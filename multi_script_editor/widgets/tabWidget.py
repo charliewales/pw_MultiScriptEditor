@@ -47,21 +47,18 @@ class tabWidgetClass(QTabWidget):
         self.currentChanged.connect(self.hideAllCompleters)
 
     def close_current_tab(self):
-        self.closeTab(self.currentIndex())
+        index = self.currentIndex()
+        self.closeTab(index)
+        self.setCurrentIndex(index-1)
+        # set focus on previous Tab
+        current_editor = self.currentWidget().edit
+        current_editor.setFocus()
 
     def closeTab(self, i):
         if self.count() > 1:
             if self.getCurrentText(i).strip():
-                # if qt == 1:
                 if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
-                # if QMessageBox.question(self, 'Close Tab',
-                #                        'Close this tab without saving?\n'+self.tabText(i),
-                #                         self.buttons) == QMessageBox.Yes:
                     self.removeTab(i)
-                # else:
-                #     if QMessageBox.question(self, 'Close Tab',
-                #                            'Close this tab without saving?\n'+self.tabText(i)) == QMessageBox.Yes:
-                #         self.removeTab(i)
             else:
                 self.removeTab(i)
 
@@ -83,9 +80,8 @@ class tabWidgetClass(QTabWidget):
         return text
 
     def addNewTab(self, name='New Tab', text = None):
-        cont = container(text, self.p, self.desk)#, self.completer)
+        cont = container(text, self.p, self.desk)
         cont.edit.saveSignal.connect(self.p.saveSession)
-        # cont.edit.executeSignal.connect(self.p.executeSelected)
         self.addTab(cont, name)
         cont.edit.moveCursor(QTextCursor.Start)
         self.setCurrentIndex(self.count()-1)
