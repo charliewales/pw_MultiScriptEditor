@@ -113,19 +113,15 @@ class tabWidgetClass(QTabWidget):
     def getCurrentLine(self, i=None):
         if i is None:
             i = self.currentIndex()
-
-        fmt = QTextCharFormat()
-        fmt.setFontWeight(QFont.Bold)
-        fmt.setUnderlineColor(Qt.red)
-        fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
-
         edit = self.widget(i).edit
         cursor = edit.textCursor()
+        # current_cursor_pos = cursor.positionInBlock()
         current_cursor_pos = cursor.position()
         cursor.select(QTextCursor.LineUnderCursor)
         edit.setTextCursor(cursor)
         text = edit.getSelection()
-        cursor.setCharFormat(fmt)
+        # cursor.movePosition(QTextCursor.EndOfLine)
+        # cursor.clearSelection()
         cursor.setPosition(current_cursor_pos)
         edit.setTextCursor(cursor)
         return text
@@ -154,16 +150,6 @@ class tabWidgetClass(QTabWidget):
 
     def copy(self):
         self.current().copy()
-
-    def wordWrap(self):
-        mode = self.current().lineWrapMode()
-        if mode == QTextEdit.WidgetWidth:
-            self.current().setLineWrapMode(QTextEdit.NoWrap)
-        else:
-            self.current().setLineWrapMode(QTextEdit.WidgetWidth)
-
-        # update line numbers
-        self.update()
 
     def paste(self):
         self.current().paste()

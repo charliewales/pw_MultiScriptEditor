@@ -1,5 +1,6 @@
-Execute selected                            >   CTRL + ENTER
 Execute All                                 >   CTRL + SHIFT + ENTER
+Execute Line                                >   CTRL + ALT + ENTER
+Execute Selected                            >   CTRL + ENTER
 Indent Selection                            >   TAB
 Unindent Selection                          >   SHIFT + TAB
 Activate Completer                          >   UP or DOWN
@@ -9,8 +10,12 @@ Autocomplete code                           >   ENTER (in Completer)
 Autocomplete first                          >   ENTER or TAB in Editor
 Font Size                                   >   CTRL + MouseWheel
 Scroll Code Left-Right                      >   ALT + MouseWheel
-Duplicate line or selected text             >   CTRL + D
 Comment/Uncomment line or selected lines    >   ALT + Q
+Toggle Word Wrap                            >   ALT + W
+Duplicate line or selected text             >   CTRL + Shit + D
+Delete line                                 >   CTRL + D
+New Tab                                     >   CTRL + N
+Close Tab                                   >   CTRL + W
 Undo                                        >   CTRL + Z
 Redo                                        >   CTRL + Y
 Copy                                        >   CTRL + C

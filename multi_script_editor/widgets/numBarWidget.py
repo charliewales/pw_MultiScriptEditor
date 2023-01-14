@@ -37,6 +37,7 @@ class lineNumberBarClass(QWidget):
         else:
             v = int(bg.value()*1.1)
         self.bg = QColor.fromHsv(bg.hue(), bg.saturation(), v)
+        self.setMinimumWidth(30)
         QWidget.update(self, *args)
 
     def paintEvent(self, event):
@@ -53,10 +54,12 @@ class lineNumberBarClass(QWidget):
             font = QFont('monospace', fontSize*0.7)
             offset = (font_metrics.ascent() + font_metrics.descent())/2
         else:
-            fontSize = self.edit.font().pointSize()
+            # fontSize = self.edit.font().pointSize()
+            fontSize = self.edit.font().pointSize()*1.5
             font = painter.font()
             font.setPixelSize(fontSize)
-            offset = font_metrics.ascent() + font_metrics.descent()
+            # offset = font_metrics.ascent() + font_metrics.descent()
+            offset = font_metrics.ascent() + font_metrics.descent()*0.7
         color = painter.pen().color()
         painter.setFont(font)
         align = Qt.AlignRight

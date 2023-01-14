@@ -1,8 +1,10 @@
 Supported applications:
-    Maya
-    Houdini
-    Nuke
+    Standalone
+
     3DsMax
+    Houdini
+    Maya
+    Nuke
 
 Tested on:
     Windows 7x64
@@ -11,6 +13,10 @@ Tested on:
     Ubuntu 14.04
     Ubuntu 16.04
 
+    Maya 2023
+    Maya 2022
+    Maya 2020
+    Maya 2019
     Maya 2018
     Maya 2017
     Maya 2016

@@ -4,3 +4,4 @@ todo
 tmp
 _backup
 _tmp
+*.pyc

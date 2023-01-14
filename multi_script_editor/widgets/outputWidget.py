@@ -6,8 +6,10 @@ except:
     from PySide2.QtGui import *
     from PySide2.QtWidgets import *
 
+import os
 from managers import context
 font_name = 'Courier'
+# font_name = 'Consolas'
 
 
 class outputClass(QTextBrowser):
@@ -15,6 +17,7 @@ class outputClass(QTextBrowser):
         super(outputClass, self).__init__()
         self.setWordWrapMode(QTextOption.NoWrap)
         font = QFont("Courier")
+        # font = QFont("Consolas")
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
         self.setFont(font)
@@ -23,6 +26,8 @@ class outputClass(QTextBrowser):
         metrics = QFontMetrics(self.document().defaultFont())
         self.setTabStopWidth(4 * metrics.width(' '))
         self.setMouseTracking(1)
+        # style = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'style', 'completer.qss')
+        # self.setStyleSheet(style)
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)

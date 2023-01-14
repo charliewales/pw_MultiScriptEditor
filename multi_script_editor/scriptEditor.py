@@ -32,7 +32,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         # ui
-        self.ver = '2.1'
+        self.ver = '3.0'
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -58,6 +58,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                               'self_context':managers.context})
         self.session = sessionManager.sessionManagerClass()
         self.execAll_act.setIcon(QIcon(icons['all']))
+        self.execLine_act.setIcon(QIcon(icons['line']))
         self.execSel_act.setIcon(QIcon(icons['sel']))
         self.clearHistory_act.setIcon(QIcon(icons['clear']))
         self.toolBar.setIconSize(QSize(32,32))
@@ -65,10 +66,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # connects
 
         self.save_act.triggered.connect(self.saveScript)
+        self.save_act.setShortcut("Ctrl+S")
         self.load_act.triggered.connect(self.loadScript)
+        self.load_act.setShortcut("Ctrl+O")
         self.exit_act.triggered.connect(self.close)
         self.tabToSpaces_act.triggered.connect(self.tabsToSpaces)
         self.saveSeccion_act.triggered.connect(lambda:self.saveSession(True))
+        self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
@@ -97,10 +101,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.paste_act.triggered.connect(self.tab.paste)
         self.paste_act.setShortcut('Ctrl+V')
         self.paste_act.setShortcutContext(Qt.WidgetShortcut)
+        
+        # self.duplicateLine_act.triggered.connect(self.tab.duplicate)
+        # self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
+        # self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
+        
+        # self.deleteLine_act.triggered.connect(self.tab.deleteLine)
+        # self.deleteLine_act.setShortcut('Ctrl+D')
+        # self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
+        
+        self.wordWrap_act.triggered.connect(self.tab.wordWrap)
+        self.wordWrap_act.setShortcut('Alt+W')
+        self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
 
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut(QKeySequence( Qt.ALT+Qt.Key_Q))
@@ -122,8 +138,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execAll_act.setShortcut('Ctrl+Shift+Return')
         self.execAll_act.triggered.connect(self.executeAll)
         self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
+        
+        self.execLine_act.setShortcut('Ctrl+Alt+Return')
+        self.execLine_act.triggered.connect(self.executeLine)
+        self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
+        self.clearHistory_act.setShortcut('Ctrl+Shift+C')
 
         # hide
         self.donate_act.setVisible(False)
@@ -248,11 +269,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if allText:
             self.executeCommand(allText.strip())
 
-    def executeSelected(self):
+    def executeLine(self):
+        text = self.tab.getCurrentLine()
+        if text:
+            self.executeCommand(text)
 
+    def executeSelected(self):
         text = self.tab.getCurrentSelectedText()
         if text:
             self.executeCommand(text)
+    
 
     def updateNamespace(self, namespace):
         self.namespace.update(namespace)
@@ -286,7 +312,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     result = eval(command, self.namespace, self.namespace)
                     if result != None:
                         self.out.showMessage(repr(result))
-
                 except SyntaxError:
                     exec command in self.namespace
             except SystemExit:

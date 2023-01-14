@@ -22,10 +22,11 @@ import re
 addEndBracket = True
 
 indentLen = 4
-minimumFontSize = 10
+minimumFontSize = 12
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
 # font_name = 'Lucida Console'
 font_name = 'Courier'
+# font_name = 'Consolas'
 
 
 class inputClass(QTextEdit):
@@ -39,10 +40,14 @@ class inputClass(QTextEdit):
         super(inputClass, self).__init__(parent)
         self.p = parent
         self.desk = desk
-        self.setWordWrapMode(QTextOption.NoWrap)
+        self.setLineWrapMode(QTextEdit.NoWrap)
+        # self.setLineWrapMode(QTextEdit.WidgetWidth)
+        # self.setWordWrapMode(QTextOption.NoWrap)
         font = QFont("Courier")
+        # font = QFont("Consolas")
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
+        self.setFont(font)
         self.setFont(font)
         self.document().setDefaultFont(QFont(font_name, minimumFontSize, QFont.Monospace))
         metrics = QFontMetrics(self.document().defaultFont())
@@ -215,8 +220,12 @@ class inputClass(QTextEdit):
         elif event.modifiers() == Qt.ShiftModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             return
         # duplicate
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+        elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_D:
             self.duplicate()
+            return
+        # delete
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+            self.deleteLine()
             self.update()
             return
         # increase indent
@@ -365,6 +374,8 @@ class inputClass(QTextEdit):
     def duplicate(self):
         self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
+        current_cursor_pos = cursor.position()
+        
         if cursor.hasSelection(): # duplicate selected
             sel = cursor.selectedText()
             end = cursor.selectionEnd()
@@ -378,7 +389,21 @@ class inputClass(QTextEdit):
             line = cursor.selectedText()
             cursor.clearSelection()
             cursor.insertText('\n'+line)
+            cursor.setPosition(current_cursor_pos + len(line) + 1)
             self.setTextCursor(cursor)
+        self.document().documentLayout().blockSignals(False)
+    
+    def deleteLine(self):
+        self.document().documentLayout().blockSignals(True)
+        cursor = self.textCursor()
+        current_cursor_pos = cursor.position()
+        cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+        cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
+        selected_text = cursor.selectedText()
+        cursor.removeSelectedText();
+        cursor.deleteChar();
+        cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
+        self.setTextCursor(cursor)
         self.document().documentLayout().blockSignals(False)
 
     def removeTabs(self, text):
