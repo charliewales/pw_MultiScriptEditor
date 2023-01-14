@@ -110,10 +110,11 @@ class tabWidgetClass(QTabWidget):
         if i is None:
             i = self.currentIndex()
 
-        fmt = QTextCharFormat()
-        fmt.setFontWeight(QFont.Bold)
-        fmt.setUnderlineColor(Qt.red)
-        fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
+        # format current line
+        # fmt = QTextCharFormat()
+        # fmt.setFontWeight(QFont.Bold)
+        # fmt.setUnderlineColor(Qt.red)
+        # fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
 
         edit = self.widget(i).edit
         cursor = edit.textCursor()
@@ -121,7 +122,7 @@ class tabWidgetClass(QTabWidget):
         cursor.select(QTextCursor.LineUnderCursor)
         edit.setTextCursor(cursor)
         text = edit.getSelection()
-        cursor.setCharFormat(fmt)
+        # cursor.setCharFormat(fmt)
         cursor.setPosition(current_cursor_pos)
         edit.setTextCursor(cursor)
         return text

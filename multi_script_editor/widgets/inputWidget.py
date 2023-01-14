@@ -178,6 +178,12 @@ class inputClass(QTextEdit):
     def keyPressEvent(self, event):
         self.inputSignal.emit()
         parse = 0
+        
+        # for tab cycling
+        tabWidget = self.parent().parent().parent()
+        current_tab_index = tabWidget.currentIndex()
+        tab_count = tabWidget.count()
+        
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
@@ -215,6 +221,16 @@ class inputClass(QTextEdit):
             if self.completer:
                 self.completer.updateCompleteList()
             self.executeSignal.emit()
+            return
+        # focus previous tab
+        elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_Backtab:
+            previous_tab_index = (current_tab_index - 1) if current_tab_index > 0 else (tab_count - 1)
+            tabWidget.setCurrentIndex(previous_tab_index)
+            return
+        # focus next tab
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_Tab:
+            next_tab_index = (current_tab_index + 1) if current_tab_index < (tab_count - 1) else 0
+            tabWidget.setCurrentIndex(next_tab_index)
             return
         # ignore Shift + Enter
         elif event.modifiers() == Qt.ShiftModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
