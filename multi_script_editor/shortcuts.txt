@@ -14,7 +14,7 @@ Comment/Uncomment line or selected lines    >   ALT + Q
 Toggle Word Wrap                            >   ALT + W
 Duplicate line or selected text             >   CTRL + Shit + D
 Delete line                                 >   CTRL + D
-New Tab                                     >   CTRL + N
+New Tab                                     >   CTRL + T
 Close Tab                                   >   CTRL + W
 Undo                                        >   CTRL + Z
 Redo                                        >   CTRL + Y

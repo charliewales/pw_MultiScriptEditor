@@ -35,7 +35,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setText('+')
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab")
-        newTabButton.setShortcut('Ctrl+N')
+        newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop()
         # variables
         self.p = parent
