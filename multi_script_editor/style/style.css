@@ -55,7 +55,7 @@ QMainWindow::separator:hover
 
 /**************Tooltip**************/
 
-QToolTip
+/* QToolTip
 {
      border: 1px solid black;
      background-color: #eeeeee;
@@ -65,7 +65,7 @@ QToolTip
      border-radius: 3px;
      color: black;
      opacity: 100;
-}
+} */
 
 /*****************MENUBAT*************/
 

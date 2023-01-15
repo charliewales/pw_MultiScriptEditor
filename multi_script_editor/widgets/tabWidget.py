@@ -196,6 +196,8 @@ class tabWidgetClass(QTabWidget):
 
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle("Multi Script Editor")
         msg_box.setText(question)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
@@ -234,3 +236,4 @@ if __name__ == '__main__':
     w = tabWidgetClass()
     w.show()
     app.exec_()
+
