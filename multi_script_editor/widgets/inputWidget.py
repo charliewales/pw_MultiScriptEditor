@@ -431,6 +431,7 @@ class inputClass(QTextEdit):
             cursor.insertText('\n'+line)
             cursor.setPosition(current_cursor_pos + len(line) + 1)
             self.setTextCursor(cursor)
+
         self.highlight_current_line()
         self.document().documentLayout().blockSignals(False)
 
@@ -444,7 +445,8 @@ class inputClass(QTextEdit):
         cursor.removeSelectedText();
         cursor.deleteChar();
         # cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
-        self.highlight_current_line()
+        cursor.setPosition(current_cursor_pos)
+        self.setTextCursor(cursor)
         self.document().documentLayout().blockSignals(False)
 
     def removeTabs(self, text):
