@@ -295,13 +295,9 @@ class inputClass(QTextEdit):
         # set background color of current line
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
-        
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-        selection.format.setBackground(QColor("#0A0A0A"))  # set the background color
+        selection.format.setBackground(QColor("#555555"))  # set the background color
         selection.cursor = cursor
-        selection.cursor.clearSelection()
-        selection.cursor.select(QTextCursor.LineUnderCursor)
-
         self.setExtraSelections([selection])
 
     # def mouseMoveEvent(self, event):
@@ -447,8 +443,7 @@ class inputClass(QTextEdit):
         selected_text = cursor.selectedText()
         cursor.removeSelectedText();
         cursor.deleteChar();
-        cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
-        self.setTextCursor(cursor)
+        # cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
         self.highlight_current_line()
         self.document().documentLayout().blockSignals(False)
 
