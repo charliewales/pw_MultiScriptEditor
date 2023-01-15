@@ -84,6 +84,7 @@ class tabWidgetClass(QTabWidget):
         cont.edit.saveSignal.connect(self.p.saveSession)
         self.addTab(cont, name)
         cont.edit.moveCursor(QTextCursor.Start)
+        cont.edit.highlight_current_line()
         self.setCurrentIndex(self.count()-1)
         return cont.edit
 
@@ -138,6 +139,11 @@ class tabWidgetClass(QTabWidget):
 
     def current(self):
         return self.widget(self.currentIndex()).edit
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            current_index = self.currentIndex()
+            self.closeTab(current_index)
 
 ############################## editor commands
     def undo(self):

@@ -24,9 +24,7 @@ addEndBracket = True
 indentLen = 4
 minimumFontSize = 12
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
-# font_name = 'Lucida Console'
 font_name = 'Courier'
-# font_name = 'Consolas'
 
 
 class inputClass(QTextEdit):
@@ -38,13 +36,15 @@ class inputClass(QTextEdit):
         # https://github.com/davidhalter/jedi
         # http://jedi.jedidjah.ch/en/latest/
         super(inputClass, self).__init__(parent)
+
+        self.setMouseTracking(True)  # Enable mouse tracking
+
         self.p = parent
         self.desk = desk
         self.setLineWrapMode(QTextEdit.NoWrap)
         # self.setLineWrapMode(QTextEdit.WidgetWidth)
         # self.setWordWrapMode(QTextOption.NoWrap)
         font = QFont("Courier")
-        # font = QFont("Consolas")
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
         self.setFont(font)
@@ -63,17 +63,18 @@ class inputClass(QTextEdit):
         # self.changeFontSize(False)
 
         self.changeFontSize(True)
+        self.highlight_current_line()
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()
-        # self.completer.hideMe()
         QTextEdit.focusOutEvent(self,event)
 
     def hideEvent(self, event):
         self.completer.updateCompleteList()
         try:
             QTextEdit.hideEvent(self,event)
-        except:pass
+        except:
+            pass
 
     def applyHightLighter(self, theme=None, qss=None):
         self.blockSignals(True)
@@ -178,12 +179,12 @@ class inputClass(QTextEdit):
     def keyPressEvent(self, event):
         self.inputSignal.emit()
         parse = 0
-        
+
         # for tab cycling
         tabWidget = self.parent().parent().parent()
         current_tab_index = tabWidget.currentIndex()
         tab_count = tabWidget.count()
-        
+
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
@@ -282,9 +283,36 @@ class inputClass(QTextEdit):
             parse = 1
 
         QTextEdit.keyPressEvent(self, event)
+
+
         # start parse text
         if parse and event.text():
             self.parseText()
+        
+        self.highlight_current_line()
+
+    def highlight_current_line(self):
+        # set background color of current line
+        cursor = self.textCursor()
+        selection = QTextEdit.ExtraSelection()
+        
+        selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+        selection.format.setBackground(QColor("#0A0A0A"))  # set the background color
+        selection.cursor = cursor
+        selection.cursor.clearSelection()
+        selection.cursor.select(QTextCursor.LineUnderCursor)
+
+        self.setExtraSelections([selection])
+
+    # def mouseMoveEvent(self, event):
+    #     cursor = self.cursorForPosition(event.pos())
+    #     selection = QTextEdit.ExtraSelection()
+    #     selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+    #     selection.format.setBackground(QColor("gray"))  # set the background color
+    #     selection.cursor = cursor
+    #     selection.cursor.clearSelection()
+    #     selection.cursor.select(QTextCursor.LineUnderCursor)
+    #     self.setExtraSelections([selection])
 
     def moveSelected(self, inc):
         cursor = self.textCursor()
@@ -391,7 +419,7 @@ class inputClass(QTextEdit):
         self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
-        
+
         if cursor.hasSelection(): # duplicate selected
             sel = cursor.selectedText()
             end = cursor.selectionEnd()
@@ -407,8 +435,9 @@ class inputClass(QTextEdit):
             cursor.insertText('\n'+line)
             cursor.setPosition(current_cursor_pos + len(line) + 1)
             self.setTextCursor(cursor)
+        self.highlight_current_line()
         self.document().documentLayout().blockSignals(False)
-    
+
     def deleteLine(self):
         self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
@@ -420,6 +449,7 @@ class inputClass(QTextEdit):
         cursor.deleteChar();
         cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
         self.setTextCursor(cursor)
+        self.highlight_current_line()
         self.document().documentLayout().blockSignals(False)
 
     def removeTabs(self, text):
@@ -555,6 +585,7 @@ class inputClass(QTextEdit):
         #         super(inputClass, self).mousePressEvent(event)
         # else:
         QTextEdit.mousePressEvent(self,event)
+        self.highlight_current_line()
 
     def selectWord(self, pattern, number, replace=None):
         text = self.toPlainText()
@@ -580,4 +611,3 @@ class inputClass(QTextEdit):
 
     def replaceAll(selfold, new):
         pass
-
