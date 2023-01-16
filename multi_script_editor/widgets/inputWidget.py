@@ -239,6 +239,7 @@ class inputClass(QTextEdit):
         # duplicate
         elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_D:
             self.duplicate()
+            self.update()
             return
         # delete
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
@@ -412,7 +413,7 @@ class inputClass(QTextEdit):
         return cursor
 
     def duplicate(self):
-        self.document().documentLayout().blockSignals(True)
+        # self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
 
@@ -433,10 +434,10 @@ class inputClass(QTextEdit):
             self.setTextCursor(cursor)
 
         self.highlight_current_line()
-        self.document().documentLayout().blockSignals(False)
+        # self.document().documentLayout().blockSignals(False)
 
     def deleteLine(self):
-        self.document().documentLayout().blockSignals(True)
+        # self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
         cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
@@ -447,7 +448,8 @@ class inputClass(QTextEdit):
         # cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
         cursor.setPosition(current_cursor_pos)
         self.setTextCursor(cursor)
-        self.document().documentLayout().blockSignals(False)
+        self.highlight_current_line()
+#        self.document().documentLayout().blockSignals(False)
 
     def removeTabs(self, text):
         lines = text.split('\n')
