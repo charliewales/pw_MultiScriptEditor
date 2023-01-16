@@ -223,13 +223,23 @@ class inputClass(QTextEdit):
                 self.completer.updateCompleteList()
             self.executeSignal.emit()
             return
-        # focus previous tab
+        # focus previous tab with Ctrl+Shift+Tab
         elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_Backtab:
             previous_tab_index = (current_tab_index - 1) if current_tab_index > 0 else (tab_count - 1)
             tabWidget.setCurrentIndex(previous_tab_index)
             return
-        # focus next tab
+        # focus previous tab with Ctrl+PageUp
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_PageUp:
+            previous_tab_index = (current_tab_index - 1) if current_tab_index > 0 else (tab_count - 1)
+            tabWidget.setCurrentIndex(previous_tab_index)
+            return
+        # focus next tab with Ctrl+Tab
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_Tab:
+            next_tab_index = (current_tab_index + 1) if current_tab_index < (tab_count - 1) else 0
+            tabWidget.setCurrentIndex(next_tab_index)
+            return
+        # focus next tab with Ctrl+PageDown
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_PageDown:
             next_tab_index = (current_tab_index + 1) if current_tab_index < (tab_count - 1) else 0
             tabWidget.setCurrentIndex(next_tab_index)
             return
