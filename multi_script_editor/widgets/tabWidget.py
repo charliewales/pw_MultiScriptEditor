@@ -49,7 +49,6 @@ class tabWidgetClass(QTabWidget):
     def close_current_tab(self):
         index = self.currentIndex()
         self.closeTab(index)
-        self.setCurrentIndex(index-1)
         # set focus on previous Tab
         current_editor = self.currentWidget().edit
         current_editor.setFocus()
