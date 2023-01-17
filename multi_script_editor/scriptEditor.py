@@ -32,7 +32,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         # ui
-        self.ver = '3.0.2'
+        py_ver = sys.version.split(' ')[0]
+        self.ver = '3.0.2 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
