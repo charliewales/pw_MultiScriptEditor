@@ -31,7 +31,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         QMainWindow.__init__(self, parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.3 - Python {0}'.format(py_ver)
+        self.ver = '3.0.4 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -144,7 +144,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.loadSession()
         self.loadSettings()
         self.setWindowStyle()
-        # self.out.showMessage('Multi Script Editor v.%s Loaded\npaulwinex.com' % self.ver)
         self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
@@ -169,14 +168,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.close()
         if __name__ == '__main__':
             sys.exit()
-        # if managers.context == 'maya':
-        #     from managers import _maya
-        #     _maya.clearDoc()
 
     def appContextMenu(self):
         if managers.context in managers.contextMenus:
             menu = managers.contextMenus[managers.context](self)
-            # menu.setStyleSheet(self.styleSheet())
             self.menubar.insertMenu(self.menubar.actions()[0], menu)
             return menu
 
@@ -272,8 +267,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def updateNamespace(self, namespace):
         self.namespace.update(namespace)
-        # md = __import__('__main__').__dict__
-        # md['mse'] = self.namespace
 
     def executeCommand(self, cmd):
         self.out.showMessage(cmd)
@@ -312,7 +305,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     traceback_lines.pop(i)
                 self.out.showMessage('\n'.join(traceback_lines))
             sys.stdout = tmp_stdout
-            # __import__("__main__").__dict__.update(self.namespace)
 
     def clearHistory(self):
         self.out.setText('')
