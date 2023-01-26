@@ -2,6 +2,7 @@ import traceback
 import sys
 import webbrowser
 import os
+
 try:
     from PySide.QtCore import *
     from PySide.QtGui import *
@@ -9,18 +10,15 @@ except:
     from PySide2.QtCore import *
     from PySide2.QtGui import *
     from PySide2.QtWidgets import *
+
 from widgets import scriptEditor_UIs as ui, tabWidget, outputWidget, about, shortcuts
 from widgets.pythonSyntax import design
 import sessionManager
 import settingsManager
 from widgets import themeEditor, findWidget
 import managers
-reload(themeEditor)
-reload(findWidget)
-reload(tabWidget)
-reload(outputWidget)
-reload(ui)
-reload(managers)
+
+
 if managers._s == 'w':
     import ctypes
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('paulwinex.multiscripteditor.2')
@@ -44,7 +42,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.in_ly.addWidget(self.tab)
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
-            m.setWindowTitle('MSE '+self.ver)
+            m.setWindowTitle('MSE {0}'.format(self.ver))
 
         #variables
         self.s = settingsManager.scriptEditorClass()
@@ -82,7 +80,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.shortcuts_act.triggered.connect(self.shortcuts)
         self.printHelp_act.triggered.connect(self.mse_help)
         # editor
-        c = Qt.WindowShortcut
+        # c = Qt.WindowShortcut
         self.undo_act.triggered.connect(self.tab.undo)
         self.undo_act.setShortcut('Ctrl+Z')
         self.undo_act.setShortcutContext(Qt.WidgetShortcut)
@@ -102,19 +100,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.paste_act.triggered.connect(self.tab.paste)
         self.paste_act.setShortcut('Ctrl+V')
         self.paste_act.setShortcutContext(Qt.WidgetShortcut)
-        
-        # self.duplicateLine_act.triggered.connect(self.tab.duplicate)
-        # self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
-        # self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
-        
-        # self.deleteLine_act.triggered.connect(self.tab.deleteLine)
-        # self.deleteLine_act.setShortcut('Ctrl+D')
-        # self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
-        
+
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
         self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
@@ -139,7 +129,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execAll_act.setShortcut('Ctrl+Shift+Return')
         self.execAll_act.triggered.connect(self.executeAll)
         self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
-        
+
         self.execLine_act.setShortcut('Ctrl+Alt+Return')
         self.execLine_act.triggered.connect(self.executeLine)
         self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
@@ -279,7 +269,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         text = self.tab.getCurrentSelectedText()
         if text:
             self.executeCommand(text)
-    
 
     def updateNamespace(self, namespace):
         self.namespace.update(namespace)
@@ -369,6 +358,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             geo = self.geometry()
             geo.moveCenter(QPoint(x,y))
             self.setGeometry(geo)
+        if data.get('splitter'):
+            sizes = data.get('splitter')
+            self.splitter.setSizes(sizes)
         f =  self.out.font()
         f.setPointSize(data['outFontSize'])
         self.out.setFont(f)
@@ -379,9 +371,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
         center = [geo.center().x(),geo.center().y()]
         size = max(8, self.out.font().pointSize())
+        split_sizes = self.splitter.sizes()
         data = dict(geometry=sGeo,
                     center=center,
-                    outFontSize=size)
+                    outFontSize=size,
+                    splitter=split_sizes)
         settings.update(data)
         self.s.writeSettings(settings)
 
@@ -401,8 +395,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def moveEvent(self, event):
         self.adjustColmpeters()
-        # super(scriptEditorClass, self).moveEvent(event)
         QMainWindow.moveEvent(self, event)
+        super(scriptEditorClass, self).moveEvent(event)
 
     def adjustColmpeters(self):
         for i in range(self.tab.count()):
@@ -412,8 +406,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def resizeEvent(self, event):
         self.adjustColmpeters()
-        # super(scriptEditorClass, self).resizeEvent(event)
         QMainWindow.resizeEvent(self, event)
+        super(scriptEditorClass, self).resizeEvent(event)
 
     def openLink(self, name):
         from style.links import links
