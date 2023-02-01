@@ -158,11 +158,13 @@ class tabWidgetClass(QTabWidget):
         self.current().copy()
 
     def wordWrap(self):
-        mode = self.current().lineWrapMode()
-        if mode == QTextEdit.WidgetWidth:
-            self.current().setLineWrapMode(QTextEdit.NoWrap)
-        else:
-            self.current().setLineWrapMode(QTextEdit.WidgetWidth)
+        for i in range(self.count()):
+            current_edit = self.widget(i).edit 
+            mode = current_edit.lineWrapMode()
+            if mode == QTextEdit.WidgetWidth:
+                current_edit.setLineWrapMode(QTextEdit.NoWrap)
+            else:
+                current_edit.setLineWrapMode(QTextEdit.WidgetWidth)
 
         # update line numbers
         self.update()

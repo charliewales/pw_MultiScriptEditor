@@ -31,7 +31,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         QMainWindow.__init__(self, parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.4 - Python {0}'.format(py_ver)
+        self.ver = '3.0.6 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -107,11 +107,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
+        self.out_wordWrap_act.setCheckable(True)
+        
         self.out_wordWrap_act.setShortcutContext(Qt.WindowShortcut)
         
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
         self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
+        self.wordWrap_act.setCheckable(True)
 
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut(QKeySequence( Qt.ALT+Qt.Key_Q))
