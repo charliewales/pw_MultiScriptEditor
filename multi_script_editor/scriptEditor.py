@@ -104,7 +104,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
-
+        
+        self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
+        self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
+        self.out_wordWrap_act.setShortcutContext(Qt.WindowShortcut)
+        
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
         self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)

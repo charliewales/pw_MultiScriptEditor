@@ -15,7 +15,8 @@ font_name = 'Courier'
 class outputClass(QTextBrowser):
     def __init__(self):
         super(outputClass, self).__init__()
-        self.setWordWrapMode(QTextOption.NoWrap)
+#        self.setWordWrapMode(QTextOption.NoWrap)
+        self.setLineWrapMode(QTextEdit.NoWrap)
         font = QFont("Courier")
         # font = QFont("Consolas")
         font.setStyleHint(QFont.Monospace)
@@ -71,6 +72,12 @@ class outputClass(QTextBrowser):
             f.setPointSize(size)
             self.setFont(f)
 
+    def wordWrap(self):
+        mode = self.lineWrapMode()
+        if mode == QTextEdit.WidgetWidth:
+            self.setLineWrapMode(QTextEdit.NoWrap)
+        else:
+            self.setLineWrapMode(QTextEdit.WidgetWidth)
 
     # def mousePressEvent(self, event):
     #     print context
