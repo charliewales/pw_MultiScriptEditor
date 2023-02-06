@@ -87,6 +87,10 @@ class Ui_scriptEditor(object):
         self.quickHelp_act.setObjectName("quickHelp_act")
         self.saveSeccion_act = QAction(scriptEditor)
         self.saveSeccion_act.setObjectName("saveSeccion_act")
+        
+        self.quit_act = QAction(scriptEditor)
+        self.quit_act.setObjectName("quit_act")
+        
         self.tabToSpaces_act = QAction(scriptEditor)
         self.tabToSpaces_act.setObjectName("tabToSpaces_act")
         self.spacesToTabs_act = QAction(scriptEditor)
@@ -135,6 +139,8 @@ class Ui_scriptEditor(object):
         self.file_menu.addAction(self.save_act)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.saveSeccion_act)
+        self.file_menu.addSeparator()
+        self.file_menu.addAction(self.quit_act)
         self.help_menu.addAction(self.openManual_act)
         self.help_menu.addAction(self.shortcuts_act)
         self.help_menu.addAction(self.donate_act)
@@ -207,6 +213,7 @@ class Ui_scriptEditor(object):
         # self.deleteLine_act.setText(QApplication.translate("scriptEditor", "Delete Line", None))
         # self.duplicateLine_act.setText(QApplication.translate("scriptEditor", "Duplicate Line", None))
         self.about_act.setText(QApplication.translate("scriptEditor", "About", None))
+        self.quit_act.setText(QApplication.translate("scriptEditor", "Quit", None))
         self.execAll_act.setText(QApplication.translate("scriptEditor", " Execute All", None))
         self.execLine_act.setText(QApplication.translate("scriptEditor", " Execute Line", None))
         self.execSel_act.setText(QApplication.translate("scriptEditor", " Execute Selected", None))

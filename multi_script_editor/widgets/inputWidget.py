@@ -372,10 +372,10 @@ class inputClass(QTextEdit):
             while not lines[ind].strip():
                 ind += 1
             if lines[ind].strip()[0] == '#': # remove comment
-                result = '\n'.join([x.replace('#','',1) for x in lines])
+                result = '\n'.join([x.replace('# ','',1) for x in lines])
                 ofs = -1
             else:   # add comment
-                result = '\n'.join(['#'+x for x in lines ])
+                result = '\n'.join(['# '+x for x in lines ])
                 ofs = 1
         return result, ofs
 

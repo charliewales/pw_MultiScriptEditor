@@ -31,7 +31,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         QMainWindow.__init__(self, parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.6 - Python {0}'.format(py_ver)
+        self.ver = '3.0.7 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -72,6 +72,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tabToSpaces_act.triggered.connect(self.tabsToSpaces)
         self.saveSeccion_act.triggered.connect(lambda:self.saveSession(True))
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
+        self.quit_act.triggered.connect(self.close)
+        self.quit_act.setShortcut("Ctrl+Q")
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
@@ -360,6 +362,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if data.get('splitter'):
             sizes = data.get('splitter')
             self.splitter.setSizes(sizes)
+        if data.get('out_wrap'):
+            out_wrap = data.get('out_wrap')
+            if out_wrap:
+                self.out_wordWrap_act.setChecked(True)
+                self.out.wordWrap()
+        if data.get('wrap'):
+            wrap = data.get('wrap')
+            if wrap:
+                self.wordWrap_act.setChecked(True)
+                self.tab.wordWrap()
         f =  self.out.font()
         f.setPointSize(data['outFontSize'])
         self.out.setFont(f)
@@ -371,10 +383,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         center = [geo.center().x(),geo.center().y()]
         size = max(8, self.out.font().pointSize())
         split_sizes = self.splitter.sizes()
+        out_word_wrap = self.out_wordWrap_act.isChecked()
+        word_wrap = self.wordWrap_act.isChecked()
+        self.wordWrap_act.setCheckable(True)
         data = dict(geometry=sGeo,
                     center=center,
                     outFontSize=size,
-                    splitter=split_sizes)
+                    splitter=split_sizes,
+                    wrap=word_wrap,
+                    out_wrap=out_word_wrap)
         settings.update(data)
         self.s.writeSettings(settings)
 
