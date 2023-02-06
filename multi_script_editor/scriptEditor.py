@@ -31,7 +31,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         QMainWindow.__init__(self, parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.7 - Python {0}'.format(py_ver)
+        self.ver = '3.0.8 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -74,6 +74,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
         self.quit_act.triggered.connect(self.close)
         self.quit_act.setShortcut("Ctrl+Q")
+        self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
+        self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
+        self.deleteLine_act.setShortcut('Ctrl+D')
+        self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
+
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
