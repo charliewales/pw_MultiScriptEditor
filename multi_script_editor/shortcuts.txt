@@ -1,6 +1,6 @@
-Execute All                                 >   CTRL + SHIFT + ENTER
-Execute Line                                >   CTRL + ALT + ENTER
 Execute Selected                            >   CTRL + ENTER
+Execute Line                                >   CTRL + ALT + ENTER
+Execute All                                 >   CTRL + SHIFT + ENTER
 Indent Selection                            >   TAB
 Unindent Selection                          >   SHIFT + TAB
 Activate Completer                          >   UP or DOWN
@@ -10,20 +10,21 @@ Autocomplete code                           >   ENTER (in Completer)
 Autocomplete first                          >   ENTER or TAB in Editor
 Font Size                                   >   CTRL + MouseWheel
 Scroll Code Left-Right                      >   ALT + MouseWheel
+Comment/Uncomment line or selected lines    >   ALT + C
 Run dir() on current word                   >   ALT + D
 Run help() on current word                  >   ALT + H
+Quick Help                                  >   ALT + Q / F1
 Run type() on current word                  >   ALT + T
-Comment/Uncomment line or selected lines    >   ALT + Q
 Toggle Word Wrap                            >   ALT + W
 Toggle Output Word Wrap                     >   CTRL + ALT + W
 Duplicate line or selected text             >   CTRL + Shit + D
+Copy                                        >   CTRL + C
 Delete line                                 >   CTRL + D
+Find and Replace                            >   CTRL + F
+Paste                                       >   CTRL + V
 New Tab                                     >   CTRL + T
 Close Tab                                   >   CTRL + W
-Undo                                        >   CTRL + Z
-Redo                                        >   CTRL + Y
-Copy                                        >   CTRL + C
-Paste                                       >   CTRL + V
 Cut                                         >   CTRL + X
-Find and Replace                            >   CTRL + F
+Redo                                        >   CTRL + Y
+Undo                                        >   CTRL + Z
 Wrap dropped nodes (Maya and Houdini)       >   MMB Drag + ALT

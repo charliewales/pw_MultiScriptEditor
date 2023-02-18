@@ -8,9 +8,7 @@ from widgets import completeWidget
 import settingsManager
 import managers
 from widgets.pythonSyntax import design
-# import inspect
-# from jedi import settings
-# settings.case_insensitive_completion = False
+
 import re
 addEndBracket = True
 
@@ -109,8 +107,6 @@ class inputClass(QTextEdit):
                         col = tc.columnNumber()
                         script = jedi.Script(text, bl, col, '')
                         try:
-                            # curframe = inspect.currentframe()
-                            # print inspect.getouterframes(curframe, 2)[1][3]
                             self.completer.updateCompleteList(script.completions())
                         except:
                             self.completer.updateCompleteList()
@@ -120,9 +116,7 @@ class inputClass(QTextEdit):
                 self.completer.updateCompleteList()
 
     def moveCompleter(self):
-        # self.p.out.showMessage('move')
         rec = self.cursorRect()
-        # pt = self.mapToGlobal(QPoint(rec.bottomRight().x(), rec.y()+self.completer.lineHeight))
         pt = self.mapToGlobal(rec.bottomRight())
         y=x=0
         if self.completer.isVisible() and self.desk:
@@ -138,8 +132,6 @@ class inputClass(QTextEdit):
                 y = futureCompGeo.height()+self.completer.lineHeight if (futureCompGeo.height()-i.height())>0 else 0
 
         pt = self.mapToGlobal(rec.bottomRight()) + QPoint(10-x, -y)
-        # if managers.context == 'hou':
-        #     print self.mapToParent(self.geometry().topLeft())
         self.completer.move(pt)
 
     def charBeforeCursor(self, cursor):
@@ -201,8 +193,8 @@ class inputClass(QTextEdit):
                     cursor.insertText(line)
                     self.setTextCursor(cursor)
             parse = 1
-        #comment
-        elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_Q:
+        #comment, Alt+C
+        elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
             self.p.tab.comment()
             return
         # execute selected
@@ -299,16 +291,6 @@ class inputClass(QTextEdit):
         selection.cursor = cursor
         self.setExtraSelections([selection])
 
-    # def mouseMoveEvent(self, event):
-    #     cursor = self.cursorForPosition(event.pos())
-    #     selection = QTextEdit.ExtraSelection()
-    #     selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-    #     selection.format.setBackground(QColor("gray"))  # set the background color
-    #     selection.cursor = cursor
-    #     selection.cursor.clearSelection()
-    #     selection.cursor.select(QTextCursor.LineUnderCursor)
-    #     self.setExtraSelections([selection])
-
     def moveSelected(self, inc):
         cursor = self.textCursor()
         if cursor.hasSelection():
@@ -344,7 +326,6 @@ class inputClass(QTextEdit):
         cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
         text = cursor.selection().toPlainText()
         self.document().documentLayout().blockSignals(False)
-        # cursor.removeSelectedText()
         text, offset = self.addRemoveComments(text)
         cursor.insertText(text)
         cursor.setPosition(min(pos+offset, len(self.toPlainText())))
@@ -377,7 +358,6 @@ class inputClass(QTextEdit):
         self.update()
 
     def fixLine(self, cursor, comp):
-        # self.document().documentLayout().blockSignals(True)
         pos = cursor.position()
         linePos = cursor.positionInBlock()
 
@@ -402,7 +382,6 @@ class inputClass(QTextEdit):
 
         res = before + comp.name + br + end
 
-        # self.document().documentLayout().blockSignals(False)
         cursor.beginEditBlock()
         cursor.insertText(res)
         cursor.endEditBlock()
@@ -411,7 +390,6 @@ class inputClass(QTextEdit):
         return cursor
 
     def duplicate(self):
-        # self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
 
@@ -432,10 +410,8 @@ class inputClass(QTextEdit):
             self.setTextCursor(cursor)
 
         self.highlight_current_line()
-        # self.document().documentLayout().blockSignals(False)
 
     def deleteLine(self):
-        # self.document().documentLayout().blockSignals(True)
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
         cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
@@ -443,11 +419,9 @@ class inputClass(QTextEdit):
         selected_text = cursor.selectedText()
         cursor.removeSelectedText();
         cursor.deleteChar();
-        # cursor.setPosition(current_cursor_pos - len(selected_text) - 1)
         cursor.setPosition(current_cursor_pos)
         self.setTextCursor(cursor)
         self.highlight_current_line()
-#        self.document().documentLayout().blockSignals(False)
 
     def removeTabs(self, text):
         lines = text.split('\n')
@@ -513,20 +487,14 @@ class inputClass(QTextEdit):
         else:
             QTextEdit.dropEvent(self,event)
 
-
-################################################################
-
     def wheelEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
             if self.completer:
                 self.completer.updateCompleteList()
             if event.delta() > 0:
                 self.changeFontSize(True)
-                # self.zoomIn(1)
             else:
                 self.changeFontSize(False)
-                # self.zoomOut(1)
-        # super(inputClass, self).wheelEvent(event)
         else:
             QTextEdit.wheelEvent(self, event)
 
@@ -558,7 +526,6 @@ class inputClass(QTextEdit):
 
     def insertFromMimeData (self, source ):
         text = source.text()
-        # text = re.sub(r'[^\x00-\x7F]','?', text)
         self.insertPlainText(text)
 
     def getFontSize(self):
@@ -577,12 +544,7 @@ class inputClass(QTextEdit):
 
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
-        # if managers.context == 'hou':
-        #     if event.button() == Qt.LeftButton:
-        #         super(inputClass, self).mousePressEvent(event)
-        # else:
         super(inputClass, self).mousePressEvent(event)
-        # QTextEdit.mousePressEvent(self,event)
         self.highlight_current_line()
 
     def function_cmd(self, function):
@@ -593,31 +555,12 @@ class inputClass(QTextEdit):
         cmd = '{0}({1})'.format(function, selectedText)
         return cmd
     
-    def dir_cmd(self):
-        cursor = self.textCursor()
-        cursor.select(QTextCursor.WordUnderCursor)
-        self.setTextCursor(cursor)
-        selectedText = cursor.selectedText()
-        cmd = 'dir({})'.format(selectedText)
-        return cmd
-    
-    def help_cmd(self):
-        cursor = self.textCursor()
-        cursor.select(QTextCursor.WordUnderCursor)
-        self.setTextCursor(cursor)
-        selectedText = cursor.selectedText()
-        cmd = 'help({})'.format(selectedText)
-        return cmd
-
     def get_current_word(self):
         cursor = self.textCursor()
         cursor.select(QTextCursor.WordUnderCursor)
         self.setTextCursor(cursor)
-        # self.executeSignal.emit()
-        selectedText = cursor.selectedText()
-        cmd = 'dir({})'.format(selectedText)
-        self.parent().parent().parent().executeCommand(cmd)
-        # return cursor.selectedText()
+        current_word = cursor.selectedText()
+        return current_word
 
     def selectWord(self, pattern, number, replace=None):
         text = self.toPlainText()

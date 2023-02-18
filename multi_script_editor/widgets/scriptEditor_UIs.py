@@ -78,6 +78,8 @@ class Ui_scriptEditor(object):
         self.help_act.setObjectName("help_act")
         self.type_act = QAction(scriptEditor)
         self.type_act.setObjectName("type_act")
+        self.quick_help_act = QAction(scriptEditor)
+        self.quick_help_act.setObjectName("quick_help_act")
         self.save_act = QAction(scriptEditor)
         self.save_act.setObjectName("save_act")
         self.load_act = QAction(scriptEditor)
@@ -90,10 +92,8 @@ class Ui_scriptEditor(object):
         self.quickHelp_act.setObjectName("quickHelp_act")
         self.saveSeccion_act = QAction(scriptEditor)
         self.saveSeccion_act.setObjectName("saveSeccion_act")
-        
         self.quit_act = QAction(scriptEditor)
         self.quit_act.setObjectName("quit_act")
-        
         self.tabToSpaces_act = QAction(scriptEditor)
         self.tabToSpaces_act.setObjectName("tabToSpaces_act")
         self.spacesToTabs_act = QAction(scriptEditor)
@@ -149,6 +149,8 @@ class Ui_scriptEditor(object):
         self.help_menu.addAction(self.donate_act)
         self.help_menu.addSeparator()
         self.help_menu.addAction(self.printHelp_act)
+        self.help_menu.addSeparator()
+        self.help_menu.addAction(self.quick_help_act)
         self.help_menu.addSeparator()
         self.help_menu.addAction(self.about_act)
         self.tools_menu.addAction(self.undo_act)
@@ -208,6 +210,7 @@ class Ui_scriptEditor(object):
         self.dir_act.setText(QApplication.translate("scriptEditor", "dir()", None))
         self.help_act.setText(QApplication.translate("scriptEditor", "help()", None))
         self.type_act.setText(QApplication.translate("scriptEditor", "type()", None))
+        self.quick_help_act.setText(QApplication.translate("scriptEditor", "Quick Help", None))
         self.save_act.setText(QApplication.translate("scriptEditor", "Save Script", None))
         self.load_act.setText(QApplication.translate("scriptEditor", "Load Script", None))
         self.exit_act.setText(QApplication.translate("scriptEditor", "Exit", None))
@@ -237,4 +240,3 @@ class Ui_scriptEditor(object):
         self.redo_act.setText(QApplication.translate("scriptEditor", "Redo", None))
         self.printHelp_act.setText(QApplication.translate("scriptEditor", "Print Help", None))
         self.comment_cat.setText(QApplication.translate("scriptEditor", "Comment", None))
-
