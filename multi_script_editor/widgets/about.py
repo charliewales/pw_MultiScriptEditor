@@ -1,12 +1,8 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import icons
-import about_UIs
+from widgets import about_UIs
 import os
 
 class aboutClass(QDialog, about_UIs.Ui_Dialog):
@@ -30,6 +26,6 @@ class aboutClass(QDialog, about_UIs.Ui_Dialog):
 text = '''Paul Winex 2018
 Any question or bug report: paulwinex@gmail.com
 
-Carlos Rico Adega 2023, version 3
+Carlos Rico Adega 2023 (v4.0.0, Python 2&3)
 Any question or bug report: carlos.rico.3d@gmail.com
 '''

@@ -1,18 +1,14 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-import shortcuts_UIs
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
+from widgets import shortcuts_UIs
 import os
 
 class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
     def __init__(self, parent):
         super(shortcutsClass, self).__init__(parent)
         self.setupUi(self)
-        self.table.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setColumnCount(2)
         self.table.setHorizontalHeaderLabels(['Action', 'Shortcut'])
         self.read()
@@ -28,7 +24,7 @@ class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
                 item = QTableWidgetItem(description)
                 self.table.setItem(i, 0, item)
                 item.setFlags(Qt.ItemIsEnabled)
-                item = QTableWidgetItem(shortcut)
+                item = QTableWidgetItem(shortcut.strip())
                 item.setFlags(Qt.ItemIsEnabled)
                 self.table.setItem(i, 1, item)
         else:

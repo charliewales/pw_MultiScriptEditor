@@ -1,14 +1,9 @@
 import os, sys, re
-try:
-    from PySide.QtGui import *
-    from PySide.QtCore import *
-except:
-    from PySide2.QtGui import *
-    from PySide2.QtCore import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 
 from multi_script_editor import scriptEditor
-reload(scriptEditor)
 import MaxPlus
 q3dsmax = QApplication.instance()
 

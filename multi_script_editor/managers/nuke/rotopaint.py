@@ -1,4 +1,4 @@
-from main import Knob
+from .main import Knob
 
 
 class AnimAttributes(object):

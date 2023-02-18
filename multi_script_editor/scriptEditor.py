@@ -2,36 +2,23 @@ import traceback
 import sys
 import webbrowser
 import os
-
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-
-from widgets import scriptEditor_UIs as ui, tabWidget, outputWidget, about, shortcuts
-from widgets.pythonSyntax import design
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import sessionManager
 import settingsManager
-from widgets import themeEditor, findWidget
 import managers
-
-
-if managers._s == 'w':
-    import ctypes
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('paulwinex.multiscripteditor.2')
-import icons_rcs
+from widgets import scriptEditor_UIs as ui, tabWidget, outputWidget, about, shortcuts
+from widgets.pythonSyntax import design
+from widgets import themeEditor, findWidget
 from icons import *
-
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
+        super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.8 - Python {0}'.format(py_ver)
+        self.ver = '4.0.0 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -43,10 +30,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
             m.setWindowTitle('MSE {0}'.format(self.ver))
-
         #variables
         self.s = settingsManager.scriptEditorClass()
-        # self.namespace = {}
         self.namespace = __import__('__main__').__dict__
         self.dial = None
 
@@ -111,13 +96,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
-        
+
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
         self.out_wordWrap_act.setCheckable(True)
-        
+
         self.out_wordWrap_act.setShortcutContext(Qt.WindowShortcut)
-        
+
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
         self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
@@ -126,6 +111,27 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut(QKeySequence( Qt.ALT+Qt.Key_Q))
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
+
+        from functools import partial
+        dir_f = partial(self.function_cmd, 'dir')
+        self.dir_act.triggered.connect(dir_f)
+        self.dir_act.setShortcut('Alt+D')
+        self.dir_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+d"), self, dir_f)
+
+        from functools import partial
+        help_f = partial(self.function_cmd, 'help')
+        self.help_act.triggered.connect(help_f)
+        self.help_act.setShortcut('Alt+H')
+        self.help_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+h"), self, help_f)
+        
+        from functools import partial
+        type_f = partial(self.function_cmd, 'type')
+        self.type_act.triggered.connect(type_f)
+        self.type_act.setShortcut('Alt+T')
+        self.type_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+t"), self, type_f)
 
         self.fillThemeMenu()
 
@@ -279,6 +285,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if text:
             self.executeCommand(text)
 
+    def function_cmd(self, function):
+        i = self.tab.currentIndex()
+        text = self.tab.widget(i).edit.function_cmd(function)
+        if text:
+            self.executeCommand(text)
+
     def updateNamespace(self, namespace):
         self.namespace.update(namespace)
 
@@ -310,7 +322,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if result != None:
                         self.out.showMessage(repr(result))
                 except SyntaxError:
-                    exec command in self.namespace
+                    exec(command, self.namespace)
             except SystemExit:
                 self.close()
             except:
@@ -416,7 +428,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def moveEvent(self, event):
         self.adjustColmpeters()
-        QMainWindow.moveEvent(self, event)
         super(scriptEditorClass, self).moveEvent(event)
 
     def adjustColmpeters(self):
@@ -427,8 +438,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def resizeEvent(self, event):
         self.adjustColmpeters()
-        QMainWindow.resizeEvent(self, event)
         super(scriptEditorClass, self).resizeEvent(event)
+        # QMainWindow.resizeEvent(self, event)
 
     def openLink(self, name):
         from style.links import links
@@ -458,12 +469,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         elif os.name =='os2':
             os.system('open "%s"' % path)
 
+
 try:
     QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
 except:
     pass
-
-
 if __name__ == '__main__':
     app = QApplication([])
     w = scriptEditorClass()

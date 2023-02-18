@@ -7,13 +7,10 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
+
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 
 class Ui_scriptEditor(object):
     def setupUi(self, scriptEditor):
@@ -64,8 +61,8 @@ class Ui_scriptEditor(object):
         self.options_menu.setTearOffEnabled(True)
         self.options_menu.setObjectName("options_menu")
         self.theme_menu = QMenu(self.options_menu)
-        self.theme_menu.setTearOffEnabled(True)
         self.theme_menu.setObjectName("theme_menu")
+        self.theme_menu.setTearOffEnabled(True)
         self.run_menu = QMenu(self.menubar)
         self.run_menu.setTearOffEnabled(True)
         self.run_menu.setObjectName("run_menu")
@@ -75,6 +72,12 @@ class Ui_scriptEditor(object):
         scriptEditor.addToolBar(Qt.TopToolBarArea, self.toolBar)
         self.clearHistory_act = QAction(scriptEditor)
         self.clearHistory_act.setObjectName("clearHistory_act")
+        self.dir_act = QAction(scriptEditor)
+        self.dir_act.setObjectName("dir_act")
+        self.help_act = QAction(scriptEditor)
+        self.help_act.setObjectName("help_act")
+        self.type_act = QAction(scriptEditor)
+        self.type_act.setObjectName("type_act")
         self.save_act = QAction(scriptEditor)
         self.save_act.setObjectName("save_act")
         self.load_act = QAction(scriptEditor)
@@ -172,6 +175,10 @@ class Ui_scriptEditor(object):
         self.options_menu.addAction(self.settingsFile_act)
         self.run_menu.addAction(self.clearHistory_act)
         self.run_menu.addSeparator()
+        self.run_menu.addAction(self.dir_act)
+        self.run_menu.addAction(self.help_act)
+        self.run_menu.addAction(self.type_act)
+        self.run_menu.addSeparator()
         self.run_menu.addAction(self.execAll_act)
         self.run_menu.addAction(self.execLine_act)
         self.run_menu.addAction(self.execSel_act)
@@ -197,7 +204,10 @@ class Ui_scriptEditor(object):
         self.theme_menu.setTitle(QApplication.translate("scriptEditor", "Theme", None))
         self.run_menu.setTitle(QApplication.translate("scriptEditor", "Run", None))
         self.toolBar.setWindowTitle(QApplication.translate("scriptEditor", "toolBar", None))
-        self.clearHistory_act.setText(QApplication.translate("scriptEditor", " Clear Output", None))
+        self.clearHistory_act.setText(QApplication.translate("scriptEditor", "Clear Output", None))
+        self.dir_act.setText(QApplication.translate("scriptEditor", "dir()", None))
+        self.help_act.setText(QApplication.translate("scriptEditor", "help()", None))
+        self.type_act.setText(QApplication.translate("scriptEditor", "type()", None))
         self.save_act.setText(QApplication.translate("scriptEditor", "Save Script", None))
         self.load_act.setText(QApplication.translate("scriptEditor", "Load Script", None))
         self.exit_act.setText(QApplication.translate("scriptEditor", "Exit", None))
@@ -214,9 +224,9 @@ class Ui_scriptEditor(object):
         self.duplicateLine_act.setText(QApplication.translate("scriptEditor", "Duplicate Line", None))
         self.about_act.setText(QApplication.translate("scriptEditor", "About", None))
         self.quit_act.setText(QApplication.translate("scriptEditor", "Quit", None))
-        self.execAll_act.setText(QApplication.translate("scriptEditor", " Execute All", None))
-        self.execLine_act.setText(QApplication.translate("scriptEditor", " Execute Line", None))
-        self.execSel_act.setText(QApplication.translate("scriptEditor", " Execute Selected", None))
+        self.execAll_act.setText(QApplication.translate("scriptEditor", "Execute All", None))
+        self.execLine_act.setText(QApplication.translate("scriptEditor", "Execute Line", None))
+        self.execSel_act.setText(QApplication.translate("scriptEditor", "Execute Selected", None))
         self.wordWrap_act.setText(QApplication.translate("scriptEditor", "Word Wrap", None))
         self.out_wordWrap_act.setText(QApplication.translate("scriptEditor", "Word Wrap (Output)", None))
         self.copy_act.setText(QApplication.translate("scriptEditor", "Copy", None))

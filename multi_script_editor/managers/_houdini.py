@@ -2,7 +2,6 @@ import os, sys, re
 main = __import__('__main__')
 hou = main.__dict__['hou']
 import hqt
-reload (hqt)
 from managers.completeWidget import contextCompleterClass
 
 path = os.path.join(os.path.dirname(__file__), 'houdini')
@@ -11,7 +10,7 @@ ns = main.__dict__
 for mod in [os.path.splitext(x)[0] for x in os.listdir(path)]:
     if not mod in ns:
         try:
-            exec 'import ' + mod in ns
+            exec('import {0}'.format(mod), ns)
         except:
             pass
 
@@ -19,7 +18,6 @@ if not path in sys.path:
     sys.path.insert(0, path)
 
 from multi_script_editor import scriptEditor
-reload(scriptEditor)
 
 
 def show(*args, **kwargs):
@@ -39,7 +37,6 @@ def get_widget():
 # if not path in sys.path:
 #     sys.path.append(path)
 # import multi_script_editor
-# reload(multi_script_editor)
 # multi_script_editor.showHoudini(ontop=1)
 
 # H14
@@ -49,7 +46,6 @@ def get_widget():
 # if not path in sys.path:
 #     sys.path.append(path)
 # import multi_script_editor
-# reload(multi_script_editor)
 # multi_script_editor.showHoudini(name='Multi Script Editor',replacePyPanel=1, hideTitleMenu=0)
 
 

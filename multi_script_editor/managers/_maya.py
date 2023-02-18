@@ -1,22 +1,12 @@
-_pyside_ver = 0
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    from shiboken import wrapInstance as wrp
-    _pyside_ver = 1
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-    _pyside_ver = 2
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import maya.OpenMayaUI as omui
-
 import os, sys, re
 from managers.completeWidget import contextCompleterClass
-
 main = __import__('__main__')
 ns = main.__dict__
-exec 'import pymel.core as pm' in ns
+exec('import pymel.core as pm', ns)
 pm = main.__dict__['pm']
 
 # jedi completion path
@@ -26,23 +16,17 @@ if compPath in sys.path:
 sys.path.insert(0, compPath)
 
 def getMayaWindow():
-    if _pyside_ver == 1:
-        ptr = omui.MQtUtil.mainWindow()
-        if ptr is not None:
-            return wrp(long(ptr), QMainWindow)
-    elif _pyside_ver == 2:
-        from pymel.core import ui
-        return ui.Window('MayaWindow').asQtObject()
+    from pymel.core import ui
+    return ui.Window('MayaWindow').asQtObject()
 
 def show(dock=False):
     if dock:
-        showDickControl()
+        showDockControl()
     else:
         showWindow()
 
 def showWindow():
     from multi_script_editor import scriptEditor
-    reload(scriptEditor)
 
     editor = scriptEditor.scriptEditorClass(parent=getMayaWindow())
     editor.show()
@@ -54,11 +38,10 @@ def clearDoc():
     if pm.dockControl(dockName, q=1, ex=1):
         pm.deleteUI(dockName)
 
-def showDickControl():
+def showDockControl():
     if pm.window(name, q=1, ex=1):
         pm.deleteUI(name)
     from multi_script_editor import scriptEditor
-    reload(scriptEditor)
     editor = scriptEditor.scriptEditorClass(parent=getMayaWindow())
     clearDoc()
     pm.dockControl(dockName, area='left',
@@ -223,7 +206,7 @@ class mayaIconsClass(QListWidget):
         return result
 
     def print_name(self, item):
-        print item.data(32)
+        print(item.data(32))
 
 class saveToShelfClass(QDialog):
     def __init__(self, parent):

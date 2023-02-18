@@ -1,20 +1,13 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import re
 import jedi
-from pythonSyntax import syntaxHighLighter
-reload(syntaxHighLighter)
-import completeWidget
-reload(completeWidget)
+from widgets.pythonSyntax import syntaxHighLighter
+from widgets import completeWidget
 import settingsManager
 import managers
-reload(managers)
-from pythonSyntax import design
+from widgets.pythonSyntax import design
 # import inspect
 # from jedi import settings
 # settings.case_insensitive_completion = False
@@ -22,9 +15,10 @@ import re
 addEndBracket = True
 
 indentLen = 4
-minimumFontSize = 12
+minimumFontSize = 10
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
 font_name = 'Courier'
+# font_name = 'Lucida Console'
 
 
 class inputClass(QTextEdit):
@@ -42,26 +36,20 @@ class inputClass(QTextEdit):
         self.p = parent
         self.desk = desk
         self.setLineWrapMode(QTextEdit.NoWrap)
-        # self.setLineWrapMode(QTextEdit.WidgetWidth)
-        # self.setWordWrapMode(QTextOption.NoWrap)
-        font = QFont("Courier")
+        if managers.context == 'hou':
+            self.setCursorWidth(2)
+        font = QFont(font_name)
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
-        self.setFont(font)
-        self.setFont(font)
         self.document().setDefaultFont(QFont(font_name, minimumFontSize, QFont.Monospace))
         metrics = QFontMetrics(self.document().defaultFont())
         self.setTabStopWidth(4 * metrics.width(' '))
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
-        # self.setContextMenuPolicy(Qt.CustomContextMenu)
-        # self.customContextMenuRequested.connect(self.openMenu)
         data = settingsManager.scriptEditorClass().readSettings()
         self.applyHightLighter(data.get('theme'))
         self.setFont(font)
-        # self.changeFontSize(False)
-
         self.changeFontSize(True)
         self.highlight_current_line()
 
@@ -372,10 +360,10 @@ class inputClass(QTextEdit):
             while not lines[ind].strip():
                 ind += 1
             if lines[ind].strip()[0] == '#': # remove comment
-                result = '\n'.join([x.replace('# ','',1) for x in lines])
+                result = '\n'.join([x.replace('#','',1) for x in lines])
                 ofs = -1
             else:   # add comment
-                result = '\n'.join(['# '+x for x in lines ])
+                result = '\n'.join(['#'+x for x in lines ])
                 ofs = 1
         return result, ofs
 
@@ -593,8 +581,43 @@ class inputClass(QTextEdit):
         #     if event.button() == Qt.LeftButton:
         #         super(inputClass, self).mousePressEvent(event)
         # else:
-        QTextEdit.mousePressEvent(self,event)
+        super(inputClass, self).mousePressEvent(event)
+        # QTextEdit.mousePressEvent(self,event)
         self.highlight_current_line()
+
+    def function_cmd(self, function):
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.WordUnderCursor)
+        self.setTextCursor(cursor)
+        selectedText = cursor.selectedText()
+        cmd = '{0}({1})'.format(function, selectedText)
+        return cmd
+    
+    def dir_cmd(self):
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.WordUnderCursor)
+        self.setTextCursor(cursor)
+        selectedText = cursor.selectedText()
+        cmd = 'dir({})'.format(selectedText)
+        return cmd
+    
+    def help_cmd(self):
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.WordUnderCursor)
+        self.setTextCursor(cursor)
+        selectedText = cursor.selectedText()
+        cmd = 'help({})'.format(selectedText)
+        return cmd
+
+    def get_current_word(self):
+        cursor = self.textCursor()
+        cursor.select(QTextCursor.WordUnderCursor)
+        self.setTextCursor(cursor)
+        # self.executeSignal.emit()
+        selectedText = cursor.selectedText()
+        cmd = 'dir({})'.format(selectedText)
+        self.parent().parent().parent().executeCommand(cmd)
+        # return cursor.selectedText()
 
     def selectWord(self, pattern, number, replace=None):
         text = self.toPlainText()

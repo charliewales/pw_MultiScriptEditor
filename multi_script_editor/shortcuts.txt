@@ -4,14 +4,18 @@ Execute Selected                            >   CTRL + ENTER
 Indent Selection                            >   TAB
 Unindent Selection                          >   SHIFT + TAB
 Activate Completer                          >   UP or DOWN
-Deactivate Completer                        >   BACKSPACE or ane char
+Deactivate Completer                        >   BACKSPACE or one char
 Hide Completer                              >   ESC
 Autocomplete code                           >   ENTER (in Completer)
 Autocomplete first                          >   ENTER or TAB in Editor
 Font Size                                   >   CTRL + MouseWheel
 Scroll Code Left-Right                      >   ALT + MouseWheel
+Run dir() on current word                   >   ALT + D
+Run help() on current word                  >   ALT + H
+Run type() on current word                  >   ALT + T
 Comment/Uncomment line or selected lines    >   ALT + Q
 Toggle Word Wrap                            >   ALT + W
+Toggle Output Word Wrap                     >   CTRL + ALT + W
 Duplicate line or selected text             >   CTRL + Shit + D
 Delete line                                 >   CTRL + D
 New Tab                                     >   CTRL + T

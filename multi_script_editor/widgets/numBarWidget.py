@@ -1,10 +1,6 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import managers
 
 class lineNumberBarClass(QWidget):
@@ -23,10 +19,7 @@ class lineNumberBarClass(QWidget):
         Also, adjusts the width of the number bar if necessary.
         '''
         # The + 4 is used to compensate for the current line being bold.
-        if managers.context == 'hou':
-            fontSize = self.edit.fs
-        else:
-            fontSize = self.edit.font().pointSize()
+        fontSize = self.edit.font().pointSize()
         width = ((self.fontMetrics().width(str(self.highest_line)) + 7))*(fontSize/13.0)
         if self.width() != width and width > 10:
             self.setFixedWidth(width)
@@ -49,17 +42,10 @@ class lineNumberBarClass(QWidget):
         line_count = 0
         # Iterate over all text blocks in the document.
         block = self.edit.document().begin()
-        if managers.context == 'hou':
-            fontSize = self.edit.fs
-            font = QFont('monospace', fontSize*0.7)
-            offset = (font_metrics.ascent() + font_metrics.descent())/2
-        else:
-            # fontSize = self.edit.font().pointSize()
-            fontSize = self.edit.font().pointSize()*1.5
-            font = painter.font()
-            font.setPixelSize(fontSize)
-            # offset = font_metrics.ascent() + font_metrics.descent()
-            offset = font_metrics.ascent() + font_metrics.descent()*0.7
+        fontSize = self.edit.font().pointSize()*1.5
+        font = painter.font()
+        font.setPixelSize(fontSize)
+        offset = font_metrics.ascent() + font_metrics.descent()*0.7
         color = painter.pen().color()
         painter.setFont(font)
         align = Qt.AlignRight

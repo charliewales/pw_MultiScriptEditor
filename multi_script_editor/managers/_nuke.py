@@ -2,28 +2,23 @@ import os, sys, re
 # import nuke
 main = __import__('__main__')
 ns = main.__dict__
-exec 'import nuke' in ns
-exec 'import nukescripts' in ns
+exec('import nuke', ns)
+exec('import nukescripts', ns)
 nuke = ns['nuke']
 import nukescripts
 from managers.nuke import nodes
 nuke_nodes = dir(nodes)
 from managers.completeWidget import contextCompleterClass
 
-try:
-    from PySide.QtGui import *
-    from PySide.QtCore import *
-except ImportError:
-    from PySide2.QtGui import *
-    from PySide2.QtCore import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 
 p = os.path.dirname(__file__).replace('\\','/')
 if not p in sys.path:
     sys.path.insert(0, p)
 
 from multi_script_editor import scriptEditor
-reload(scriptEditor)
 
 # QT
 qApp = QApplication.instance()

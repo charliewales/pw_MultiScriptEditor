@@ -1,19 +1,13 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    qt = 1
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-    qt = 2
-import themeEditor_UIs as ui
-import settingsManager
 import os
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
+from widgets import themeEditor_UIs as ui
+import settingsManager
 from .pythonSyntax import design
 from .pythonSyntax import syntaxHighLighter
 from . import inputWidget
-import icons_rcs
+# import icons_rcs
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):
@@ -200,8 +194,6 @@ print(f.__doc__)
 '''
 
 
-
-
 if __name__ == '__main__':
     app = QApplication([])
     w = themeEditorClass()
@@ -210,5 +202,3 @@ if __name__ == '__main__':
     if os.path.exists(qss):
         w.setStyleSheet(open(qss).read())
     app.exec_()
-
-

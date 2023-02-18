@@ -1,14 +1,8 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import re
-import design
-import keywords
-
+from widgets.pythonSyntax import design, keywords
 
 class PythonHighlighterClass (QSyntaxHighlighter):
     def __init__(self, document, colors=None):

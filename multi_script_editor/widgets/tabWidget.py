@@ -1,16 +1,8 @@
-try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
-    qt = 1
-except:
-    from PySide2.QtCore import *
-    from PySide2.QtGui import *
-    from PySide2.QtWidgets import *
-    qt = 2
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtWidgets import * 
+from vendor.Qt.QtGui import * 
 import os
-import numBarWidget, inputWidget
-reload(inputWidget)
-reload(numBarWidget)
+from widgets import numBarWidget, inputWidget
 from managers import context
 
 

@@ -7,7 +7,6 @@
 
 def createInterface():
     from multi_script_editor import scriptEditor
-    reload(scriptEditor)
     w = scriptEditor.scriptEditorClass()
     w.setStyleSheet('')
     import hqt
