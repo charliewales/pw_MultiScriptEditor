@@ -1,4 +1,4 @@
-# Multi Script Editor v2.0.4
+# Multi Script Editor v4.1.0
 
 ![alt tag](http://www.paulwinex.ru/wp-content/uploads/2015/04/mse_banner.jpg)
 
