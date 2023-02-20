@@ -10,10 +10,11 @@ Tested on:
     Rocky Linux 8.6
     Windows 10
 
-    Houdini 19.5.368 - Windows 10
-    Maya 2023.3 - Windows 10
+    Houdini 19.5.368 - Windows 10 - Rocky Linux 8.6
+    Maya 2023.3 - Windows 10 - Rocky Linux 8.6
     Maya 2022.4 - Windows 10
-    Nuke 13.1v2 - Windows 10
+    Nuke 13.1v2 - Windows 10 - Rocky Linux 8.6
     Standalone
-    	Python 2.7.15
-    	Python 3.10.0
+    	Python 2.7.15 - Windows 10
+    	Python 3.6.8  - Rocky Linux 8.6
+    	Python 3.10.0 - Windows 10
