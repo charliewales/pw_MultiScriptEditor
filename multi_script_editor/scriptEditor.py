@@ -4,9 +4,9 @@ import webbrowser
 import os
 from functools import partial
 from vendor.help import get_help 
-from vendor.Qt import QtCore 
-from vendor.Qt import QtWidgets 
-from vendor.Qt import QtGui 
+from vendor.Qt.QtCore import * 
+from vendor.Qt.QtGui import * 
+from vendor.Qt.QtWidgets import * 
 import sessionManager
 import settingsManager
 import managers
@@ -15,12 +15,12 @@ from widgets.pythonSyntax import design
 from widgets import themeEditor, findWidget
 from icons import *
 
-class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
+class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '4.1.0 - Python {0}'.format(py_ver)
+        self.ver = '4.1.1 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -43,11 +43,11 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
                               'self_help': self.mse_help,
                               'self_context':managers.context})
         self.session = sessionManager.sessionManagerClass()
-        self.execAll_act.setIcon(QtGui.QIcon(icons['all']))
-        self.execLine_act.setIcon(QtGui.QIcon(icons['line']))
-        self.execSel_act.setIcon(QtGui.QIcon(icons['sel']))
-        self.clearHistory_act.setIcon(QtGui.QIcon(icons['clear']))
-        self.toolBar.setIconSize(QtCore.QSize(32,32))
+        self.execAll_act.setIcon(QIcon(icons['all']))
+        self.execLine_act.setIcon(QIcon(icons['line']))
+        self.execSel_act.setIcon(QIcon(icons['sel']))
+        self.clearHistory_act.setIcon(QIcon(icons['clear']))
+        self.toolBar.setIconSize(QSize(32,32))
         self.menubar.setNativeMenuBar(False)
         # connects
 
@@ -62,9 +62,9 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
         self.quit_act.triggered.connect(self.close)
         self.quit_act.setShortcut("Ctrl+Q")
         self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
-        self.duplicateLine_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
         self.deleteLine_act.setShortcut('Ctrl+D')
-        self.deleteLine_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
@@ -74,69 +74,69 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
         self.shortcuts_act.triggered.connect(self.shortcuts)
         self.printHelp_act.triggered.connect(self.mse_help)
         # editor
-        # c = QtCore.Qt.WindowShortcut
+        # c = Qt.WindowShortcut
         self.undo_act.triggered.connect(self.tab.undo)
         self.undo_act.setShortcut('Ctrl+Z')
-        self.undo_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.undo_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.redo_act.triggered.connect(self.tab.redo)
         self.redo_act.setShortcut('Ctrl+Y')
-        self.redo_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.redo_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.copy_act.triggered.connect(self.tab.copy)
         self.copy_act.setShortcut('Ctrl+C')
-        self.copy_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.copy_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.cut_act.triggered.connect(self.tab.cut)
         self.cut_act.setShortcut('Ctrl+X')
-        self.cut_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.cut_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.paste_act.triggered.connect(self.tab.paste)
         self.paste_act.setShortcut('Ctrl+V')
-        self.paste_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.paste_act.setShortcutContext(Qt.WidgetShortcut)
 
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
-        self.find_act.setShortcutContext(QtCore.Qt.WindowShortcut)
+        self.find_act.setShortcutContext(Qt.WindowShortcut)
 
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
         self.out_wordWrap_act.setCheckable(True)
 
-        self.out_wordWrap_act.setShortcutContext(QtCore.Qt.WindowShortcut)
+        self.out_wordWrap_act.setShortcutContext(Qt.WindowShortcut)
 
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
-        self.wordWrap_act.setShortcutContext(QtCore.Qt.WindowShortcut)
+        self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
         self.wordWrap_act.setCheckable(True)
 
         self.comment_cat.triggered.connect(self.tab.comment)
-        self.comment_cat.setShortcut(QtGui.QKeySequence( QtCore.Qt.ALT+QtCore.Qt.Key_Q))
-        self.comment_cat.setShortcutContext(QtCore.Qt.WidgetShortcut)
+        self.comment_cat.setShortcut(QKeySequence( Qt.ALT+Qt.Key_Q))
+        self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
 
         dir_f = partial(self.function_cmd, 'dir')
         self.dir_act.triggered.connect(dir_f)
         self.dir_act.setShortcut('Alt+D')
-        self.dir_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
-        QtWidgets.QShortcut(QtGui.QKeySequence("Alt+d"), self, dir_f)
+        self.dir_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+d"), self, dir_f)
 
         help_f = partial(self.function_cmd, 'help')
         self.help_act.triggered.connect(help_f)
         self.help_act.setShortcut('Alt+H')
-        self.help_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
-        QtWidgets.QShortcut(QtGui.QKeySequence("Alt+h"), self, help_f)
+        self.help_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+h"), self, help_f)
 
         type_f = partial(self.function_cmd, 'type')
         self.type_act.triggered.connect(type_f)
         self.type_act.setShortcut('Alt+T')
-        self.type_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
-        QtWidgets.QShortcut(QtGui.QKeySequence("Alt+t"), self, type_f)
+        self.type_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+t"), self, type_f)
 
         self.quick_help_act.triggered.connect(self.get_word_help)
         self.quick_help_act.setShortcut('Alt+Q')
-        self.quick_help_act.setShortcutContext(QtCore.Qt.WidgetShortcut)
-        QtWidgets.QShortcut(QtGui.QKeySequence("F1"), self, self.get_word_help)
-        QtWidgets.QShortcut(QtGui.QKeySequence("Alt+Q"), self, self.get_word_help)
+        self.quick_help_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("F1"), self, self.get_word_help)
+        QShortcut(QKeySequence("Alt+Q"), self, self.get_word_help)
 
         self.fillThemeMenu()
 
@@ -145,19 +145,19 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
             import nuke
             if nuke.NUKE_VERSION_MAJOR>8:
                 self.execSel_act.setShortcut('Ctrl+Return')
-                self.execSel_act.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+                self.execSel_act.setShortcutContext(Qt.ApplicationShortcut)
 
         self.execSel_act.triggered.connect(self.executeSelected)
         self.execSel_act.setShortcut('Ctrl+Return')
-        self.execSel_act.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.execSel_act.setShortcutContext(Qt.WidgetWithChildrenShortcut)
 
         self.execAll_act.setShortcut('Ctrl+Shift+Return')
         self.execAll_act.triggered.connect(self.executeAll)
-        self.execAll_act.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+        self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
 
         self.execLine_act.setShortcut('Ctrl+Alt+Return')
         self.execLine_act.triggered.connect(self.executeLine)
-        self.execLine_act.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+        self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
         self.clearHistory_act.setShortcut('Ctrl+Shift+C')
@@ -213,13 +213,13 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
 
     def fillThemeMenu(self):
         self.theme_menu.clear()
-        self.theme_menu.addAction(QtWidgets.QAction('Edit...', self, triggered=self.openThemeEditor))
+        self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
         self.theme_menu.addSeparator()
-        self.theme_menu.addAction(QtWidgets.QAction('default', self, triggered=lambda: self.applyTheme('default')))
+        self.theme_menu.addAction(QAction('default', self, triggered=lambda: self.applyTheme('default')))
         data = self.s.readSettings()
         if data.get('colors'):
             for t in data.get('colors').keys():
-                self.theme_menu.addAction(QtWidgets.QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
+                self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
 
     def applyTheme(self, name):
         for i in range(self.tab.count()):
@@ -240,7 +240,7 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
             qss = os.path.join(os.path.dirname(__file__),'style', 'style.css')
             if os.path.exists(qss):
                 self.setStyleSheet(open(qss).read())
-                self.setWindowIcon(QtGui.QIcon(icons['pw']))
+                self.setWindowIcon(QIcon(icons['pw']))
 
     def loadSession(self):
         sessions = self.session.readSession()
@@ -362,7 +362,7 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getOpenFileName(self, 'Open script', d, "PY Files (*.py)")
+        path = tQFileDialog.getOpenFileName(self, 'Open script', d, "PY Files (*.py)")
         if path[0]:
             if os.path.exists(path[0]):
                 text = open(path[0]).read()
@@ -384,7 +384,7 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
         if data.get('center'):
             x, y = data.get('center')
             geo = self.geometry()
-            geo.moveCenter(QtCore.QPoint(x,y))
+            geo.moveCenter(QPoint(x,y))
             self.setGeometry(geo)
         if data.get('splitter'):
             sizes = data.get('splitter')
@@ -449,7 +449,6 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
     def resizeEvent(self, event):
         self.adjustColmpeters()
         super(scriptEditorClass, self).resizeEvent(event)
-        # QMainWindow.resizeEvent(self, event)
 
     def openLink(self, name):
         from style.links import links
@@ -481,13 +480,13 @@ class scriptEditorClass(QtWidgets.QMainWindow, ui.Ui_scriptEditor):
 
 
 try:
-    QtCore.QTextCodec.setCodecForCStrings(QtCore.QTextCodec.codecForName("UTF-8"))
+    QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
 except:
     pass
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
+    app = QApplication([])
     w = scriptEditorClass()
     w.show()
     app.exec_()
