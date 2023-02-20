@@ -119,7 +119,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.wordWrap_act.setCheckable(True)
 
         self.comment_cat.triggered.connect(self.tab.comment)
-        self.comment_cat.setShortcut(QKeySequence(Qt.ALT + Qt.Key_Q))
+        self.comment_cat.setShortcut('Alt+C')
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
 
         dir_f = partial(self.function_cmd, 'dir')
