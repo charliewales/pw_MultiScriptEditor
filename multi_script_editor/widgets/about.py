@@ -26,6 +26,6 @@ class aboutClass(QDialog, about_UIs.Ui_Dialog):
 text = '''Paul Winex 2018
 Any question or bug report: paulwinex@gmail.com
 
-Carlos Rico Adega 2023 (v4, Python 2&3)
+Carlos Rico Adega 2023 (v4.1.3, Python 2&3)
 Any question or bug report: carlos.rico.3d@gmail.com
 '''

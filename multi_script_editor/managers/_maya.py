@@ -10,7 +10,7 @@ exec('import pymel.core as pm', ns)
 pm = main.__dict__['pm']
 
 # jedi completion path
-current_path = os.dirname(__file__)
+current_path = os.path.dirname(__file__)
 compPath = os.path.join(current_path,'maya_completion').replace('\\','/')
 if compPath in sys.path:
     sys.path.remove(compPath)
