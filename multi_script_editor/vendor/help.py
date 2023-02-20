@@ -8,6 +8,17 @@ else:
 import re
 
 
+QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets'
+QtGui_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtGui'
+QtCore_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtCore'
+
+try:
+    import PySide2
+except:
+    QtWidgets_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
+    QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
+    QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
+
 def url_exists(url):
     found = 0
     try:
@@ -20,15 +31,6 @@ def url_exists(url):
 
 
 def get_help(text):
-    QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets'
-    QtGui_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtGui'
-    QtCore_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtCore'
-
-    if sys.version_info.major < 3:
-        QtWidgets_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
-        QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
-        QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
-
     if text == 'QtWidgets':
         webbrowser.open('{}/index.html#module-PySide2.QtWidgets'.format(QtWidgets_url))
     elif text == 'QtGui':
