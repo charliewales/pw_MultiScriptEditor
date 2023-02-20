@@ -20,7 +20,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '4.1.1 - Python {0}'.format(py_ver)
+        self.ver = '4.1.2 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -70,6 +70,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
         self.openManual_act.triggered.connect(lambda :self.openLink('manual'))
+
+        self.houdini_hou_act.triggered.connect(lambda :self.openLink('houdini_hou'))
+        self.maya_cmds_act.triggered.connect(lambda :self.openLink('maya_cmds'))
+        self.nuke_dev_guide_act.triggered.connect(lambda :self.openLink('nuke_dev_guide'))
+
+        self.qt_modules_act.triggered.connect(lambda :self.openLink('qt_docs'))
+        self.qt_docs_act.triggered.connect(lambda :self.openLink('qt_modules'))
+
         self.about_act.triggered.connect(self.about)
         self.shortcuts_act.triggered.connect(self.shortcuts)
         self.printHelp_act.triggered.connect(self.mse_help)
@@ -111,7 +119,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.wordWrap_act.setCheckable(True)
 
         self.comment_cat.triggered.connect(self.tab.comment)
-        self.comment_cat.setShortcut(QKeySequence( Qt.ALT+Qt.Key_Q))
+        self.comment_cat.setShortcut(QKeySequence(Qt.ALT + Qt.Key_Q))
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
 
         dir_f = partial(self.function_cmd, 'dir')
