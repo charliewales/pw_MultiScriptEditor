@@ -230,7 +230,7 @@ class Ui_scriptEditor(object):
         self.help_act.setText(QApplication.translate("scriptEditor", "help()", None))
         self.type_act.setText(QApplication.translate("scriptEditor", "type()", None))
         self.maya_cmds_act.setText(QApplication.translate("scriptEditor", "Maya Commands", None))
-        self.houdini_hou_act.setText(QApplication.translate("scriptEditor", "Houdin hou package", None))
+        self.houdini_hou_act.setText(QApplication.translate("scriptEditor", "Houdini hou package", None))
         self.nuke_dev_guide_act.setText(QApplication.translate("scriptEditor", "Nuke Dev Guide", None))
         self.quick_help_act.setText(QApplication.translate("scriptEditor", "Quick Help", None))
         self.qt_docs_act.setText(QApplication.translate("scriptEditor", "Qt for Python", None))
