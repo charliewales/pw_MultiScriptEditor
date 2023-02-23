@@ -20,7 +20,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '4.1.3 - Python {0}'.format(py_ver)
+        self.ver = '4.1.4 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -72,6 +72,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.openManual_act.triggered.connect(lambda :self.openLink('manual'))
 
         self.houdini_hou_act.triggered.connect(lambda :self.openLink('houdini_hou'))
+        self.houdini_envs_act.triggered.connect(lambda :self.openLink('houdini_envs'))
         self.maya_cmds_act.triggered.connect(lambda :self.openLink('maya_cmds'))
         self.nuke_dev_guide_act.triggered.connect(lambda :self.openLink('nuke_dev_guide'))
 

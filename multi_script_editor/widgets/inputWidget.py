@@ -549,10 +549,13 @@ class inputClass(QTextEdit):
 
     def function_cmd(self, function):
         cursor = self.textCursor()
-        cursor.select(QTextCursor.WordUnderCursor)
-        self.setTextCursor(cursor)
         selectedText = cursor.selectedText()
+        if not selectedText:
+            cursor.select(QTextCursor.WordUnderCursor)
+            self.setTextCursor(cursor)
+            selectedText = cursor.selectedText()
         cmd = '{0}({1})'.format(function, selectedText)
+
         return cmd
     
     def get_current_word(self):
