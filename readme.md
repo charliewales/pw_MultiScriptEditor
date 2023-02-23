@@ -1,8 +1,5 @@
 # Multi Script Editor v4.1.4
 
-![alt tag](http://www.paulwinex.ru/wp-content/uploads/2015/04/mse_banner.jpg)
-
-#### [paulwinex.com](http://paulwinex.com/portfolio/multi-script-editor/)
 
 ## [Tutorials](https://vimeo.com/channels/multiscripteditor)
 
@@ -19,9 +16,9 @@ or embedded in another application. The main purpose for integration - the abili
 
 ### Existing integration modules
 
-  - Houdini 13-17
-  - Nuke 8-10
-  - Maya 2014-2017
+  - Houdini 19
+  - Nuke 13
+  - Maya 2022-2023
   - 3DsMax 2014-2017
     
 RV Integration in [nebukadhezer branch](https://github.com/nebukadhezer/multi_script_editor)
@@ -57,12 +54,11 @@ The main pre condition - Should be used Python2.7.
 
 # How to install
 
-
-[Standalone](https://github.com/nebukadhezer/multi_script_editor)
-[Houdini install](https://github.com/nebukadhezer/multi_script_editor)
-[Maya install](https://github.com/nebukadhezer/multi_script_editor)
-[Nuke install](https://github.com/nebukadhezer/multi_script_editor)
-[3DsMax install](https://github.com/nebukadhezer/multi_script_editor)
+[Standalone](https://github.com/nebukadhezer/pw_MultiScriptEditor#standalone)
+[Houdini install](https://github.com/nebukadhezer/pw_MultiScriptEditor#houdini-13)
+[Maya install](https://github.com/nebukadhezer/pw_MultiScriptEditor#maya)
+[Nuke install](https://github.com/nebukadhezer/pw_MultiScriptEditor#nuke)
+[3DsMax install](https://github.com/nebukadhezer/pw_MultiScriptEditor#3dsmax)
 
 You can use single module installation for each case. Just extract module `multi_script_editor`
 to somewhere (no spaces and non ascii characters in path) and add this path to PYTHONPATH before start your app.
