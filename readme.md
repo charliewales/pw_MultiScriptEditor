@@ -1,5 +1,6 @@
 # Multi Script Editor v4.1.4
 
+## [Original code from Paul Winex](https://github.com/paulwinex/pw_MultiScriptEditor)
 
 ## [Tutorials](https://vimeo.com/channels/multiscripteditor)
 
