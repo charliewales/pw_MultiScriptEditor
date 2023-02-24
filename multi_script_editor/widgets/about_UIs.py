@@ -14,7 +14,7 @@ from vendor.Qt.QtGui import *
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(465, 660)
+        Dialog.resize(465, 680)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QHBoxLayout()
