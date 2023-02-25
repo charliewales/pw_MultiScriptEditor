@@ -23,6 +23,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton = QPushButton(self)
         newTabButton.setMaximumWidth(30)
         self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
+        self.setCornerWidget(parent.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setText('+')
         newTabButton.clicked.connect(self.addNewTab)
