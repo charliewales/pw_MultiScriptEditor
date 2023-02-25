@@ -49,64 +49,93 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.clearHistory_act.setIcon(QIcon(icons['clear']))
         self.toolBar.setIconSize(QSize(32,32))
         self.menubar.setNativeMenuBar(False)
-        # connects
 
-        self.save_act.triggered.connect(self.saveScript)
-        self.save_act.setShortcut("Ctrl+S")
+        # connects
         self.load_act.triggered.connect(self.loadScript)
+        self.load_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogOpenButton))
         self.load_act.setShortcut("Ctrl+O")
+        self.save_act.triggered.connect(self.saveScript)
+        self.save_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogSaveButton))
+        self.save_act.setShortcut("Ctrl+S")
+        self.saveSeccion_act.triggered.connect(lambda:self.saveSession(True))
+        self.saveSeccion_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogSaveButton))
+        self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
         self.exit_act.triggered.connect(self.close)
         self.tabToSpaces_act.triggered.connect(self.tabsToSpaces)
-        self.saveSeccion_act.triggered.connect(lambda:self.saveSession(True))
-        self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
         self.quit_act.triggered.connect(self.close)
+        self.quit_act.setShortcut("Ctrl+Q")
+        self.quit_act.setIcon(self.get_builtin_icon(QStyle.SP_BrowserStop))
         self.quit_act.setShortcut("Ctrl+Q")
         self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
         self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
+        self.duplicateLine_act.setIcon(self.get_builtin_icon(QStyle.SP_FileDialogDetailedView))
         self.deleteLine_act.setShortcut('Ctrl+D')
         self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
+        self.deleteLine_act.setIcon(self.get_builtin_icon(QStyle.SP_LineEditClearButton))
 
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
+        self.settingsFile_act.setIcon(self.get_builtin_icon(QStyle.SP_DirIcon))
+        self.theme_menu.setIcon(self.get_builtin_icon(QStyle.SP_DialogHelpButton))
+        
         self.splitter.splitterMoved.connect(self.adjustColmpeters)
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
         self.openManual_act.triggered.connect(lambda :self.openLink('manual'))
+        self.openManual_act.setIcon(QIcon(icons['github']))
 
         self.houdini_hou_act.triggered.connect(lambda :self.openLink('houdini_hou'))
+        self.houdini_hou_act.setIcon(QIcon(icons['houdini']))
         self.houdini_envs_act.triggered.connect(lambda :self.openLink('houdini_envs'))
+        self.houdini_envs_act.setIcon(QIcon(icons['houdini']))
         self.maya_cmds_act.triggered.connect(lambda :self.openLink('maya_cmds'))
+        self.maya_cmds_act.setIcon(QIcon(icons['maya']))
         self.nuke_dev_guide_act.triggered.connect(lambda :self.openLink('nuke_dev_guide'))
+        self.nuke_dev_guide_act.setIcon(QIcon(icons['nuke']))
 
         self.qt_modules_act.triggered.connect(lambda :self.openLink('qt_docs'))
+        self.qt_modules_act.setIcon(self.get_builtin_icon(QStyle.SP_TitleBarMenuButton))
         self.qt_docs_act.triggered.connect(lambda :self.openLink('qt_modules'))
+        self.qt_docs_act.setIcon(self.get_builtin_icon(QStyle.SP_TitleBarMenuButton))
 
         self.about_act.triggered.connect(self.about)
+        self.about_act.setIcon(self.get_builtin_icon(QStyle.SP_MessageBoxInformation))
+        self.help_act.setIcon(QIcon(icons['sel']))
         self.shortcuts_act.triggered.connect(self.shortcuts)
+        self.shortcuts_act.setIcon(self.get_builtin_icon(QStyle.SP_DirLinkIcon))
         self.printHelp_act.triggered.connect(self.mse_help)
+        self.printHelp_act.setIcon(self.get_builtin_icon(QStyle.SP_MessageBoxQuestion))
         # editor
         # c = Qt.WindowShortcut
         self.undo_act.triggered.connect(self.tab.undo)
         self.undo_act.setShortcut('Ctrl+Z')
         self.undo_act.setShortcutContext(Qt.WidgetShortcut)
+        self.undo_act.setIcon(self.get_builtin_icon(QStyle.SP_ArrowBack))
 
         self.redo_act.triggered.connect(self.tab.redo)
         self.redo_act.setShortcut('Ctrl+Y')
         self.redo_act.setShortcutContext(Qt.WidgetShortcut)
+        self.redo_act.setIcon(self.get_builtin_icon(QStyle.SP_ArrowForward))
 
         self.copy_act.triggered.connect(self.tab.copy)
         self.copy_act.setShortcut('Ctrl+C')
         self.copy_act.setShortcutContext(Qt.WidgetShortcut)
+        self.copy_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaSeekForward))
 
         self.cut_act.triggered.connect(self.tab.cut)
         self.cut_act.setShortcut('Ctrl+X')
         self.cut_act.setShortcutContext(Qt.WidgetShortcut)
+        self.cut_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaStop))
 
         self.paste_act.triggered.connect(self.tab.paste)
         self.paste_act.setShortcut('Ctrl+V')
         self.paste_act.setShortcutContext(Qt.WidgetShortcut)
+        self.paste_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPlay))
 
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
+        self.find_act.setIcon(self.get_builtin_icon(QStyle.SP_FileDialogContentsView))
+
+        self.tabToSpaces_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPause))
 
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
@@ -122,27 +151,32 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut('Alt+C')
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
+        self.comment_cat.setIcon(self.get_builtin_icon(QStyle.SP_DialogApplyButton))
 
         dir_f = partial(self.function_cmd, 'dir')
         self.dir_act.triggered.connect(dir_f)
         self.dir_act.setShortcut('Alt+D')
+        self.dir_act.setIcon(QIcon(icons['sel']))
         self.dir_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence("Alt+d"), self, dir_f)
 
         help_f = partial(self.function_cmd, 'help')
         self.help_act.triggered.connect(help_f)
         self.help_act.setShortcut('Alt+H')
+        self.help_act.setIcon(QIcon(icons['sel']))
         self.help_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence("Alt+h"), self, help_f)
 
         type_f = partial(self.function_cmd, 'type')
         self.type_act.triggered.connect(type_f)
         self.type_act.setShortcut('Alt+T')
+        self.type_act.setIcon(QIcon(icons['sel']))
         self.type_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence("Alt+t"), self, type_f)
 
         self.quick_help_act.triggered.connect(self.get_word_help)
         self.quick_help_act.setShortcut('Alt+Q')
+        self.quick_help_act.setIcon(QIcon(icons['help']))
         self.quick_help_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence("F1"), self, self.get_word_help)
         QShortcut(QKeySequence("Alt+Q"), self, self.get_word_help)
@@ -181,6 +215,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
+    
+    def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
+        builtin_icon = icon
+        action_icon = self.style().standardIcon(builtin_icon)
+        return action_icon
 
     def __del__(self):
         self.saveSession()

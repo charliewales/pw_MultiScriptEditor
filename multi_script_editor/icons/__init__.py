@@ -10,4 +10,8 @@ icons = dict(
     clear=os.path.join(root,'clear.png'),
     help=os.path.join(root,'help.png'),
     donate=os.path.join(root,'donate.png'),
+    maya=os.path.join(root,'maya.png'),
+    houdini=os.path.join(root,'houdini.png'),
+    nuke=os.path.join(root,'nuke.png'),
+    github=os.path.join(root,'github.png'),
 )

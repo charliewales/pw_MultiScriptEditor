@@ -14,6 +14,9 @@ if not os.path.exists(style):
 class tabWidgetClass(QTabWidget):
     def __init__(self, parent=None):
         super(tabWidgetClass, self).__init__(parent)
+        # variables
+        self.p = parent
+        self.lastSearch = [0, None]
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
@@ -23,16 +26,15 @@ class tabWidgetClass(QTabWidget):
         newTabButton = QPushButton(self)
         newTabButton.setMaximumWidth(30)
         self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
-        self.setCornerWidget(parent.toolBar, Qt.TopRightCorner)
+        self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
-        newTabButton.setText('+')
+        builtin_icon = QStyle.SP_FileDialogNewFolder
+        newTab_icon = self.style().standardIcon(builtin_icon)
+        newTabButton.setIcon(newTab_icon)
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab")
         newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop()
-        # variables
-        self.p = parent
-        self.lastSearch = [0, None]
 
         #connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
