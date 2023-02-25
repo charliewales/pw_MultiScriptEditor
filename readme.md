@@ -1,4 +1,4 @@
-# Multi Script Editor v4.1.6
+# Multi Script Editor v3.0.0
 
 ## [Original code from Paul Winex](https://github.com/paulwinex/pw_MultiScriptEditor)
 
