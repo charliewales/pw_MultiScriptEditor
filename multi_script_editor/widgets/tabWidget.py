@@ -4,6 +4,7 @@ from vendor.Qt.QtGui import *
 import os
 from widgets import numBarWidget, inputWidget
 from managers import context
+from icons import *
 
 
 style = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'style', 'completer.qss')
@@ -28,9 +29,10 @@ class tabWidgetClass(QTabWidget):
         self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
         self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
-        builtin_icon = QStyle.SP_FileDialogNewFolder
-        newTab_icon = self.style().standardIcon(builtin_icon)
-        newTabButton.setIcon(newTab_icon)
+        # builtin_icon = QStyle.SP_FileDialogNewFolder
+        # newTab_icon = self.style().standardIcon(builtin_icon)
+        # # newTabButton.setIcon(newTab_icon)
+        newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab")
         newTabButton.setShortcut('Ctrl+T')

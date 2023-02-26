@@ -66,12 +66,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.quit_act.setShortcut("Ctrl+Q")
         self.quit_act.setIcon(self.get_builtin_icon(QStyle.SP_BrowserStop))
         self.quit_act.setShortcut("Ctrl+Q")
+
         self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
         self.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
-        self.duplicateLine_act.setIcon(self.get_builtin_icon(QStyle.SP_FileDialogDetailedView))
+        self.duplicateLine_act.setIcon(QIcon(icons['duplicate_line']))
         self.deleteLine_act.setShortcut('Ctrl+D')
         self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
-        self.deleteLine_act.setIcon(self.get_builtin_icon(QStyle.SP_LineEditClearButton))
+        self.deleteLine_act.setIcon(QIcon(icons['delete_line']))
 
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.settingsFile_act.setIcon(self.get_builtin_icon(QStyle.SP_DirIcon))
@@ -108,27 +109,28 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.undo_act.triggered.connect(self.tab.undo)
         self.undo_act.setShortcut('Ctrl+Z')
         self.undo_act.setShortcutContext(Qt.WidgetShortcut)
-        self.undo_act.setIcon(self.get_builtin_icon(QStyle.SP_ArrowBack))
+        self.undo_act.setIcon(QIcon(icons['undo']))
 
         self.redo_act.triggered.connect(self.tab.redo)
         self.redo_act.setShortcut('Ctrl+Y')
         self.redo_act.setShortcutContext(Qt.WidgetShortcut)
         self.redo_act.setIcon(self.get_builtin_icon(QStyle.SP_ArrowForward))
+        self.redo_act.setIcon(QIcon(icons['redo']))
 
         self.copy_act.triggered.connect(self.tab.copy)
         self.copy_act.setShortcut('Ctrl+C')
         self.copy_act.setShortcutContext(Qt.WidgetShortcut)
-        self.copy_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaSeekForward))
+        self.copy_act.setIcon(QIcon(icons['copy']))
 
         self.cut_act.triggered.connect(self.tab.cut)
         self.cut_act.setShortcut('Ctrl+X')
         self.cut_act.setShortcutContext(Qt.WidgetShortcut)
-        self.cut_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaStop))
+        self.cut_act.setIcon(QIcon(icons['cut']))
 
         self.paste_act.triggered.connect(self.tab.paste)
         self.paste_act.setShortcut('Ctrl+V')
         self.paste_act.setShortcutContext(Qt.WidgetShortcut)
-        self.paste_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPlay))
+        self.paste_act.setIcon(QIcon(icons['paste']))
 
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
@@ -136,6 +138,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.find_act.setIcon(self.get_builtin_icon(QStyle.SP_FileDialogContentsView))
 
         self.tabToSpaces_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPause))
+        self.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
@@ -151,7 +154,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut('Alt+C')
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
-        self.comment_cat.setIcon(self.get_builtin_icon(QStyle.SP_DialogApplyButton))
+        self.comment_cat.setIcon(QIcon(icons['comment']))
 
         dir_f = partial(self.function_cmd, 'dir')
         self.dir_act.triggered.connect(dir_f)
