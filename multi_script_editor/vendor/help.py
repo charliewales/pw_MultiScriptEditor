@@ -1,11 +1,14 @@
 import webbrowser
 
 import sys
-if sys.version_info.major >= 3:
+import re
+
+PYTHON_VERSION = sys.version_info.major
+
+if PYTHON_VERSION >= 3:
     from urllib.request import urlopen
 else:
     from urllib2 import urlopen
-import re
 
 
 QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets'
@@ -93,12 +96,17 @@ def get_help(text):
             webbrowser.open(OpenMayaUI)
             return
         else:
-            python = 'https://docs.python.org/{0}/library/{1}.html'.format(sys.version_info.major, text)
-            if url_exists(python):
-                webbrowser.open(python)
-                return
-
             python_cmd_url = 'http://help.autodesk.com/cloudhelp/2023/ENU/Maya-Tech-Docs/CommandsPython/{}.html'.format(text)
             if url_exists(python_cmd_url):
                 webbrowser.open(python_cmd_url)
+                return
+
+            python_module = 'https://docs.python.org/{0}/library/{1}.html'.format(PYTHON_VERSION, text)
+            if url_exists(python_module):
+                webbrowser.open(python)
+                return
+
+            python_function = 'https://docs.python.org/{0}/library/functions.html#{1}'.format(PYTHON_VERSION, text)
+            if url_exists(python_function):
+                webbrowser.open(python_function)
                 return
