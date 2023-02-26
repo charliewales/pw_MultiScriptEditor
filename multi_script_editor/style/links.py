@@ -8,5 +8,7 @@ links = dict(
     houdini_hou='https://www.sidefx.com/docs/houdini/hom/hou/index.html',
     houdini_envs='https://www.sidefx.com/docs/houdini/ref/env.html',
     nuke_dev_guide='https://learn.foundry.com/nuke/developers/131/pythondevguide/#',
-    site='http://www.paulwinex.com/'
+    site='http://www.paulwinex.com/',
+    python2='https://docs.python.org/2/',
+    python3='https://docs.python.org/3/',
 )

@@ -29,9 +29,6 @@ class tabWidgetClass(QTabWidget):
         self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
         self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
-        # builtin_icon = QStyle.SP_FileDialogNewFolder
-        # newTab_icon = self.style().standardIcon(builtin_icon)
-        # # newTabButton.setIcon(newTab_icon)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab")
@@ -107,19 +104,12 @@ class tabWidgetClass(QTabWidget):
         if i is None:
             i = self.currentIndex()
 
-        # format current line
-        # fmt = QTextCharFormat()
-        # fmt.setFontWeight(QFont.Bold)
-        # fmt.setUnderlineColor(Qt.red)
-        # fmt.setUnderlineStyle(QTextCharFormat.SpellCheckUnderline)
-
         edit = self.widget(i).edit
         cursor = edit.textCursor()
         current_cursor_pos = cursor.position()
         cursor.select(QTextCursor.LineUnderCursor)
         edit.setTextCursor(cursor)
         text = edit.getSelection()
-        # cursor.setCharFormat(fmt)
         cursor.setPosition(current_cursor_pos)
         edit.setTextCursor(cursor)
         return text
@@ -214,13 +204,7 @@ class container(QWidget):
         self.edit.executeSignal.connect(parent.executeSelected)
         if text:
             self.edit.addText(text)
-        # if not context == 'hou':
-            # line number
-        # if context == 'hou':
-        #     import hou
-        #     if hou.applicationVersion()[0] > 14:
         hbox.addWidget(self.edit)
-                # return
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())

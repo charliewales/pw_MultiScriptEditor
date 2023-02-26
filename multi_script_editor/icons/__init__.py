@@ -25,4 +25,5 @@ icons = dict(
     undo=os.path.join(root,'undo.png'),
     redo=os.path.join(root,'redo.png'),
     tabs_to_spaces=os.path.join(root,'tabs_to_spaces.png'),
+    python=os.path.join(root,'python.png'),
 )

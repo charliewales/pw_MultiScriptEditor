@@ -3,10 +3,10 @@ import sys
 import webbrowser
 import os
 from functools import partial
-from vendor.help import get_help 
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtGui import * 
-from vendor.Qt.QtWidgets import * 
+from vendor.help import get_help
+from vendor.Qt.QtCore import *
+from vendor.Qt.QtGui import *
+from vendor.Qt.QtWidgets import *
 import sessionManager
 import settingsManager
 import managers
@@ -49,6 +49,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.clearHistory_act.setIcon(QIcon(icons['clear']))
         self.toolBar.setIconSize(QSize(32,32))
         self.menubar.setNativeMenuBar(False)
+        self.menubar.setStyleSheet("QMenu {icon-size: 20px;}")
 
         # connects
         self.load_act.triggered.connect(self.loadScript)
@@ -77,11 +78,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.settingsFile_act.setIcon(self.get_builtin_icon(QStyle.SP_DirIcon))
         self.theme_menu.setIcon(self.get_builtin_icon(QStyle.SP_DialogHelpButton))
-        
-        self.splitter.splitterMoved.connect(self.adjustColmpeters)
+
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
         self.openManual_act.triggered.connect(lambda :self.openLink('manual'))
         self.openManual_act.setIcon(QIcon(icons['github']))
+
+        self.python_act.triggered.connect(lambda :self.openLink('python{0}'.format(sys.version_info.major)))
+        self.python_act.setIcon(QIcon(icons['python']))
 
         self.houdini_hou_act.triggered.connect(lambda :self.openLink('houdini_hou'))
         self.houdini_hou_act.setIcon(QIcon(icons['houdini']))
@@ -218,7 +221,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
-    
+
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
         action_icon = self.style().standardIcon(builtin_icon)

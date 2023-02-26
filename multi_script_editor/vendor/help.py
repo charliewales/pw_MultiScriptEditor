@@ -38,7 +38,6 @@ def get_help(text):
     elif text == 'QtCore':
         webbrowser.open('{}/index.html#module-PySide2.QtCore'.format(QtCore_url))
     else:
-
         if text.startswith('Q'):
             QtWidgets_class = '{}/{}.html'.format(QtWidgets_url, text)
             QtGui_class = '{}/{}.html'.format(QtGui_url, text)
@@ -46,10 +45,13 @@ def get_help(text):
 
             if url_exists(QtWidgets_class):
                 webbrowser.open(QtWidgets_class)
+                return
             elif url_exists(QtGui_class):
                 webbrowser.open(QtGui_class)
+                return
             elif url_exists(QtCore_class):
                 webbrowser.open(QtCore_class)
+                return
 
         elif text.startswith('M'):
             class_parts = re.findall('[A-Z][^A-Z]*', text)
@@ -63,26 +65,40 @@ def get_help(text):
 
             if url_exists(OpenMaya):
                 webbrowser.open(OpenMaya)
+                return
             elif url_exists(OpenMayaUI):
                 webbrowser.open(OpenMayaUI)
+                return
             elif url_exists(OpenMayaAnim):
                 webbrowser.open(OpenMayaAnim)
+                return
             elif url_exists(OpenMayaRender):
                 webbrowser.open(OpenMayaRender)
+                return
 
         elif text == 'OpenMaya':
             OpenMaya = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_html'
             webbrowser.open(OpenMaya)
+            return
         elif text == 'OpenMayaAnim':
             OpenMayaAnim  = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_anim_html'
             webbrowser.open(OpenMayaAnim )
+            return
         elif text == 'OpenMayaRender':
             OpenMayaRender  = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_render_html'
             webbrowser.open(OpenMayaRender )
+            return
         elif text == 'OpenMayaUI':
             OpenMayaUI = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_u_i_html'
             webbrowser.open(OpenMayaUI)
+            return
         else:
+            python = 'https://docs.python.org/{0}/library/{1}.html'.format(sys.version_info.major, text)
+            if url_exists(python):
+                webbrowser.open(python)
+                return
+
             python_cmd_url = 'http://help.autodesk.com/cloudhelp/2023/ENU/Maya-Tech-Docs/CommandsPython/{}.html'.format(text)
             if url_exists(python_cmd_url):
                 webbrowser.open(python_cmd_url)
+                return

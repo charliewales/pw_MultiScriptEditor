@@ -548,22 +548,18 @@ class inputClass(QTextEdit):
         self.highlight_current_line()
 
     def function_cmd(self, function):
+        selectedText = self.get_current_word()
+        cmd = '{0}({1})'.format(function, selectedText)
+        return cmd
+
+    def get_current_word(self):
         cursor = self.textCursor()
         selectedText = cursor.selectedText()
         if not selectedText:
             cursor.select(QTextCursor.WordUnderCursor)
             self.setTextCursor(cursor)
             selectedText = cursor.selectedText()
-        cmd = '{0}({1})'.format(function, selectedText)
-
-        return cmd
-    
-    def get_current_word(self):
-        cursor = self.textCursor()
-        cursor.select(QTextCursor.WordUnderCursor)
-        self.setTextCursor(cursor)
-        current_word = cursor.selectedText()
-        return current_word
+        return selectedText
 
     def selectWord(self, pattern, number, replace=None):
         text = self.toPlainText()
