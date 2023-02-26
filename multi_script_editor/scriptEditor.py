@@ -416,7 +416,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = tQFileDialog.getOpenFileName(self, 'Open script', d, "PY Files (*.py)")
+        path = QFileDialog.getOpenFileName(self, 'Open script', d, "PY Files (*.py)")
         if path[0]:
             if os.path.exists(path[0]):
                 text = open(path[0]).read()

@@ -91,7 +91,8 @@ class tabWidgetClass(QTabWidget):
 
     def getCurrentSelectedText(self):
         i = self.currentIndex()
-        text = self.widget(i).edit.getSelection()
+        # text = self.widget(i).edit.getSelection()
+        text = self.widget(i).edit.get_current_word()
         return text
 
     def getCurrentText(self, i=None):
