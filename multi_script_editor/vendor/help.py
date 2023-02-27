@@ -1,4 +1,3 @@
-import builtins
 import re
 import sys
 import webbrowser
@@ -19,9 +18,9 @@ except:
     QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
     QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
 
-# store builtin functions
+# store built-in functions
 built_ins = list()
-for bi in dir(builtins):
+for bi in dir(__builtins__):
     if bi.startswith('_') or bi[0].isupper():
         continue
     built_ins.append(bi)
