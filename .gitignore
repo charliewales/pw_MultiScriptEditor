@@ -5,3 +5,4 @@ tmp
 _backup
 _tmp
 *.pyc
+multi_script_editor/run_no_pyc.cmd

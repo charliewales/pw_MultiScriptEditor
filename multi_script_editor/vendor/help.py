@@ -1,45 +1,52 @@
+import builtins
+import re
+import sys
 import webbrowser
 
-import sys
-import re
-
-PYTHON_VERSION = sys.version_info.major
-
-if PYTHON_VERSION >= 3:
+try:
     from urllib.request import urlopen
-else:
+except:
     from urllib2 import urlopen
 
-
-QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/index.html'
-QtGui_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtGui/index.html'
-QtCore_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtCore/index.html'
+QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets'
+QtGui_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtGui'
+QtCore_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtCore'
 
 try:
     import PySide2
 except:
-    QtWidgets_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui/index.html'
-    QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui/index.html'
-    QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore/index.html'
+    QtWidgets_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
+    QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
+    QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
+
+# store builtin functions
+built_ins = list()
+for bi in dir(builtins):
+    if bi.startswith('_') or bi[0].isupper():
+        continue
+    built_ins.append(bi)
+
+PYTHON_VERSION = sys.version_info.major
 
 def url_exists(url):
-    found = 0
+    found = False
     try:
         ret = urlopen(url)
         if ret.code == 200:
-            found = 1
+            found = True
     except Exception as e:
         print(e.__class__,  e, url)
     return found
 
 
 def get_help(text):
+    text = text.strip()
     if text == 'QtWidgets':
-        webbrowser.open(QtWidgets_url)
+        webbrowser.open('{}/index.html'.format(QtWidgets_url))
     elif text == 'QtGui':
-        webbrowser.open(QtGui_url)
+        webbrowser.open('{}/index.html'.format(QtGui_url))
     elif text == 'QtCore':
-        webbrowser.open(QtCore_url)
+        webbrowser.open('{}/index.html'.format(QtCore_url))
     else:
         if text.startswith('Q'):
             QtWidgets_class = '{}/{}.html'.format(QtWidgets_url, text)
@@ -99,13 +106,12 @@ def get_help(text):
             python_cmd_url = 'http://help.autodesk.com/cloudhelp/2023/ENU/Maya-Tech-Docs/CommandsPython/{}.html'.format(text)
             if url_exists(python_cmd_url):
                 webbrowser.open(python_cmd_url)
-                return
 
             python_module = 'https://docs.python.org/{0}/library/{1}.html'.format(PYTHON_VERSION, text)
             if url_exists(python_module):
                 webbrowser.open(python_module)
-                return
 
-            python_function = 'https://docs.python.org/{0}/library/functions.html#{1}'.format(PYTHON_VERSION, text)
-            if url_exists(python_function):
-                webbrowser.open(python_function)
+            if text in built_ins:
+                python_function = 'https://docs.python.org/{0}/library/functions.html#{1}'.format(PYTHON_VERSION, text)
+                if url_exists(python_function):
+                    webbrowser.open(python_function)
