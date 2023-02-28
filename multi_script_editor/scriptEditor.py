@@ -369,6 +369,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.namespace.update(namespace)
 
     def executeCommand(self, cmd):
+        if self.clear_exec_act.isChecked():
+            self.clearHistory()
         self.out.showMessage(cmd)
         self.runCommand(cmd)
 
@@ -463,6 +465,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if wrap:
                 self.wordWrap_act.setChecked(True)
                 self.tab.wordWrap()
+        if data.get('clear_exec'):
+            clear_exec = data.get('clear_exec')
+            if clear_exec:
+                self.clear_exec_act.setChecked(True)
         f =  self.out.font()
         f.setPointSize(data['outFontSize'])
         self.out.setFont(f)
@@ -475,6 +481,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         size = max(8, self.out.font().pointSize())
         split_sizes = self.splitter.sizes()
         out_word_wrap = self.out_wordWrap_act.isChecked()
+        clear_execute = self.clear_exec_act.isChecked()
         word_wrap = self.wordWrap_act.isChecked()
         self.wordWrap_act.setCheckable(True)
         data = dict(geometry=sGeo,
@@ -482,7 +489,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     outFontSize=size,
                     splitter=split_sizes,
                     wrap=word_wrap,
-                    out_wrap=out_word_wrap)
+                    out_wrap=out_word_wrap,
+                    clear_exec=clear_execute,)
         settings.update(data)
         self.s.writeSettings(settings)
 
