@@ -143,11 +143,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tabToSpaces_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPause))
         self.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
+        self.clear_exec_act.triggered.connect(self.show_clear_exec)
+        self.clear_exec_act.setShortcut('Ctrl+Alt+C')
+        self.clear_exec_act.setShortcutContext(Qt.WindowShortcut)
+        self.clear_exec_act.setCheckable(True)
+
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
-        self.out_wordWrap_act.setCheckable(True)
-
         self.out_wordWrap_act.setShortcutContext(Qt.WindowShortcut)
+        self.out_wordWrap_act.setCheckable(True)
 
         self.wordWrap_act.triggered.connect(self.tab.wordWrap)
         self.wordWrap_act.setShortcut('Alt+W')
@@ -228,6 +232,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def clear_exec(self, exec_func):
         self.clearHistory()
         exec_func()
+        
+    def show_clear_exec(self):
+        if self.clear_exec_act.isChecked():
+            self.toolBar.setStyleSheet('QToolBar {background-color: red;}')
+        else:
+            self.toolBar.setStyleSheet('')
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
@@ -469,6 +479,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             clear_exec = data.get('clear_exec')
             if clear_exec:
                 self.clear_exec_act.setChecked(True)
+                self.show_clear_exec()
         f =  self.out.font()
         f.setPointSize(data['outFontSize'])
         self.out.setFont(f)
