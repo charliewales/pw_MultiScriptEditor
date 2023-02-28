@@ -226,7 +226,6 @@ class Ui_scriptEditor(object):
         self.toolBar.addAction(self.execLine_act)
         self.toolBar.addAction(self.execSel_act)
         self.toolBar.addAction(self.clearHistory_act)
-        self.toolBar.addAction(self.clear_exec_act)
 
         self.retranslateUi(scriptEditor)
         QMetaObject.connectSlotsByName(scriptEditor)
