@@ -19,6 +19,7 @@ Run help() on current word                  >   ALT + H
 Quick Help                                  >   ALT + Q / F1
 Run type() on current word                  >   ALT + T
 Toggle Word Wrap                            >   ALT + W
+Toggle Clear Output before Execute          >   CTRL + ALT + C
 Toggle Output Word Wrap                     >   CTRL + ALT + W
 Clear Output                                >   CTRL + Shit + C
 Duplicate line or selected text             >   CTRL + Shit + D
