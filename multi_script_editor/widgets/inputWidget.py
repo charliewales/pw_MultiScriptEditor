@@ -554,11 +554,11 @@ class inputClass(QTextEdit):
 
     def get_current_word(self):
         cursor = self.textCursor()
-        selectedText = cursor.selectedText()
+        selectedText = cursor.selection().toPlainText()
         if not selectedText:
             cursor.select(QTextCursor.WordUnderCursor)
             self.setTextCursor(cursor)
-            selectedText = cursor.selectedText()
+            selectedText = cursor.selection().toPlainText()
         return selectedText
 
     def selectWord(self, pattern, number, replace=None):
