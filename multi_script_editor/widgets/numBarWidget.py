@@ -9,8 +9,6 @@ class lineNumberBarClass(QWidget):
         self.edit = edit
         self.highest_line = 0
         self.setMinimumWidth(30)
-        # self.edit.installEventFilter(self)
-        # self.edit.viewport().installEventFilter(self)
         self.bg = None
 
     def update(self, *args):
@@ -42,7 +40,7 @@ class lineNumberBarClass(QWidget):
         line_count = 0
         # Iterate over all text blocks in the document.
         block = self.edit.document().begin()
-        fontSize = self.edit.font().pointSize()*1.5
+        fontSize = self.edit.font().pointSize()*1.0
         font = painter.font()
         font.setPixelSize(fontSize)
         offset = font_metrics.ascent() + font_metrics.descent()*0.7
@@ -71,7 +69,7 @@ class lineNumberBarClass(QWidget):
                         round(position.y()) - contents_y,
                         self.width(),
                         fontSize + (offset/2) ))
-            #   #restore color
+                # restore color
                 painter.setPen(QPen(color))
 
             # draw text
