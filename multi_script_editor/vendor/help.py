@@ -18,14 +18,36 @@ except:
     QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
     QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
 
-# store built-in functions
+
+PYTHON_VERSION = sys.version_info.major
+
 built_ins = list()
-for bi in dir(__builtins__):
+if PYTHON_VERSION >= 3:
+    import builtins
+    builtins_list = dir(builtins)
+else:
+    builtins_list = ['abs', 'all', 'any', 'apply', 'basestring', 'bin',
+                     'bool', 'buffer', 'bytearray', 'bytes', 'callable',
+                     'chr', 'classmethod', 'cmp', 'coerce', 'compile',
+                     'complex', 'copyright', 'credits', 'delattr', 'dict',
+                     'dir', 'divmod', 'enumerate', 'eval', 'execfile',
+                     'exit', 'file', 'filter', 'float', 'format', 'frozenset',
+                     'getattr', 'globals', 'hasattr', 'hash', 'help', 'hex',
+                     'id', 'input', 'int', 'intern', 'isinstance', 'issubclass',
+                     'iter', 'len', 'license', 'list', 'locals', 'long', 'map',
+                     'max', 'memoryview', 'min', 'next', 'object', 'oct',
+                     'open', 'ord', 'pow', 'print', 'property', 'quit', 'range',
+                     'raw_input', 'reduce', 'reload', 'repr', 'reversed',
+                     'round', 'set', 'setattr', 'slice', 'sorted',
+                     'staticmethod', 'str', 'sum', 'super', 'tuple',
+                     'type', 'unichr', 'unicode', 'vars', 'xrange', 'zip']
+
+# store built-in functions
+for bi in builtins_list:
     if bi.startswith('_') or bi[0].isupper():
         continue
     built_ins.append(bi)
 
-PYTHON_VERSION = sys.version_info.major
 
 def url_exists(url):
     found = False

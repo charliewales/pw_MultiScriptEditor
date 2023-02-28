@@ -338,7 +338,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def executeAll(self):
         allText = self.tab.getCurrentText()
-        allText += '# Execute All'
+        allText += '\n# Execute All'
         if allText:
             self.executeCommand(allText.strip())
 
