@@ -199,14 +199,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execSel_act.triggered.connect(self.executeSelected)
         self.execSel_act.setShortcut('Ctrl+Return')
         self.execSel_act.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        QShortcut(QKeySequence('Ctrl+Shift+Return'), self, partial(self.clear_exec, self.executeSelected))
 
-        self.execAll_act.setShortcut('Ctrl+Shift+Return')
+        self.execAll_act.setShortcut('Alt+Return')
         self.execAll_act.triggered.connect(self.executeAll)
         self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
+        QShortcut(QKeySequence('Alt+Shift+Return'), self, partial(self.clear_exec, self.executeAll))
 
         self.execLine_act.setShortcut('Ctrl+Alt+Return')
         self.execLine_act.triggered.connect(self.executeLine)
         self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
+        QShortcut(QKeySequence('Control+Alt+Shift+Return'), self, partial(self.clear_exec, self.executeLine))
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
         self.clearHistory_act.setShortcut('Ctrl+Shift+C')
@@ -221,6 +224,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
+
+    def clear_exec(self, exec_func):
+        self.clearHistory()
+        exec_func()
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
@@ -331,16 +338,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def executeAll(self):
         allText = self.tab.getCurrentText()
+        allText += '# Execute All'
         if allText:
             self.executeCommand(allText.strip())
 
     def executeLine(self):
         text = self.tab.getCurrentLine()
+        text += '\n# Execute Line'
         if text:
             self.executeCommand(text)
 
     def executeSelected(self):
         text = self.tab.getCurrentSelectedText()
+        text += '\n# Execute Selected'
         if text:
             self.executeCommand(text)
 

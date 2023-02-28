@@ -1,6 +1,9 @@
+Execute All                                 >   ALT + ENTER
+Clear Output & Execute All                  >   ALT + SHIFT + ENTER
 Execute Selected                            >   CTRL + ENTER
+Clear Output & Execute Selected             >   CTRL + SHIFT + ENTER
 Execute Line                                >   CTRL + ALT + ENTER
-Execute All                                 >   CTRL + SHIFT + ENTER
+Clear Output & Execute Line                 >   CTRL + ALT + SHIFT + ENTER
 Indent Selection                            >   TAB
 Unindent Selection                          >   SHIFT + TAB
 Activate Completer                          >   UP or DOWN
@@ -17,6 +20,7 @@ Quick Help                                  >   ALT + Q / F1
 Run type() on current word                  >   ALT + T
 Toggle Word Wrap                            >   ALT + W
 Toggle Output Word Wrap                     >   CTRL + ALT + W
+Clear Output                                >   CTRL + Shit + C
 Duplicate line or selected text             >   CTRL + Shit + D
 Copy                                        >   CTRL + C
 Delete line                                 >   CTRL + D

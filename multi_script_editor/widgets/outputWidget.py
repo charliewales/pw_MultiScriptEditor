@@ -4,17 +4,18 @@ from vendor.Qt.QtGui import *
 
 import os
 from managers import context
-font_name = 'Courier'
-# font_name = 'Consolas'
 
+from widgets.pythonSyntax import syntaxHighLighter
+import settingsManager
+from widgets.pythonSyntax import design
+
+font_name = 'Courier'
 
 class outputClass(QTextBrowser):
     def __init__(self):
         super(outputClass, self).__init__()
-#        self.setWordWrapMode(QTextOption.NoWrap)
         self.setLineWrapMode(QTextEdit.NoWrap)
-        font = QFont("Courier")
-        # font = QFont("Consolas")
+        font = QFont(font_name)
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
         self.setFont(font)
@@ -23,8 +24,9 @@ class outputClass(QTextBrowser):
         metrics = QFontMetrics(self.document().defaultFont())
         self.setTabStopWidth(4 * metrics.width(' '))
         self.setMouseTracking(1)
-        # style = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'style', 'completer.qss')
-        # self.setStyleSheet(style)
+        data = settingsManager.scriptEditorClass().readSettings()
+        self.applyHightLighter(data.get('theme'))
+        self.setStyleSheet('QTextBrowser {background-color: #303030}')
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)
@@ -51,6 +53,16 @@ class outputClass(QTextBrowser):
         # super(outputClass, self).wheelEvent(event)
         QTextBrowser.wheelEvent(self, event)
 
+    def applyHightLighter(self, theme=None, qss=None):
+        self.blockSignals(True)
+        colors = None
+        if theme or not theme =='default':
+            colors = design.getColors(theme)
+        self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
+        st = design.editorStyle(theme)
+        self.setStyleSheet(st)
+        self.blockSignals(False)
+
     def changeFontSize(self, up):
         if context == 'hou':
             if up:
@@ -74,12 +86,3 @@ class outputClass(QTextBrowser):
             self.setLineWrapMode(QTextEdit.NoWrap)
         else:
             self.setLineWrapMode(QTextEdit.WidgetWidth)
-
-    # def mousePressEvent(self, event):
-    #     print context
-    #     if context == 'hou':
-    #         if event.button() == Qt.LeftButton:
-    #             # super(outputClass, self).mousePressEvent(event)
-    #             QTextBrowser.mousePressEvent(self, event)
-    #     else:
-    #     QTextBrowser.mousePressEvent(self, event)
