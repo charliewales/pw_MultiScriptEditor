@@ -95,10 +95,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.nuke_dev_guide_act.triggered.connect(lambda :self.openLink('nuke_dev_guide'))
         self.nuke_dev_guide_act.setIcon(QIcon(icons['nuke']))
 
-        self.qt_modules_act.triggered.connect(lambda :self.openLink('qt_docs'))
-        self.qt_modules_act.setIcon(QIcon(icons['qt']))
-        self.qt_docs_act.triggered.connect(lambda :self.openLink('qt_modules'))
+        self.qt_docs_act.triggered.connect(lambda :self.openLink('qt_docs'))
         self.qt_docs_act.setIcon(QIcon(icons['qt']))
+        self.qt_modules_act.triggered.connect(lambda :self.openLink('qt_modules'))
+        self.qt_modules_act.setIcon(QIcon(icons['qt']))
 
         self.about_act.triggered.connect(self.about)
         self.about_act.setIcon(QIcon(icons['about']))

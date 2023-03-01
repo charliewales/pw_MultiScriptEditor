@@ -15,7 +15,8 @@ addEndBracket = True
 indentLen = 4
 minimumFontSize = 10
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
-font_name = 'Courier'
+# font_name = 'Courier'
+font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 

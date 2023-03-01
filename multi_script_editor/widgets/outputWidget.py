@@ -9,7 +9,9 @@ from widgets.pythonSyntax import syntaxHighLighter
 import settingsManager
 from widgets.pythonSyntax import design
 
-font_name = 'Courier'
+# font_name = 'Courier'
+font_name = 'Consolas'
+# font_name = 'Lucida Console'
 
 class outputClass(QTextBrowser):
     def __init__(self):
