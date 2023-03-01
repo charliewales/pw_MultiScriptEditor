@@ -26,4 +26,13 @@ icons = dict(
     redo=os.path.join(root,'redo.png'),
     tabs_to_spaces=os.path.join(root,'tabs_to_spaces.png'),
     python=os.path.join(root,'python.png'),
+    open=os.path.join(root,'open.png'),
+    save=os.path.join(root,'save.png'),
+    about=os.path.join(root,'about.png'),
+    quit=os.path.join(root,'quit.png'),
+    theme=os.path.join(root,'theme.png'),
+    settings=os.path.join(root,'settings.png'),
+    qt=os.path.join(root,'qt.png'),
+    shortcut=os.path.join(root,'shortcut.png'),
+    print_help=os.path.join(root,'print_help.png'),
 )

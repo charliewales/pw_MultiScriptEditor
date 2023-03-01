@@ -53,19 +53,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # connects
         self.load_act.triggered.connect(self.loadScript)
-        self.load_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogOpenButton))
+        self.load_act.setIcon(QIcon(icons['open']))
         self.load_act.setShortcut("Ctrl+O")
         self.save_act.triggered.connect(self.saveScript)
-        self.save_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogSaveButton))
+        self.save_act.setIcon(QIcon(icons['save']))
         self.save_act.setShortcut("Ctrl+S")
         self.saveSeccion_act.triggered.connect(lambda:self.saveSession(True))
-        self.saveSeccion_act.setIcon(self.get_builtin_icon(QStyle.SP_DialogSaveButton))
+        self.saveSeccion_act.setIcon(QIcon(icons['save']))
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
         self.exit_act.triggered.connect(self.close)
         self.tabToSpaces_act.triggered.connect(self.tabsToSpaces)
         self.quit_act.triggered.connect(self.close)
         self.quit_act.setShortcut("Ctrl+Q")
-        self.quit_act.setIcon(self.get_builtin_icon(QStyle.SP_BrowserStop))
+        self.quit_act.setIcon(QIcon(icons['quit']))
         self.quit_act.setShortcut("Ctrl+Q")
 
         self.duplicateLine_act.setShortcut('Ctrl+Shift+D')
@@ -76,8 +76,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.deleteLine_act.setIcon(QIcon(icons['delete_line']))
 
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
-        self.settingsFile_act.setIcon(self.get_builtin_icon(QStyle.SP_DirIcon))
-        self.theme_menu.setIcon(self.get_builtin_icon(QStyle.SP_DialogHelpButton))
+        self.settingsFile_act.setIcon(QIcon(icons['settings']))
+        self.theme_menu.setIcon(QIcon(icons['theme']))
 
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
         self.openManual_act.triggered.connect(lambda :self.openLink('manual'))
@@ -96,17 +96,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.nuke_dev_guide_act.setIcon(QIcon(icons['nuke']))
 
         self.qt_modules_act.triggered.connect(lambda :self.openLink('qt_docs'))
-        self.qt_modules_act.setIcon(self.get_builtin_icon(QStyle.SP_TitleBarMenuButton))
+        self.qt_modules_act.setIcon(QIcon(icons['qt']))
         self.qt_docs_act.triggered.connect(lambda :self.openLink('qt_modules'))
-        self.qt_docs_act.setIcon(self.get_builtin_icon(QStyle.SP_TitleBarMenuButton))
+        self.qt_docs_act.setIcon(QIcon(icons['qt']))
 
         self.about_act.triggered.connect(self.about)
-        self.about_act.setIcon(self.get_builtin_icon(QStyle.SP_MessageBoxInformation))
+        self.about_act.setIcon(QIcon(icons['about']))
         self.help_act.setIcon(QIcon(icons['sel']))
         self.shortcuts_act.triggered.connect(self.shortcuts)
-        self.shortcuts_act.setIcon(self.get_builtin_icon(QStyle.SP_DirLinkIcon))
+        self.shortcuts_act.setIcon(QIcon(icons['shortcut']))
         self.printHelp_act.triggered.connect(self.mse_help)
-        self.printHelp_act.setIcon(self.get_builtin_icon(QStyle.SP_MessageBoxQuestion))
+        self.printHelp_act.setIcon(QIcon(icons['print_help']))
         # editor
         # c = Qt.WindowShortcut
         self.undo_act.triggered.connect(self.tab.undo)
@@ -117,7 +117,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.redo_act.triggered.connect(self.tab.redo)
         self.redo_act.setShortcut('Ctrl+Y')
         self.redo_act.setShortcutContext(Qt.WidgetShortcut)
-        self.redo_act.setIcon(self.get_builtin_icon(QStyle.SP_ArrowForward))
         self.redo_act.setIcon(QIcon(icons['redo']))
 
         self.copy_act.triggered.connect(self.tab.copy)
@@ -138,9 +137,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.find_act.triggered.connect(self.findWidget)
         self.find_act.setShortcut('Ctrl+F')
         self.find_act.setShortcutContext(Qt.WindowShortcut)
-        self.find_act.setIcon(self.get_builtin_icon(QStyle.SP_FileDialogContentsView))
+        self.find_act.setIcon(QIcon(icons['replace']))
 
-        self.tabToSpaces_act.setIcon(self.get_builtin_icon(QStyle.SP_MediaPause))
         self.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
         self.clear_exec_act.triggered.connect(self.show_clear_exec)
@@ -235,7 +233,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
-            self.toolBar.setStyleSheet('QToolBar {background-color: red;}')
+            self.toolBar.setStyleSheet('QToolBar {background-color: indianred;}')
+            # self.toolBar.setStyleSheet('''
+            #                             QToolBar
+            #                             {
+            #                                 border: 4 solid #747474;
+            #                                 color: black;
+            #                                 border-top-left-radius: 20px;
+            #                                 border-top-right-radius: 20px;
+            #                                 border-bottom-right-radius: 20px;
+            #                                 border-bottom-left-radius: 20px;
+            #                             }
+            #                             ''')
         else:
             self.toolBar.setStyleSheet('')
 

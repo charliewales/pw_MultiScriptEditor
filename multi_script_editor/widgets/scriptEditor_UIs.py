@@ -252,7 +252,7 @@ class Ui_scriptEditor(object):
         self.qt_docs_act.setText(QApplication.translate("scriptEditor", "Qt for Python", None))
         self.qt_modules_act.setText(QApplication.translate("scriptEditor", "Qt Modules", None))
         self.save_act.setText(QApplication.translate("scriptEditor", "Save Script", None))
-        self.load_act.setText(QApplication.translate("scriptEditor", "Load Script", None))
+        self.load_act.setText(QApplication.translate("scriptEditor", "Open Script", None))
         self.exit_act.setText(QApplication.translate("scriptEditor", "Exit", None))
         self.openManual_act.setText(QApplication.translate("scriptEditor", "GitHub", None))
         self.python_act.setText(QApplication.translate("scriptEditor", "Python documentation", None))
