@@ -6,6 +6,15 @@ import managers
 class lineNumberBarClass(QWidget):
     def __init__(self, edit, parent=None):
         QWidget.__init__(self, parent)
+        
+        desktop = QApplication.desktop()
+        screen_resolution = desktop.screenGeometry()
+        width, height = screen_resolution.width(), screen_resolution.height()
+
+        self.font_size_mult = 1.0
+        if width > 2560:
+            self.font_size_mult = 1.5
+
         self.edit = edit
         self.highest_line = 0
         self.setMinimumWidth(30)
@@ -40,7 +49,7 @@ class lineNumberBarClass(QWidget):
         line_count = 0
         # Iterate over all text blocks in the document.
         block = self.edit.document().begin()
-        fontSize = self.edit.font().pointSize()*1.0
+        fontSize = self.edit.font().pointSize()*self.font_size_mult
         font = painter.font()
         font.setPixelSize(fontSize)
         offset = font_metrics.ascent() + font_metrics.descent()*0.7
