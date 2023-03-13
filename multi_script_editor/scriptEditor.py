@@ -234,17 +234,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
             self.toolBar.setStyleSheet('QToolBar {background-color: indianred;}')
-            # self.toolBar.setStyleSheet('''
-            #                             QToolBar
-            #                             {
-            #                                 border: 4 solid #747474;
-            #                                 color: black;
-            #                                 border-top-left-radius: 20px;
-            #                                 border-top-right-radius: 20px;
-            #                                 border-bottom-right-radius: 20px;
-            #                                 border-bottom-left-radius: 20px;
-            #                             }
-            #                             ''')
         else:
             self.toolBar.setStyleSheet('')
 
@@ -357,19 +346,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def executeAll(self):
         allText = self.tab.getCurrentText()
-        allText += '\n# Execute All'
+        if self.print_command_act.isChecked():
+            allText += '\n# Execute All'
         if allText:
             self.executeCommand(allText.strip())
 
     def executeLine(self):
         text = self.tab.getCurrentLine()
-        text += '\n# Execute Line'
+        if self.print_command_act.isChecked():
+            text += '\n# Execute Line'
         if text:
             self.executeCommand(text)
 
     def executeSelected(self):
         text = self.tab.getCurrentSelectedText()
-        text += '\n# Execute Selected'
+        if self.print_command_act.isChecked():
+            text += '\n# Execute Selected'
         if text:
             self.executeCommand(text)
 
@@ -489,6 +481,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if clear_exec:
                 self.clear_exec_act.setChecked(True)
                 self.show_clear_exec()
+        if data.get('echo_execute'):
+            echo_execute = data.get('echo_execute')
+            if echo_execute:
+                self.print_command_act.setChecked(True)
         f =  self.out.font()
         f.setPointSize(data['outFontSize'])
         self.out.setFont(f)
@@ -502,6 +498,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         split_sizes = self.splitter.sizes()
         out_word_wrap = self.out_wordWrap_act.isChecked()
         clear_execute = self.clear_exec_act.isChecked()
+        echo_execute = self.print_command_act.isChecked()
         word_wrap = self.wordWrap_act.isChecked()
         self.wordWrap_act.setCheckable(True)
         data = dict(geometry=sGeo,
@@ -510,6 +507,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     splitter=split_sizes,
                     wrap=word_wrap,
                     out_wrap=out_word_wrap,
+                    echo_execute=echo_execute,
                     clear_exec=clear_execute,)
         settings.update(data)
         self.s.writeSettings(settings)
