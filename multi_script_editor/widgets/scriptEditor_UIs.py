@@ -244,7 +244,7 @@ class Ui_scriptEditor(object):
         self.run_menu.setTitle(QApplication.translate("scriptEditor", "Run", None))
         self.toolBar.setWindowTitle(QApplication.translate("scriptEditor", "toolBar", None))
         self.clearHistory_act.setText(QApplication.translate("scriptEditor", "Clear Output", None))
-        self.clear_exec_act.setText(QApplication.translate("scriptEditor", "Clear Output before Execute", None))
+        self.clear_exec_act.setText(QApplication.translate("scriptEditor", "Clear Output before Execution", None))
         self.print_command_act.setText(QApplication.translate("scriptEditor", "Echo Executed Command", None))
         self.dir_act.setText(QApplication.translate("scriptEditor", "dir()", None))
         self.help_act.setText(QApplication.translate("scriptEditor", "help()", None))
