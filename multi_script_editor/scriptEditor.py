@@ -201,17 +201,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execSel_act.triggered.connect(self.executeSelected)
         self.execSel_act.setShortcut('Ctrl+Return')
         self.execSel_act.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        QShortcut(QKeySequence('Ctrl+Shift+Return'), self, partial(self.clear_exec, self.executeSelected))
 
-        self.execAll_act.setShortcut('Alt+Return')
         self.execAll_act.triggered.connect(self.executeAll)
+        self.execAll_act.setShortcut('Alt+Return')
         self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
-        QShortcut(QKeySequence('Alt+Shift+Return'), self, partial(self.clear_exec, self.executeAll))
 
-        self.execLine_act.setShortcut('Ctrl+Alt+Return')
+        self.execLine_act.setShortcut('Ctrl+Shift+Return')
         self.execLine_act.triggered.connect(self.executeLine)
         self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
-        QShortcut(QKeySequence('Control+Alt+Shift+Return'), self, partial(self.clear_exec, self.executeLine))
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
         self.clearHistory_act.setShortcut('Ctrl+Shift+C')
