@@ -77,6 +77,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.settingsFile_act.setIcon(QIcon(icons['settings']))
+
+        self.ontop_act.triggered.connect(self.always_ontop)
+
         self.theme_menu.setIcon(QIcon(icons['theme']))
 
         self.donate_act.triggered.connect(lambda :self.openLink('donate'))
@@ -227,7 +230,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def clear_exec(self, exec_func):
         self.clearHistory()
         exec_func()
-        
+
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
             self.toolBar.setStyleSheet('QToolBar {background-color: indianred;}')
@@ -450,40 +453,54 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def insertText(self, text):
         self.tab.addToCurrent(text)
 
+    def always_ontop(self, state=False):
+        """Set the window to always be on top or turn off the feature."""
+        if state:
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        else:
+            self.setWindowFlags(self.windowFlags() ^ Qt.WindowStaysOnTopHint)
+        self.show()
+
     def loadSettings(self):
         data = self.s.readSettings()
-        if data['geometry']:
-            self.move(data['geometry'][0], data['geometry'][1])
-            self.resize(data['geometry'][2], data['geometry'][3])
-        if data.get('center'):
-            x, y = data.get('center')
+
+        always_ontop = data.get('always_ontop', False)
+        center = data.get('center', None)
+        clear_exec = data.get('clear_execute', None)
+        echo_exec = data.get('echo_execute', None)
+        geo = data.get('geometry', None)
+        out_wrap = data.get('out_wrap', None)
+        outFontSize = data.get('outFontSize', 10)
+        splitter = data.get('splitter', None)
+        wrap = data.get('wrap', None)
+
+        if geo:
+            self.move(geo[0], geo[1])
+            self.resize(geo[2], geo[3])
+        if center:
+            x, y = center
             geo = self.geometry()
             geo.moveCenter(QPoint(x,y))
             self.setGeometry(geo)
-        if data.get('splitter'):
-            sizes = data.get('splitter')
-            self.splitter.setSizes(sizes)
-        if data.get('out_wrap'):
-            out_wrap = data.get('out_wrap')
-            if out_wrap:
-                self.out_wordWrap_act.setChecked(True)
-                self.out.wordWrap()
-        if data.get('wrap'):
-            wrap = data.get('wrap')
-            if wrap:
-                self.wordWrap_act.setChecked(True)
-                self.tab.wordWrap()
-        if data.get('clear_exec'):
-            clear_exec = data.get('clear_exec')
-            if clear_exec:
-                self.clear_exec_act.setChecked(True)
-                self.show_clear_exec()
-        if data.get('echo_execute'):
-            echo_execute = data.get('echo_execute')
-            if echo_execute:
-                self.print_command_act.setChecked(True)
+        if splitter:
+            self.splitter.setSizes(splitter)
+        if out_wrap:
+            self.out_wordWrap_act.setChecked(out_wrap)
+            self.out.wordWrap()
+        if wrap:
+            self.wordWrap_act.setChecked(wrap)
+            self.tab.wordWrap()
+        if clear_exec:
+            self.clear_exec_act.setChecked(clear_exec)
+            self.show_clear_exec()
+        if echo_exec:
+            self.print_command_act.setChecked(echo_exec)
+        if always_ontop:
+            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            self.ontop_act.setChecked(always_ontop)
+
         f =  self.out.font()
-        f.setPointSize(data['outFontSize'])
+        f.setPointSize(outFontSize)
         self.out.setFont(f)
 
     def saveSettings(self):
@@ -497,7 +514,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         clear_execute = self.clear_exec_act.isChecked()
         echo_execute = self.print_command_act.isChecked()
         word_wrap = self.wordWrap_act.isChecked()
-        self.wordWrap_act.setCheckable(True)
+        always_ontop = self.ontop_act.isChecked()
+
         data = dict(geometry=sGeo,
                     center=center,
                     outFontSize=size,
@@ -505,7 +523,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     wrap=word_wrap,
                     out_wrap=out_word_wrap,
                     echo_execute=echo_execute,
-                    clear_exec=clear_execute,)
+                    clear_execute=clear_execute,
+                    always_ontop=always_ontop,)
         settings.update(data)
         self.s.writeSettings(settings)
 
