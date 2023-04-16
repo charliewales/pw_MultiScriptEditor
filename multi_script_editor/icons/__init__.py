@@ -35,4 +35,5 @@ icons = dict(
     qt=os.path.join(root,'qt.png'),
     shortcut=os.path.join(root,'shortcut.png'),
     print_help=os.path.join(root,'print_help.png'),
+    font=os.path.join(root,'font.png'),
 )

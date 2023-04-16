@@ -21,6 +21,7 @@ Run type() on current word                  >   ALT + T
 Toggle Word Wrap                            >   ALT + W
 Toggle Clear Output before Execute          >   CTRL + ALT + C
 Toggle Output Word Wrap                     >   CTRL + ALT + W
+Toggle Always On Top                        >   CTRL + ALT + T
 Clear Output                                >   CTRL + Shit + C
 Duplicate line or selected text             >   CTRL + Shit + D
 Copy                                        >   CTRL + C

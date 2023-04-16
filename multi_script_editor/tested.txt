@@ -17,4 +17,4 @@ Tested on:
     Standalone
     	Python 2.7.15 - Windows 10
     	Python 3.6.8  - Rocky Linux 8.6
-    	Python 3.10.0 - Windows 10
+    	Python 3.10.10 - Windows 10

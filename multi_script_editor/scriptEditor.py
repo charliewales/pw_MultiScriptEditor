@@ -75,10 +75,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
         self.deleteLine_act.setIcon(QIcon(icons['delete_line']))
 
+        self.set_font_act.triggered.connect(self.choose_font)
+        self.set_font_act.setIcon(QIcon(icons['font']))
+
         self.settingsFile_act.triggered.connect(self.openSettingsFile)
         self.settingsFile_act.setIcon(QIcon(icons['settings']))
-
-        self.ontop_act.triggered.connect(self.always_ontop)
 
         self.theme_menu.setIcon(QIcon(icons['theme']))
 
@@ -144,10 +145,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
+        self.print_command_act.setCheckable(True)
+
         self.clear_exec_act.triggered.connect(self.show_clear_exec)
         self.clear_exec_act.setShortcut('Ctrl+Alt+C')
         self.clear_exec_act.setShortcutContext(Qt.WindowShortcut)
         self.clear_exec_act.setCheckable(True)
+
+        self.whitespace_act.triggered.connect(self.render_whitespace)
+        self.whitespace_act.setShortcut('Ctrl+Shift+W')
+        self.whitespace_act.setShortcutContext(Qt.WindowShortcut)
+        self.whitespace_act.setCheckable(True)
 
         self.out_wordWrap_act.triggered.connect(self.out.wordWrap)
         self.out_wordWrap_act.setShortcut('Ctrl+Alt+W')
@@ -164,33 +172,37 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
         self.comment_cat.setIcon(QIcon(icons['comment']))
 
+        self.always_ontop_act.triggered.connect(self.always_ontop)
+        self.always_ontop_act.setShortcutContext(Qt.WidgetShortcut)
+        self.always_ontop_act.setCheckable(True)
+
         dir_f = partial(self.function_cmd, 'dir')
         self.dir_act.triggered.connect(dir_f)
         self.dir_act.setShortcut('Alt+D')
         self.dir_act.setIcon(QIcon(icons['sel']))
         self.dir_act.setShortcutContext(Qt.WidgetShortcut)
-        QShortcut(QKeySequence("Alt+d"), self, dir_f)
+        QShortcut(QKeySequence('Alt+d'), self, dir_f)
 
         help_f = partial(self.function_cmd, 'help')
         self.help_act.triggered.connect(help_f)
         self.help_act.setShortcut('Alt+H')
         self.help_act.setIcon(QIcon(icons['sel']))
         self.help_act.setShortcutContext(Qt.WidgetShortcut)
-        QShortcut(QKeySequence("Alt+h"), self, help_f)
+        QShortcut(QKeySequence('Alt+h'), self, help_f)
 
         type_f = partial(self.function_cmd, 'type')
         self.type_act.triggered.connect(type_f)
         self.type_act.setShortcut('Alt+T')
         self.type_act.setIcon(QIcon(icons['sel']))
         self.type_act.setShortcutContext(Qt.WidgetShortcut)
-        QShortcut(QKeySequence("Alt+t"), self, type_f)
+        QShortcut(QKeySequence('Alt+t'), self, type_f)
 
         self.quick_help_act.triggered.connect(self.get_word_help)
         self.quick_help_act.setShortcut('Alt+Q')
         self.quick_help_act.setIcon(QIcon(icons['help']))
         self.quick_help_act.setShortcutContext(Qt.WidgetShortcut)
-        QShortcut(QKeySequence("F1"), self, self.get_word_help)
-        QShortcut(QKeySequence("Alt+Q"), self, self.get_word_help)
+        QShortcut(QKeySequence('F1'), self, self.get_word_help)
+        QShortcut(QKeySequence('Alt+Q'), self, self.get_word_help)
 
         self.fillThemeMenu()
 
@@ -226,6 +238,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
+
+    def render_whitespace(self, state):
+        wrap_state = self.wordWrap_act.isChecked()
+        self.tab.wordWrap(not wrap_state)
+        self.tab.render_whitespace(state)
+        self.out.render_whitespace(state)
+        self.tab.wordWrap(wrap_state)
+
+    def choose_font(self):
+        font_dialog = QFontDialog(self)
+        font_dialog.resize(self.width()*.8, self.height()*0.6)
+        font_dialog.exec_()
+        font = font_dialog.currentFont()
+        if font:
+            self.tab.set_font(font)
+            self.out.setFont(font)
 
     def clear_exec(self, exec_func):
         self.clearHistory()
@@ -293,13 +321,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def applyTheme(self, name):
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
+            o = self.out
             qss = design.editorStyle(name)
             # text color
             w.edit.applyHightLighter(name)
+            o.applyHightLighter(name)
             #completer
             w.edit.completer.setStyleSheet(qss)
             #editor
             w.edit.setStyleSheet(qss)
+            o.setStyleSheet(qss)
         s = self.s.readSettings()
         s['theme'] = name
         self.s.writeSettings(s)
@@ -453,8 +484,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def insertText(self, text):
         self.tab.addToCurrent(text)
 
-    def always_ontop(self, state=False):
+    def always_ontop(self):
         """Set the window to always be on top or turn off the feature."""
+        state = self.always_ontop_act.isChecked()
         if state:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         else:
@@ -473,6 +505,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         outFontSize = data.get('outFontSize', 10)
         splitter = data.get('splitter', None)
         wrap = data.get('wrap', None)
+        show_whitespace = data.get('show_whitespace', False)
 
         if geo:
             self.move(geo[0], geo[1])
@@ -486,10 +519,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.splitter.setSizes(splitter)
         if out_wrap:
             self.out_wordWrap_act.setChecked(out_wrap)
-            self.out.wordWrap()
+            self.out.wordWrap(out_wrap)
         if wrap:
             self.wordWrap_act.setChecked(wrap)
-            self.tab.wordWrap()
+            self.tab.wordWrap(wrap)
         if clear_exec:
             self.clear_exec_act.setChecked(clear_exec)
             self.show_clear_exec()
@@ -497,7 +530,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.print_command_act.setChecked(echo_exec)
         if always_ontop:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-            self.ontop_act.setChecked(always_ontop)
+            self.always_ontop_act.setChecked(always_ontop)
+        if show_whitespace:
+            wrap_state = self.wordWrap_act.isChecked()
+            self.tab.wordWrap(not wrap_state)
+            self.tab.render_whitespace(show_whitespace)
+            self.out.render_whitespace(show_whitespace)
+            self.whitespace_act.setChecked(show_whitespace)
+            self.tab.wordWrap(wrap_state)
 
         f =  self.out.font()
         f.setPointSize(outFontSize)
@@ -514,7 +554,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         clear_execute = self.clear_exec_act.isChecked()
         echo_execute = self.print_command_act.isChecked()
         word_wrap = self.wordWrap_act.isChecked()
-        always_ontop = self.ontop_act.isChecked()
+        always_ontop = self.always_ontop_act.isChecked()
+        show_whitespace = self.whitespace_act.isChecked()
 
         data = dict(geometry=sGeo,
                     center=center,
@@ -524,7 +565,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     out_wrap=out_word_wrap,
                     echo_execute=echo_execute,
                     clear_execute=clear_execute,
-                    always_ontop=always_ontop,)
+                    always_ontop=always_ontop,
+                    show_whitespace=show_whitespace)
         settings.update(data)
         self.s.writeSettings(settings)
 

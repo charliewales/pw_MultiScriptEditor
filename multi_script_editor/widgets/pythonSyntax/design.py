@@ -7,6 +7,7 @@ if not os.path.exists(EditorStyle):
 
 defaultColors = dict(
         background = (40,40,40),
+        output_background = (40,40,40),
         keywords = (65,255,130),
         digits = (250,255,62),
         definition = (255,160,250),
@@ -25,7 +26,8 @@ defaultColors = dict(
         completer_alt_background= (65,65,65),
         completer_hover_background= (85,85,85),
         completer_selected_background= (123,123,123),
-        default=(210,210,210)
+        default=(210,210,210),
+        whitespace=(0,0,0)
 )
 
 

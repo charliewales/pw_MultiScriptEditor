@@ -52,6 +52,8 @@ class PythonHighlighterClass (QSyntaxHighlighter):
         # Single-quoted string
         rules += [(r"[ru]?'[^'\\]*(\\.[^'\\]*)*'", 0, self.getStyle(self.colors['string']))]
 
+        # Whitespace, \s
+        rules += [(r"\s", 0, self.getStyle(self.colors['whitespace']))]
 
         # Build a QRegExp for each pattern
         self.rules = [(QRegExp(pat), index, fmt) for (pat, index, fmt) in rules]
@@ -147,5 +149,3 @@ class PythonHighlighterClass (QSyntaxHighlighter):
             return True
         else:
             return False
-
-

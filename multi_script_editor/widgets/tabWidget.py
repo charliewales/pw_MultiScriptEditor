@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import *
+from vendor.Qt.QtWidgets import *
+from vendor.Qt.QtGui import *
 import os
 from widgets import numBarWidget, inputWidget
 from managers import context
@@ -31,9 +31,19 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.clicked.connect(self.addNewTab)
-        newTabButton.setToolTip("Add Tab")
+        newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop()
+
+        whitespace_act = self.topLevelWidget().findChild(QAction, "whitespace_act")
+        # wordWrap_act = self.topLevelWidget().findChild(QAction, "wordWrap_act")
+        self.render_whitespace(whitespace_act.isChecked())
+
+        # mode = wordWrap_act.isChecked()
+        # if mode == QTextEdit.WidgetWidth:
+        #     cont.edit.setLineWrapMode(QTextEdit.NoWrap)
+        # else:
+        #     cont.edit.setLineWrapMode(QTextEdit.WidgetWidth)
 
         #connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
@@ -79,6 +89,14 @@ class tabWidgetClass(QTabWidget):
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         self.setCurrentIndex(self.count()-1)
+
+        topWidget = cont.edit.topLevelWidget()
+        ws_widget = topWidget.findChildren(QAction, 'whitespace_act')[0]
+        ww_widget = topWidget.findChildren(QAction, 'wordWrap_act')[0]
+
+        cont.edit.wordWrap(ww_widget.isChecked())
+        cont.edit.render_whitespace(ws_widget.isChecked())
+
         return cont.edit
 
     def getTabText(self, i):
@@ -99,7 +117,7 @@ class tabWidgetClass(QTabWidget):
             i = self.currentIndex()
         text = self.widget(i).edit.toPlainText()
         return text
-    
+
     def getCurrentLine(self, i=None):
         if i is None:
             i = self.currentIndex()
@@ -144,17 +162,22 @@ class tabWidgetClass(QTabWidget):
     def copy(self):
         self.current().copy()
 
-    def wordWrap(self):
+    def render_whitespace(self, state):
         for i in range(self.count()):
-            current_edit = self.widget(i).edit 
-            mode = current_edit.lineWrapMode()
-            if mode == QTextEdit.WidgetWidth:
-                current_edit.setLineWrapMode(QTextEdit.NoWrap)
-            else:
-                current_edit.setLineWrapMode(QTextEdit.WidgetWidth)
+            current_edit = self.widget(i).edit
+            current_edit.render_whitespace(state)
 
+    def wordWrap(self, state):
+        for i in range(self.count()):
+            current_edit = self.widget(i).edit
+            current_edit.wordWrap(state)
         # update line numbers
         self.update()
+
+    def set_font(self, font):
+        for i in range(self.count()):
+            current_edit = self.widget(i).edit
+            current_edit.setFont(font)
 
     def paste(self):
         self.current().paste()

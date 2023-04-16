@@ -7,7 +7,6 @@ import settingsManager
 from .pythonSyntax import design
 from .pythonSyntax import syntaxHighLighter
 from . import inputWidget
-# import icons_rcs
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):
@@ -26,13 +25,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.apply_btn.clicked.connect(self.apply)
         self.apply_btn.setText('Close')
         self.textSize_spb.valueChanged.connect(self.updateExample)
-
+        self.resize(self.parent().width()*0.8, self.parent().height()*0.6)
         self.fillUI()
         self.updateUI()
         self.updateColors()
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
-
 
     def fillUI(self, restore=None):
         if restore is None:
@@ -49,7 +47,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             index = self.themeList_cbb.findText(restore)
             self.themeList_cbb.setCurrentIndex(index)
         self.updateExample()
-
 
     def updateColors(self):
         curTheme = self.themeList_cbb.currentText()
@@ -127,7 +124,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 settings['colors'] = {name: colors}
             self.s.writeSettings(settings)
             self.fillUI(name)
-            # self.updateUI()
+            self.updateUI()
 
     def deleteTheme(self):
         text = self.themeList_cbb.currentText()

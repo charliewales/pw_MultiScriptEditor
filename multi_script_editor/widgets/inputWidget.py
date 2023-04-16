@@ -586,3 +586,19 @@ class inputClass(QTextEdit):
 
     def replaceAll(selfold, new):
         pass
+
+    def wordWrap(self, state):
+        if state:
+            self.setLineWrapMode(QTextEdit.WidgetWidth)
+        else:
+            self.setLineWrapMode(QTextEdit.NoWrap)
+
+    def render_whitespace(self, state):
+        text_option = QTextOption()
+        if state:
+            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
+            self.document().setDefaultTextOption(text_option)
+        else:
+            self.document().setDefaultTextOption(text_option)
+        self.wordWrap(not state)
+        self.wordWrap(state)

@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import *
+from vendor.Qt.QtWidgets import *
+from vendor.Qt.QtGui import *
 
 import os
 from managers import context
@@ -28,7 +28,6 @@ class outputClass(QTextBrowser):
         self.setMouseTracking(1)
         data = settingsManager.scriptEditorClass().readSettings()
         self.applyHightLighter(data.get('theme'))
-        self.setStyleSheet('QTextBrowser {background-color: #303030}')
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)
@@ -82,9 +81,21 @@ class outputClass(QTextBrowser):
             f.setPointSize(size)
             self.setFont(f)
 
-    def wordWrap(self):
-        mode = self.lineWrapMode()
-        if mode == QTextEdit.WidgetWidth:
-            self.setLineWrapMode(QTextEdit.NoWrap)
-        else:
+    def wordWrap(self, state):
+        if state:
             self.setLineWrapMode(QTextEdit.WidgetWidth)
+        else:
+            self.setLineWrapMode(QTextEdit.NoWrap)
+
+    def set_font(self, font):
+        self.setFont(font)
+
+    def render_whitespace(self, state):
+        text_option = QTextOption()
+        if state:
+            self.document().setDefaultTextOption(text_option)
+        else:
+            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
+            self.document().setDefaultTextOption(text_option)
+        self.wordWrap(not state)
+        self.wordWrap(state)
