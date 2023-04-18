@@ -34,17 +34,8 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop()
-
-        whitespace_act = self.topLevelWidget().findChild(QAction, "whitespace_act")
-        # wordWrap_act = self.topLevelWidget().findChild(QAction, "wordWrap_act")
+        whitespace_act = self.p.findChild(QAction, "whitespace_act")
         self.render_whitespace(whitespace_act.isChecked())
-
-        # mode = wordWrap_act.isChecked()
-        # if mode == QTextEdit.WidgetWidth:
-        #     cont.edit.setLineWrapMode(QTextEdit.NoWrap)
-        # else:
-        #     cont.edit.setLineWrapMode(QTextEdit.WidgetWidth)
-
         #connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
@@ -90,12 +81,15 @@ class tabWidgetClass(QTabWidget):
         cont.edit.highlight_current_line()
         self.setCurrentIndex(self.count()-1)
 
-        topWidget = cont.edit.topLevelWidget()
-        ws_widget = topWidget.findChildren(QAction, 'whitespace_act')[0]
-        ww_widget = topWidget.findChildren(QAction, 'wordWrap_act')[0]
+        ws_widget = self.p.findChildren(QAction, 'whitespace_act')[0]
+        ww_widget = self.p.findChildren(QAction, 'wordWrap_act')[0]
 
-        cont.edit.wordWrap(ww_widget.isChecked())
         cont.edit.render_whitespace(ws_widget.isChecked())
+
+        cont.edit.wordWrap(not ww_widget.isChecked())
+        cont.edit.wordWrap(ww_widget.isChecked())
+
+        cont.edit.set_start_font()
 
         return cont.edit
 
@@ -178,6 +172,17 @@ class tabWidgetClass(QTabWidget):
         for i in range(self.count()):
             current_edit = self.widget(i).edit
             current_edit.setFont(font)
+
+    def set_start_font(self, font_d):
+        family = font_d.get('family', 'Courier')
+        pointSize = font_d.get('pointSize', 10)
+        italic = font_d.get('italic', False)
+        weight = font_d.get('weight', 1)
+        editor_font = QFont(family, pointSize, weight, italic)
+        editor_font.setStyleHint(QFont.Monospace)
+        for i in range(self.count()):
+            current_edit = self.widget(i).edit
+            current_edit.setFont(editor_font)
 
     def paste(self):
         self.current().paste()

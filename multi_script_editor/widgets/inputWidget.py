@@ -46,11 +46,22 @@ class inputClass(QTextEdit):
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
-        data = settingsManager.scriptEditorClass().readSettings()
-        self.applyHightLighter(data.get('theme'))
-        self.setFont(font)
+        self.data = settingsManager.scriptEditorClass().readSettings()
+        self.applyHightLighter(self.data.get('theme'))
+        # self.setFont(font)
+        self.set_start_font()
         self.changeFontSize(True)
         self.highlight_current_line()
+
+    def set_start_font(self):
+        font_d = self.data.get('font', {})
+        family = font_d.get('family', 'Courier')
+        pointSize = font_d.get('pointSize', 10)
+        italic = font_d.get('italic', False)
+        weight = font_d.get('weight', 1.0)
+        editor_font = QFont(family, pointSize, weight, italic)
+        editor_font.setStyleHint(QFont.Monospace)
+        self.setFont(editor_font)
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()
@@ -276,11 +287,10 @@ class inputClass(QTextEdit):
 
         QTextEdit.keyPressEvent(self, event)
 
-
         # start parse text
         if parse and event.text():
             self.parseText()
-        
+
         self.highlight_current_line()
 
     def highlight_current_line(self):
@@ -288,7 +298,11 @@ class inputClass(QTextEdit):
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-        selection.format.setBackground(QColor("#555555"))  # set the background color
+        data = settingsManager.scriptEditorClass().readSettings() or {}
+        theme = data.get('theme', 'default')
+        theme_colors = data.get("colors", {}).get(theme, {})
+        highlight_color = theme_colors.get('highlight_line', (85,85,85))
+        selection.format.setBackground(QColor.fromRgb(*highlight_color))  # set the background color
         selection.cursor = cursor
         self.setExtraSelections([selection])
 
@@ -600,5 +614,5 @@ class inputClass(QTextEdit):
             self.document().setDefaultTextOption(text_option)
         else:
             self.document().setDefaultTextOption(text_option)
-        self.wordWrap(not state)
-        self.wordWrap(state)
+        # self.wordWrap(not state)
+        # self.wordWrap(state)

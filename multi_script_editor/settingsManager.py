@@ -48,6 +48,12 @@ class scriptEditorClass(object):
 
     def defaults(self):
         return dict(geometry=None,
-                    outFontSize=8
+                    outFontSize=8,
+                    wrap=True,
+                    out_wrap=True,
+                    echo_execute=True,
+                    clear_execute=False,
+                    always_ontop=True,
+                    show_whitespace=True,
+                    font={"family": "Courier", "pointSize": 10, "weight": 1, "italic": False}
                     )
-

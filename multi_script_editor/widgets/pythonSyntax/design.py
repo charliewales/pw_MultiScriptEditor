@@ -27,7 +27,8 @@ defaultColors = dict(
         completer_hover_background= (85,85,85),
         completer_selected_background= (123,123,123),
         default=(210,210,210),
-        whitespace=(0,0,0)
+        whitespace=(80,80,80),
+        highlight_line=(85, 85, 85),
 )
 
 

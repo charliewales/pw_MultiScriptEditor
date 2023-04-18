@@ -241,19 +241,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
+        out_wrap_state = self.out_wordWrap_act.isChecked()
         self.tab.wordWrap(not wrap_state)
+        self.out.wordWrap(not out_wrap_state)
         self.tab.render_whitespace(state)
         self.out.render_whitespace(state)
+        self.out.wordWrap(out_wrap_state)
         self.tab.wordWrap(wrap_state)
 
     def choose_font(self):
+        editor_font = self.tab.widget(0).edit.font()
         font_dialog = QFontDialog(self)
-        font_dialog.resize(self.width()*.8, self.height()*0.6)
-        font_dialog.exec_()
-        font = font_dialog.currentFont()
-        if font:
+        font_dialog.setCurrentFont(editor_font)
+        font_dialog.resize(self.width()*.8, self.height()*0.7)
+        accept_dialog = font_dialog.exec_()
+        if accept_dialog:
+            font = font_dialog.currentFont()
             self.tab.set_font(font)
-            self.out.setFont(font)
+            self.out.set_font(font)
 
     def clear_exec(self, exec_func):
         self.clearHistory()
@@ -283,6 +288,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.setHtml(old+txt)
         self.out.moveCursor(QTextCursor.End)
         self.out.ensureCursorVisible()
+
+    def showEvent(self, event):
+        data = self.s.readSettings()
+        if not data:
+            self.saveSettings()
 
     def closeEvent(self, event):
         self.saveSession()
@@ -506,6 +516,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         splitter = data.get('splitter', None)
         wrap = data.get('wrap', None)
         show_whitespace = data.get('show_whitespace', False)
+        font = data.get('font', False)
 
         if geo:
             self.move(geo[0], geo[1])
@@ -532,12 +543,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
             self.always_ontop_act.setChecked(always_ontop)
         if show_whitespace:
-            wrap_state = self.wordWrap_act.isChecked()
-            self.tab.wordWrap(not wrap_state)
             self.tab.render_whitespace(show_whitespace)
             self.out.render_whitespace(show_whitespace)
             self.whitespace_act.setChecked(show_whitespace)
-            self.tab.wordWrap(wrap_state)
+        if font:
+            self.tab.set_start_font(font)
+            self.out.set_start_font(font)
+
+        self.tab.wordWrap(not wrap)
+        self.tab.wordWrap(wrap)
 
         f =  self.out.font()
         f.setPointSize(outFontSize)
@@ -556,6 +570,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         word_wrap = self.wordWrap_act.isChecked()
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
+        editor_font = self.tab.widget(0).edit.font()
+
+        font_data = dict()
+        font_family = editor_font.family()
+        font_size = editor_font.pointSize()
+        font_italic = editor_font.italic()
+        font_weight = editor_font.weight()
+        font_data.update({"family": font_family})
+        font_data.update({"pointSize": font_size})
+        font_data.update({"weight": font_weight})
+        font_data.update({"italic": font_italic})
 
         data = dict(geometry=sGeo,
                     center=center,
@@ -566,7 +591,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     echo_execute=echo_execute,
                     clear_execute=clear_execute,
                     always_ontop=always_ontop,
-                    show_whitespace=show_whitespace)
+                    show_whitespace=show_whitespace,
+                    font=font_data)
         settings.update(data)
         self.s.writeSettings(settings)
 

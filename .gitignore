@@ -7,3 +7,4 @@ _tmp
 *.pyc
 multi_script_editor/run_no_pyc.cmd
 .history/
+multi_script_editor/run2_no_pyc.cmd

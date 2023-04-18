@@ -93,9 +93,17 @@ class outputClass(QTextBrowser):
     def render_whitespace(self, state):
         text_option = QTextOption()
         if state:
-            self.document().setDefaultTextOption(text_option)
-        else:
             text_option.setFlags(QTextOption.ShowTabsAndSpaces)
             self.document().setDefaultTextOption(text_option)
-        self.wordWrap(not state)
-        self.wordWrap(state)
+        else:
+            self.document().setDefaultTextOption(text_option)
+    
+    def set_start_font(self, font_d):
+        family = font_d.get('family', 'Courier')
+        pointSize = font_d.get('pointSize', 10)
+        italic = font_d.get('italic', False)
+        weight = font_d.get('weight', 1)
+        editor_font = QFont(family, pointSize, weight, italic)
+        editor_font.setStyleHint(QFont.Monospace)        
+        self.setFont(editor_font)
+
