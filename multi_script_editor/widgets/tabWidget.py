@@ -246,4 +246,3 @@ if __name__ == '__main__':
     w = tabWidgetClass()
     w.show()
     app.exec_()
-

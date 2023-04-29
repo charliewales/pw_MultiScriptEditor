@@ -242,12 +242,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
         out_wrap_state = self.out_wordWrap_act.isChecked()
-        self.tab.wordWrap(not wrap_state)
-        self.out.wordWrap(not out_wrap_state)
         self.tab.render_whitespace(state)
         self.out.render_whitespace(state)
-        self.out.wordWrap(out_wrap_state)
+        self.tab.wordWrap(not wrap_state)
+        self.out.wordWrap(not out_wrap_state)
         self.tab.wordWrap(wrap_state)
+        self.out.wordWrap(out_wrap_state)
 
     def choose_font(self):
         editor_font = self.tab.widget(0).edit.font()

@@ -48,7 +48,6 @@ class inputClass(QTextEdit):
         self.completer = completeWidget.completeMenuClass(parent, self)
         self.data = settingsManager.scriptEditorClass().readSettings()
         self.applyHightLighter(self.data.get('theme'))
-        # self.setFont(font)
         self.set_start_font()
         self.changeFontSize(True)
         self.highlight_current_line()
@@ -614,5 +613,3 @@ class inputClass(QTextEdit):
             self.document().setDefaultTextOption(text_option)
         else:
             self.document().setDefaultTextOption(text_option)
-        # self.wordWrap(not state)
-        # self.wordWrap(state)
