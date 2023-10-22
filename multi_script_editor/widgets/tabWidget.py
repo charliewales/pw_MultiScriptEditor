@@ -217,6 +217,7 @@ class tabWidgetClass(QTabWidget):
         msg_box.setText(question)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        yes_button.setFocus()
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 

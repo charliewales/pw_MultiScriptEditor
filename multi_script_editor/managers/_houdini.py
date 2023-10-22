@@ -25,7 +25,7 @@ def show(*args, **kwargs):
 
 def get_widget():
     widget = scriptEditor.scriptEditorClass()
-    widget.setStyleSheet('')            
+    widget.setStyleSheet('')
     widget.setStyleSheet( hqt.get_h14_style() )
     return widget
 
@@ -225,4 +225,3 @@ def wrapDroppedText(namespace, text, event):
             return '\n'.join(syntax)
 
     return text
-

@@ -100,7 +100,7 @@ class outputClass(QTextBrowser):
 
     def set_start_font(self, font_d):
         family = font_d.get('family', 'Courier')
-        pointSize = font_d.get('pointSize', 10)
+        pointSize = font_d.get('pointSize', 14)
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1)
         editor_font = QFont(family, pointSize, weight, italic)
