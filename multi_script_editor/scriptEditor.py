@@ -20,7 +20,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.0 - Python {0}'.format(py_ver)
+        self.ver = '3.0.2 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -228,7 +228,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execLine_act.setShortcut('Ctrl+Shift+Return')
         self.execLine_act.triggered.connect(self.executeLine)
         self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
-        
+
         QShortcut(QKeySequence('Ctrl+Shift+Enter'), self, self.executeLine)
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
