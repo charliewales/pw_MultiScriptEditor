@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import *
+from vendor.Qt.QtWidgets import *
+from vendor.Qt.QtGui import *
 import re
 import jedi
 from widgets.pythonSyntax import syntaxHighLighter
@@ -208,8 +208,13 @@ class inputClass(QTextEdit):
         elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
             self.p.tab.comment()
             return
+        # execute all/selected on pressing Enter key (numpad)
         elif event.key() == Qt.Key_Enter:
-            self.window().executeAll()
+            selection = self.getSelection()
+            if selection:
+                self.window().executeSelected()
+            else:
+                self.window().executeAll()
             event.ignore()
             return
         # execute selected
