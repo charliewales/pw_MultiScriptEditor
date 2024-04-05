@@ -217,13 +217,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.execSel_act.setShortcut('Ctrl+Return')
         self.execSel_act.setShortcutContext(Qt.WidgetWithChildrenShortcut)
 
+        QShortcut(QKeySequence('Ctrl+Enter'), self, self.executeSelected)
+
         self.execAll_act.triggered.connect(self.executeAll)
         self.execAll_act.setShortcut('Alt+Return')
         self.execAll_act.setShortcutContext(Qt.ApplicationShortcut)
 
+        QShortcut(QKeySequence('Alt+Enter'), self, self.executeAll)
+
         self.execLine_act.setShortcut('Ctrl+Shift+Return')
         self.execLine_act.triggered.connect(self.executeLine)
         self.execLine_act.setShortcutContext(Qt.ApplicationShortcut)
+        
+        QShortcut(QKeySequence('Ctrl+Shift+Enter'), self, self.executeLine)
 
         self.clearHistory_act.triggered.connect(self.clearHistory)
         self.clearHistory_act.setShortcut('Ctrl+Shift+C')

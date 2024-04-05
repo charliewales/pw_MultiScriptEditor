@@ -208,6 +208,10 @@ class inputClass(QTextEdit):
         elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
             self.p.tab.comment()
             return
+        elif event.key() == Qt.Key_Enter:
+            self.window().executeAll()
+            event.ignore()
+            return
         # execute selected
         elif event.modifiers() == Qt.ControlModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer:
