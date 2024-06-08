@@ -20,7 +20,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '3.0.2 - Python {0}'.format(py_ver)
+        self.ver = '3.0.3 - Python {0}'.format(py_ver)
         self.setupUi(self)
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
@@ -38,10 +38,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.dial = None
 
         self.updateNamespace({'self_main':self,
-                              'self_version':self.ver,
-                              'self_output': self.out,
-                              'self_help': self.mse_help,
-                              'self_context':managers.context})
+                            'self_version':self.ver,
+                            'self_output': self.out,
+                            'self_help': self.mse_help,
+                            'self_context':managers.context})
         self.session = sessionManager.sessionManagerClass()
         self.execAll_act.setIcon(QIcon(icons['all']))
         self.execLine_act.setIcon(QIcon(icons['line']))
@@ -383,9 +383,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 size = self.tab.widget(item).edit.font().pointSize()
             tab = {'name':name,
-                   'text':text,
-                   'active': item == index,
-                   'size': size}
+                'text':text,
+                'active': item == index,
+                'size': size}
             tabs.append(tab)
         path = self.session.writeSession(tabs)
         if verbos:
