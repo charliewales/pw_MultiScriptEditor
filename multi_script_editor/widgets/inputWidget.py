@@ -212,12 +212,9 @@ class inputClass(QTextEdit):
         elif event.key() == Qt.Key_Enter:
             selection = self.getSelection()
             if selection:
-                # self.window().executeSelected()
                 self.executeSignal.emit()
             else:
-                # self.window().executeAll()
                 self.p.executeAll()
-                # self.executeSignal.emit()
             event.ignore()
             return
         # execute selected
