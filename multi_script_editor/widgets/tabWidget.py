@@ -15,6 +15,24 @@ if not os.path.exists(style):
 class tabWidgetClass(QTabWidget):
     def __init__(self, parent=None):
         super(tabWidgetClass, self).__init__(parent)
+        self.setStyleSheet("""
+            QTabBar::tab {
+                max-width: 250px;
+                min-width: 80px;
+                max-height: 16px;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                padding: 8px;
+            }
+            QTabBar::tab:selected {
+                background: #136fa8;
+                color: #dddddd;
+                border: 2px solid #548af5;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+
+            }
+        """)
         # variables
         self.p = parent
         self.lastSearch = [0, None]

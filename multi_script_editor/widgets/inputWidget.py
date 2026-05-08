@@ -192,6 +192,18 @@ class inputClass(QTextEdit):
                     cursor.insertText(add)
                     self.setTextCursor(cursor)
                     return
+        # comment, Alt+C
+        elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
+            self.p.tab.comment()
+            return
+        # shuffle lines, Alt+up, Alt+down
+        elif event.modifiers() == Qt.AltModifier:
+            if event.key() == Qt.Key_Up:
+                self.move_line_up()
+                return
+            elif event.key() == Qt.Key_Down:
+                self.move_line_down()
+                return
         # remove 4 spaces
         elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_Backspace:
             cursor = self.textCursor()
@@ -206,10 +218,6 @@ class inputClass(QTextEdit):
                     cursor.insertText(line)
                     self.setTextCursor(cursor)
             parse = 1
-        #comment, Alt+C
-        elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
-            self.p.tab.comment()
-            return
         # execute all/selected on pressing Enter key (numpad)
         elif event.key() == Qt.Key_Enter:
             selection = self.getSelection()
@@ -300,6 +308,72 @@ class inputClass(QTextEdit):
         # start parse text
         if parse and event.text():
             self.parseText()
+
+        self.highlight_current_line()
+
+    def move_line_up(self):
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+
+        current_block = cursor.block()
+        prev_block = current_block.previous()
+
+        if not prev_block.isValid():
+            return  # already at top
+
+        current_text = current_block.text()
+        prev_text = prev_block.text()
+
+        # Replace previous line
+        cursor.setPosition(prev_block.position())
+        cursor.select(QTextCursor.LineUnderCursor)
+        cursor.removeSelectedText()
+        cursor.insertText(current_text)
+
+        # Replace current line
+        cursor.setPosition(current_block.position())
+        cursor.select(QTextCursor.LineUnderCursor)
+        cursor.removeSelectedText()
+        cursor.insertText(prev_text)
+
+        # Restore cursor to moved line
+        cursor.setPosition(prev_block.position())
+        self.setTextCursor(cursor)
+
+        cursor.endEditBlock()
+
+        self.highlight_current_line()
+
+    def move_line_down(self):
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+
+        current_block = cursor.block()
+        next_block = current_block.next()
+
+        if not next_block.isValid():
+            return  # already at bottom
+
+        current_text = current_block.text()
+        next_text = next_block.text()
+
+        # Replace current line
+        cursor.setPosition(current_block.position())
+        cursor.select(QTextCursor.LineUnderCursor)
+        cursor.removeSelectedText()
+        cursor.insertText(next_text)
+
+        # Replace next line
+        cursor.setPosition(next_block.position())
+        cursor.select(QTextCursor.LineUnderCursor)
+        cursor.removeSelectedText()
+        cursor.insertText(current_text)
+
+        # Restore cursor
+        cursor.setPosition(next_block.position())
+        self.setTextCursor(cursor)
+
+        cursor.endEditBlock()
 
         self.highlight_current_line()
 
