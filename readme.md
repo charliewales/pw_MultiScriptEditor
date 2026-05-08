@@ -1,5 +1,5 @@
 # Multi Script Editor v4.x.x
-<img width="1088" height="1166" alt="image" src="https://github.com/user-attachments/assets/332bb5d8-0f5f-41ee-8590-de80b452d9e0" />
+<img width="1079" height="1019" alt="imaxe" src="https://github.com/user-attachments/assets/7def0dd8-0a2c-464f-ae88-f0fa1e3cff23" />
 
 ## [Original code from Paul Winex](https://github.com/paulwinex/pw_MultiScriptEditor)
 
