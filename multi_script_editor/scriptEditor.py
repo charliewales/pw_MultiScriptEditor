@@ -28,7 +28,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
-        ver = "4.1.3"
+        ver = "4.2.0"
         py_ver = sys.version.split(' ')[0]
         self.ver = '{0} · Python-{1} · {2}-{3}'.format(
             ver, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
