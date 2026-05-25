@@ -28,7 +28,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
-        ver = "4.2.0"
+        ver = "4.2.1"
         py_ver = sys.version.split(' ')[0]
         self.ver = '{0} · Python-{1} · {2}-{3}'.format(
             ver, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
@@ -209,6 +209,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.help_act.setIcon(QIcon(icons['sel']))
         self.help_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence('Alt+h'), self, help_f)
+
+        print_f = partial(self.function_cmd, "print")
+        self.print_act.triggered.connect(print_f)
+        self.print_act.setShortcut("Alt+e")
+        self.print_act.setIcon(QIcon(icons["sel"]))
+        self.print_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+e"), self, print_f)
 
         type_f = partial(self.function_cmd, 'type')
         self.type_act.triggered.connect(type_f)

@@ -8,9 +8,9 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import *
+from vendor.Qt.QtWidgets import *
+from vendor.Qt.QtGui import *
 
 class Ui_scriptEditor(object):
     def setupUi(self, scriptEditor):
@@ -78,6 +78,8 @@ class Ui_scriptEditor(object):
         self.print_command_act.setObjectName("print_command_act")
         self.dir_act = QAction(scriptEditor)
         self.dir_act.setObjectName("dir_act")
+        self.print_act = QAction(scriptEditor)
+        self.print_act.setObjectName("print_act")
         self.help_act = QAction(scriptEditor)
         self.help_act.setObjectName("help_act")
         self.type_act = QAction(scriptEditor)
@@ -224,6 +226,7 @@ class Ui_scriptEditor(object):
         self.run_menu.addSeparator()
         self.run_menu.addAction(self.dir_act)
         self.run_menu.addAction(self.help_act)
+        self.run_menu.addAction(self.print_act)
         self.run_menu.addAction(self.type_act)
         self.run_menu.addSeparator()
         self.run_menu.addAction(self.print_command_act)
@@ -256,6 +259,7 @@ class Ui_scriptEditor(object):
         self.clear_exec_act.setText(QApplication.translate("scriptEditor", "Clear Output before Execution", None))
         self.print_command_act.setText(QApplication.translate("scriptEditor", "Echo Executed Command", None))
         self.dir_act.setText(QApplication.translate("scriptEditor", "dir()", None))
+        self.print_act.setText(QApplication.translate("scriptEditor", "print()", None))
         self.help_act.setText(QApplication.translate("scriptEditor", "help()", None))
         self.type_act.setText(QApplication.translate("scriptEditor", "type()", None))
         self.maya_cmds_act.setText(QApplication.translate("scriptEditor", "Maya Commands", None))
