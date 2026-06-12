@@ -283,6 +283,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.wordWrap(wrap_state)
         self.out.wordWrap(out_wrap_state)
 
+    def toggle_word_wrap(self):
+        state = not self.wordWrap_act.isChecked()
+        self.wordWrap_act.setChecked(state)
+        self.tab.wordWrap(state)
+
     def choose_font(self):
         editor_font = self.tab.widget(0).edit.font()
         font_dialog = QFontDialog(self)
@@ -331,9 +336,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def closeEvent(self, event):
         self.saveSession()
         self.saveSettings()
-        self.close()
-        if __name__ == '__main__':
-            sys.exit()
+        event.accept()
 
     def appContextMenu(self):
         if managers.context in managers.contextMenus:
@@ -480,7 +483,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             try:
                 try:
                     result = eval(command, self.namespace, self.namespace)
-                    if result != None:
+                    if result is not None:
                         #if command.startswith("dir("):
                         #    result = "['" + "',\n'".join(result) + "']"
                         #    self.out.showMessage(result)
@@ -496,7 +499,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 for i in (3, 2, 1, -1):
                     traceback_lines.pop(i)
                 self.out.showMessage('\n'.join(traceback_lines))
-            sys.stdout = tmp_stdout
+            finally:
+                sys.stdout = tmp_stdout
 
     def clearHistory(self):
         self.out.setText('')

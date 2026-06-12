@@ -49,7 +49,8 @@ class outputClass(QTextBrowser):
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
-            if event.delta() > 0:
+            delta = event.angleDelta().y() if hasattr(event, 'angleDelta') else event.delta()
+            if delta > 0:
                 self.changeFontSize(True)
             else:
                 self.changeFontSize(False)

@@ -110,7 +110,7 @@ class inputClass(QTextEdit):
                         context_completer = True
                         self.completer.updateCompleteList(comp, extra)
                 if not context_completer:
-                    if re.match('[a-zA-Z0-9_.]', text[pos-1]):
+                    if pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1]):
                         offs = 0
                         if managers.context in managers.autoImport:
                             autoImp = managers.autoImport.get(managers.context, '')
@@ -203,6 +203,10 @@ class inputClass(QTextEdit):
                 return
             elif event.key() == Qt.Key_Down:
                 self.move_line_down()
+                return
+            elif event.key() == Qt.Key_W:
+                if hasattr(self.p, 'toggle_word_wrap'):
+                    self.p.toggle_word_wrap()
                 return
         # remove 4 spaces
         elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_Backspace:
@@ -312,69 +316,63 @@ class inputClass(QTextEdit):
         self.highlight_current_line()
 
     def move_line_up(self):
-        cursor = self.textCursor()
-        cursor.beginEditBlock()
-
-        current_block = cursor.block()
-        prev_block = current_block.previous()
-
-        if not prev_block.isValid():
-            return  # already at top
-
-        current_text = current_block.text()
-        prev_text = prev_block.text()
-
-        # Replace previous line
-        cursor.setPosition(prev_block.position())
-        cursor.select(QTextCursor.LineUnderCursor)
-        cursor.removeSelectedText()
-        cursor.insertText(current_text)
-
-        # Replace current line
-        cursor.setPosition(current_block.position())
-        cursor.select(QTextCursor.LineUnderCursor)
-        cursor.removeSelectedText()
-        cursor.insertText(prev_text)
-
-        # Restore cursor to moved line
-        cursor.setPosition(prev_block.position())
-        self.setTextCursor(cursor)
-
-        cursor.endEditBlock()
-
-        self.highlight_current_line()
+        self.move_selected_lines(-1)
 
     def move_line_down(self):
+        self.move_selected_lines(1)
+
+    def selected_line_range(self):
+        cursor = self.textCursor()
+        document = self.document()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+        end_lookup = end
+        if cursor.hasSelection() and end > start:
+            end_lookup = end - 1
+        start_block = document.findBlock(start)
+        end_block = document.findBlock(end_lookup)
+        return start_block.blockNumber(), end_block.blockNumber()
+
+    def line_position(self, line):
+        block = self.document().findBlockByNumber(line)
+        if block.isValid():
+            return block.position()
+        return len(self.toPlainText())
+
+    def move_selected_lines(self, direction):
+        start_line, end_line = self.selected_line_range()
+        text = self.toPlainText()
+        lines = text.split('\n')
+        if direction < 0:
+            if start_line <= 0:
+                return
+            moving = lines[start_line:end_line + 1]
+            lines[start_line:end_line + 1] = []
+            insert_at = start_line - 1
+            lines[insert_at:insert_at] = moving
+        else:
+            if end_line >= len(lines) - 1:
+                return
+            moving = lines[start_line:end_line + 1]
+            lines[start_line:end_line + 1] = []
+            insert_at = start_line + 1
+            lines[insert_at:insert_at] = moving
+
+        new_start_line = start_line + direction
+        new_end_line = end_line + direction
         cursor = self.textCursor()
         cursor.beginEditBlock()
-
-        current_block = cursor.block()
-        next_block = current_block.next()
-
-        if not next_block.isValid():
-            return  # already at bottom
-
-        current_text = current_block.text()
-        next_text = next_block.text()
-
-        # Replace current line
-        cursor.setPosition(current_block.position())
-        cursor.select(QTextCursor.LineUnderCursor)
-        cursor.removeSelectedText()
-        cursor.insertText(next_text)
-
-        # Replace next line
-        cursor.setPosition(next_block.position())
-        cursor.select(QTextCursor.LineUnderCursor)
-        cursor.removeSelectedText()
-        cursor.insertText(current_text)
-
-        # Restore cursor
-        cursor.setPosition(next_block.position())
-        self.setTextCursor(cursor)
-
+        cursor.select(QTextCursor.Document)
+        cursor.insertText('\n'.join(lines))
         cursor.endEditBlock()
 
+        cursor = self.textCursor()
+        cursor.setPosition(self.line_position(new_start_line))
+        end_pos = self.line_position(new_end_line + 1)
+        if end_pos > self.line_position(new_end_line):
+            end_pos -= 1
+        cursor.setPosition(end_pos, QTextCursor.KeepAnchor)
+        self.setTextCursor(cursor)
         self.highlight_current_line()
 
     def highlight_current_line(self):

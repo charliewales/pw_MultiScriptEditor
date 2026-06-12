@@ -26,6 +26,7 @@ class lineNumberBarClass(QWidget):
         Also, adjusts the width of the number bar if necessary.
         '''
         # The + 4 is used to compensate for the current line being bold.
+        self.highest_line = self.edit.document().blockCount()
         fontSize = self.edit.font().pointSize()
         width = ((self.fontMetrics().width(str(self.highest_line)) + 7))*(fontSize/13.0)
         if self.width() != width and width > 10:
@@ -62,8 +63,11 @@ class lineNumberBarClass(QWidget):
             position = self.edit.document().documentLayout().blockBoundingRect(block).topLeft()
             # Check if the position of the block is out side of the visible
             # area.
-            if position.y() == page_bottom:
+            if position.y() > page_bottom:
                 break
+            if position.y() + fontSize < contents_y:
+                block = block.next()
+                continue
 
             rec = QRect(0,
                         round(position.y()) - contents_y,
@@ -88,7 +92,6 @@ class lineNumberBarClass(QWidget):
             # control points
 
             block = block.next()
-        self.highest_line = line_count
         painter.end()
         QWidget.paintEvent(self, event)
 

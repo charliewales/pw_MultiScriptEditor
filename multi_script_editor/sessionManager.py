@@ -11,9 +11,11 @@ class sessionManagerClass(object):
     def __init__(self):
         self.path = os.path.normpath(os.path.join(settingsManager.userPrefFolder(), sessionFilename))
         if not os.path.exists(self.path):
-            f = open(self.path, 'w')
-            f.write('{}')
-            f.close()
+            folder = os.path.dirname(self.path)
+            if folder and not os.path.exists(folder):
+                os.makedirs(folder)
+            with codecs.open(self.path, "w", "utf-16") as stream:
+                json.dump([], stream, indent=4)
 
     def readSession(self):
         if os.path.exists(self.path):

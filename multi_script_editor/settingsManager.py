@@ -5,6 +5,7 @@ from managers import context
 
 settingsFilename = 'pw_scriptEditor_pref.json'
 
+
 def userPrefFolder():
     appData = None
     if context == 'hou':
@@ -12,19 +13,24 @@ def userPrefFolder():
     elif context == 'maya':
         appData = os.getenv('MAYA_APP_DIR')
     elif context == 'nuke':
-        appData = os.path.join(os.environ['HOME'], '.nuke')
+        home = os.getenv('HOME') or os.path.expanduser('~')
+        appData = os.path.join(home, '.nuke')
     elif context == 'max':
         import MaxPlus
         appData = os.path.dirname(MaxPlus.PathManager.GetTempDir())
     if not appData:
         appData = os.getenv('HOME') or os.path.expanduser('~')
-    return  appData
+    return appData
+
 
 def settingsFile():
     path = os.path.normpath(os.path.join(userPrefFolder(), settingsFilename)).replace('\\','/')
     if not os.path.exists(path):
-                with open(path, 'w') as f:
-                    f.write('[]')
+        folder = os.path.dirname(path)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+        with codecs.open(path, "w", "utf-16") as stream:
+            json.dump(scriptEditorClass.defaults(), stream, indent=4)
     return path
 
 
@@ -46,7 +52,8 @@ class scriptEditorClass(object):
         with codecs.open(self.path, "w", "utf-16") as stream:
             json.dump(data, stream, indent=4)
 
-    def defaults(self):
+    @staticmethod
+    def defaults():
         return dict(geometry=None,
                     outFontSize=8,
                     wrap=True,
