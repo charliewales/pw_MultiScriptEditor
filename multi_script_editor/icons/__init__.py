@@ -36,4 +36,6 @@ icons = dict(
     shortcut=os.path.join(root,'shortcut.png'),
     print_help=os.path.join(root,'print_help.png'),
     font=os.path.join(root,'font.png'),
+    move_line_up=os.path.join(root,'move_line_up.png'),
+    move_line_down=os.path.join(root,'move_line_down.png'),
 )
