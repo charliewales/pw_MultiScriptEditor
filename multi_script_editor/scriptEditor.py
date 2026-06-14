@@ -266,6 +266,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.wordWrap_act.setShortcutContext(Qt.WindowShortcut)
         self.wordWrap_act.setCheckable(True)
 
+        self.moveLineUp_act.triggered.connect(self.tab.move_line_up)
+        self.moveLineUp_act.setShortcut('Alt+Up')
+        self.moveLineUp_act.setShortcutContext(Qt.WidgetShortcut)
+        self.moveLineUp_act.setIcon(QIcon(icons["move_line_up"]))
+
+        self.moveLineDown_act.triggered.connect(self.tab.move_line_down)
+        self.moveLineDown_act.setShortcut('Alt+Down')
+        self.moveLineDown_act.setShortcutContext(Qt.WidgetShortcut)
+        self.moveLineDown_act.setIcon(QIcon(icons["move_line_down"]))
+
         self.comment_cat.triggered.connect(self.tab.comment)
         self.comment_cat.setShortcut('Alt+C')
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)

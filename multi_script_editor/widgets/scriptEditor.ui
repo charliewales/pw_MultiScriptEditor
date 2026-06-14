@@ -100,6 +100,8 @@
     <addaction name="paste_act"/>
     <addaction name="separator"/>
     <addaction name="tabToSpaces_act"/>
+    <addaction name="moveLineUp_act"/>
+    <addaction name="moveLineDown_act"/>
     <addaction name="comment_cat"/>
     <addaction name="find_act"/>
    </widget>
@@ -267,6 +269,16 @@
   <action name="printHelp_act">
    <property name="text">
     <string>Print Help</string>
+   </property>
+  </action>
+  <action name="moveLineUp_act">
+   <property name="text">
+    <string>Move Line(s) Up</string>
+   </property>
+  </action>
+  <action name="moveLineDown_act">
+   <property name="text">
+    <string>Move Line(s) Down</string>
    </property>
   </action>
   <action name="comment_cat">

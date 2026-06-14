@@ -14,6 +14,8 @@ Autocomplete first                          >   ENTER or TAB in Editor
 Font Size                                   >   CTRL + MouseWheel
 Scroll Code Left-Right                      >   ALT + MouseWheel
 Comment/Uncomment line or selected lines    >   ALT + C
+Move line(s) up                                >   ALT + UP
+Move line(s) down                              >   ALT + DOWN
 Run dir() on current word                   >   ALT + D
 Run help() on current word                  >   ALT + H
 Quick Help                                  >   ALT + Q / F1

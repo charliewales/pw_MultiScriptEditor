@@ -227,6 +227,12 @@ class tabWidgetClass(QTabWidget):
         text = text.replace(find, rep)
         self.current().setPlainText(text)
 
+    def move_line_up(self):
+        self.current().move_line_up()
+
+    def move_line_down(self):
+        self.current().move_line_down()
+
     def comment(self):
         self.current().commentSelected()
 
