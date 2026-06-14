@@ -271,6 +271,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
         self.comment_cat.setIcon(QIcon(icons['comment']))
 
+        self.selectNextOccurrence_act.triggered.connect(self.tab.selectNextOccurrence)
+        self.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
+        self.selectNextOccurrence_act.setShortcutContext(Qt.WidgetShortcut)
+
+        self.selectAllOccurrences_act.triggered.connect(self.tab.selectAllOccurrences)
+        self.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
+        self.selectAllOccurrences_act.setShortcutContext(Qt.WidgetShortcut)
+
         self.always_ontop_act.triggered.connect(self.always_ontop)
         self.always_ontop_act.setShortcutContext(Qt.WidgetShortcut)
         self.always_ontop_act.setCheckable(True)

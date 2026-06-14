@@ -59,6 +59,7 @@ class inputClass(QTextEdit):
         self.autocomplete_timer.setSingleShot(True)
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
+        self.multi_cursors = []
 
     def set_start_font(self):
         font_d = self.data.get('font', {})
@@ -203,6 +204,8 @@ class inputClass(QTextEdit):
 
     def keyPressEvent(self, event):
         self.inputSignal.emit()
+        if self.handle_multi_cursor_key(event):
+            return
         parse = 0
 
         # for tab cycling
@@ -423,6 +426,8 @@ class inputClass(QTextEdit):
         self.highlight_current_line()
 
     def highlight_current_line(self):
+        selections = []
+        
         # set background color of current line
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
@@ -433,7 +438,31 @@ class inputClass(QTextEdit):
         highlight_color = theme_colors.get('highlight_line', (85,85,85))
         selection.format.setBackground(QColor.fromRgb(*highlight_color))  # set the background color
         selection.cursor = cursor
-        self.setExtraSelections([selection])
+        selections.append(selection)
+
+        # Draw multi-cursors
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            for mc in self.multi_cursors:
+                sel = QTextEdit.ExtraSelection()
+                if mc.hasSelection():
+                    sel.cursor = mc
+                    # Use a semi-transparent selection color
+                    sel.format.setBackground(QColor(40, 100, 200, 120))
+                else:
+                    # Simulated cursor block: highlight next character if possible
+                    c_copy = QTextCursor(mc)
+                    if not c_copy.atEnd():
+                        c_copy.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
+                        sel.cursor = c_copy
+                        # Draw simulated cursor color
+                        sel.format.setBackground(QColor(128, 128, 255, 180))
+                    else:
+                        # At the end of the line/document, we can format the cursor directly or highlight
+                        sel.cursor = c_copy
+                        sel.format.setBackground(QColor(128, 128, 255, 180))
+                selections.append(sel)
+
+        self.setExtraSelections(selections)
 
     def moveSelected(self, inc):
         cursor = self.textCursor()
@@ -688,6 +717,8 @@ class inputClass(QTextEdit):
 
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
         super(inputClass, self).mousePressEvent(event)
         self.highlight_current_line()
 
@@ -743,3 +774,216 @@ class inputClass(QTextEdit):
             self.document().setDefaultTextOption(text_option)
         else:
             self.document().setDefaultTextOption(text_option)
+
+    # --- Multi-Cursor / Multi-Selection Support ---
+
+    def handle_multi_cursor_key(self, event):
+        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
+            return False
+
+        key = event.key()
+        modifiers = event.modifiers()
+
+        # Escape key clears multi-cursor mode
+        if key == Qt.Key_Escape:
+            self.multi_cursors = []
+            self.highlight_current_line()
+            return True
+
+        # Clear on Ctrl+A
+        if key == Qt.Key_A and (modifiers & Qt.ControlModifier):
+            self.multi_cursors = []
+            self.highlight_current_line()
+            return False
+
+        # Check navigation keys
+        nav_ops = {
+            Qt.Key_Left: QTextCursor.Left,
+            Qt.Key_Right: QTextCursor.Right,
+            Qt.Key_Up: QTextCursor.Up,
+            Qt.Key_Down: QTextCursor.Down,
+            Qt.Key_Home: QTextCursor.StartOfLine,
+            Qt.Key_End: QTextCursor.EndOfLine,
+        }
+
+        if key in nav_ops:
+            op = nav_ops[key]
+            mode = QTextCursor.KeepAnchor if (modifiers & Qt.ShiftModifier) else QTextCursor.MoveAnchor
+            
+            # Ctrl + Left/Right moves word by word
+            if key == Qt.Key_Left and (modifiers & Qt.ControlModifier):
+                op = QTextCursor.WordLeft
+            elif key == Qt.Key_Right and (modifiers & Qt.ControlModifier):
+                op = QTextCursor.WordRight
+
+            # Apply movement to all cursors
+            for cursor in self.multi_cursors:
+                cursor.movePosition(op, mode)
+
+            self.deduplicate_and_sort_cursors()
+            
+            # Keep main cursor in sync with the first cursor in our list
+            if self.multi_cursors:
+                self.setTextCursor(self.multi_cursors[0])
+            self.highlight_current_line()
+            return True
+
+        # Text edits (typing, backspace, delete, return, tab)
+        is_edit = False
+        text = event.text()
+
+        # Sort cursors descending by position so edits at the bottom do not affect offsets of top cursors
+        sorted_cursors = sorted(self.multi_cursors, key=lambda c: c.position(), reverse=True)
+
+        main_cursor = self.textCursor()
+        main_cursor.beginEditBlock()
+        try:
+            if key == Qt.Key_Backspace:
+                is_edit = True
+                for cursor in sorted_cursors:
+                    cursor.deletePreviousChar()
+            elif key == Qt.Key_Delete:
+                is_edit = True
+                for cursor in sorted_cursors:
+                    cursor.deleteChar()
+            elif key in [Qt.Key_Return, Qt.Key_Enter]:
+                is_edit = True
+                for cursor in sorted_cursors:
+                    cursor.insertText("\n")
+            elif key == Qt.Key_Tab:
+                is_edit = True
+                for cursor in sorted_cursors:
+                    cursor.insertText("    ")
+            elif text and text.isprintable():
+                is_edit = True
+                for cursor in sorted_cursors:
+                    cursor.insertText(text)
+        finally:
+            main_cursor.endEditBlock()
+
+        if is_edit:
+            self.deduplicate_and_sort_cursors()
+            if self.multi_cursors:
+                self.setTextCursor(self.multi_cursors[0])
+            self.highlight_current_line()
+            # Trigger autocomplete parsing (with debounce)
+            self.autocomplete_timer.start(200)
+            return True
+
+        return False
+
+    def deduplicate_and_sort_cursors(self):
+        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
+            return
+        seen = set()
+        unique_cursors = []
+        # Sort by position, anchor to maintain stable order and identify duplicates
+        sorted_c = sorted(self.multi_cursors, key=lambda c: (c.position(), c.anchor()))
+        for c in sorted_c:
+            key = (c.position(), c.anchor())
+            if key not in seen:
+                seen.add(key)
+                unique_cursors.append(c)
+        self.multi_cursors = unique_cursors
+
+    def select_next_occurrence(self):
+        cursor = self.textCursor()
+        
+        # If no selection on the current cursor, select the word under the cursor first
+        if not cursor.hasSelection():
+            cursor.select(QTextCursor.WordUnderCursor)
+            self.setTextCursor(cursor)
+            
+        if not cursor.hasSelection():
+            return
+
+        target_text = cursor.selectedText()
+        if not target_text:
+            return
+
+        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
+            self.multi_cursors = [cursor]
+
+        # Find starting position for the next search
+        last_cursor = self.multi_cursors[-1]
+        start_pos = last_cursor.position()
+        
+        # Search forward
+        found_cursor = self.document().find(target_text, start_pos)
+        
+        # Wrap around if not found
+        if found_cursor.isNull() or found_cursor.position() <= start_pos:
+            found_cursor = self.document().find(target_text, 0)
+
+        if not found_cursor.isNull():
+            # Check if already selected
+            already_selected = False
+            for mc in self.multi_cursors:
+                if mc.selectionStart() == found_cursor.selectionStart() and mc.selectionEnd() == found_cursor.selectionEnd():
+                    already_selected = True
+                    break
+            
+            if not already_selected:
+                self.multi_cursors.append(found_cursor)
+                self.setTextCursor(found_cursor)
+
+        self.highlight_current_line()
+
+    def select_all_occurrences(self):
+        cursor = self.textCursor()
+        
+        # If no selection on the current cursor, select the word under the cursor first
+        if not cursor.hasSelection():
+            cursor.select(QTextCursor.WordUnderCursor)
+            self.setTextCursor(cursor)
+            
+        if not cursor.hasSelection():
+            return
+
+        target_text = cursor.selectedText()
+        if not target_text:
+            return
+
+        self.multi_cursors = []
+        start_pos = 0
+        while True:
+            found_cursor = self.document().find(target_text, start_pos)
+            if found_cursor.isNull():
+                break
+            if found_cursor.position() <= start_pos:
+                break
+            self.multi_cursors.append(found_cursor)
+            start_pos = found_cursor.position()
+
+        self.highlight_current_line()
+
+    # Clear multi-cursor selections on standard clipboard and undo/redo operations
+    def undo(self):
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
+            self.highlight_current_line()
+        super(inputClass, self).undo()
+
+    def redo(self):
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
+            self.highlight_current_line()
+        super(inputClass, self).redo()
+
+    def cut(self):
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
+            self.highlight_current_line()
+        super(inputClass, self).cut()
+
+    def copy(self):
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
+            self.highlight_current_line()
+        super(inputClass, self).copy()
+
+    def paste(self):
+        if hasattr(self, 'multi_cursors') and self.multi_cursors:
+            self.multi_cursors = []
+            self.highlight_current_line()
+        super(inputClass, self).paste()

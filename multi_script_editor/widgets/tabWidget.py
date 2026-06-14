@@ -230,6 +230,12 @@ class tabWidgetClass(QTabWidget):
     def comment(self):
         self.current().commentSelected()
 
+    def selectNextOccurrence(self):
+        self.current().select_next_occurrence()
+
+    def selectAllOccurrences(self):
+        self.current().select_all_occurrences()
+
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)

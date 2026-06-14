@@ -166,6 +166,10 @@ class Ui_scriptEditor(object):
         self.showOutline_act = QAction(scriptEditor)
         self.showOutline_act.setObjectName("showOutline_act")
         self.showOutline_act.setCheckable(True)
+        self.selectNextOccurrence_act = QAction(scriptEditor)
+        self.selectNextOccurrence_act.setObjectName("selectNextOccurrence_act")
+        self.selectAllOccurrences_act = QAction(scriptEditor)
+        self.selectAllOccurrences_act.setObjectName("selectAllOccurrences_act")
         self.file_menu.addAction(self.load_act)
         self.file_menu.addAction(self.save_act)
         self.file_menu.addSeparator()
@@ -201,13 +205,14 @@ class Ui_scriptEditor(object):
         self.tools_menu.addAction(self.copy_act)
         self.tools_menu.addAction(self.cut_act)
         self.tools_menu.addAction(self.paste_act)
-        self.tools_menu.addAction(self.paste_act)
         self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.deleteLine_act)
         self.tools_menu.addAction(self.duplicateLine_act)
         self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.comment_cat)
         self.tools_menu.addAction(self.find_act)
+        self.tools_menu.addAction(self.selectNextOccurrence_act)
+        self.tools_menu.addAction(self.selectAllOccurrences_act)
         self.tools_menu.addAction(self.tabToSpaces_act)
         self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.whitespace_act)
@@ -246,10 +251,10 @@ class Ui_scriptEditor(object):
         self.toolBar.addAction(self.execLine_act)
         self.toolBar.addAction(self.execSel_act)
         self.toolBar.addAction(self.clearHistory_act)
-
+ 
         self.retranslateUi(scriptEditor)
         QMetaObject.connectSlotsByName(scriptEditor)
-
+ 
     def retranslateUi(self, scriptEditor):
         scriptEditor.setWindowTitle(QApplication.translate("scriptEditor", "MainWindow", None))
         self.file_menu.setTitle(QApplication.translate("scriptEditor", "File", None))
@@ -307,3 +312,5 @@ class Ui_scriptEditor(object):
         self.printHelp_act.setText(QApplication.translate("scriptEditor", "Help", None))
         self.comment_cat.setText(QApplication.translate("scriptEditor", "Comment", None))
         self.showOutline_act.setText(QApplication.translate("scriptEditor", "Show Code Outline", None))
+        self.selectNextOccurrence_act.setText(QApplication.translate("scriptEditor", "Add Next Occurrence", None))
+        self.selectAllOccurrences_act.setText(QApplication.translate("scriptEditor", "Select All Occurrences", None))
