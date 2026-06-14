@@ -45,6 +45,9 @@ class outputClass(QTextBrowser):
         font-size: %spx;
     }''' % size
         self.setStyleSheet(style)
+        f = self.font()
+        f.setPointSize(size)
+        self.setFont(f)
 
 
     def wheelEvent(self, event):

@@ -210,6 +210,7 @@ class Ui_scriptEditor(object):
         self.tools_menu.addAction(self.duplicateLine_act)
         self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.comment_cat)
+        self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.find_act)
         self.tools_menu.addAction(self.selectNextOccurrence_act)
         self.tools_menu.addAction(self.selectAllOccurrences_act)
@@ -251,10 +252,10 @@ class Ui_scriptEditor(object):
         self.toolBar.addAction(self.execLine_act)
         self.toolBar.addAction(self.execSel_act)
         self.toolBar.addAction(self.clearHistory_act)
- 
+
         self.retranslateUi(scriptEditor)
         QMetaObject.connectSlotsByName(scriptEditor)
- 
+
     def retranslateUi(self, scriptEditor):
         scriptEditor.setWindowTitle(QApplication.translate("scriptEditor", "MainWindow", None))
         self.file_menu.setTitle(QApplication.translate("scriptEditor", "File", None))

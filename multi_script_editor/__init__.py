@@ -12,6 +12,7 @@ def showHoudini(
     ontop=False,
     name=None,
     floating=False,
+    dialog=False,
     position=(),
     size=(),
     pane=None,
@@ -26,6 +27,7 @@ def showHoudini(
     _houdini.show(
         clear=clear,
         ontop=ontop,
+        dialog=dialog,
         name=name,
         floating=floating,
         position=position,

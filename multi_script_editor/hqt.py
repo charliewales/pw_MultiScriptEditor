@@ -129,23 +129,9 @@ def setIcon(widget):
 ############  METHODS FOR HOU 14 ###########################
 ############################################################
 
-def getHouWindow(): # temporary method
-    # check Houdini version
-#    version = hou.applicationVersion()[0]
-#    if 13 <= version:
-#        app = QApplication.instance()
-#        for w in app.topLevelWidgets():
-#            if w.windowIconText():
-#                return w
-#    elif 13 < version < 17:
-#        return hou.ui.mainQtWindow()
-#    elif version > 16:
-#        return hou.qt.mainWindow()
+def getHouWindow():
     return hou.qt.mainWindow()
 
-
-
-houWindow = getHouWindow()
 
 def showUi14(cls,  name=None, floating=False, position=(),
              size=(), pane=None, replacePyPanel=False,
@@ -158,10 +144,27 @@ def showUi14(cls,  name=None, floating=False, position=(),
     if dialog:
         h = getHouWindow()
         dial = cls(h, *(args or []), **(kwargs or {}))
-        dial.setStyleSheet('')
-        dial.setStyleSheet(get_h14_style())
-        res = dial.exec_()
-        return (res, dial)
+        dial.tab.setStyleSheet("""
+            QTabBar::tab {
+                max-width: 250px;
+                min-width: 80px;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+                padding: 8px;
+            }
+            QTabBar::tab:selected {
+                background: #136fa8;
+                color: #dddddd;
+                border: 2px solid #548af5;
+                border-top-left-radius: 16px;
+                border-top-right-radius: 16px;
+
+            }
+        """)
+
+        dial.show()
+
+        return dial
 
     panFile = createPanelFile(cls, name)
     panFile = os.path.normpath(panFile).replace('\\', '/')

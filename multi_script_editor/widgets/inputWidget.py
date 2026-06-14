@@ -397,11 +397,11 @@ class inputClass(QTextEdit):
         cursor = self.textCursor()
         anchor = cursor.anchor()
         position = cursor.position()
-        
+
         anchor_block = self.document().findBlock(anchor)
         anchor_col = anchor - anchor_block.position()
         anchor_block_num = anchor_block.blockNumber()
-        
+
         pos_block = self.document().findBlock(position)
         pos_col = position - pos_block.position()
         pos_block_num = pos_block.blockNumber()
@@ -415,19 +415,19 @@ class inputClass(QTextEdit):
         new_cursor = self.textCursor()
         new_anchor_block = self.document().findBlockByNumber(anchor_block_num + direction)
         new_pos_block = self.document().findBlockByNumber(pos_block_num + direction)
-        
+
         if new_anchor_block.isValid() and new_pos_block.isValid():
             new_anchor = new_anchor_block.position() + anchor_col
             new_pos = new_pos_block.position() + pos_col
             new_cursor.setPosition(new_anchor)
             new_cursor.setPosition(new_pos, QTextCursor.KeepAnchor)
             self.setTextCursor(new_cursor)
-            
+
         self.highlight_current_line()
 
     def highlight_current_line(self):
         selections = []
-        
+
         # set background color of current line
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
@@ -696,6 +696,10 @@ class inputClass(QTextEdit):
         font-family: %s;
     }''' % (size, font_name)
         self.setStyleSheet(style)
+        f = self.font()
+        f.setPointSize(size)
+        f.setFamily(font_name)
+        self.setFont(f)
 
     def insertFromMimeData (self, source ):
         text = source.text()
@@ -809,7 +813,7 @@ class inputClass(QTextEdit):
         if key in nav_ops:
             op = nav_ops[key]
             mode = QTextCursor.KeepAnchor if (modifiers & Qt.ShiftModifier) else QTextCursor.MoveAnchor
-            
+
             # Ctrl + Left/Right moves word by word
             if key == Qt.Key_Left and (modifiers & Qt.ControlModifier):
                 op = QTextCursor.WordLeft
@@ -821,7 +825,7 @@ class inputClass(QTextEdit):
                 cursor.movePosition(op, mode)
 
             self.deduplicate_and_sort_cursors()
-            
+
             # Keep main cursor in sync with the first cursor in our list
             if self.multi_cursors:
                 self.setTextCursor(self.multi_cursors[0])
@@ -888,12 +892,12 @@ class inputClass(QTextEdit):
 
     def select_next_occurrence(self):
         cursor = self.textCursor()
-        
+
         # If no selection on the current cursor, select the word under the cursor first
         if not cursor.hasSelection():
             cursor.select(QTextCursor.WordUnderCursor)
             self.setTextCursor(cursor)
-            
+
         if not cursor.hasSelection():
             return
 
@@ -907,10 +911,10 @@ class inputClass(QTextEdit):
         # Find starting position for the next search
         last_cursor = self.multi_cursors[-1]
         start_pos = last_cursor.position()
-        
+
         # Search forward
         found_cursor = self.document().find(target_text, start_pos)
-        
+
         # Wrap around if not found
         if found_cursor.isNull() or found_cursor.position() <= start_pos:
             found_cursor = self.document().find(target_text, 0)
@@ -922,7 +926,7 @@ class inputClass(QTextEdit):
                 if mc.selectionStart() == found_cursor.selectionStart() and mc.selectionEnd() == found_cursor.selectionEnd():
                     already_selected = True
                     break
-            
+
             if not already_selected:
                 self.multi_cursors.append(found_cursor)
                 self.setTextCursor(found_cursor)
@@ -931,12 +935,12 @@ class inputClass(QTextEdit):
 
     def select_all_occurrences(self):
         cursor = self.textCursor()
-        
+
         # If no selection on the current cursor, select the word under the cursor first
         if not cursor.hasSelection():
             cursor.select(QTextCursor.WordUnderCursor)
             self.setTextCursor(cursor)
-            
+
         if not cursor.hasSelection():
             return
 

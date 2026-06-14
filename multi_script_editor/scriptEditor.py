@@ -9,6 +9,7 @@ os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(["PySide2", "PySide6"])
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
+mse_version = "5.0.0"
 
 import managers
 import sessionManager
@@ -18,7 +19,7 @@ from icons import *
 from vendor.help import get_help
 import ast
 import re
-# Cleaned up global/wildcard imports to use explicit imports from vendor.Qt for better performance and maintainability
+
 from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer
 from vendor.Qt.QtGui import QColor, QIcon, QKeySequence, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu
@@ -91,14 +92,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
-        ver = "5.0.0"
         py_ver = sys.version.split(' ')[0]
         self.ver = '{0} · Python-{1} · {2}-{3}'.format(
-            ver, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
+            mse_version, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
         )
         self.setupUi(self)
         self.icon_path = os.path.dirname(__file__)
-        window_icon = "{0}/icons/pw.png".format(self.icon_path)
+        window_icon = QIcon(icons["pw"])
         self.setWindowIcon(QIcon(window_icon))
 
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
@@ -274,10 +274,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.selectNextOccurrence_act.triggered.connect(self.tab.selectNextOccurrence)
         self.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         self.selectNextOccurrence_act.setShortcutContext(Qt.WidgetShortcut)
+        self.selectNextOccurrence_act.setIcon(QIcon(icons["replace"]))
 
         self.selectAllOccurrences_act.triggered.connect(self.tab.selectAllOccurrences)
         self.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
         self.selectAllOccurrences_act.setShortcutContext(Qt.WidgetShortcut)
+        self.selectAllOccurrences_act.setIcon(QIcon(icons["replace"]))
 
         self.always_ontop_act.triggered.connect(self.always_ontop)
         self.always_ontop_act.setShortcutContext(Qt.WidgetShortcut)
@@ -361,6 +363,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # Sessions Submenu in File menu
         self.sessions_menu = QMenu("Sessions", self)
+        self.sessions_menu.setIcon(QIcon(icons['open']))
         self.file_menu.insertMenu(self.saveSeccion_act, self.sessions_menu)
         self.fillSessionsMenu()
 
@@ -403,8 +406,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         accept_dialog = font_dialog.exec_()
         if accept_dialog:
             font = font_dialog.currentFont()
-            self.tab.set_font(font)
+            # print("font", font)
+            for index in range(0, self.tab.count()):
+                self.tab.widget(index).edit.setFont(font)
             self.out.set_font(font)
+            self.saveSettings()
 
     def clear_exec(self, exec_func):
         self.clearHistory()
@@ -740,6 +746,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
         editor_font = self.tab.widget(0).edit.font()
+        show_outline = self.showOutline_act.isChecked()
 
         font_data = dict()
         font_family = editor_font.family()
@@ -763,7 +770,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             always_ontop=always_ontop,
             show_whitespace=show_whitespace,
             font=font_data,
-            show_outline=self.showOutline_act.isChecked(),
+            show_outline=show_outline,
         )
         settings.update(data)
         self.s.writeSettings(settings)
@@ -885,6 +892,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.sessions_menu.addAction(save_act)
 
         self.delete_session_menu = QMenu("Delete Session", self)
+        self.delete_session_menu.setIcon(QIcon(icons["clear"]))
         self.sessions_menu.addMenu(self.delete_session_menu)
 
         self.sessions_menu.addSeparator()
