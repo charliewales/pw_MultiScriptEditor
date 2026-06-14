@@ -505,17 +505,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def loadSession(self):
         sessions = None
-        if self.session.backupExists():
-            res = QMessageBox.question(
-                self,
-                "Restore Session",
-                "An auto-saved session backup was found (potentially from an unexpected exit). Do you want to restore it?",
-                QMessageBox.Yes | QMessageBox.No
-            )
-            if res == QMessageBox.Yes:
-                sessions = self.session.readBackup()
-            else:
-                self.session.removeBackup()
+        # if self.session.backupExists():
+        #     res = QMessageBox.question(
+        #         self,
+        #         "Restore Session",
+        #         "An auto-saved session backup was found (potentially from an unexpected exit). Do you want to restore it?",
+        #         QMessageBox.Yes | QMessageBox.No
+        #     )
+        #     if res == QMessageBox.Yes:
+        #         sessions = self.session.readBackup()
+        #     else:
+        #         self.session.removeBackup()
 
         if sessions is None:
             sessions = self.session.readSession()
