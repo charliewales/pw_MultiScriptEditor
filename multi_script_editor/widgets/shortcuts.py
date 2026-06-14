@@ -1,6 +1,5 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 from widgets import shortcuts_UIs
 import os, sys
 

@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtGui import QFont, QFontMetrics
+from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem
 import os, re
 from . pythonSyntax import design
 import managers

@@ -1,7 +1,6 @@
 import os, sys, re
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import QEvent, QObject
+from vendor.Qt.QtWidgets import QApplication
 
 from multi_script_editor import scriptEditor
 import MaxPlus

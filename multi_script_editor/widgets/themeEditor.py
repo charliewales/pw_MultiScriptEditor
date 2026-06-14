@@ -1,7 +1,7 @@
 import os
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import QSize, Qt
+from vendor.Qt.QtGui import QColor, QIcon, QPixmap
+from vendor.Qt.QtWidgets import QApplication, QColorDialog, QDialog, QInputDialog, QLineEdit, QListWidgetItem, QMessageBox
 from widgets import themeEditor_UIs as ui
 import settingsManager
 from .pythonSyntax import design

@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import QSize, Qt
+from vendor.Qt.QtGui import QIcon, QPixmap
+from vendor.Qt.QtWidgets import QDialog
 import icons
 from widgets import about_UIs
 import os

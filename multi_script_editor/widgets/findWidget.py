@@ -1,6 +1,5 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import QTimer, Qt, Signal
+from vendor.Qt.QtWidgets import QWidget
 from widgets import findWidget_UIs as ui
 
 class findWidgetClass(QWidget, ui.Ui_findReplace):

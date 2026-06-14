@@ -8,9 +8,8 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import QMetaObject, QSize, Qt
+from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget
 
 class Ui_themeEditor(object):
     def setupUi(self, themeEditor):

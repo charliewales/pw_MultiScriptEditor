@@ -16,19 +16,82 @@ import settingsManager
 import vendor.Qt
 from icons import *
 from vendor.help import get_help
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtGui import *
-from vendor.Qt.QtWidgets import *
+import ast
+import re
+# Cleaned up global/wildcard imports to use explicit imports from vendor.Qt for better performance and maintainability
+from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer
+from vendor.Qt.QtGui import QColor, QIcon, QKeySequence, QPalette, QTextCursor
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
 from widgets import scriptEditor_UIs as ui
 from widgets.pythonSyntax import design
+
+
+def parse_outline(code):
+    try:
+        tree = ast.parse(code)
+    except:
+        return parse_outline_regex(code)
+
+    symbols = []
+
+    class OutlineVisitor(ast.NodeVisitor):
+        def visit_ClassDef(self, node):
+            symbols.append({
+                'name': "class {0}".format(node.name),
+                'line': node.lineno,
+                'indent': 0,
+                'type': 'class'
+            })
+            self.generic_visit(node)
+
+        def visit_FunctionDef(self, node):
+            symbols.append({
+                'name': "def {0}()".format(node.name),
+                'line': node.lineno,
+                'indent': 1,
+                'type': 'function'
+            })
+
+    OutlineVisitor().visit(tree)
+    symbols.sort(key=lambda x: x['line'])
+    return symbols
+
+
+def parse_outline_regex(code):
+    symbols = []
+    lines = code.split('\n')
+    for i, line in enumerate(lines):
+        line_num = i + 1
+        class_match = re.match(r'^(\s*)class\s+(\w+)', line)
+        if class_match:
+            indent = len(class_match.group(1)) // 4
+            name = class_match.group(2)
+            symbols.append({
+                'name': "class {0}".format(name),
+                'line': line_num,
+                'indent': indent,
+                'type': 'class'
+            })
+            continue
+        def_match = re.match(r'^(\s*)def\s+(\w+)', line)
+        if def_match:
+            indent = len(def_match.group(1)) // 4
+            name = def_match.group(2)
+            symbols.append({
+                'name': "def {0}()".format(name),
+                'line': line_num,
+                'indent': indent,
+                'type': 'function'
+            })
+    return symbols
 
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
-        ver = "4.3.0"
+        ver = "5.0.0"
         py_ver = sys.version.split(' ')[0]
         self.ver = '{0} · Python-{1} · {2}-{3}'.format(
             ver, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
@@ -44,7 +107,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out = outputWidget.outputClass()
         self.out_ly.addWidget(self.out)
         self.tab = tabWidget.tabWidgetClass(self)
-        self.in_ly.addWidget(self.tab)
+
+        # Horizontal QSplitter for outline sidebar and editor tabs
+        self.horizontal_splitter = QSplitter(Qt.Horizontal)
+        self.outline_panel = QWidget()
+        self.outline_ly = QVBoxLayout(self.outline_panel)
+        self.outline_ly.setContentsMargins(0, 0, 0, 0)
+        self.outline_title = QLabel("Outline")
+        self.outline_title.setStyleSheet("font-weight: bold; padding: 4px; color: #fff; background-color: #333;")
+        self.outline_list = QListWidget()
+        self.outline_list.itemClicked.connect(self.outlineItemClicked)
+        self.outline_ly.addWidget(self.outline_title)
+        self.outline_ly.addWidget(self.outline_list)
+
+        self.horizontal_splitter.addWidget(self.outline_panel)
+        self.horizontal_splitter.addWidget(self.tab)
+        self.in_ly.addWidget(self.horizontal_splitter)
+        self.horizontal_splitter.setSizes([0, 800])  # Start with outline panel collapsed
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
             m.setWindowTitle('MSE {0}'.format(self.ver))
@@ -265,6 +344,26 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # hide
         self.donate_act.setVisible(False)
 
+        # Create status bar
+        self.statusBar()
+
+        # Outline toggle setup
+        self.showOutline_act.setShortcut("Ctrl+Shift+O")
+        self.showOutline_act.triggered.connect(self.toggleOutline)
+
+        # Sessions Submenu in File menu
+        self.sessions_menu = QMenu("Sessions", self)
+        self.file_menu.insertMenu(self.saveSeccion_act, self.sessions_menu)
+        self.fillSessionsMenu()
+
+        # Auto-Save timer (every 60 seconds)
+        self.autosave_timer = QTimer(self)
+        self.autosave_timer.timeout.connect(self.autoSave)
+        self.autosave_timer.start(60000)
+
+        # Tab current change triggers outline refresh
+        self.tab.currentChanged.connect(self.updateOutline)
+
         # start
         self.loadSession()
         self.loadSettings()
@@ -336,6 +435,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def closeEvent(self, event):
         self.saveSession()
         self.saveSettings()
+        self.session.removeBackup()
         event.accept()
 
     def appContextMenu(self):
@@ -390,7 +490,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.setWindowIcon(QIcon(icons['pw']))
 
     def loadSession(self):
-        sessions = self.session.readSession()
+        sessions = None
+        if self.session.backupExists():
+            res = QMessageBox.question(
+                self,
+                "Restore Session",
+                "An auto-saved session backup was found (potentially from an unexpected exit). Do you want to restore it?",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if res == QMessageBox.Yes:
+                sessions = self.session.readBackup()
+            else:
+                self.session.removeBackup()
+
+        if sessions is None:
+            sessions = self.session.readSession()
+
         self.tab.clear()
         active = 0
         if sessions:
@@ -599,6 +714,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         f.setPointSize(outFontSize)
         self.out.setFont(f)
 
+        show_outline = data.get('show_outline', False)
+        self.showOutline_act.setChecked(show_outline)
+        self.toggleOutline(show_outline)
+
     def saveSettings(self):
         settings = self.s.readSettings()
         geo = self.geometry()
@@ -636,6 +755,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             always_ontop=always_ontop,
             show_whitespace=show_whitespace,
             font=font_data,
+            show_outline=self.showOutline_act.isChecked(),
         )
         settings.update(data)
         self.s.writeSettings(settings)
@@ -697,11 +817,152 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         elif os.name == 'os2':
             os.system('open "%s"' % path)
 
+    # NEW FEATURES METHODS
+    def toggleOutline(self, state):
+        if state:
+            self.horizontal_splitter.setSizes([200, 600])
+            self.updateOutline()
+        else:
+            self.horizontal_splitter.setSizes([0, 800])
+
+    def updateOutline(self):
+        if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
+            return
+        self.outline_list.clear()
+        edit = self.tab.current()
+        if not edit:
+            return
+        code = edit.toPlainText()
+        symbols = parse_outline(code)
+        for sym in symbols:
+            indent_spaces = "  " * sym['indent']
+            item = QListWidgetItem("{0}{1}".format(indent_spaces, sym['name']))
+            item.setData(Qt.UserRole, sym['line'])
+            if sym['type'] == 'class':
+                item.setForeground(QColor("#56B6C2"))
+            else:
+                item.setForeground(QColor("#E06C75"))
+            self.outline_list.addItem(item)
+
+    def outlineItemClicked(self, item):
+        line = item.data(Qt.UserRole)
+        if line:
+            edit = self.tab.current()
+            cursor = edit.textCursor()
+            block = edit.document().findBlockByNumber(line - 1)
+            cursor.setPosition(block.position())
+            edit.setTextCursor(cursor)
+            edit.setFocus()
+
+    def autoSave(self):
+        tabs = []
+        index = self.tab.currentIndex()
+        for item in range(self.tab.count()):
+            name = self.tab.tabText(item)
+            text = self.tab.getTabText(item)
+            if managers.context == 'hou':
+                size = self.tab.widget(item).edit.fs
+            else:
+                size = self.tab.widget(item).edit.font().pointSize()
+            tab = {'name': name, 'text': text, 'active': item == index, 'size': size}
+            tabs.append(tab)
+        self.session.writeBackup(tabs)
+
+    def fillSessionsMenu(self):
+        self.sessions_menu.clear()
+
+        save_act = QAction("Save Current Session As...", self)
+        save_act.setIcon(QIcon(icons['save']))
+        save_act.triggered.connect(self.saveNamedSession)
+        self.sessions_menu.addAction(save_act)
+
+        self.delete_session_menu = QMenu("Delete Session", self)
+        self.sessions_menu.addMenu(self.delete_session_menu)
+
+        self.sessions_menu.addSeparator()
+
+        names = self.session.listNamedSessions()
+        if names:
+            for name in names:
+                act = QAction(name, self)
+                act.triggered.connect(lambda checked=False, n=name: self.loadNamedSession(n))
+                self.sessions_menu.addAction(act)
+
+                del_act = QAction(name, self)
+                del_act.triggered.connect(lambda checked=False, n=name: self.deleteNamedSession(n))
+                self.delete_session_menu.addAction(del_act)
+        else:
+            no_sessions_act = QAction("No saved sessions", self)
+            no_sessions_act.setEnabled(False)
+            self.sessions_menu.addAction(no_sessions_act)
+
+            no_del_act = QAction("No saved sessions", self)
+            no_del_act.setEnabled(False)
+            self.delete_session_menu.addAction(no_del_act)
+
+    def saveNamedSession(self):
+        name, ok = QInputDialog.getText(self, "Save Named Session", "Enter session name:")
+        if ok and name.strip():
+            name = name.strip()
+            tabs = []
+            index = self.tab.currentIndex()
+            for item in range(self.tab.count()):
+                name_tab = self.tab.tabText(item)
+                text = self.tab.getTabText(item)
+                if managers.context == 'hou':
+                    size = self.tab.widget(item).edit.fs
+                else:
+                    size = self.tab.widget(item).edit.font().pointSize()
+                tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size}
+                tabs.append(tab)
+            self.session.writeNamedSession(name, tabs)
+            self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
+            self.fillSessionsMenu()
+
+    def loadNamedSession(self, name):
+        res = QMessageBox.question(
+            self,
+            "Load Session",
+            "Loading session '{0}' will replace all current tabs. Do you want to proceed?".format(name),
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if res == QMessageBox.Yes:
+            sessions = self.session.readNamedSession(name)
+            self.tab.clear()
+            active = 0
+            if sessions:
+                for i, s in enumerate(sessions):
+                    w = self.tab.addNewTab(s['name'], s['text'])
+                    if s['active']:
+                        active = i
+                    w.setFontSize(s.get('size', None))
+            else:
+                self.tab.addNewTab()
+            self.tab.setCurrentIndex(active)
+            self.out.showMessage(">>> Loaded named session '{0}'.".format(name))
+
+    def deleteNamedSession(self, name):
+        res = QMessageBox.question(
+            self,
+            "Delete Session",
+            "Are you sure you want to delete session '{0}'?".format(name),
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if res == QMessageBox.Yes:
+            self.session.deleteNamedSession(name)
+            self.out.showMessage(">>> Deleted named session '{0}'.".format(name))
+            self.fillSessionsMenu()
+
 
 try:
+    from PySide2.QtCore import QTextCodec
     QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
 except:
-    pass
+    try:
+        from PySide.QtCore import QTextCodec
+        QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
+    except:
+        pass
 
 
 def show():

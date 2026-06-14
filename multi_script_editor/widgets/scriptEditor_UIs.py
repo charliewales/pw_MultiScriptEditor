@@ -8,9 +8,8 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import QMetaObject, QRect, Qt
+from vendor.Qt.QtWidgets import QAction, QApplication, QFrame, QMenu, QMenuBar, QSplitter, QToolBar, QVBoxLayout, QWidget
 
 class Ui_scriptEditor(object):
     def setupUi(self, scriptEditor):
@@ -164,6 +163,9 @@ class Ui_scriptEditor(object):
         self.printHelp_act.setObjectName("printHelp_act")
         self.comment_cat = QAction(scriptEditor)
         self.comment_cat.setObjectName("comment_cat")
+        self.showOutline_act = QAction(scriptEditor)
+        self.showOutline_act.setObjectName("showOutline_act")
+        self.showOutline_act.setCheckable(True)
         self.file_menu.addAction(self.load_act)
         self.file_menu.addAction(self.save_act)
         self.file_menu.addSeparator()
@@ -217,9 +219,11 @@ class Ui_scriptEditor(object):
         self.options_menu.addSeparator()
         self.options_menu.addAction(self.set_font_act)
         self.options_menu.addSeparator()
-        self.options_menu.addAction(self.theme_menu.menuAction())
-        self.options_menu.addSeparator()
         self.options_menu.addAction(self.settingsFile_act)
+        self.options_menu.addSeparator()
+        self.options_menu.addAction(self.showOutline_act)
+        self.options_menu.addSeparator()
+        self.options_menu.addAction(self.theme_menu.menuAction())
         self.run_menu.addSeparator()
         self.run_menu.addAction(self.clear_exec_act)
         self.run_menu.addAction(self.clearHistory_act)
@@ -302,3 +306,4 @@ class Ui_scriptEditor(object):
         self.redo_act.setText(QApplication.translate("scriptEditor", "Redo", None))
         self.printHelp_act.setText(QApplication.translate("scriptEditor", "Help", None))
         self.comment_cat.setText(QApplication.translate("scriptEditor", "Comment", None))
+        self.showOutline_act.setText(QApplication.translate("scriptEditor", "Show Code Outline", None))

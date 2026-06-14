@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextOption
+from vendor.Qt.QtWidgets import QTextBrowser, QTextEdit
 
 import os
 from managers import context

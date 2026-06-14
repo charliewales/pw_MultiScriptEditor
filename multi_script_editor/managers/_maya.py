@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import * 
-from vendor.Qt.QtWidgets import * 
-from vendor.Qt.QtGui import * 
+from vendor.Qt.QtCore import QSize, Qt
+from vendor.Qt.QtGui import QIcon
+from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout
 import maya.OpenMayaUI as omui
 import os, sys, re
 from managers.completeWidget import contextCompleterClass

@@ -23,9 +23,10 @@ if not __name__ in ns:
 # from PySide2.QtGui import *
 # from PySide2.QtWidgets import *
 
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+# Cleaned up global/wildcard imports to use explicit imports from vendor.Qt for better performance and maintainability
+from vendor.Qt.QtCore import QEventLoop, QTimer, Qt
+from vendor.Qt.QtGui import QColor, QIcon, QCursor
+from vendor.Qt.QtWidgets import QAction, QApplication, QGridLayout, QLabel, QLineEdit, QMainWindow, QMenu, QScrollArea, QVBoxLayout, QWidget
 
 import tempfile
 

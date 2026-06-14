@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption
+from vendor.Qt.QtWidgets import QTextEdit
 import re
 import jedi
 from widgets.pythonSyntax import syntaxHighLighter
@@ -53,6 +53,12 @@ class inputClass(QTextEdit):
         self.set_start_font()
         self.changeFontSize(True)
         self.highlight_current_line()
+
+        # Performance optimization: Use a debounced timer for jedi autocompletion parsing to prevent UI lag on fast typing
+        self.autocomplete_timer = QTimer(self)
+        self.autocomplete_timer.setSingleShot(True)
+        self.autocomplete_timer.timeout.connect(self.parseText)
+        self.syntax_errors = {}
 
     def set_start_font(self):
         font_d = self.data.get('font', {})
@@ -127,6 +133,32 @@ class inputClass(QTextEdit):
                         self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
+        self.runLinter()
+
+    def runLinter(self):
+        code = self.toPlainText()
+        self.syntax_errors = {}
+        if code.strip():
+            try:
+                compile(code.encode('utf-8'), '<string>', 'exec')
+            except SyntaxError as e:
+                self.syntax_errors[e.lineno] = e.msg
+            except Exception:
+                pass
+
+        if hasattr(self.parent(), 'lineNum'):
+            self.parent().lineNum.update()
+
+        main_win = self.p
+        if hasattr(main_win, 'updateOutline'):
+            main_win.updateOutline()
+        if hasattr(main_win, 'statusBar') and main_win.statusBar():
+            if self.syntax_errors:
+                first_err_line = list(self.syntax_errors.keys())[0]
+                msg = self.syntax_errors[first_err_line]
+                main_win.statusBar().showMessage("Syntax Error on line {0}: {1}".format(first_err_line, msg))
+            else:
+                main_win.statusBar().clearMessage()
 
     def moveCompleter(self):
         rec = self.cursorRect()
@@ -309,9 +341,9 @@ class inputClass(QTextEdit):
 
         QTextEdit.keyPressEvent(self, event)
 
-        # start parse text
+        # start parse text (Debounced to prevent lag on keypress)
         if parse and event.text():
-            self.parseText()
+            self.autocomplete_timer.start(200) # 200 ms debounce delay
 
         self.highlight_current_line()
 
@@ -358,21 +390,36 @@ class inputClass(QTextEdit):
             insert_at = start_line + 1
             lines[insert_at:insert_at] = moving
 
-        new_start_line = start_line + direction
-        new_end_line = end_line + direction
+        # Save cursor details relative to their blocks to restore position and selection correctly
         cursor = self.textCursor()
+        anchor = cursor.anchor()
+        position = cursor.position()
+        
+        anchor_block = self.document().findBlock(anchor)
+        anchor_col = anchor - anchor_block.position()
+        anchor_block_num = anchor_block.blockNumber()
+        
+        pos_block = self.document().findBlock(position)
+        pos_col = position - pos_block.position()
+        pos_block_num = pos_block.blockNumber()
+
         cursor.beginEditBlock()
         cursor.select(QTextCursor.Document)
         cursor.insertText('\n'.join(lines))
         cursor.endEditBlock()
 
-        cursor = self.textCursor()
-        cursor.setPosition(self.line_position(new_start_line))
-        end_pos = self.line_position(new_end_line + 1)
-        if end_pos > self.line_position(new_end_line):
-            end_pos -= 1
-        cursor.setPosition(end_pos, QTextCursor.KeepAnchor)
-        self.setTextCursor(cursor)
+        # Reconstruct cursor with original selection and column position shifted by direction
+        new_cursor = self.textCursor()
+        new_anchor_block = self.document().findBlockByNumber(anchor_block_num + direction)
+        new_pos_block = self.document().findBlockByNumber(pos_block_num + direction)
+        
+        if new_anchor_block.isValid() and new_pos_block.isValid():
+            new_anchor = new_anchor_block.position() + anchor_col
+            new_pos = new_pos_block.position() + pos_col
+            new_cursor.setPosition(new_anchor)
+            new_cursor.setPosition(new_pos, QTextCursor.KeepAnchor)
+            self.setTextCursor(new_cursor)
+            
         self.highlight_current_line()
 
     def highlight_current_line(self):

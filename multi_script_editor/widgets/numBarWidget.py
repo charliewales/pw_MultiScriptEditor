@@ -1,6 +1,6 @@
-from vendor.Qt.QtCore import *
-from vendor.Qt.QtWidgets import *
-from vendor.Qt.QtGui import *
+from vendor.Qt.QtCore import QRect, Qt
+from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen
+from vendor.Qt.QtWidgets import QApplication, QWidget
 import managers
 
 class lineNumberBarClass(QWidget):
@@ -85,6 +85,13 @@ class lineNumberBarClass(QWidget):
                             self.width(),
                             fontSize + (offset/2) ))
                 # restore color
+                painter.setPen(QPen(color))
+
+            # draw error indicator if this line has a syntax error
+            if hasattr(self.edit, 'syntax_errors') and line_count in self.edit.syntax_errors:
+                painter.setBrush(QBrush(QColor("red")))
+                painter.setPen(Qt.NoPen)
+                painter.drawEllipse(3, round(position.y()) - contents_y + int(fontSize / 2) - 2, 6, 6)
                 painter.setPen(QPen(color))
 
             # draw text
