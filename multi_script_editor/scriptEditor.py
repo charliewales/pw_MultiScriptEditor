@@ -705,7 +705,9 @@ except:
 
 
 def show():
-    app = QApplication([])
+    app = QApplication.instance()
+    if not app:
+        app = QApplication()
     # Set the dark theme
     font_color = Qt.white
     app.setStyle("Fusion")
