@@ -49,6 +49,7 @@ class Ui_Dialog(object):
         self.donate_btn = QPushButton(Dialog)
         self.donate_btn.setObjectName("donate_btn")
         self.horizontalLayout_2.addWidget(self.donate_btn)
+        self.donate_btn.hide()
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.verticalLayout.setStretch(2, 1)
 
