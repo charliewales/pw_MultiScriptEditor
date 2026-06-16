@@ -9,7 +9,7 @@ os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(["PySide2", "PySide6"])
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "5.0.0"
+mse_version = "5.0.1"
 
 import managers
 import sessionManager
