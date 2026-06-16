@@ -35,20 +35,26 @@ def settingsFile():
 
 
 class scriptEditorClass(object):
+    _cached_settings = None
+
     def __init__(self):
         super(scriptEditorClass, self).__init__()
         self.path = settingsFile()
 
     def readSettings(self):
+        if scriptEditorClass._cached_settings is not None:
+            return scriptEditorClass._cached_settings
         if os.path.exists(self.path) and os.path.isfile(self.path):
             with codecs.open(self.path, "r", "utf-16") as stream:
                 try:
-                    return json.load(stream)
+                    scriptEditorClass._cached_settings = json.load(stream)
+                    return scriptEditorClass._cached_settings
                 except:
                     return self.defaults()
         return self.defaults()
 
     def writeSettings(self, data):
+        scriptEditorClass._cached_settings = data
         with codecs.open(self.path, "w", "utf-16") as stream:
             json.dump(data, stream, indent=4)
 

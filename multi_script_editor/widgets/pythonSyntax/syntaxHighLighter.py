@@ -20,42 +20,45 @@ class PythonHighlighterClass (QSyntaxHighlighter):
         # defaults
         # rules += [(r".*", 0, self.getStyle(self.colors['default'], False))]
         # Keywords
-        rules += [('\\b%s\\b' % w, 0, self.getStyle(self.colors['keywords'], True))
-            for w in keywords.syntax['keywords']]
-        # Methods
-        rules += [("\\b[A-Za-z0-9_]+(?=\\()", 0, self.getStyle(self.colors['methods'], False))]
-        # Operators
-        rules += [(r'[~!@$%^&*()-+=]', 0, self.getStyle(self.colors['operator']))]
-        #    for o in pythonSyntax.syntax['operators']]
-        #Braces
-        rules += [(r'%s' % b, 0, self.getStyle(self.colors['brace']))
-            for b in keywords.syntax['braces']]
-        # Definition
-        rules += [("\\b%s\\b" % b, 0, self.getStyle(self.colors['definition'], True))
-            for b in keywords.syntax['definition']]
-        # Extra
-        rules += [("\\b%s\\b" % b, 0, self.getStyle(self.colors['extra']))
-            for b in keywords.syntax['extras']]
+        keywords_pattern = r'\b(' + '|'.join(keywords.syntax['keywords']) + r')\b'
+        rules.append((keywords_pattern, 0, self.getStyle(self.colors['keywords'], True)))
 
-        # Comment
-        # rules += [(r'#([.*]+|[^#]*)', 0, self.getStyle(design.comment))]
+        # Methods
+        rules.append(("\\b[A-Za-z0-9_]+(?=\\()", 0, self.getStyle(self.colors['methods'], False)))
+
+        # Operators
+        rules.append((r'[~!@$%^&*()-+=]', 0, self.getStyle(self.colors['operator'])))
+
+        # Braces
+        braces_pattern = r'(' + '|'.join(keywords.syntax['braces']) + r')'
+        rules.append((braces_pattern, 0, self.getStyle(self.colors['brace'])))
+
+        # Definition
+        definitions_pattern = r'\b(' + '|'.join(keywords.syntax['definition']) + r')\b'
+        rules.append((definitions_pattern, 0, self.getStyle(self.colors['definition'], True)))
+
+        # Extra
+        extras_pattern = r'\b(' + '|'.join(keywords.syntax['extras']) + r')\b'
+        rules.append((extras_pattern, 0, self.getStyle(self.colors['extra'])))
 
         # Digits
-        rules += [(r"\b[\d]+\b", 0, self.getStyle(self.colors['digits']))]
-            # ("(?:^|[^A-Za-z])([\d|\.]*\d+)", 0, self.getStyle(design.digits)),
-
+        rules.append((r"\b[\d]+\b", 0, self.getStyle(self.colors['digits'])))
 
         # Double-quoted string
-        rules += [(r'[ru]?"[^"\\]*(\\.[^"\\]*)*"', 0, self.getStyle(self.colors['string']))]
+        rules.append((r'[ru]?"[^"\\]*(\\.[^"\\]*)*"', 0, self.getStyle(self.colors['string'])))
 
         # Single-quoted string
-        rules += [(r"[ru]?'[^'\\]*(\\.[^'\\]*)*'", 0, self.getStyle(self.colors['string']))]
+        rules.append((r"[ru]?'[^'\\]*(\\.[^'\\]*)*'", 0, self.getStyle(self.colors['string'])))
 
         # Whitespace, \s
-        rules += [(r"\s", 0, self.getStyle(self.colors['whitespace']))]
+        rules.append((r"\s", 0, self.getStyle(self.colors['whitespace'])))
 
         # Build a QRegExp for each pattern
         self.rules = [(QRegExp(pat), index, fmt) for (pat, index, fmt) in rules]
+        
+        # Cache formats used dynamically in highlightBlock to avoid repeated getStyle calls
+        self.default_format = self.getStyle(self.colors['default'])
+        self.comment_format = self.getStyle(self.colors['comment'])
         # self.rehighlight()
 
 
@@ -70,8 +73,7 @@ class PythonHighlighterClass (QSyntaxHighlighter):
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
         """
-        defFormat = self.getStyle(self.colors['default'])
-        self.setFormat(0, len(text), defFormat)
+        self.setFormat(0, len(text), self.default_format)
 
         # Do other syntax formatting
         for expression, nth, format in self.rules:
@@ -85,8 +87,8 @@ class PythonHighlighterClass (QSyntaxHighlighter):
                 index = expression.indexIn(text, index + length)
 
 
-        strings = re.findall(r'(".*?")|(\'.*?\')', text)
         if '#' in text:
+            strings = re.findall(r'(".*?")|(\'.*?\')', text)
             copy = text
             if strings:
                 pat = []
@@ -99,7 +101,7 @@ class PythonHighlighterClass (QSyntaxHighlighter):
             if '#' in copy:
                 index = copy.index('#')
                 length = len(copy) - index
-                self.setFormat(index, length, self.getStyle(self.colors['comment']))
+                self.setFormat(index, length, self.comment_format)
 
         self.setCurrentBlockState(0)
 

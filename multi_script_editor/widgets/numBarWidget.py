@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import QRect, Qt
+from vendor.Qt.QtCore import QRect, Qt, QPoint
 from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen
 from vendor.Qt.QtWidgets import QApplication, QWidget
 import managers
@@ -47,9 +47,18 @@ class lineNumberBarClass(QWidget):
         font_metrics = self.fontMetrics()
         current_block = self.edit.document().findBlock(self.edit.textCursor().position())
         painter = QPainter(self)
-        line_count = 0
-        # Iterate over all text blocks in the document.
-        block = self.edit.document().begin()
+        
+        # Get the first visible block
+        cursor = self.edit.cursorForPosition(QPoint(0, 0))
+        block = cursor.block()
+        
+        # Start a bit earlier to handle any partially visible block
+        if block.previous().isValid():
+            block = block.previous()
+            
+        line_count = block.blockNumber()
+        
+        # Iterate over all visible text blocks in the document.
         fontSize = self.edit.font().pointSize()*self.font_size_mult
         font = painter.font()
         font.setPixelSize(fontSize)
@@ -61,8 +70,7 @@ class lineNumberBarClass(QWidget):
             line_count += 1
             # The top left position of the block in the document
             position = self.edit.document().documentLayout().blockBoundingRect(block).topLeft()
-            # Check if the position of the block is out side of the visible
-            # area.
+            # Check if the position of the block is outside of the visible area.
             if position.y() > page_bottom:
                 break
             if position.y() + fontSize < contents_y:

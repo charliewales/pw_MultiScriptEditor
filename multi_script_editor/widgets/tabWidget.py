@@ -265,7 +265,6 @@ class container(QWidget):
         self.edit.executeSignal.connect(parent.executeSelected)
         if text:
             self.edit.addText(text)
-        hbox.addWidget(self.edit)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
