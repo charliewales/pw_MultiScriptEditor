@@ -150,7 +150,7 @@ def showUi14(cls,  name=None, floating=False, position=(),
                 min-width: 80px;
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
-                padding: 8px;
+                padding: 2px;
             }
             QTabBar::tab:selected {
                 background: #136fa8;

@@ -136,6 +136,7 @@ Check for `isinstance` and other information to infer a type.
 
 auto_import_modules = [
     'gi',  # This third-party repository (GTK stuff) doesn't really work with jedi
+    'hou', 'nuke', 'pymel.core', 'maya.cmds', 'MaxPlus',
 ]
 """
 Modules that will not be analyzed but imported, if they contain Python code.

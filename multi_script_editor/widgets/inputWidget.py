@@ -129,7 +129,10 @@ class inputClass(QTextEdit):
                             offs = len(autoImp.split('\n'))-1
                         bl = tc.blockNumber() + 1 + offs
                         col = tc.columnNumber()
-                        script = jedi.Script(code=text)
+                        if hasattr(self.p, 'namespace'):
+                            script = jedi.Interpreter(text, namespaces=[self.p.namespace])
+                        else:
+                            script = jedi.Script(code=text)
                         try:
                             self.completer.updateCompleteList(script.complete(line=bl, column=col))
                         except:

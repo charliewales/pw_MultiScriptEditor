@@ -21,7 +21,7 @@ class tabWidgetClass(QTabWidget):
                 min-width: 80px;
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
-                padding: 8px;
+                padding: 4px;
             }
             QTabBar::tab:selected {
                 background: #136fa8;
