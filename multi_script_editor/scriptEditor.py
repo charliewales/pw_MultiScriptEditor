@@ -10,7 +10,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "5.0.2"
+mse_version = "5.1.0"
 
 import managers
 import sessionManager
@@ -946,7 +946,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         save_act.setIcon(QIcon(icons['save']))
         save_act.triggered.connect(self.saveNamedSession)
         self.sessions_menu.addAction(save_act)
-        
+
         restore_backup_act = QAction("Restore Crash Backup", self)
         restore_backup_act.triggered.connect(self.restoreBackupSession)
         if not self.session.backupExists():
