@@ -160,6 +160,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.save_act.setShortcut("Ctrl+S")
 
         self.recent_files_menu = QMenu("Recent Files", self)
+        self.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
         self.file_menu.insertMenu(self.saveSeccion_act, self.recent_files_menu)
         self.updateRecentFilesMenu()
 
