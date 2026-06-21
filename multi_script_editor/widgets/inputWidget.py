@@ -134,7 +134,7 @@ class inputClass(QTextEdit):
                         else:
                             script = jedi.Script(code=text)
                         try:
-                            self.completer.updateCompleteList(script.complete(line=bl, column=col))
+                            self.completer.updateCompleteList(script.complete(line=bl, column=col, fuzzy=True))
                         except:
                             self.completer.updateCompleteList()
                     else:
