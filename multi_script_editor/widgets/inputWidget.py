@@ -60,9 +60,11 @@ class inputClass(QTextEdit):
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
         self.multi_cursors = []
+        self._highlight_color_cache = None
 
-    def set_start_font(self):
-        font_d = self.data.get('font', {})
+    def set_start_font(self, font_d=None):
+        if font_d is None:
+            font_d = self.data.get('font', {})
         family = font_d.get('family', 'Courier')
         pointSize = font_d.get('pointSize', 10)
         italic = font_d.get('italic', False)
@@ -85,6 +87,7 @@ class inputClass(QTextEdit):
     def applyHightLighter(self, theme=None, qss=None):
         self.blockSignals(True)
         colors = None
+        self._highlight_color_cache = None
         if theme or not theme =='default':
             colors = design.getColors(theme)
             if self.completer:
@@ -96,6 +99,7 @@ class inputClass(QTextEdit):
 
     def applyPreviewStyle(self, colors):
         self.blockSignals(True)
+        self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
         qss = design.applyColorToEditorStyle(colors)
         self.setStyleSheet(qss)
@@ -432,11 +436,14 @@ class inputClass(QTextEdit):
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-        data = settingsManager.scriptEditorClass().readSettings() or {}
-        theme = data.get('theme', 'default')
-        theme_colors = data.get("colors", {}).get(theme, {})
-        highlight_color = theme_colors.get('highlight_line', (85,85,85))
-        selection.format.setBackground(QColor.fromRgb(*highlight_color))  # set the background color
+        
+        if getattr(self, '_highlight_color_cache', None) is None:
+            data = settingsManager.scriptEditorClass().readSettings() or {}
+            theme = data.get('theme', 'default')
+            theme_colors = data.get("colors", {}).get(theme, {})
+            self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
+            
+        selection.format.setBackground(QColor.fromRgb(*self._highlight_color_cache))  # set the background color
         selection.cursor = cursor
         selections.append(selection)
 
@@ -745,7 +752,7 @@ class inputClass(QTextEdit):
         if not pattern in text:
             return number
         cursor = self.textCursor()
-        indexis = [(m.start(0), m.end(0)) for m in re.finditer(self.fixRegextSymbols(pattern), text)]
+        indexis = [(m.start(0), m.end(0)) for m in re.finditer(re.escape(pattern), text)]
         if number > len(indexis)-1:
             number = 0
         cursor.setPosition(indexis[number][0])
@@ -756,11 +763,6 @@ class inputClass(QTextEdit):
         self.setTextCursor(cursor)
         self.setFocus()
         return number
-
-    def fixRegextSymbols(self, pattern):
-        for s in ['[',']','(',')','*','^', '.', ',', '{', '}','$']:
-            pattern = pattern.replace(s, '\\'+s)
-        return pattern
 
     def replaceAll(selfold, new):
         pass

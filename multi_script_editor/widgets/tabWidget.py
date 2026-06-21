@@ -193,16 +193,10 @@ class tabWidgetClass(QTabWidget):
             current_edit = self.widget(i).edit
             current_edit.setFont(font)
 
-    def set_start_font(self, font_d):
-        family = font_d.get('family', 'Courier')
-        pointSize = font_d.get('pointSize', 10)
-        italic = font_d.get('italic', False)
-        weight = font_d.get('weight', 1)
-        editor_font = QFont(family, pointSize, weight, italic)
-        editor_font.setStyleHint(QFont.Monospace)
+    def set_start_font(self, font_d=None):
         for i in range(self.count()):
             current_edit = self.widget(i).edit
-            current_edit.setFont(editor_font)
+            current_edit.set_start_font(font_d)
 
     def paste(self):
         self.current().paste()

@@ -5,7 +5,8 @@ import webbrowser
 from functools import partial
 
 # Set preferred binding
-os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(["PySide2", "PySide6"])
+if not os.environ.get("QT_PREFERRED_BINDING"):
+    os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(["PySide2", "PySide6", "PyQt5", "PySide", "PyQt4"])
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
@@ -370,6 +371,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # Outline toggle setup
         self.showOutline_act.setShortcut("Ctrl+Shift+O")
         self.showOutline_act.triggered.connect(self.toggleOutline)
+
+        self.outline_timer = QTimer(self)
+        self.outline_timer.setSingleShot(True)
+        self.outline_timer.timeout.connect(self._updateOutlineNow)
 
         # Sessions Submenu in File menu
         self.sessions_menu = QMenu("Sessions", self)
@@ -851,6 +856,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.horizontal_splitter.setSizes([0, 800])
 
     def updateOutline(self):
+        if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
+            return
+        self.outline_timer.start(500)
+
+    def _updateOutlineNow(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
             return
         self.outline_list.clear()
