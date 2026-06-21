@@ -158,11 +158,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.save_act.triggered.connect(self.saveScript)
         self.save_act.setIcon(QIcon(icons['save']))
         self.save_act.setShortcut("Ctrl+S")
-        
+
         self.recent_files_menu = QMenu("Recent Files", self)
         self.file_menu.insertMenu(self.saveSeccion_act, self.recent_files_menu)
         self.updateRecentFilesMenu()
-        
+
         self.saveSeccion_act.triggered.connect(lambda: self.saveSession(True))
         self.saveSeccion_act.setIcon(QIcon(icons['save']))
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
@@ -524,21 +524,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.setWindowIcon(QIcon(icons['pw']))
 
     def loadSession(self):
-        sessions = None
-        # if self.session.backupExists():
-        #     res = QMessageBox.question(
-        #         self,
-        #         "Restore Session",
-        #         "An auto-saved session backup was found (potentially from an unexpected exit). Do you want to restore it?",
-        #         QMessageBox.Yes | QMessageBox.No
-        #     )
-        #     if res == QMessageBox.Yes:
-        #         sessions = self.session.readBackup()
-        #     else:
-        #         self.session.removeBackup()
-
-        if sessions is None:
-            sessions = self.session.readSession()
+        sessions = self.session.readSession()
 
         self.tab.clear()
         active = 0
@@ -960,6 +946,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         save_act.setIcon(QIcon(icons['save']))
         save_act.triggered.connect(self.saveNamedSession)
         self.sessions_menu.addAction(save_act)
+        
+        restore_backup_act = QAction("Restore Crash Backup", self)
+        restore_backup_act.triggered.connect(self.restoreBackupSession)
+        if not self.session.backupExists():
+            restore_backup_act.setEnabled(False)
+        self.sessions_menu.addAction(restore_backup_act)
 
         self.delete_session_menu = QMenu("Delete Session", self)
         self.delete_session_menu.setIcon(QIcon(icons["clear"]))
@@ -1038,6 +1030,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.session.deleteNamedSession(name)
             self.out.showMessage(">>> Deleted named session '{0}'.".format(name))
             self.fillSessionsMenu()
+
+    def restoreBackupSession(self):
+        if self.session.backupExists():
+            sessions = self.session.readBackup()
+            if sessions:
+                self.tab.clear()
+                active = 0
+                for i, s in enumerate(sessions):
+                    w = self.tab.addNewTab(s['name'], s['text'])
+                    if s['active']:
+                        active = i
+                    w.setFontSize(s.get('size', None))
+                self.tab.setCurrentIndex(active)
+                self.out.showMessage("Crash backup restored successfully.")
+            else:
+                self.out.showMessage("Crash backup is empty or invalid.")
+        else:
+            self.out.showMessage("No crash backup found.")
 
 
 try:
