@@ -31,13 +31,16 @@ class lineNumberBarClass(QWidget):
         width = ((self.fontMetrics().width(str(self.highest_line)) + 7))*(fontSize/13.0)
         if self.width() != width and width > 10:
             self.setFixedWidth(width)
-        bg = self.palette().brush(QPalette.Normal,QPalette.Window).color().toHsv()
-        v = bg.value()
-        if v > 20:
-            v = int(bg.value()*0.8)
+        if hasattr(self.edit, '_highlight_color_cache') and self.edit._highlight_color_cache:
+            self.bg = QColor.fromRgb(*self.edit._highlight_color_cache)
         else:
-            v = int(bg.value()*1.1)
-        self.bg = QColor.fromHsv(bg.hue(), bg.saturation(), v)
+            bg = self.palette().brush(QPalette.Normal,QPalette.Window).color().toHsv()
+            v = bg.value()
+            if v > 20:
+                v = int(bg.value()*0.8)
+            else:
+                v = int(bg.value()*1.1)
+            self.bg = QColor.fromHsv(bg.hue(), bg.saturation(), v)
         self.setMinimumWidth(30)
         QWidget.update(self, *args)
 

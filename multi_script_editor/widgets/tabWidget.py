@@ -19,7 +19,6 @@ class tabWidgetClass(QTabWidget):
             QTabBar::tab {
                 max-width: 250px;
                 min-width: 80px;
-                max-height: 16px;
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
                 padding: 8px;

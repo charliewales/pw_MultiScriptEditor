@@ -10,7 +10,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "5.0.1"
+mse_version = "5.0.2"
 
 import managers
 import sessionManager
@@ -158,6 +158,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.save_act.triggered.connect(self.saveScript)
         self.save_act.setIcon(QIcon(icons['save']))
         self.save_act.setShortcut("Ctrl+S")
+        
+        self.recent_files_menu = QMenu("Recent Files", self)
+        self.file_menu.insertMenu(self.saveSeccion_act, self.recent_files_menu)
+        self.updateRecentFilesMenu()
+        
         self.saveSeccion_act.triggered.connect(lambda: self.saveSession(True))
         self.saveSeccion_act.setIcon(QIcon(icons['save']))
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
@@ -659,6 +664,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             try:
                 with open(path[0], 'w') as f:
                     f.write(text)
+                self.addRecentFile(path[0])
             except:
                 self.out.showMessage('Error save file; %s' % path[0])
 
@@ -671,6 +677,50 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if os.path.exists(path[0]):
                 text = open(path[0]).read()
                 self.tab.addNewTab(os.path.basename(path[0]), text)
+                self.addRecentFile(path[0])
+
+    def addRecentFile(self, path):
+        data = self.s.readSettings()
+        recent = data.get('recent_files', [])
+        if path in recent:
+            recent.remove(path)
+        recent.insert(0, path)
+        recent = recent[:20]
+        data['recent_files'] = recent
+        self.s.writeSettings(data)
+        self.updateRecentFilesMenu()
+
+    def updateRecentFilesMenu(self):
+        if not hasattr(self, 'recent_files_menu'): return
+        self.recent_files_menu.clear()
+        data = self.s.readSettings()
+        recent = data.get('recent_files', [])
+        if not recent:
+            a = self.recent_files_menu.addAction("No recent files")
+            a.setEnabled(False)
+            return
+        for path in recent:
+            if os.path.exists(path):
+                act = QAction(os.path.basename(path), self)
+                act.setToolTip(path)
+                act.triggered.connect(partial(self.openRecentFile, path))
+                self.recent_files_menu.addAction(act)
+        self.recent_files_menu.addSeparator()
+        clear_act = QAction("Clear Recent", self)
+        clear_act.triggered.connect(self.clearRecentFiles)
+        self.recent_files_menu.addAction(clear_act)
+
+    def clearRecentFiles(self):
+        data = self.s.readSettings()
+        data['recent_files'] = []
+        self.s.writeSettings(data)
+        self.updateRecentFilesMenu()
+
+    def openRecentFile(self, path):
+        if os.path.exists(path):
+            text = open(path).read()
+            self.tab.addNewTab(os.path.basename(path), text)
+            self.addRecentFile(path)
 
     def tabsToSpaces(self):
         text = self.tab.getCurrentText()

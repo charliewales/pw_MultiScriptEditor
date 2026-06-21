@@ -68,5 +68,6 @@ class scriptEditorClass(object):
                     clear_execute=False,
                     always_ontop=True,
                     show_whitespace=True,
-                    font={"family": "Courier", "pointSize": 10, "weight": 1, "italic": False}
+                    font={"family": "Courier", "pointSize": 10, "weight": 1, "italic": False},
+                    recent_files=[]
                     )
