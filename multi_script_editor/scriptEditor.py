@@ -742,6 +742,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = data.get('show_whitespace', False)
         font = data.get('font', False)
         fuzzy_autocomplete = data.get('fuzzy_autocomplete', False)
+        show_docstrings = data.get('show_docstrings', False)
 
         if geo:
             self.move(geo[0], geo[1])
@@ -775,6 +776,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.set_start_font(font)
             self.out.set_start_font(font)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
+        self.show_docstrings_act.setChecked(show_docstrings)
 
         self.tab.wordWrap(not wrap)
         self.tab.wordWrap(wrap)
@@ -803,6 +805,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         editor_font = self.tab.widget(0).edit.font()
         show_outline = self.showOutline_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
+        show_docstrings = self.show_docstrings_act.isChecked()
 
         font_data = dict()
         font_family = editor_font.family()
@@ -828,6 +831,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font=font_data,
             show_outline=show_outline,
             fuzzy_autocomplete=fuzzy_autocomplete,
+            show_docstrings=show_docstrings,
         )
         settings.update(data)
         self.s.writeSettings(settings)

@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFont, QFontMetrics
-from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem
+from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
+from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QToolTip
 import os, re
 from . pythonSyntax import design
 import managers
@@ -23,12 +23,51 @@ class completeMenuClass(QListWidget):
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window)
         else:
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window | Qt.WindowStaysOnTopHint)
+            
+        self._icon_cache = {}
+
         @self.itemDoubleClicked.connect
         def insertSelected(item):
             if item:
                 comp = item.data(32)
                 self.sendText(comp)
                 self.hideMe()
+        self.currentItemChanged.connect(self.onItemChanged)
+
+    def onItemChanged(self, current, previous):
+        if not current:
+            QToolTip.hideText()
+            return
+        
+        show_docstrings = False
+        try:
+            if hasattr(self.e, 'p') and hasattr(self.e.p, 'show_docstrings_act'):
+                show_docstrings = self.e.p.show_docstrings_act.isChecked()
+        except:
+            pass
+
+        if show_docstrings:
+            comp = current.data(32)
+            if hasattr(comp, 'docstring'):
+                try:
+                    doc = comp.docstring()
+                    if doc:
+                        # Limit doc length
+                        if len(doc) > 800:
+                            doc = doc[:800] + '...'
+                        
+                        # Show tooltip near the right side of the list
+                        pos = self.mapToGlobal(self.rect().topRight())
+                        pos.setX(pos.x() + 10)
+                        QToolTip.showText(pos, doc, self)
+                    else:
+                        QToolTip.hideText()
+                except Exception:
+                    QToolTip.hideText()
+            else:
+                QToolTip.hideText()
+        else:
+            QToolTip.hideText()
 
     def updateStyle(self, colors=None):
         text = design.editorStyle()
@@ -42,6 +81,41 @@ class completeMenuClass(QListWidget):
                 for i in [x for x in lines if not x.name == 'mro']:
                     item = QListWidgetItem(i.name)
                     item.setData(32, i)
+                    
+                    if hasattr(i, 'type') and i.type:
+                        t = i.type
+                        if t not in self._icon_cache:
+                            # Generate a colored icon
+                            color_map = {
+                                'function': QColor(100, 180, 255),
+                                'class': QColor(150, 220, 100),
+                                'module': QColor(255, 150, 100),
+                                'statement': QColor(200, 200, 200),
+                                'keyword': QColor(255, 100, 150)
+                            }
+                            text_map = {'function': 'f', 'class': 'C', 'module': 'M', 'statement': 'V', 'keyword': 'K'}
+                            
+                            pix = QPixmap(16, 16)
+                            pix.fill(Qt.transparent)
+                            painter = QPainter(pix)
+                            painter.setRenderHint(QPainter.Antialiasing)
+                            
+                            c = color_map.get(t, QColor(150, 150, 150))
+                            painter.setBrush(c)
+                            painter.setPen(Qt.NoPen)
+                            painter.drawRect(0, 0, 16, 16)
+                            
+                            painter.setPen(Qt.black)
+                            font = QFont("Arial", 9)
+                            painter.setFont(font)
+                            char = text_map.get(t, '?')
+                            painter.drawText(pix.rect(), Qt.AlignCenter, char)
+                            painter.end()
+                            
+                            self._icon_cache[t] = QIcon(pix)
+                            
+                        item.setIcon(self._icon_cache[t])
+                        
                     self.addItem(item)
             if extra:
 

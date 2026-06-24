@@ -577,6 +577,12 @@ class inputClass(QTextEdit):
                     if end and end[0] == brackets[before[-1]]:
                         br = ''
 
+        # Auto-add parenthesis for functions/methods/classes
+        if hasattr(comp, 'type') and comp.type in ('function', 'class', 'method'):
+            if not end.startswith('('):
+                br += '()'
+                ofs += 1 # Move cursor inside the parenthesis
+
         res = before + comp.name + br + end
 
         cursor.beginEditBlock()
