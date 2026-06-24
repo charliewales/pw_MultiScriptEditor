@@ -103,6 +103,8 @@
     <addaction name="moveLineUp_act"/>
     <addaction name="moveLineDown_act"/>
     <addaction name="comment_cat"/>
+    <addaction name="add_quotes_act"/>
+    <addaction name="separator"/>
     <addaction name="find_act"/>
    </widget>
    <widget class="QMenu" name="options_menu">
@@ -284,6 +286,11 @@
   <action name="comment_cat">
    <property name="text">
     <string>Comment</string>
+   </property>
+  </action>
+  <action name="add_quotes_act">
+   <property name="text">
+    <string>Add Quotes</string>
    </property>
   </action>
  </widget>

@@ -288,6 +288,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.comment_cat.setShortcutContext(Qt.WidgetShortcut)
         self.comment_cat.setIcon(QIcon(icons['comment']))
 
+        self.add_quotes_act.triggered.connect(self.tab.addQuotes)
+        self.add_quotes_act.setShortcut('Alt+Q')
+        self.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
+        QShortcut(QKeySequence("Alt+Q"), self, self.tab.addQuotes)
+
         self.selectNextOccurrence_act.triggered.connect(self.tab.selectNextOccurrence)
         self.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         self.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
@@ -331,11 +336,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         QShortcut(QKeySequence('Alt+t'), self, type_f)
 
         self.quick_help_act.triggered.connect(self.get_word_help)
-        self.quick_help_act.setShortcut('Alt+Q')
+        self.quick_help_act.setShortcut('F1')
         self.quick_help_act.setIcon(QIcon(icons['help']))
         self.quick_help_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence('F1'), self, self.get_word_help)
-        QShortcut(QKeySequence('Alt+Q'), self, self.get_word_help)
+        # QShortcut(QKeySequence('Alt+Q'), self, self.get_word_help)
 
         self.fillThemeMenu()
 

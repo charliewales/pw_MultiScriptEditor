@@ -229,6 +229,9 @@ class tabWidgetClass(QTabWidget):
     def comment(self):
         self.current().commentSelected()
 
+    def addQuotes(self):
+        self.current().addQuotesSelected()
+
     def selectNextOccurrence(self):
         self.current().select_next_occurrence()
 

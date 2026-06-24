@@ -504,6 +504,18 @@ class inputClass(QTextEdit):
             self.setTextCursor(cursor)
             self.update()
 
+    def addQuotesSelected(self):
+        cursor = self.textCursor()
+        self.document().documentLayout().blockSignals(True)
+        if not cursor.hasSelection():
+            cursor.select(QTextCursor.WordUnderCursor)
+        text = cursor.selection().toPlainText()
+        if text:
+            cursor.insertText('"' + text + '"')
+        self.document().documentLayout().blockSignals(False)
+        self.setTextCursor(cursor)
+        self.update()
+
     def commentSelected(self):
         cursor = self.textCursor()
         self.document().documentLayout().blockSignals(True)
