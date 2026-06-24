@@ -50,7 +50,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
-        self.desk = QApplication.desktop()
+        self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
         whitespace_act = self.p.findChild(QAction, "whitespace_act")
         self.render_whitespace(whitespace_act.isChecked())
         #connects

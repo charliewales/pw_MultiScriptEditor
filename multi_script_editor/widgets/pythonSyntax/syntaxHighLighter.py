@@ -77,14 +77,23 @@ class PythonHighlighterClass (QSyntaxHighlighter):
 
         # Do other syntax formatting
         for expression, nth, format in self.rules:
-            index = expression.indexIn(text, 0)
-            # print expression, index
-            while index >= 0:
-                # We actually want the index of the nth match
-                index = expression.pos(nth)
-                length = len(expression.cap(nth))
-                self.setFormat(index, length, format)
-                index = expression.indexIn(text, index + length)
+            if hasattr(expression, 'indexIn'):
+                index = expression.indexIn(text, 0)
+                while index >= 0:
+                    # We actually want the index of the nth match
+                    index = expression.pos(nth)
+                    length = len(expression.cap(nth))
+                    self.setFormat(index, length, format)
+                    index = expression.indexIn(text, index + length)
+            else:
+                match = expression.match(text, 0)
+                while match.hasMatch():
+                    index = match.capturedStart(nth)
+                    length = match.capturedLength(nth)
+                    if length == 0:
+                        break
+                    self.setFormat(index, length, format)
+                    match = expression.match(text, index + length)
 
 
         if '#' in text:
@@ -123,17 +132,29 @@ class PythonHighlighterClass (QSyntaxHighlighter):
             add = 0
         # Otherwise, look for the delimiter on this line
         else:
-            start = delimiter.indexIn(text)
-            # Move past this match
-            add = delimiter.matchedLength()
+            if hasattr(delimiter, 'indexIn'):
+                start = delimiter.indexIn(text)
+                # Move past this match
+                add = delimiter.matchedLength()
+            else:
+                match = delimiter.match(text)
+                start = match.capturedStart() if match.hasMatch() else -1
+                add = match.capturedLength() if match.hasMatch() else 0
 
         # As long as there's a delimiter match on this line...
         while start >= 0:
             # Look for the ending delimiter
-            end = delimiter.indexIn(text, start + add)
+            if hasattr(delimiter, 'indexIn'):
+                end = delimiter.indexIn(text, start + add)
+                matchedLength = delimiter.matchedLength()
+            else:
+                match = delimiter.match(text, start + add)
+                end = match.capturedStart() if match.hasMatch() else -1
+                matchedLength = match.capturedLength() if match.hasMatch() else 0
+                
             # Ending delimiter on this line?
             if end >= add:
-                length = end - start + add + delimiter.matchedLength()
+                length = end - start + add + matchedLength
                 self.setCurrentBlockState(0)
             # No; multi-line string
             else:
@@ -143,7 +164,11 @@ class PythonHighlighterClass (QSyntaxHighlighter):
             self.setFormat(start, length, style)
             # Look for the next match
 
-            start = delimiter.indexIn(text, start + length)
+            if hasattr(delimiter, 'indexIn'):
+                start = delimiter.indexIn(text, start + length)
+            else:
+                match = delimiter.match(text, start + length)
+                start = match.capturedStart() if match.hasMatch() else -1
 
         # Return True if still inside a multi-line string, False otherwise
         if self.currentBlockState() == in_state:

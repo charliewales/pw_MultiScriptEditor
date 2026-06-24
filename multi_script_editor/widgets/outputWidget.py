@@ -26,7 +26,11 @@ class outputClass(QTextBrowser):
         default_font.setStyleHint(QFont.Monospace)
         self.document().setDefaultFont(default_font)
         metrics = QFontMetrics(self.document().defaultFont())
-        self.setTabStopWidth(4 * metrics.width(' '))
+        width = metrics.horizontalAdvance(' ') if hasattr(metrics, 'horizontalAdvance') else metrics.width(' ')
+        if hasattr(self, 'setTabStopDistance'):
+            self.setTabStopDistance(4 * width)
+        else:
+            self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
         data = settingsManager.scriptEditorClass().readSettings()
         self.applyHightLighter(data.get('theme'))

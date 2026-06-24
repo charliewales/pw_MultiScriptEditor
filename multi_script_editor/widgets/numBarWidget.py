@@ -7,8 +7,12 @@ class lineNumberBarClass(QWidget):
     def __init__(self, edit, parent=None):
         QWidget.__init__(self, parent)
 
-        desktop = QApplication.desktop()
-        screen_resolution = desktop.screenGeometry()
+        if hasattr(QApplication, 'desktop'):
+            desktop = QApplication.desktop()
+            screen_resolution = desktop.screenGeometry()
+        else:
+            from vendor.Qt.QtGui import QGuiApplication
+            screen_resolution = QGuiApplication.primaryScreen().geometry()
         width, height = screen_resolution.width(), screen_resolution.height()
 
         self.font_size_mult = 1.0
@@ -28,7 +32,9 @@ class lineNumberBarClass(QWidget):
         # The + 4 is used to compensate for the current line being bold.
         self.highest_line = self.edit.document().blockCount()
         fontSize = self.edit.font().pointSize()
-        width = ((self.fontMetrics().width(str(self.highest_line)) + 7))*(fontSize/13.0)
+        fm = self.fontMetrics()
+        text_width = fm.horizontalAdvance(str(self.highest_line)) if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line))
+        width = ((text_width + 7))*(fontSize/13.0)
         if self.width() != width and width > 10:
             self.setFixedWidth(width)
         if hasattr(self.edit, '_highlight_color_cache') and self.edit._highlight_color_cache:

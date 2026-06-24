@@ -44,7 +44,11 @@ class inputClass(QTextEdit):
         default_font.setStyleHint(QFont.Monospace)
         self.document().setDefaultFont(default_font)
         metrics = QFontMetrics(self.document().defaultFont())
-        self.setTabStopWidth(4 * metrics.width(' '))
+        width = metrics.horizontalAdvance(' ') if hasattr(metrics, 'horizontalAdvance') else metrics.width(' ')
+        if hasattr(self, 'setTabStopDistance'):
+            self.setTabStopDistance(4 * width)
+        else:
+            self.setTabStopWidth(4 * width)
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
@@ -172,8 +176,15 @@ class inputClass(QTextEdit):
         rec = self.cursorRect()
         pt = self.mapToGlobal(rec.bottomRight())
         y=x=0
-        if self.completer.isVisible() and self.desk:
-            currentScreen = self.desk.screenGeometry(self.mapToGlobal(rec.bottomRight()))
+        if self.completer.isVisible():
+            if self.desk:
+                currentScreen = self.desk.screenGeometry(self.mapToGlobal(rec.bottomRight()))
+            else:
+                from vendor.Qt.QtGui import QGuiApplication
+                screen = QGuiApplication.screenAt(self.mapToGlobal(rec.bottomRight()))
+                if screen is None:
+                    screen = QGuiApplication.primaryScreen()
+                currentScreen = screen.geometry()
             futureCompGeo = self.completer.geometry()
             futureCompGeo.moveTo(pt)
             if not currentScreen.contains(futureCompGeo):
@@ -245,10 +256,6 @@ class inputClass(QTextEdit):
                 return
             elif event.key() == Qt.Key_Down:
                 self.move_line_down()
-                return
-            elif event.key() == Qt.Key_W:
-                if hasattr(self.p, 'toggle_word_wrap'):
-                    self.p.toggle_word_wrap()
                 return
         # remove 4 spaces
         elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_Backspace:
@@ -439,13 +446,13 @@ class inputClass(QTextEdit):
         cursor = self.textCursor()
         selection = QTextEdit.ExtraSelection()
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-        
+
         if getattr(self, '_highlight_color_cache', None) is None:
             data = settingsManager.scriptEditorClass().readSettings() or {}
             theme = data.get('theme', 'default')
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
-            
+
         selection.format.setBackground(QColor.fromRgb(*self._highlight_color_cache))  # set the background color
         selection.cursor = cursor
         selections.append(selection)

@@ -290,12 +290,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.selectNextOccurrence_act.triggered.connect(self.tab.selectNextOccurrence)
         self.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
-        self.selectNextOccurrence_act.setShortcutContext(Qt.WidgetShortcut)
+        self.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
         self.selectNextOccurrence_act.setIcon(QIcon(icons["replace"]))
 
         self.selectAllOccurrences_act.triggered.connect(self.tab.selectAllOccurrences)
         self.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
-        self.selectAllOccurrences_act.setShortcutContext(Qt.WidgetShortcut)
+        self.selectAllOccurrences_act.setShortcutContext(Qt.WindowShortcut)
         self.selectAllOccurrences_act.setIcon(QIcon(icons["replace"]))
 
         self.always_ontop_act.triggered.connect(self.always_ontop)
@@ -449,7 +449,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         return action_icon
 
     def __del__(self):
-        self.saveSession()
+        if hasattr(self, 'tab'):
+            self.saveSession()
 
     def mse_help(self):
         src = os.path.join(os.path.dirname(__file__), 'helpText.txt')
