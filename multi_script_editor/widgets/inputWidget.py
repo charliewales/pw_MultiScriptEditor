@@ -541,7 +541,8 @@ class inputClass(QTextEdit):
     def insertText(self, comp):
         cursor = self.textCursor()
         self.document().documentLayout().blockSignals(True)
-        cursor.insertText(comp.complete)
+        if comp.complete:
+            cursor.insertText(comp.complete)
         cursor = self.fixLine(cursor, comp)
         self.document().documentLayout().blockSignals(False)
         self.setTextCursor(cursor)
@@ -558,7 +559,12 @@ class inputClass(QTextEdit):
 
         start = line[:linePos]
         end = line[linePos:]
-        before = start[:-len(comp.name)]
+        to_remove = len(comp.name)
+        if hasattr(comp, 'get_completion_prefix_length'):
+            comp_len = len(comp.complete) if comp.complete else 0
+            to_remove = comp.get_completion_prefix_length() + comp_len
+            
+        before = start[:-to_remove] if to_remove > 0 else start
         br = ''
         ofs = 0
         if hasattr(comp, 'end_char'):
@@ -576,7 +582,8 @@ class inputClass(QTextEdit):
         cursor.insertText(res)
         cursor.endEditBlock()
         cursor.clearSelection()
-        cursor.setPosition(pos+ofs,QTextCursor.MoveAnchor)
+        new_pos = pos - linePos + len(before) + len(comp.name) + ofs
+        cursor.setPosition(new_pos, QTextCursor.MoveAnchor)
         return cursor
 
     def duplicate(self):
