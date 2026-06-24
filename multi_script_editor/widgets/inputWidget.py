@@ -579,7 +579,8 @@ class inputClass(QTextEdit):
 
         # Auto-add parenthesis for functions/methods/classes
         if hasattr(comp, 'type') and comp.type in ('function', 'class', 'method'):
-            if not end.startswith('('):
+            is_import = bool(re.match(r'^\s*(from|import)\b', start))
+            if not end.startswith('(') and not is_import:
                 br += '()'
                 ofs += 1 # Move cursor inside the parenthesis
 
