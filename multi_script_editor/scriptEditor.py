@@ -340,7 +340,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.quick_help_act.setIcon(QIcon(icons['help']))
         self.quick_help_act.setShortcutContext(Qt.WidgetShortcut)
         QShortcut(QKeySequence('F1'), self, self.get_word_help)
-        # QShortcut(QKeySequence('Alt+Q'), self, self.get_word_help)
 
         self.fillThemeMenu()
 
