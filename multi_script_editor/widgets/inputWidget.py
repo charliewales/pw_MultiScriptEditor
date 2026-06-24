@@ -138,7 +138,8 @@ class inputClass(QTextEdit):
                         else:
                             script = jedi.Script(code=text)
                         try:
-                            self.completer.updateCompleteList(script.complete(line=bl, column=col, fuzzy=True))
+                            use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
+                            self.completer.updateCompleteList(script.complete(line=bl, column=col, fuzzy=use_fuzzy))
                         except:
                             self.completer.updateCompleteList()
                     else:
