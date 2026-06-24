@@ -291,6 +291,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.add_quotes_act.triggered.connect(self.tab.addQuotes)
         self.add_quotes_act.setShortcut('Alt+Q')
         self.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
+
+        self.autocomplete_act.setShortcut('Alt+A')
+        self.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), self, self.tab.addQuotes)
 
         self.selectNextOccurrence_act.triggered.connect(self.tab.selectNextOccurrence)
@@ -745,6 +748,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         wrap = data.get('wrap', None)
         show_whitespace = data.get('show_whitespace', False)
         font = data.get('font', False)
+        autocomplete = data.get('autocomplete', True)
         fuzzy_autocomplete = data.get('fuzzy_autocomplete', False)
         show_docstrings = data.get('show_docstrings', False)
 
@@ -779,6 +783,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if font:
             self.tab.set_start_font(font)
             self.out.set_start_font(font)
+        self.autocomplete_act.setChecked(autocomplete)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
         self.show_docstrings_act.setChecked(show_docstrings)
 
@@ -808,6 +813,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = self.whitespace_act.isChecked()
         editor_font = self.tab.widget(0).edit.font()
         show_outline = self.showOutline_act.isChecked()
+        autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
 
@@ -834,6 +840,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_whitespace=show_whitespace,
             font=font_data,
             show_outline=show_outline,
+            autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
         )

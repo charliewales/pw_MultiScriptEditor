@@ -112,6 +112,9 @@ class inputClass(QTextEdit):
 
     def parseText(self):
         if self.completer:
+            if hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
+                self.completer.hide()
+                return
             text = self.toPlainText()
             self.moveCompleter()
             if text:
