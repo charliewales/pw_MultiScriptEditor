@@ -291,6 +291,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.add_quotes_act.triggered.connect(self.tab.addQuotes)
         self.add_quotes_act.setShortcut('Alt+Q')
         self.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
+        self.add_quotes_act.setIcon(QIcon(icons['add_quotes']))
 
         self.autocomplete_act.setShortcut('Alt+A')
         self.autocomplete_act.setShortcutContext(Qt.WindowShortcut)

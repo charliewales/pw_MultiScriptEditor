@@ -20,6 +20,7 @@ icons = dict(
     delete_line=os.path.join(root, "delete_line.png"),
     duplicate_line=os.path.join(root, "duplicate_line.png"),
     comment=os.path.join(root, "comment.png"),
+    add_quotes=os.path.join(root, "add_quotes.png"),
     replace=os.path.join(root, "replace.png"),
     add_tab=os.path.join(root, "add_tab.png"),
     undo=os.path.join(root, "undo.png"),
