@@ -385,6 +385,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.showOutline_act.setShortcut("Ctrl+Shift+O")
         self.showOutline_act.triggered.connect(self.toggleOutline)
 
+        # Syntax Check toggle setup
+        self.syntaxCheck_act.triggered.connect(self.toggleSyntaxCheck)
+
         self.outline_timer = QTimer(self)
         self.outline_timer.setSingleShot(True)
         self.outline_timer.timeout.connect(self._updateOutlineNow)
@@ -798,6 +801,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.showOutline_act.setChecked(show_outline)
         self.toggleOutline(show_outline)
 
+        syntax_check = data.get('syntax_check', True)
+        self.syntaxCheck_act.setChecked(syntax_check)
+        self.toggleSyntaxCheck(syntax_check)
+
     def saveSettings(self):
         settings = self.s.readSettings()
         geo = self.geometry()
@@ -813,6 +820,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = self.whitespace_act.isChecked()
         editor_font = self.tab.widget(0).edit.font()
         show_outline = self.showOutline_act.isChecked()
+        syntax_check = self.syntaxCheck_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
@@ -840,6 +848,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_whitespace=show_whitespace,
             font=font_data,
             show_outline=show_outline,
+            syntax_check=syntax_check,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
@@ -912,6 +921,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             self.horizontal_splitter.setSizes([0, 800])
 
+    def toggleSyntaxCheck(self, state=None):
+        if state is None:
+            state = self.syntaxCheck_act.isChecked()
+        self.statusBar().setVisible(state)
+        
+        for i in range(self.tab.count()):
+            w = self.tab.widget(i)
+            if hasattr(w, 'edit'):
+                w.edit.runLinter()
+                
+        if not state:
+            self.statusBar().clearMessage()
     def updateOutline(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
             return

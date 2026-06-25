@@ -152,9 +152,14 @@ class inputClass(QTextEdit):
         self.runLinter()
 
     def runLinter(self):
+        main_win = self.p
+        check_syntax = True
+        if hasattr(main_win, 'syntaxCheck_act'):
+            check_syntax = main_win.syntaxCheck_act.isChecked()
+
         code = self.toPlainText()
         self.syntax_errors = {}
-        if code.strip():
+        if check_syntax and code.strip():
             try:
                 compile(code.encode('utf-8'), '<string>', 'exec')
             except SyntaxError as e:
@@ -165,7 +170,6 @@ class inputClass(QTextEdit):
         if hasattr(self.parent(), 'lineNum'):
             self.parent().lineNum.update()
 
-        main_win = self.p
         if hasattr(main_win, 'updateOutline'):
             main_win.updateOutline()
         if hasattr(main_win, 'statusBar') and main_win.statusBar():
