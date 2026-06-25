@@ -110,25 +110,25 @@ class inputClass(QTextEdit):
         self.completer.setStyleSheet(qss)
         self.blockSignals(False)
 
-    def parseText(self):
+    def parseText(self, force=False):
         if self.completer:
-            if hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
+            if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
                 self.completer.hide()
                 return
             text = self.toPlainText()
             self.moveCompleter()
-            if text:
+            if text or force:
                 tc = self.textCursor()
                 context_completer = False
                 pos = tc.position()
                 if managers.context in managers.contextCompleters:
-                    line = text[:pos].split('\n')[-1]
+                    line = text[:pos].split('\n')[-1] if text else ''
                     comp, extra = managers.contextCompleters[managers.context ](line, self.p.namespace)
                     if comp or extra:
                         context_completer = True
                         self.completer.updateCompleteList(comp, extra)
                 if not context_completer:
-                    if pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1]):
+                    if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
                         offs = 0
                         if managers.context in managers.autoImport:
                             autoImp = managers.autoImport.get(managers.context, '')
@@ -238,6 +238,11 @@ class inputClass(QTextEdit):
         tabWidget = self.parent().parent().parent()
         current_tab_index = tabWidget.currentIndex()
         tab_count = tabWidget.count()
+
+        # force autocomplete, Ctrl+Space
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_Space:
+            self.parseText(force=True)
+            return
 
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
