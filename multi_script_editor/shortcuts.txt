@@ -11,21 +11,27 @@ Deactivate Completer                        >   BACKSPACE or one char
 Hide Completer                              >   ESC
 Autocomplete code                           >   ENTER (in Completer)
 Autocomplete first                          >   ENTER or TAB in Editor
+Force Autocomplete                          >   CTRL + SPACE
 Font Size                                   >   CTRL + MouseWheel
 Scroll Code Left-Right                      >   ALT + MouseWheel
 Comment/Uncomment line or selected lines    >   ALT + C
-Move line(s) up                                >   ALT + UP
-Move line(s) down                              >   ALT + DOWN
+Move line(s) up                             >   ALT + UP
+Move line(s) down                           >   ALT + DOWN
 Run dir() on current word                   >   ALT + D
 Run help() on current word                  >   ALT + H
-Quick Help                                  >   ALT + Q / F1
+Quick Help                                  >   F1
+Add Quotes                                  >   ALT + Q
+Print Command                               >   ALT + E
+Autocomplete                                >   ALT + A
 Run type() on current word                  >   ALT + T
 Toggle Word Wrap                            >   ALT + W
 Toggle Clear Output before Execute          >   CTRL + ALT + C
 Toggle Output Word Wrap                     >   CTRL + ALT + W
 Toggle Always On Top                        >   CTRL + ALT + T
-Clear Output                                >   CTRL + Shit + C
-Duplicate line or selected text             >   CTRL + Shit + D
+Clear Output                                >   CTRL + SHIFT + C
+Duplicate line or selected text             >   CTRL + SHIFT + D
+Select Next Occurrence                      >   CTRL + ALT + D
+Select All Occurrences                      >   CTRL + SHIFT + ALT + D
 Copy                                        >   CTRL + C
 Delete line                                 >   CTRL + D
 Find and Replace                            >   CTRL + F
@@ -36,3 +42,9 @@ Cut                                         >   CTRL + X
 Redo                                        >   CTRL + Y
 Undo                                        >   CTRL + Z
 Wrap dropped nodes (Maya and Houdini)       >   MMB Drag + ALT
+Open File                                   >   CTRL + O
+Save File                                   >   CTRL + S
+Save Session                                >   CTRL + SHIFT + S
+Quit                                        >   CTRL + Q
+Show Code Outline                           >   CTRL + SHIFT + O
+Toggle Show Whitespace                      >   CTRL + SHIFT + W
