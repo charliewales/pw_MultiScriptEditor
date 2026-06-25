@@ -10,7 +10,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "5.2.0"
+mse_version = "5.3.0"
 
 import managers
 import sessionManager
@@ -925,12 +925,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if state is None:
             state = self.syntaxCheck_act.isChecked()
         self.statusBar().setVisible(state)
-        
+
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
             if hasattr(w, 'edit'):
                 w.edit.runLinter()
-                
+
         if not state:
             self.statusBar().clearMessage()
     def updateOutline(self):
