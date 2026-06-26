@@ -167,6 +167,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.saveSeccion_act.triggered.connect(lambda: self.saveSession(True))
         self.saveSeccion_act.setIcon(QIcon(icons['save']))
         self.saveSeccion_act.setShortcut("Ctrl+Shift+S")
+        self.closeAllTabs_act.triggered.connect(self.closeAllTabsWithConfirm)
+        self.closeAllTabs_act.setIcon(QIcon(icons['close_all_tabs']))
         self.exit_act.triggered.connect(self.close)
         self.tabToSpaces_act.triggered.connect(self.tabsToSpaces)
         self.quit_act.triggered.connect(self.close)
@@ -574,6 +576,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         path = self.session.writeSession(tabs)
         if verbos:
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
+
+    def closeAllTabsWithConfirm(self):
+        res = QMessageBox.question(
+            self,
+            "Close All Tabs",
+            "Are you sure you want to close all tabs?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if res == QMessageBox.Yes:
+            self.tab.clear()
+            self.tab.addNewTab()
 
     def executeAll(self):
         allText = self.tab.getCurrentText()

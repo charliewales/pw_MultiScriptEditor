@@ -31,6 +31,7 @@ icons = dict(
     save=os.path.join(root, "save.png"),
     about=os.path.join(root, "about.png"),
     quit=os.path.join(root, "quit.png"),
+    close_all_tabs=os.path.join(root, "close_all_tabs.png"),
     theme=os.path.join(root, "theme.png"),
     settings=os.path.join(root, "settings.png"),
     qt=os.path.join(root, "qt.png"),
