@@ -40,4 +40,5 @@ icons = dict(
     move_line_up=os.path.join(root, "move_line_up.png"),
     move_line_down=os.path.join(root, "move_line_down.png"),
     file_recent=os.path.join(root, "file_recent.png"),
+    restore_backup=os.path.join(root, "restore_backup.png"),
 )

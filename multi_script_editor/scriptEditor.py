@@ -991,6 +991,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.sessions_menu.addAction(save_act)
 
         restore_backup_act = QAction("Restore Crash Backup", self)
+        restore_backup_act.setIcon(QIcon(icons['restore_backup']))
         restore_backup_act.triggered.connect(self.restoreBackupSession)
         if not self.session.backupExists():
             restore_backup_act.setEnabled(False)
