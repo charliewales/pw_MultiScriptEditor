@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Script Editor - Documentation</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #16a085; }
+        ul { margin-bottom: 20px; }
+        li { margin-bottom: 5px; }
+        strong { color: #2980b9; }
+        .shortcut { display: inline-block; background: #ecf0f1; border-radius: 4px; padding: 2px 6px; font-size: 0.85em; font-family: monospace; color: #c0392b; margin-left: 8px; border: 1px solid #bdc3c7; }
+    </style>
+</head>
+<body>
+
+    <h1>Multi Script Editor Documentation</h1>
+
+    <h2>General Overview</h2>
+    <p>Multi Script Editor is an open-source, cross-platform, and cross-application Python editor. It can be run as a standalone application or embedded within other software applications (such as Houdini, Nuke, Maya, 3DsMax), offering the ability to script in Python efficiently and centrally.</p>
+
+    <h3>Key Features:</h3>
+    <ul>
+        <li>Preserves and loads tabs and the code within them.</li>
+        <li>Interactive execution of selected code.</li>
+        <li>Adjustable color themes for the code editor.</li>
+        <li>Code completion (via the <code>jedi</code> module).</li>
+        <li>Context completion for different functions, such as existing nodes and scene paths depending on the integrated software.</li>
+    </ul>
+
+    <hr>
+
+    <h2>Options by Menu</h2>
+    <p>Below is a breakdown of the different actions and tools grouped by the menu where they are located within the application:</p>
+
+    <h3>File Menu</h3>
+    <ul>
+        <li><strong>Open Script</strong><span class="shortcut">CTRL + O</span>: Opens an existing Python script file.</li>
+        <li><strong>Save Script</strong><span class="shortcut">CTRL + S</span>: Saves the script in the current tab.</li>
+        <li><strong>Save Session</strong><span class="shortcut">CTRL + SHIFT + S</span>: Saves the current session, including open tabs and their contents.</li>
+        <li><strong>Close All Tabs</strong>: Closes all open tabs, leaving only one empty tab (prompts for confirmation before closing).</li>
+        <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>: Closes the application.</li>
+    </ul>
+
+    <h3>Edit Menu (Tools)</h3>
+    <ul>
+        <li><strong>Undo</strong><span class="shortcut">CTRL + Z</span>: Undoes the last action.</li>
+        <li><strong>Redo</strong><span class="shortcut">CTRL + Y</span>: Redoes the previously undone action.</li>
+        <li><strong>Copy</strong><span class="shortcut">CTRL + C</span>: Copies the selected text to the clipboard.</li>
+        <li><strong>Cut</strong><span class="shortcut">CTRL + X</span>: Cuts the selected text to the clipboard.</li>
+        <li><strong>Paste</strong><span class="shortcut">CTRL + V</span>: Pastes the clipboard content.</li>
+        <li><strong>Delete Line</strong><span class="shortcut">CTRL + D</span>: Deletes the line where the cursor is currently located.</li>
+        <li><strong>Duplicate Line</strong><span class="shortcut">CTRL + SHIFT + D</span>: Duplicates the current line or selected text.</li>
+        <li><strong>Move Line(s) Up</strong><span class="shortcut">ALT + UP</span>: Moves the selected line(s) one position up.</li>
+        <li><strong>Move Line(s) Down</strong><span class="shortcut">ALT + DOWN</span>: Moves the selected line(s) one position down.</li>
+        <li><strong>Add Quotes</strong><span class="shortcut">ALT + Q</span>: Adds quotes around the selected text.</li>
+        <li><strong>Comment</strong><span class="shortcut">ALT + C</span>: Comments or uncomments the current line or selected text block.</li>
+        <li><strong>Select Next Occurrence</strong><span class="shortcut">CTRL + ALT + D</span>: Selects the next occurrence of the current word.</li>
+        <li><strong>Select All Occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>: Selects all occurrences of the current word.</li>
+        <li><strong>Find and Replace</strong><span class="shortcut">CTRL + F</span>: Opens the tool to find and replace text within the editor.</li>
+        <li><strong>Tab to spaces</strong>: Converts tabs in the document to spaces.</li>
+        <li><strong>Render Whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>: Shows or hides whitespace characters in the editor.</li>
+        <li><strong>Word Wrap</strong><span class="shortcut">ALT + W</span>: Toggles automatic word wrap in the code editor.</li>
+        <li><strong>Word Wrap (Output)</strong><span class="shortcut">CTRL + ALT + W</span>: Toggles word wrap in the output console.</li>
+    </ul>
+
+    <h3>Run Menu</h3>
+    <ul>
+        <li><strong>Clear Output before Execution</strong><span class="shortcut">CTRL + ALT + C</span>: If enabled, clears the output console before each execution.</li>
+        <li><strong>Clear Output</strong><span class="shortcut">CTRL + SHIFT + C</span>: Manually clears the output console.</li>
+        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>: Executes the <code>dir()</code> function on the current word and displays the result in the output.</li>
+        <li><strong>help()</strong><span class="shortcut">ALT + H</span>: Executes the <code>help()</code> function on the current word and displays the documentation.</li>
+        <li><strong>print()</strong>: Adds a <code>print()</code> statement for the selected word.</li>
+        <li><strong>type()</strong><span class="shortcut">ALT + T</span>: Executes the <code>type()</code> function on the current word to display its data type.</li>
+        <li><strong>Echo Executed Command</strong><span class="shortcut">ALT + E</span>: Displays the executed code in the output console before the results.</li>
+        <li><strong>Execute All</strong><span class="shortcut">ALT + ENTER</span>: Executes all the code in the current tab.</li>
+        <li><strong>Execute Line</strong><span class="shortcut">CTRL + ALT + ENTER</span>: Executes only the line of code where the cursor is located.</li>
+        <li><strong>Execute Selected</strong><span class="shortcut">CTRL + ENTER</span>: Executes only the currently selected text block.</li>
+    </ul>
+
+    <h3>Options Menu</h3>
+    <ul>
+        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>: Toggles the basic autocomplete function.</li>
+        <li><strong>Fuzzy Autocomplete</strong>: Enables fuzzy search for autocompletion.</li>
+        <li><strong>Show Docstrings</strong>: Shows or hides docstrings during autocompletion.</li>
+        <li><strong>Show Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>: Shows or hides the code outline panel (classes and functions).</li>
+        <li><strong>Syntax Check</strong>: Toggles real-time syntax checking.</li>
+        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>: Keeps the editor window always visible on top of other windows.</li>
+        <li><strong>Choose Font...</strong><span class="shortcut">CTRL + MouseWheel</span>: Allows changing the font type and size of the editor text.</li>
+        <li><strong>Open Settings Folder</strong>: Opens the folder where the editor's configuration and session files are saved.</li>
+        <li><strong>Theme</strong>: Submenu that allows opening the theme editor (<strong>Edit...</strong>) to customize the interface colors.</li>
+    </ul>
+
+    <h3>Help Menu</h3>
+    <ul>
+        <li><strong>Quick Help</strong><span class="shortcut">F1</span>: Displays a quick help guide on general usage and variables.</li>
+        <li><strong>GitHub</strong>: Opens the project repository page on GitHub (Manual).</li>
+        <li><strong>Houdini Env Variables</strong>: Opens Houdini environment variables documentation.</li>
+        <li><strong>Houdini hou package</strong>: Opens documentation for the Houdini <code>hou</code> module.</li>
+        <li><strong>Maya Commands</strong>: Opens Maya commands documentation.</li>
+        <li><strong>Nuke Dev Guide</strong>: Opens the Nuke development guide.</li>
+        <li><strong>Qt for Python</strong>: Opens the official Qt for Python (PySide) documentation.</li>
+        <li><strong>Qt Modules</strong>: Opens documentation for Qt modules.</li>
+        <li><strong>Python documentation</strong>: Opens the official Python documentation for the current version.</li>
+        <li><strong>Shortcuts</strong>: Displays the full list of keyboard shortcuts for the editor.</li>
+        <li><strong>Documentation</strong>: Opens this documentation file.</li>
+        <li><strong>Help</strong>: Displays general help information for the editor.</li>
+        <li><strong>About</strong>: Displays information about the application's version and authors.</li>
+    </ul>
+
+</body>
+</html>

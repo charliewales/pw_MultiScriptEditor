@@ -225,6 +225,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.help_act.setIcon(QIcon(icons['sel']))
         self.shortcuts_act.triggered.connect(self.shortcuts)
         self.shortcuts_act.setIcon(QIcon(icons['shortcut']))
+
+        self.documentation_act.triggered.connect(self.openDocumentation)
+        self.documentation_act.setIcon(QIcon(icons['pw']))
         self.printHelp_act.triggered.connect(self.mse_help)
         self.printHelp_act.setIcon(QIcon(icons['print_help']))
         # editor
@@ -910,6 +913,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         from style.links import links
 
         webbrowser.open(f"{links[name]}{extra}")
+
+    def openDocumentation(self):
+        doc_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'documentation.html')
+        webbrowser.open('file://' + doc_path.replace('\\', '/'))
 
     def about(self):
         dial = about.aboutClass(self)
