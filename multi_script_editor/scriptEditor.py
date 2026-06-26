@@ -193,7 +193,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.openManual_act.triggered.connect(lambda: self.openLink('manual'))
         self.openManual_act.setIcon(QIcon(icons['github']))
 
-        self.python_act.triggered.connect(lambda: self.openLink('python{0}'.format(sys.version_info.major)))
+        self.python_act.triggered.connect(
+            lambda: self.openLink(
+                "python{0}".format(sys.version_info.major), f".{sys.version_info.minor}")
+        )
         self.python_act.setIcon(QIcon(icons['python']))
 
         self.houdini_hou_act.triggered.connect(lambda: self.openLink('houdini_hou'))
@@ -205,9 +208,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.nuke_dev_guide_act.triggered.connect(lambda: self.openLink('nuke_dev_guide'))
         self.nuke_dev_guide_act.setIcon(QIcon(icons['nuke']))
 
-        self.qt_docs_act.triggered.connect(lambda: self.openLink('qt_docs'))
+        self.qt_docs_act.triggered.connect(
+            lambda: self.openLink(f"qt{'6' if vendor.Qt.IsPySide6 else '5'}_docs")
+        )
+
         self.qt_docs_act.setIcon(QIcon(icons['qt']))
-        self.qt_modules_act.triggered.connect(lambda: self.openLink('qt_modules'))
+        self.qt_modules_act.triggered.connect(
+            lambda: self.openLink(f"qt{'6' if vendor.Qt.IsPySide6 else '5'}_modules")
+        )
         self.qt_modules_act.setIcon(QIcon(icons['qt']))
 
         self.about_act.triggered.connect(self.about)
@@ -885,10 +893,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.adjustColmpeters()
         super(scriptEditorClass, self).resizeEvent(event)
 
-    def openLink(self, name):
+    def openLink(self, name, extra=""):
         from style.links import links
 
-        webbrowser.open(links[name])
+        webbrowser.open(f"{links[name]}{extra}")
 
     def about(self):
         dial = about.aboutClass(self)
