@@ -288,7 +288,12 @@ def editorStyle(theme=None):
         for p in proxys:
             name = p[1:-1]
             if name in colors:
-                text = text.replace(p, str(colors[name]))
+                c = colors[name]
+                if isinstance(c, (list, tuple)):
+                    val = '#%02x%02x%02x' % (c[0], c[1], c[2])
+                else:
+                    val = str(c)
+                text = text.replace(f'rgb{p}', val)
             elif name == 'textsize':
                 text = text.replace(p, '12')
         return text
@@ -301,9 +306,11 @@ def applyColorToEditorStyle(colors=None):
             name = p[1:-1]
             if name in colors:
                 c = colors[name]
-                if isinstance(c, list):
-                    c = tuple(c)
-                text = text.replace(p, str(c))
+                if isinstance(c, (list, tuple)):
+                    val = '#%02x%02x%02x' % (c[0], c[1], c[2])
+                else:
+                    val = str(c)
+                text = text.replace(f'rgb{p}', val)
             elif name == 'textsize':
                 text = text.replace(p, '12')
         return text

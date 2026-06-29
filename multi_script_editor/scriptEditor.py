@@ -201,7 +201,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
         self.theme_menu.addSeparator()
         for t in sorted(design.predefinedThemes.keys()):
-            self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
+            self.theme_menu.addAction(QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x)))
         data = self._current_settings
         if data.get('colors'):
             added_separator = False
@@ -210,21 +210,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if not added_separator:
                         self.theme_menu.addSeparator()
                         added_separator = True
-                    self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
+                    self.theme_menu.addAction(QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x)))
 
     def applyTheme(self, name):
+        qss = design.editorStyle(name)
+        o = self.out
+        o.applyHightLighter(name)
+        o.setStyleSheet(qss)
+        
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
-            o = self.out
-            qss = design.editorStyle(name)
-            # text color
             w.edit.applyHightLighter(name)
-            o.applyHightLighter(name)
-            # completer
             w.edit.completer.setStyleSheet(qss)
-            # editor
             w.edit.setStyleSheet(qss)
-            o.setStyleSheet(qss)
         s = self._current_settings
         s['theme'] = name
         self.save_settings_requested.emit(s)
