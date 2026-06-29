@@ -3,6 +3,7 @@ from vendor.Qt.QtGui import QIcon
 from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout, QWidget
 from vendor.Qt.QtCompat import wrapInstance
 import maya.OpenMayaUI as omui
+import maya improt cmds
 import os, sys, re
 from managers.completeWidget import contextCompleterClass
 main = __import__('__main__')
@@ -10,12 +11,6 @@ ns = main.__dict__
 exec('import pymel.core as pm', ns)
 pm = main.__dict__['pm']
 
-# jedi completion path
-current_path = os.path.dirname(__file__)
-compPath = os.path.join(current_path,'maya_completion').replace('\\','/')
-if compPath in sys.path:
-    sys.path.remove(compPath)
-sys.path.insert(0, compPath)
 
 def getMayaWindow():
     return wrapInstance(int(omui.MQtUtil.mainWindow()), QWidget)

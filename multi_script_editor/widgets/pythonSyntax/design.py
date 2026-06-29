@@ -1,4 +1,4 @@
-import settingsManager
+from core.settings_model import SettingsModel
 import os, re
 
 EditorStyle = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'style', 'completer.qss')
@@ -33,8 +33,8 @@ defaultColors = dict(
 
 
 def getColors(theme=False):
-    s = settingsManager.scriptEditorClass()
-    settings = s.readSettings()
+    s = SettingsModel()
+    settings = s.read_settings()
     if not theme:
         theme = settings.get('theme')
     result = {k:v for k,v in defaultColors.items()}
@@ -52,7 +52,7 @@ def editorStyle(theme=None):
     colors = {k:tuple(v) if isinstance(v, list) else v for k,v in colors.items()}
     if EditorStyle:
         text = open(EditorStyle).read()
-        proxys = re.findall('\[.*\]', text)
+        proxys = re.findall(r'\[.*\]', text)
         for p in proxys:
             name = p[1:-1]
             if name in colors:
@@ -62,7 +62,7 @@ def editorStyle(theme=None):
 def applyColorToEditorStyle(colors=None):
     if EditorStyle:
         text = open(EditorStyle).read()
-        proxys = re.findall('\[.*\]', text)
+        proxys = re.findall(r'\[.*\]', text)
         for p in proxys:
             name = p[1:-1]
             if name in colors:

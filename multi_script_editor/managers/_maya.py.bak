@@ -36,8 +36,8 @@ def showWindow():
 dockName = 'pw_scriptEditorDock'
 name = 'pw_scriptEditor'
 def clearDoc():
-    if cmds.dockControl(dockName, q=1, ex=1):
-        cmds.deleteUI(dockName)
+    if pm.dockControl(dockName, q=1, ex=1):
+        pm.deleteUI(dockName)
 
 def showDockControl():
     if cmds.window(name, q=1, ex=1):

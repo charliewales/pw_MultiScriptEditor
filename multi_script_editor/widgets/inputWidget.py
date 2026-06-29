@@ -5,7 +5,7 @@ import re
 import jedi
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets import completeWidget
-import settingsManager
+from core.settings_model import SettingsModel
 import managers
 from widgets.pythonSyntax import design
 
@@ -52,7 +52,7 @@ class inputClass(QTextEdit):
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
-        self.data = settingsManager.scriptEditorClass().readSettings()
+        self.data = SettingsModel().read_settings()
         self.applyHightLighter(self.data.get('theme'))
         self.set_start_font()
         self.changeFontSize(True)
@@ -65,6 +65,10 @@ class inputClass(QTextEdit):
         self.syntax_errors = {}
         self.multi_cursors = []
         self._highlight_color_cache = None
+        self.textChanged.connect(self._on_text_changed)
+
+    def _on_text_changed(self):
+        self.autocomplete_timer.start(200)
 
     def set_start_font(self, font_d=None):
         if font_d is None:
@@ -114,6 +118,12 @@ class inputClass(QTextEdit):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
                 self.completer.hide()
+                self.runLinter()
+                return
+            if getattr(self, '_skip_autocomplete_once', False):
+                self._skip_autocomplete_once = False
+                self.completer.hide()
+                self.runLinter()
                 return
             text = self.toPlainText()
             self.moveCompleter()
@@ -247,17 +257,20 @@ class inputClass(QTextEdit):
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
+                self._skip_autocomplete_once = True
                 self.completer.applyCurrentComplete()
                 return
+            
+            self._skip_autocomplete_once = True
+            
             # auto indent
-            else:
-                add = self.getCurrentIndent()
-                if add:
-                    QTextEdit.keyPressEvent(self, event)
-                    cursor = self.textCursor()
-                    cursor.insertText(add)
-                    self.setTextCursor(cursor)
-                    return
+            add = self.getCurrentIndent()
+            if add:
+                QTextEdit.keyPressEvent(self, event)
+                cursor = self.textCursor()
+                cursor.insertText(add)
+                self.setTextCursor(cursor)
+                return
         # comment, Alt+C
         elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
             self.p.tab.comment()
@@ -265,9 +278,11 @@ class inputClass(QTextEdit):
         # shuffle lines, Alt+up, Alt+down
         elif event.modifiers() == Qt.AltModifier:
             if event.key() == Qt.Key_Up:
+                self._skip_autocomplete_once = True
                 self.move_line_up()
                 return
             elif event.key() == Qt.Key_Down:
+                self._skip_autocomplete_once = True
                 self.move_line_down()
                 return
         # remove 4 spaces
@@ -336,6 +351,7 @@ class inputClass(QTextEdit):
         elif event.key() == Qt.Key_Tab:
             if self.completer:
                 if self.completer.isVisible():
+                    self._skip_autocomplete_once = True
                     self.completer.applyCurrentComplete()
                     return
             if self.textCursor().selection().toPlainText():
@@ -372,8 +388,8 @@ class inputClass(QTextEdit):
         QTextEdit.keyPressEvent(self, event)
 
         # start parse text (Debounced to prevent lag on keypress)
-        if parse and event.text():
-            self.autocomplete_timer.start(200) # 200 ms debounce delay
+        # Note: We now rely on textChanged signal for more reliable updates,
+        # but if we needed key-specific parsing, it would go here.
 
         self.highlight_current_line()
 
@@ -461,7 +477,7 @@ class inputClass(QTextEdit):
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
 
         if getattr(self, '_highlight_color_cache', None) is None:
-            data = settingsManager.scriptEditorClass().readSettings() or {}
+            data = SettingsModel().read_settings() or {}
             theme = data.get('theme', 'default')
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))

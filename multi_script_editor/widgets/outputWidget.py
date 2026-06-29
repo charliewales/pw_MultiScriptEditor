@@ -6,7 +6,7 @@ import os
 from managers import context
 
 from widgets.pythonSyntax import syntaxHighLighter
-import settingsManager
+from core.settings_model import SettingsModel
 from widgets.pythonSyntax import design
 
 # font_name = 'Courier'
@@ -32,7 +32,7 @@ class outputClass(QTextBrowser):
         else:
             self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
-        data = settingsManager.scriptEditorClass().readSettings()
+        data = SettingsModel().read_settings()
         self.applyHightLighter(data.get('theme'))
 
     def showMessage(self, msg):

@@ -20,7 +20,7 @@ def show():
         qtwindow = MaxPlus.GetQMaxWindow()
     except:
         qtwindow = MaxPlus.GetQMaxMainWindow()
-    se = scriptEditor.scriptEditorClass(parent=qtwindow)
+    se = scriptEditor.create_editor_instance(parent=qtwindow)
     #se.installEventFilter(MaxDialogEvents())
     se.runCommand('import MaxPlus')
     #se.MaxEventFilter = MaxDialogEvents()

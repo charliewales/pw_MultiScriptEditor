@@ -24,7 +24,7 @@ def show(*args, **kwargs):
     hqt.show(scriptEditor.scriptEditorClass, *args, **kwargs)
 
 def get_widget():
-    widget = scriptEditor.scriptEditorClass()
+    widget = scriptEditor.create_editor_instance()
     widget.setStyleSheet('')
     widget.setStyleSheet( hqt.get_h14_style() )
     return widget

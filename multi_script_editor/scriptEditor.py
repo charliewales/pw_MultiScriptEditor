@@ -10,18 +10,18 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "5.3.0"
+mse_version = "6.0.0"
 
 import managers
-import sessionManager
-import settingsManager
+from core.execution_manager import ExecutionManager
+from presenters.main_presenter import MainPresenter
 import vendor.Qt
 from icons import *
 from vendor.help import get_help
 import ast
 import re
 
-from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer
+from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QColor, QIcon, QKeySequence, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
@@ -29,67 +29,12 @@ from widgets import scriptEditor_UIs as ui
 from widgets.pythonSyntax import design
 
 
-def parse_outline(code):
-    try:
-        tree = ast.parse(code)
-    except:
-        return parse_outline_regex(code)
-
-    symbols = []
-
-    class OutlineVisitor(ast.NodeVisitor):
-        def visit_ClassDef(self, node):
-            symbols.append({
-                'name': "class {0}".format(node.name),
-                'line': node.lineno,
-                'indent': 0,
-                'type': 'class'
-            })
-            self.generic_visit(node)
-
-        def visit_FunctionDef(self, node):
-            symbols.append({
-                'name': "def {0}()".format(node.name),
-                'line': node.lineno,
-                'indent': 1,
-                'type': 'function'
-            })
-
-    OutlineVisitor().visit(tree)
-    symbols.sort(key=lambda x: x['line'])
-    return symbols
-
-
-def parse_outline_regex(code):
-    symbols = []
-    lines = code.split('\n')
-    for i, line in enumerate(lines):
-        line_num = i + 1
-        class_match = re.match(r'^(\s*)class\s+(\w+)', line)
-        if class_match:
-            indent = len(class_match.group(1)) // 4
-            name = class_match.group(2)
-            symbols.append({
-                'name': "class {0}".format(name),
-                'line': line_num,
-                'indent': indent,
-                'type': 'class'
-            })
-            continue
-        def_match = re.match(r'^(\s*)def\s+(\w+)', line)
-        if def_match:
-            indent = len(def_match.group(1)) // 4
-            name = def_match.group(2)
-            symbols.append({
-                'name': "def {0}()".format(name),
-                'line': line_num,
-                'indent': indent,
-                'type': 'function'
-            })
-    return symbols
-
-
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
+    execute_command_requested = Signal(str, bool, bool)
+    update_outline_requested = Signal(str)
+    save_settings_requested = Signal(dict)
+    load_settings_requested = Signal()
+
     def __init__(self, parent=None):
         super(scriptEditorClass, self).__init__(parent)
         # ui
@@ -101,7 +46,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.icon_path = os.path.dirname(__file__)
         window_icon = QIcon(icons["pw"])
         self.setWindowIcon(QIcon(window_icon))
-
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('cw_scriptEditor')
         # widgets
@@ -129,7 +73,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
             m.setWindowTitle('MSE {0}'.format(self.ver))
         # variables
-        self.s = settingsManager.scriptEditorClass()
+        self._current_settings = {}
         self.namespace = __import__('__main__').__dict__
         self.dial = None
 
@@ -142,7 +86,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 'self_context': managers.context,
             }
         )
-        self.session = sessionManager.sessionManagerClass()
         self.execAll_act.setIcon(QIcon(icons['all']))
         self.execLine_act.setIcon(QIcon(icons['line']))
         self.execSel_act.setIcon(QIcon(icons['sel']))
@@ -410,7 +353,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.sessions_menu = QMenu("Sessions", self)
         self.sessions_menu.setIcon(QIcon(icons['open']))
         self.file_menu.insertMenu(self.saveSeccion_act, self.sessions_menu)
-        self.fillSessionsMenu()
 
         # Auto-Save timer (every 60 seconds)
         self.autosave_timer = QTimer(self)
@@ -421,10 +363,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.currentChanged.connect(self.updateOutline)
 
         # start
+        self._exec_manager = ExecutionManager()
+        self._presenter = MainPresenter(self, self._exec_manager)
+        self.fillSessionsMenu()
         self.loadSession()
+        if self.tab.count() > 0 and self.tab.widget(0):
+            self.tab.widget(0).edit.setFocus()
+            
         self.loadSettings()
         self.setWindowStyle()
-        self.tab.widget(0).edit.setFocus()
         self.appContextMenu()
         self.addArgs()
 
@@ -488,14 +435,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.ensureCursorVisible()
 
     def showEvent(self, event):
-        data = self.s.readSettings()
+        data = self._current_settings
         if not data:
             self.saveSettings()
 
     def closeEvent(self, event):
         self.saveSession()
         self.saveSettings()
-        self.session.removeBackup()
+        if hasattr(self, '_presenter'):
+            self._presenter.remove_backup()
         event.accept()
 
     def appContextMenu(self):
@@ -520,7 +468,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
         self.theme_menu.addSeparator()
         self.theme_menu.addAction(QAction('default', self, triggered=lambda: self.applyTheme('default')))
-        data = self.s.readSettings()
+        data = self._current_settings
         if data.get('colors'):
             for t in data.get('colors').keys():
                 self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
@@ -538,9 +486,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             # editor
             w.edit.setStyleSheet(qss)
             o.setStyleSheet(qss)
-        s = self.s.readSettings()
+        s = self._current_settings
         s['theme'] = name
-        self.s.writeSettings(s)
+        self.save_settings_requested.emit(s)
 
     def setWindowStyle(self):
         if __name__ == '__main__':
@@ -550,33 +498,35 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.setWindowIcon(QIcon(icons['pw']))
 
     def loadSession(self):
-        sessions = self.session.readSession()
-
+        sessions = self._presenter.get_session_tabs()
         self.tab.clear()
-        active = 0
         if sessions:
             for i, s in enumerate(sessions):
-                w = self.tab.addNewTab(s['name'], s['text'])
-                if s['active']:
-                    active = i
+                w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'))
+                if s.get('active'):
+                    self.tab.setCurrentIndex(i)
                 w.setFontSize(s.get('size', None))
-        else:
+        if self.tab.count() == 0:
             self.tab.addNewTab()
-        self.tab.setCurrentIndex(active)
 
     def saveSession(self, verbos=False):
+        if not hasattr(self, '_presenter'):
+            return
         tabs = []
         index = self.tab.currentIndex()
         for item in range(self.tab.count()):
+            widget = self.tab.widget(item)
+            if not widget:
+                continue
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
             if managers.context == 'hou':
-                size = self.tab.widget(item).edit.fs
+                size = widget.edit.fs
             else:
-                size = self.tab.widget(item).edit.font().pointSize()
+                size = widget.edit.font().pointSize()
             tab = {'name': name, 'text': text, 'active': item == index, 'size': size}
             tabs.append(tab)
-        path = self.session.writeSession(tabs)
+        path = self._presenter.save_session(tabs)
         if verbos:
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
 
@@ -596,21 +546,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.print_command_act.isChecked():
             allText += '\n# Execute All'
         if allText:
-            self.executeCommand(allText.strip())
+            self.execute_command_requested.emit(allText.strip(), self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def executeLine(self):
         text = self.tab.getCurrentLine()
         if self.print_command_act.isChecked():
             text += '\n# Execute Line'
         if text:
-            self.executeCommand(text)
+            self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def executeSelected(self):
         text = self.tab.getCurrentSelectedText()
         if self.print_command_act.isChecked():
             text += '\n# Execute Selected'
         if text:
-            self.executeCommand(text)
+            self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def get_word_help(self):
         i = self.tab.currentIndex()
@@ -621,58 +571,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         i = self.tab.currentIndex()
         text = self.tab.widget(i).edit.function_cmd(function)
         if text:
-            self.executeCommand(text)
+            self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def updateNamespace(self, namespace):
         self.namespace.update(namespace)
 
-    def executeCommand(self, cmd):
-        if self.clear_exec_act.isChecked():
-            self.clearHistory()
-        self.out.showMessage(cmd)
-        self.runCommand(cmd)
+    def get_namespace(self):
+        return self.namespace
 
-    def runCommand(self, command=None):
-        if command:
-            tmp_stdout = sys.stdout
+    def clear_output(self):
+        self.clearHistory()
 
-            class stdoutProxy:
-                def __init__(self, write_func):
-                    self.write_func = write_func
-                    self.skip = False
-
-                def write(self, text):
-                    if not self.skip:
-                        stripped_text = text.rstrip('\n')
-                        self.write_func(stripped_text)
-                        QCoreApplication.processEvents()
-                    self.skip = not self.skip
-
-                def flush(self):
-                    pass
-
-            sys.stdout = stdoutProxy(self.out.showMessage)
-            try:
-                try:
-                    result = eval(command, self.namespace, self.namespace)
-                    if result is not None:
-                        #if command.startswith("dir("):
-                        #    result = "['" + "',\n'".join(result) + "']"
-                        #    self.out.showMessage(result)
-                        #else:
-                        #    self.out.showMessage(repr(result))
-                        self.out.showMessage(repr(result))
-                except SyntaxError:
-                    exec(command, self.namespace)
-            except SystemExit:
-                self.close()
-            except:
-                traceback_lines = traceback.format_exc().split('\n')
-                for i in (3, 2, 1, -1):
-                    traceback_lines.pop(i)
-                self.out.showMessage('\n'.join(traceback_lines))
-            finally:
-                sys.stdout = tmp_stdout
+    def append_output_message(self, text):
+        self.out.showMessage(text)
 
     def clearHistory(self):
         self.out.setText('')
@@ -703,20 +614,20 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.addRecentFile(path[0])
 
     def addRecentFile(self, path):
-        data = self.s.readSettings()
+        data = self._current_settings
         recent = data.get('recent_files', [])
         if path in recent:
             recent.remove(path)
         recent.insert(0, path)
         recent = recent[:20]
         data['recent_files'] = recent
-        self.s.writeSettings(data)
+        self.save_settings_requested.emit(data)
         self.updateRecentFilesMenu()
 
     def updateRecentFilesMenu(self):
         if not hasattr(self, 'recent_files_menu'): return
         self.recent_files_menu.clear()
-        data = self.s.readSettings()
+        data = self._current_settings
         recent = data.get('recent_files', [])
         if not recent:
             a = self.recent_files_menu.addAction("No recent files")
@@ -734,9 +645,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.recent_files_menu.addAction(clear_act)
 
     def clearRecentFiles(self):
-        data = self.s.readSettings()
+        data = self._current_settings
         data['recent_files'] = []
-        self.s.writeSettings(data)
+        self.save_settings_requested.emit(data)
         self.updateRecentFilesMenu()
 
     def openRecentFile(self, path):
@@ -762,8 +673,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.setWindowFlags(self.windowFlags() ^ Qt.WindowStaysOnTopHint)
         self.show()
 
+    def apply_settings(self, settings):
+        self._current_settings = settings
+        self.loadSettings()
+
     def loadSettings(self):
-        data = self.s.readSettings()
+        data = self._current_settings
 
         always_ontop = data.get('always_ontop', False)
         center = data.get('center', None)
@@ -831,7 +746,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.toggleSyntaxCheck(syntax_check)
 
     def saveSettings(self):
-        settings = self.s.readSettings()
+        settings = self._current_settings
         geo = self.geometry()
         sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
         center = [geo.center().x(), geo.center().y()]
@@ -843,7 +758,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         word_wrap = self.wordWrap_act.isChecked()
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
-        editor_font = self.tab.widget(0).edit.font()
         show_outline = self.showOutline_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
@@ -851,14 +765,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_docstrings = self.show_docstrings_act.isChecked()
 
         font_data = dict()
-        font_family = editor_font.family()
-        font_size = editor_font.pointSize()
-        font_italic = editor_font.italic()
-        font_weight = editor_font.weight()
-        font_data.update({"family": font_family})
-        font_data.update({"pointSize": font_size})
-        font_data.update({"weight": font_weight})
-        font_data.update({"italic": font_italic})
+        if self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
+            editor_font = self.tab.widget(0).edit.font()
+            font_data.update({
+                "family": editor_font.family(),
+                "pointSize": editor_font.pointSize(),
+                "weight": editor_font.weight(),
+                "italic": editor_font.italic()
+            })
+        else:
+            font_data = settings.get('font', {})
 
         data = dict(
             geometry=sGeo,
@@ -879,10 +795,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_docstrings=show_docstrings,
         )
         settings.update(data)
-        self.s.writeSettings(settings)
+        self.save_settings_requested.emit(settings)
 
     def openSettingsFile(self):
-        path = settingsManager.userPrefFolder()
+        from core.settings_model import SettingsModel
+        path = SettingsModel()._get_user_pref_folder()
         self.out.showMessage('>>> Settings folder: %s' % path.replace('\\', '/'))
 
         if os.path.exists(path):
@@ -965,17 +882,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def updateOutline(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
             return
+        if hasattr(self, 'horizontal_splitter') and self.horizontal_splitter.sizes()[0] == 0:
+            return
         self.outline_timer.start(500)
 
     def _updateOutlineNow(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
             return
-        self.outline_list.clear()
+        if hasattr(self, 'horizontal_splitter') and self.horizontal_splitter.sizes()[0] == 0:
+            return
         edit = self.tab.current()
         if not edit:
             return
         code = edit.toPlainText()
-        symbols = parse_outline(code)
+        self.update_outline_requested.emit(code)
+
+    def set_outline_symbols(self, symbols):
+        self.outline_list.clear()
         for sym in symbols:
             indent_spaces = "  " * sym['indent']
             item = QListWidgetItem("{0}{1}".format(indent_spaces, sym['name']))
@@ -1008,7 +931,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 size = self.tab.widget(item).edit.font().pointSize()
             tab = {'name': name, 'text': text, 'active': item == index, 'size': size}
             tabs.append(tab)
-        self.session.writeBackup(tabs)
+        self._presenter.save_backup(tabs)
 
     def fillSessionsMenu(self):
         self.sessions_menu.clear()
@@ -1021,7 +944,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         restore_backup_act = QAction("Restore Crash Backup", self)
         restore_backup_act.setIcon(QIcon(icons['restore_backup']))
         restore_backup_act.triggered.connect(self.restoreBackupSession)
-        if not self.session.backupExists():
+        if not self._presenter.backup_exists():
             restore_backup_act.setEnabled(False)
         self.sessions_menu.addAction(restore_backup_act)
 
@@ -1031,7 +954,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.sessions_menu.addSeparator()
 
-        names = self.session.listNamedSessions()
+        names = self._presenter.get_named_sessions()
         if names:
             for name in names:
                 act = QAction(name, self)
@@ -1065,7 +988,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     size = self.tab.widget(item).edit.font().pointSize()
                 tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size}
                 tabs.append(tab)
-            self.session.writeNamedSession(name, tabs)
+            self._presenter.save_named_session(name, tabs)
             self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
             self.fillSessionsMenu()
 
@@ -1077,18 +1000,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             QMessageBox.Yes | QMessageBox.No
         )
         if res == QMessageBox.Yes:
-            sessions = self.session.readNamedSession(name)
+            sessions = self._presenter.get_named_session_tabs(name)
             self.tab.clear()
-            active = 0
             if sessions:
                 for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s['name'], s['text'])
-                    if s['active']:
-                        active = i
+                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'))
+                    if s.get('active'):
+                        self.tab.setCurrentIndex(i)
                     w.setFontSize(s.get('size', None))
-            else:
+            if self.tab.count() == 0:
                 self.tab.addNewTab()
-            self.tab.setCurrentIndex(active)
             self.out.showMessage(">>> Loaded named session '{0}'.".format(name))
 
     def deleteNamedSession(self, name):
@@ -1099,13 +1020,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             QMessageBox.Yes | QMessageBox.No
         )
         if res == QMessageBox.Yes:
-            self.session.deleteNamedSession(name)
+            self._presenter.delete_named_session(name)
             self.out.showMessage(">>> Deleted named session '{0}'.".format(name))
             self.fillSessionsMenu()
 
     def restoreBackupSession(self):
-        if self.session.backupExists():
-            sessions = self.session.readBackup()
+        if self._presenter.backup_exists():
+            sessions = self._presenter.get_backup_tabs()
             if sessions:
                 self.tab.clear()
                 active = 0
@@ -1156,13 +1077,25 @@ def show():
     palette.setColor(QPalette.HighlightedText, Qt.black)
     app.setPalette(palette)
     w = scriptEditorClass()
+    exec_manager = ExecutionManager()
+    presenter = MainPresenter(w, exec_manager)
     w.show()
-    app.exec_()
+    if hasattr(app, 'exec'):
+        app.exec()
+    else:
+        app.exec_()
 
+
+def create_editor_instance(parent=None):
+    w = scriptEditorClass(parent)
+    return w
 
 if __name__ == '__main__':
     app = QApplication([])
-    w = scriptEditorClass()
+    w = create_editor_instance()
     w.show()
-    app.exec_()
+    if hasattr(app, 'exec'):
+        app.exec()
+    else:
+        app.exec_()
     # show()
