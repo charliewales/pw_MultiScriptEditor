@@ -132,7 +132,7 @@ def getHouWindow():
 def showUi14(cls,  name=None, floating=False, position=(),
             size=(), pane=None, replacePyPanel=False,
             hideTitleMenu=True, dialog=False, useThisPanel=None, args=None, kwargs=None):
-"""
+    """
     open qt ui in houdini 14
     """
     if not inspect.isclass(cls):
