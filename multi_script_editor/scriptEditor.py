@@ -47,7 +47,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         window_icon = QIcon(icons["pw"])
         self.setWindowIcon(QIcon(window_icon))
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
-        self.setObjectName('cw_scriptEditor')
+        self.setObjectName('pw_scriptEditor')
         # widgets
         self.out = outputWidget.outputClass()
         self.out_ly.addWidget(self.out)
@@ -106,7 +106,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.loadSession()
         if self.tab.count() > 0 and self.tab.widget(0):
             self.tab.widget(0).edit.setFocus()
-            
+
         self.loadSettings()
         self.setWindowStyle()
         self.appContextMenu()
@@ -241,11 +241,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.syntax_errors = errors
             if hasattr(w, 'lineNum'):
                 w.lineNum.update()
-        
+
         # Update Outline
         if hasattr(self, 'updateOutline'):
             self.updateOutline()
-            
+
         # Update StatusBar
         if self.statusBar():
             if errors:
@@ -546,7 +546,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     pt_size = self.tab.widget(0).edit.fs
                 else:
                     pt_size = editor_font.pixelSize()
-                    
+
             font_data.update({
                 "family": editor_font.family(),
                 "pointSize": pt_size,
@@ -626,30 +626,30 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def findWidget(self):
         focus_widget = QApplication.focusWidget()
         target = 'input'
-        
+
         if focus_widget == self.out or self.out.isAncestorOf(focus_widget):
             target = 'output'
-            
+
         if target == 'output':
             # Searching in log, center on editor (self.tab)
             center_widget = self.tab
         else:
             # Searching in editor, center on log (self.out)
             center_widget = self.out
-            
+
         w = findWidget.findWidgetClass(self.out, center_widget)
-        
+
         # Restore case sensitive state
         is_case_sensitive = self._current_settings.get('search_case_sensitive', False)
         w.case_cb.setChecked(is_case_sensitive)
-        
+
         # Save case sensitive state when toggled
         def on_case_toggled(checked):
             self._current_settings['search_case_sensitive'] = checked
             self.saveSettings()
-            
+
         w.case_cb.toggled.connect(on_case_toggled)
-        
+
         if target == 'output':
             w.setReplaceEnabled(False)
             w.searchSignal.connect(self.out.search)
@@ -660,7 +660,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.replaceSignal.connect(self.tab.replace)
             w.replaceAllSignal.connect(self.tab.replaceAll)
             w.setWindowTitle("Find in Editor")
-            
+
         w.show()
         w.activateWindow()
 

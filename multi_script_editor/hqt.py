@@ -19,10 +19,6 @@ ns = main.__dict__
 if not __name__ in ns:
     exec('import {0}'.format(__name__), ns)
 
-# from PySide2.QtCore import *
-# from PySide2.QtGui import *
-# from PySide2.QtWidgets import *
-
 # Cleaned up global/wildcard imports to use explicit imports from vendor.Qt for better performance and maintainability
 from vendor.Qt.QtCore import QEventLoop, QTimer, Qt
 from vendor.Qt.QtGui import QColor, QIcon, QCursor
@@ -134,9 +130,9 @@ def getHouWindow():
 
 
 def showUi14(cls,  name=None, floating=False, position=(),
-             size=(), pane=None, replacePyPanel=False,
-             hideTitleMenu=True, dialog=False, useThisPanel=None, args=None, kwargs=None):
-    """
+            size=(), pane=None, replacePyPanel=False,
+            hideTitleMenu=True, dialog=False, useThisPanel=None, args=None, kwargs=None):
+"""
     open qt ui in houdini 14
     """
     if not inspect.isclass(cls):
