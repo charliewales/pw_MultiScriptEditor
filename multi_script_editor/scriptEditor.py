@@ -1,6 +1,5 @@
 import os
 import sys
-import traceback
 import webbrowser
 from functools import partial
 
@@ -135,7 +134,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         accept_dialog = font_dialog.exec_()
         if accept_dialog:
             font = font_dialog.currentFont()
-            # print("font", font)
             for index in range(0, self.tab.count()):
                 self.tab.widget(index).edit.setFont(font)
             self.out.set_font(font)
@@ -360,7 +358,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
         cont = self.tab.widget(index)
         text = self.tab.getCurrentText()
-        
+
         # Check if the tab already has an associated file path
         if hasattr(cont, 'file_path') and cont.file_path and os.path.exists(os.path.dirname(cont.file_path)):
             try:
@@ -506,7 +504,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if always_ontop:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() ^ Qt.WindowStaysOnTopHint)
         if show_whitespace is not None:
             self.tab.render_whitespace(show_whitespace)
             self.out.render_whitespace(show_whitespace)
