@@ -612,7 +612,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         webbrowser.open(f"{links[name]}{extra}")
 
     def openDocumentation(self):
-        doc_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'documentation.html')
+        doc_path = os.path.join(os.path.dirname(__file__), 'docs', 'documentation.html')
         webbrowser.open('file://' + doc_path.replace('\\', '/'))
 
     def about(self):
