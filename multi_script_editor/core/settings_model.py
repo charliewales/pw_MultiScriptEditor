@@ -61,8 +61,8 @@ class SettingsModel:
                     out_wrap=True,
                     echo_execute=True,
                     clear_execute=False,
-                    always_ontop=True,
+                    always_ontop=False,
                     show_whitespace=True,
-                    font={"family": "Courier", "pointSize": 10, "weight": 1, "italic": False},
+                    font={"family": "Courier", "pointSize": 12, "weight": 1, "italic": False},
                     recent_files=[]
                     )

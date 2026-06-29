@@ -436,7 +436,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if state:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         else:
-            self.setWindowFlags(self.windowFlags() ^ Qt.WindowStaysOnTopHint)
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
         self.show()
 
     def apply_settings(self, settings):
@@ -458,8 +458,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = data.get('show_whitespace', False)
         font = data.get('font', False)
         autocomplete = data.get('autocomplete', True)
-        fuzzy_autocomplete = data.get('fuzzy_autocomplete', False)
-        show_docstrings = data.get('show_docstrings', False)
+        fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
+        show_docstrings = data.get('show_docstrings', True)
 
         if geo:
             self.move(geo[0], geo[1])
@@ -482,9 +482,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.show_clear_exec()
         if echo_exec:
             self.print_command_act.setChecked(echo_exec)
+        self.always_ontop_act.setChecked(always_ontop)
         if always_ontop:
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
-            self.always_ontop_act.setChecked(always_ontop)
+        else:
+            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
         if show_whitespace:
             self.tab.render_whitespace(show_whitespace)
             self.out.render_whitespace(show_whitespace)
