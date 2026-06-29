@@ -147,15 +147,18 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                     use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
                     
                     try:
-                        comps = self.p._presenter.request_autocomplete(
-                            text=text,
-                            line=bl,
-                            column=col,
-                            namespace=namespace,
-                            fuzzy=use_fuzzy,
-                            context=managers.context
-                        )
-                        self.completer.updateCompleteList(comps)
+                        if hasattr(self.p, '_presenter'):
+                            comps = self.p._presenter.request_autocomplete(
+                                text=text,
+                                line=bl,
+                                column=col,
+                                namespace=namespace,
+                                fuzzy=use_fuzzy,
+                                context=managers.context
+                            )
+                            self.completer.updateCompleteList(comps)
+                        else:
+                            self.completer.updateCompleteList()
                     except Exception as e:
                         print(e)
                         self.completer.updateCompleteList()
@@ -174,7 +177,8 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         code = self.toPlainText()
         if check_syntax and code.strip():
             # Delegate linting to the presenter
-            self.p._presenter.request_lint(code)
+            if hasattr(self.p, '_presenter'):
+                self.p._presenter.request_lint(code)
         else:
             # Clear errors if check_syntax is disabled or code is empty
             self.syntax_errors = {}
