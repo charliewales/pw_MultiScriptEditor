@@ -531,9 +531,18 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         text = cursor.selection().toPlainText()
         self.document().documentLayout().blockSignals(False)
         text, offset = self.addRemoveComments(text)
+        cursor.beginEditBlock()
         cursor.insertText(text)
+        cursor.endEditBlock()
         cursor.setPosition(min(pos+offset, len(self.toPlainText())))
         self.setTextCursor(cursor)
+        
+        # Prevent autocomplete dialog from popping up due to textChanged
+        if hasattr(self, 'autocomplete_timer'):
+            self.autocomplete_timer.stop()
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.hide()
+            
         self.update()
 
     def addRemoveComments(self, text):

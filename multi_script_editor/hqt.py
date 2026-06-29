@@ -48,8 +48,6 @@ def show(cls, clear=False, ontop=False, name=None, floating=False, position=(), 
 ----------------------------------------------------------------------------------------------------------
     Other functions:
         hqt.houdiniColors()         # list of colors in current Houdini theme
-        hqt.applyStyle(widget)      # apply QT stile and Houdini icon for widget
-        hqt.setIcon(widget)         # set Houdini icon for widget
         hqt.getHouWindow()          # return main Qt widget of Houdini
         hqt.showWidget()            # Just show widget
         hqt.get_hou_style()         # return qt stylesheet for current Houdini theme
@@ -88,8 +86,6 @@ def getApp():
     qApp = QApplication.instance()
     if qApp is None:
         qApp = QApplication(['houdini'])
-        #houdini style
-        applyStyle(qApp)
     return qApp
 
 ################################## Get main application in 13
@@ -105,21 +101,6 @@ def clearUi(name):
                     w.close()
                 except:
                     pass
-
-##################################### STYLE
-def applyStyle(widget, theme=False, h13=False):
-    widget.setStyleSheet('')
-    widget.setStyleSheet(qss13() if h13 else get_hou_style(theme))
-    setIcon(widget)
-
-def setIcon(widget):
-    if hou.applicationVersion()[0] < 15:
-        if widget.windowIcon().isNull():
-            ico = QIcon(':/houdini.png')
-            widget.setWindowIcon(ico)
-        else:
-            ico = hou.ui.createQtIcon('DESKTOP_application')
-            widget.setWindowIcon(ico)
 
 ############################################################
 ############  METHODS FOR HOU 14 ###########################
@@ -222,7 +203,6 @@ def showWidget(widget, tool=False):
         widget.setWindowFlags(Qt.Tool)
     else:
         widget.setWindowFlags(Qt.Window)
-    applyStyle(widget)
     widget.show()
     return widget
 
