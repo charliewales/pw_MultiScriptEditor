@@ -291,9 +291,10 @@ def editorStyle(theme=None):
                 c = colors[name]
                 if isinstance(c, (list, tuple)):
                     val = '#%02x%02x%02x' % (c[0], c[1], c[2])
+                    text = text.replace(f'rgb{p}', val)
                 else:
                     val = str(c)
-                text = text.replace(f'rgb{p}', val)
+                    text = text.replace(p, val)
             elif name == 'textsize':
                 text = text.replace(p, '12')
         return text
@@ -308,9 +309,10 @@ def applyColorToEditorStyle(colors=None):
                 c = colors[name]
                 if isinstance(c, (list, tuple)):
                     val = '#%02x%02x%02x' % (c[0], c[1], c[2])
+                    text = text.replace(f'rgb{p}', val)
                 else:
                     val = str(c)
-                text = text.replace(f'rgb{p}', val)
+                    text = text.replace(p, val)
             elif name == 'textsize':
                 text = text.replace(p, '12')
         return text
