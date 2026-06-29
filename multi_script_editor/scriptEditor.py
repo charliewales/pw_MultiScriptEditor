@@ -129,7 +129,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         font_dialog = QFontDialog(self)
         font_dialog.setCurrentFont(editor_font)
         font_dialog.resize(self.width() * 0.8, self.height() * 0.7)
-        accept_dialog = font_dialog.exec_()
+        if hasattr(font_dialog, 'exec'):
+            accept_dialog = getattr(font_dialog, 'exec')()
+        else:
+            accept_dialog = font_dialog.exec_()
+        
         if accept_dialog:
             font = font_dialog.currentFont()
             for index in range(0, self.tab.count()):

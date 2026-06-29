@@ -2,13 +2,13 @@ from vendor.Qt.QtGui import QFont, QTextOption
 
 class BaseTextWidgetMixin:
     """
-    Mixin class that provides common text editing functionalities 
+    Mixin class that provides common text editing functionalities
     such as font size manipulation, word wrap, and whitespace rendering.
     Expects to be mixed into a QTextEdit or QTextBrowser.
     """
     def changeFontSize(self, up):
         import managers
-        if managers.context == 'hou':
+        if managers.context in ('hou', 'maya'):
             if not hasattr(self, 'fs'):
                 self.fs = self.font().pointSize()
             if up:
@@ -30,15 +30,6 @@ class BaseTextWidgetMixin:
         f = self.font()
         f.setPointSize(size)
         self.setFont(f)
-        import managers
-        if managers.context == 'hou':
-            family = f.family()
-            style = self.styleSheet() + '''
-            QTextEdit, QTextBrowser {
-                font-size: %spx;
-                font-family: "%s";
-            }''' % (size, family)
-            self.setStyleSheet(style)
 
     def wordWrap(self, state):
         from vendor.Qt.QtWidgets import QTextEdit
@@ -65,12 +56,39 @@ class BaseTextWidgetMixin:
         pointSize = font_d.get('pointSize', 14)
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1)
+
+        # Cross-compatibility patch for PySide2 (NF) vs PySide6 (Nerd Font)
+        from vendor.Qt.QtGui import QFontDatabase
+        try:
+            families = QFontDatabase.families()
+        except TypeError:
+            db = QFontDatabase()
+            families = db.families()
+
+        if family not in families:
+            aliases = [
+                (" NFM", " Nerd Font Mono"),
+                (" NFP", " Nerd Font Propo"),
+                (" NF", " Nerd Font")
+            ]
+            for a, b in aliases:
+                if a in family:
+                    alt = family.replace(a, b)
+                    if alt in families:
+                        family = alt
+                        break
+                elif b in family:
+                    alt = family.replace(b, a)
+                    if alt in families:
+                        family = alt
+                        break
+
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
-        
+
         import managers
-        if managers.context == 'hou':
+        if managers.context in ('hou', 'maya'):
             style = self.styleSheet() + '''
             QTextEdit, QTextBrowser {
                 font-size: %spx;

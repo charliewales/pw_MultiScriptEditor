@@ -278,7 +278,10 @@ class houdiniMenu(QMenu):
         self.addAction(act)
 
     def show(self, *args, **kwargs):
-        return self.exec_(QCursor.pos())
+        if hasattr(self, 'exec'):
+            return getattr(self, 'exec')(QCursor.pos())
+        else:
+            return self.exec_(QCursor.pos())
 
 ############################################################
 ############  RESOURCES  ###################################
