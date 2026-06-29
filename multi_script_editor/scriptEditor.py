@@ -38,9 +38,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = '{0} · Python-{1} · {2}-{3}'.format(
-            mse_version, py_ver, vendor.Qt.__binding__, vendor.Qt.__binding_version__
-        )
+        self.ver = f"{mse_version} · Python-{py_ver} · {vendor.Qt.__binding__}-{vendor.Qt.__binding_version__}"
         self.setupUi(self)
         self.icon_path = os.path.dirname(__file__)
         window_icon = QIcon(icons["pw"])

@@ -15,6 +15,7 @@ Tested on:
     Maya 2022.4 - Windows 10
     Nuke 13.1v2 - Windows 10 - Rocky Linux 8.6
     Standalone
-    	Python 2.7.15 - Windows 10
     	Python 3.6.8  - Rocky Linux 8.6
     	Python 3.10.10 - Windows 10
+    	
+    	Support for Python 2 was removed.
