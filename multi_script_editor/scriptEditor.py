@@ -844,10 +844,36 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         dial.exec_()
 
     def findWidget(self):
+        focus_widget = QApplication.focusWidget()
+        target = 'input'
+        
+        if focus_widget == self.out or self.out.isAncestorOf(focus_widget):
+            target = 'output'
+            
         w = findWidget.findWidgetClass(self.out)
-        w.searchSignal.connect(self.tab.search)
-        w.replaceSignal.connect(self.tab.replace)
-        w.replaceAllSignal.connect(self.tab.replaceAll)
+        
+        # Restore case sensitive state
+        is_case_sensitive = self._current_settings.get('search_case_sensitive', False)
+        w.case_cb.setChecked(is_case_sensitive)
+        
+        # Save case sensitive state when toggled
+        def on_case_toggled(checked):
+            self._current_settings['search_case_sensitive'] = checked
+            self.saveSettings()
+            
+        w.case_cb.toggled.connect(on_case_toggled)
+        
+        if target == 'output':
+            w.setReplaceEnabled(False)
+            w.searchSignal.connect(self.out.search)
+            w.setWindowTitle("Find in Log")
+        else:
+            w.setReplaceEnabled(True)
+            w.searchSignal.connect(self.tab.search)
+            w.replaceSignal.connect(self.tab.replace)
+            w.replaceAllSignal.connect(self.tab.replaceAll)
+            w.setWindowTitle("Find in Editor")
+            
         w.show()
         w.activateWindow()
 

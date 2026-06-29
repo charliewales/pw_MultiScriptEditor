@@ -75,8 +75,17 @@ class tabWidgetClass(QTabWidget):
 
     def openMenu(self):
         menu = QMenu(self)
+        menu.addAction(QAction('Duplicate Current Tab', self, triggered = self.duplicateTab))
         menu.addAction(QAction('Rename Current Tab', self, triggered = self.renameTab))
         menu.exec_(QCursor.pos())
+
+    def duplicateTab(self):
+        index = self.currentIndex()
+        name = self.tabText(index)
+        text = self.getCurrentText(index)
+        new_name = name + " (copy)"
+        self.addNewTab(new_name, text)
+        self.setCurrentIndex(self.count() - 1)
 
     def renameTab(self):
         index = self.currentIndex()
@@ -200,25 +209,25 @@ class tabWidgetClass(QTabWidget):
     def paste(self):
         self.current().paste()
 
-    def search(self, text=None):
+    def search(self, text=None, case_sensitive=False):
         if text:
-            if text == self.lastSearch[0]:
+            if not hasattr(self, 'lastSearch') or len(self.lastSearch) < 3:
+                self.lastSearch = [text, 0, case_sensitive]
+            if text == self.lastSearch[0] and case_sensitive == self.lastSearch[2]:
                 self.lastSearch[1] += 1
             else:
-                self.lastSearch = [text, 0]
-            self.lastSearch[1] = self.current().selectWord(text, self.lastSearch[1])
+                self.lastSearch = [text, 0, case_sensitive]
+            self.lastSearch[1] = self.current().selectWord(text, self.lastSearch[1], case_sensitive=case_sensitive)
 
-    def replace(self, parts):
+    def replace(self, parts, case_sensitive=False):
         find, rep = parts
-        self.lastSearch = [find, 0]
-        self.lastSearch[1] = self.current().selectWord(find, self.lastSearch[1], rep)
-        self.current().selectWord(find, self.lastSearch[1])
+        self.lastSearch = [find, 0, case_sensitive]
+        self.lastSearch[1] = self.current().selectWord(find, self.lastSearch[1], rep, case_sensitive=case_sensitive)
+        self.current().selectWord(find, self.lastSearch[1], case_sensitive=case_sensitive)
 
-    def replaceAll(self, pat):
-        find, rep = pat
-        text = self.current().toPlainText()
-        text = text.replace(find, rep)
-        self.current().setPlainText(text)
+    def replaceAll(self, parts, case_sensitive=False):
+        find, rep = parts
+        self.current().replaceAll(find, rep, case_sensitive=case_sensitive)
 
     def move_line_up(self):
         self.current().move_line_up()

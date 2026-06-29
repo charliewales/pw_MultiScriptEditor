@@ -43,6 +43,25 @@ class outputClass(QTextBrowser):
         self.moveCursor(QTextCursor.End)
         self.ensureCursorVisible()
 
+    def search(self, text=None, case_sensitive=False):
+        if text:
+            from vendor.Qt.QtGui import QTextDocument
+            if not hasattr(self, 'lastSearch'):
+                self.lastSearch = [text, 0, case_sensitive]
+            
+            if text == self.lastSearch[0] and case_sensitive == self.lastSearch[2]:
+                self.lastSearch[1] += 1
+            else:
+                self.lastSearch = [text, 0, case_sensitive]
+                
+            options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+            found = self.find(text, options)
+            if not found:
+                cursor = self.textCursor()
+                cursor.movePosition(QTextCursor.Start)
+                self.setTextCursor(cursor)
+                self.find(text, options)
+
     def setTextEditFontSize(self, size):
         style = '''QTextEdit
     {

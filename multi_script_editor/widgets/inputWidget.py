@@ -812,25 +812,33 @@ class inputClass(QTextEdit):
             selectedText = cursor.selection().toPlainText()
         return selectedText
 
-    def selectWord(self, pattern, number, replace=None):
+    def selectWord(self, pattern, number, replace=None, case_sensitive=False):
         text = self.toPlainText()
-        if not pattern in text:
+        flags = 0 if case_sensitive else re.IGNORECASE
+        
+        indexis = [(m.start(0), m.end(0)) for m in re.finditer(re.escape(pattern), text, flags=flags)]
+        if not indexis:
             return number
-        cursor = self.textCursor()
-        indexis = [(m.start(0), m.end(0)) for m in re.finditer(re.escape(pattern), text)]
+            
         if number > len(indexis)-1:
             number = 0
+            
+        cursor = self.textCursor()
         cursor.setPosition(indexis[number][0])
         cursor.setPosition(indexis[number][1], QTextCursor.KeepAnchor)
-        if replace:
+        if replace is not None:
             cursor.removeSelectedText()
             cursor.insertText(replace)
         self.setTextCursor(cursor)
         self.setFocus()
         return number
 
-    def replaceAll(selfold, new):
-        pass
+    def replaceAll(self, find, rep, case_sensitive=False):
+        text = self.toPlainText()
+        flags = 0 if case_sensitive else re.IGNORECASE
+        new_text = re.sub(re.escape(find), rep, text, flags=flags)
+        if new_text != text:
+            self.setPlainText(new_text)
 
     def wordWrap(self, state):
         if state:
