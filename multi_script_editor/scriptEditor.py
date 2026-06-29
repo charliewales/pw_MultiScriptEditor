@@ -103,9 +103,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._presenter = MainPresenter(self, self._exec_manager)
         self.fillSessionsMenu()
         self.loadSession()
-        if self.tab.count() > 0 and self.tab.widget(0):
-            self.tab.widget(0).edit.setFocus()
-
+        if self.tab.count() > 0:
+            QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
         self.loadSettings()
         self.setWindowStyle()
         self.appContextMenu()
