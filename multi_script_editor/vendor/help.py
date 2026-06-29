@@ -1,3 +1,4 @@
+import builtins
 import re
 import sys
 import webbrowser
@@ -7,40 +8,31 @@ try:
 except:
     from urllib2 import urlopen
 
-QtWidgets_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtWidgets'
-QtGui_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtGui'
-QtCore_url = 'https://doc.qt.io/qtforpython-5/PySide2/QtCore'
+QtWidgets_url = 'https://doc.qt.io/qtforpython-{}/PySide{}/QtWidgets'
+QtGui_url = 'https://doc.qt.io/qtforpython-{}/PySide{}/QtGui'
+QtCore_url = 'https://doc.qt.io/qtforpython-{}/PySide{}/QtCore'
 
 try:
-    import PySide2
+    try:
+        import PySide2
+        QtCore_url = QtCore_url.format("5", "2")
+        QtWidgets_url = QtWidgets_url.format("5", "2")
+        QtGui_url = QtGui_url.format("5", "2")
+    except:
+        import PySide6
+        QtCore_url = QtCore_url.format("6", "6")
+        QtWidgets_url = QtWidgets_url.format("6", "6")
+        QtGui_url = QtGui_url.format("6", "6")
 except:
     QtWidgets_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
     QtGui_url = 'https://pyside.github.io/docs/pyside/PySide/QtGui'
     QtCore_url = 'https://pyside.github.io/docs/pyside/PySide/QtCore'
 
 
-PYTHON_VERSION = sys.version_info.major
+PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
-built_ins = list()
-if PYTHON_VERSION >= 3:
-    import builtins
-    builtins_list = dir(builtins)
-else:
-    builtins_list = ['abs', 'all', 'any', 'apply', 'basestring', 'bin',
-                     'bool', 'buffer', 'bytearray', 'bytes', 'callable',
-                     'chr', 'classmethod', 'cmp', 'coerce', 'compile',
-                     'complex', 'copyright', 'credits', 'delattr', 'dict',
-                     'dir', 'divmod', 'enumerate', 'eval', 'execfile',
-                     'exit', 'file', 'filter', 'float', 'format', 'frozenset',
-                     'getattr', 'globals', 'hasattr', 'hash', 'help', 'hex',
-                     'id', 'input', 'int', 'intern', 'isinstance', 'issubclass',
-                     'iter', 'len', 'license', 'list', 'locals', 'long', 'map',
-                     'max', 'memoryview', 'min', 'next', 'object', 'oct',
-                     'open', 'ord', 'pow', 'print', 'property', 'quit', 'range',
-                     'raw_input', 'reduce', 'reload', 'repr', 'reversed',
-                     'round', 'set', 'setattr', 'slice', 'sorted',
-                     'staticmethod', 'str', 'sum', 'super', 'tuple',
-                     'type', 'unichr', 'unicode', 'vars', 'xrange', 'zip']
+built_ins = []
+builtins_list = dir(builtins)
 
 # store built-in functions
 for bi in builtins_list:
@@ -89,10 +81,10 @@ def get_help(text):
             class_parts = '_'.join(class_parts)
             class_html_name = class_parts.lower()
 
-            OpenMaya = 'https://help.autodesk.com/cloudhelp/2022/ENU/Maya-SDK/py_ref/class_open_maya_1_1_{0}.html'.format(class_html_name)
-            OpenMayaAnim = 'https://help.autodesk.com/cloudhelp/2022/ENU/Maya-SDK/py_ref/class_open_maya_anim_1_1_{0}.html'.format(class_html_name)
-            OpenMayaRender = 'https://help.autodesk.com/cloudhelp/2022/ENU/Maya-SDK/py_ref/class_open_maya_render_1_1_{0}.html'.format(class_html_name)
-            OpenMayaUI = 'https://help.autodesk.com/cloudhelp/2022/ENU/Maya-SDK/py_ref/class_open_maya_u_i_1_1_{0}.html'.format(class_html_name)
+            OpenMaya = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/class_{0}.html'.format(class_html_name)
+            OpenMayaAnim = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/class_{0}.html'.format(class_html_name)
+            OpenMayaRender = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/class_{0}.html'.format(class_html_name)
+            OpenMayaUI = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/class_{0}.html'.format(class_html_name)
 
             if url_exists(OpenMaya):
                 webbrowser.open(OpenMaya)
@@ -108,7 +100,7 @@ def get_help(text):
                 return
 
         elif text == 'OpenMaya':
-            OpenMaya = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_html'
+            OpenMaya = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/group___open_maya.html'
             webbrowser.open(OpenMaya)
             return
         elif text == 'OpenMayaAnim':
@@ -116,15 +108,15 @@ def get_help(text):
             webbrowser.open(OpenMayaAnim )
             return
         elif text == 'OpenMayaRender':
-            OpenMayaRender  = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_render_html'
+            OpenMayaRender  = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/group___open_maya_render.html'
             webbrowser.open(OpenMayaRender )
             return
         elif text == 'OpenMayaUI':
-            OpenMayaUI = 'https://help.autodesk.com/view/MAYAUL/2022/ENU/?guid=Maya_SDK_py_ref_namespace_open_maya_u_i_html'
+            OpenMayaUI = 'https://help.autodesk.com/cloudhelp/2027/ENU/MAYA-API-REF/cpp_ref/group___open_maya_u_i.html'
             webbrowser.open(OpenMayaUI)
             return
         else:
-            python_cmd_url = 'http://help.autodesk.com/cloudhelp/2023/ENU/Maya-Tech-Docs/CommandsPython/{}.html'.format(text)
+            python_cmd_url = 'http://help.autodesk.com/cloudhelp/2027/ENU/Maya-Tech-Docs/CommandsPython/{}.html'.format(text)
             if url_exists(python_cmd_url):
                 webbrowser.open(python_cmd_url)
 
