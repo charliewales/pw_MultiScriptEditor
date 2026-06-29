@@ -7,7 +7,7 @@
 
 def createInterface():
     from multi_script_editor import scriptEditor
-    w = scriptEditor.scriptEditorClass()
+    w = scriptEditor.create_editor_instance()
     w.setStyleSheet('')
     import hqt
     w.setStyleSheet( hqt.get_h14_style() )
