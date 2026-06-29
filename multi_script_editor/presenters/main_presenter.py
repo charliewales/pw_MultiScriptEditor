@@ -2,6 +2,7 @@ from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel
 from core.session_model import SessionModel
 from core.autocomplete_provider import AutocompleteProvider
+from core.linter_provider import LinterProvider
 
 class MainPresenter:
     def __init__(self, view, execution_manager):
@@ -10,6 +11,7 @@ class MainPresenter:
         self.settings_model = SettingsModel()
         self.session_model = SessionModel()
         self.autocomplete_provider = AutocompleteProvider()
+        self.linter_provider = LinterProvider()
         
         # Connect view signals to presenter slots
         self.view.execute_command_requested.connect(self.handle_execute_command)
@@ -99,3 +101,11 @@ class MainPresenter:
             fuzzy=fuzzy,
             context=context
         )
+
+    def request_lint(self, code):
+        """
+        Delegates the lint request to the model (LinterProvider).
+        Updates the view with the syntax errors.
+        """
+        errors = self.linter_provider.check_syntax(code)
+        self.view.show_syntax_errors(errors)

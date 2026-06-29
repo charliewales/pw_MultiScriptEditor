@@ -164,27 +164,14 @@ class inputClass(QTextEdit):
             check_syntax = main_win.syntaxCheck_act.isChecked()
 
         code = self.toPlainText()
-        self.syntax_errors = {}
         if check_syntax and code.strip():
-            try:
-                compile(code.encode('utf-8'), '<string>', 'exec')
-            except SyntaxError as e:
-                self.syntax_errors[e.lineno] = e.msg
-            except Exception:
-                pass
-
-        if hasattr(self.parent(), 'lineNum'):
-            self.parent().lineNum.update()
-
-        if hasattr(main_win, 'updateOutline'):
-            main_win.updateOutline()
-        if hasattr(main_win, 'statusBar') and main_win.statusBar():
-            if self.syntax_errors:
-                first_err_line = list(self.syntax_errors.keys())[0]
-                msg = self.syntax_errors[first_err_line]
-                main_win.statusBar().showMessage("Syntax Error on line {0}: {1}".format(first_err_line, msg))
-            else:
-                main_win.statusBar().clearMessage()
+            # Delegate linting to the presenter
+            self.p._presenter.request_lint(code)
+        else:
+            # Clear errors if check_syntax is disabled or code is empty
+            self.syntax_errors = {}
+            if hasattr(self.p, 'show_syntax_errors'):
+                self.p.show_syntax_errors({})
 
     def moveCompleter(self):
         rec = self.cursorRect()

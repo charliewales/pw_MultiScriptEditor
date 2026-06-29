@@ -497,6 +497,31 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.setStyleSheet(open(qss).read())
                 self.setWindowIcon(QIcon(icons['pw']))
 
+    def show_syntax_errors(self, errors):
+        # Pass the errors to the active tab's input widget (for highlighting line numbers if needed)
+        w = self.tab.currentWidget()
+        if w and hasattr(w, 'edit'):
+            w.edit.syntax_errors = errors
+            if hasattr(w, 'lineNum'):
+                w.lineNum.update()
+        
+        # Update Outline
+        if hasattr(self, 'updateOutline'):
+            self.updateOutline()
+            
+        # Update StatusBar
+        if self.statusBar():
+            if errors:
+                first_err_line = list(errors.keys())[0]
+                msg = errors[first_err_line]
+                self.statusBar().showMessage("Syntax Error on line {0}: {1}".format(first_err_line, msg))
+            else:
+                self.statusBar().clearMessage()
+
+    def getShortcut(self, action):
+        settings = self._presenter.settings_model.load_settings()
+        return settings.get('shortcuts', {}).get(action, None)
+
     def loadSession(self):
         sessions = self._presenter.get_session_tabs()
         self.tab.clear()
