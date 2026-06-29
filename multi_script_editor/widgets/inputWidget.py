@@ -1,8 +1,8 @@
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
 import re
-import jedi
+
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets import completeWidget
 from core.settings_model import SettingsModel
@@ -129,34 +129,30 @@ class inputClass(QTextEdit):
             self.moveCompleter()
             if text or force:
                 tc = self.textCursor()
-                context_completer = False
                 pos = tc.position()
-                if managers.context in managers.contextCompleters:
-                    line = text[:pos].split('\n')[-1] if text else ''
-                    comp, extra = managers.contextCompleters[managers.context ](line, self.p.namespace)
-                    if comp or extra:
-                        context_completer = True
-                        self.completer.updateCompleteList(comp, extra)
-                if not context_completer:
-                    if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
-                        offs = 0
-                        if managers.context in managers.autoImport:
-                            autoImp = managers.autoImport.get(managers.context, '')
-                            text = autoImp + text
-                            offs = len(autoImp.split('\n'))-1
-                        bl = tc.blockNumber() + 1 + offs
-                        col = tc.columnNumber()
-                        if hasattr(self.p, 'namespace'):
-                            script = jedi.Interpreter(text, namespaces=[self.p.namespace])
-                        else:
-                            script = jedi.Script(code=text)
-                        try:
-                            use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
-                            self.completer.updateCompleteList(script.complete(line=bl, column=col, fuzzy=use_fuzzy))
-                        except:
-                            self.completer.updateCompleteList()
-                    else:
+                
+                # Check if we should autocomplete
+                if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
+                    bl = tc.blockNumber() + 1
+                    col = tc.columnNumber()
+                    namespace = self.p.namespace if hasattr(self.p, 'namespace') else None
+                    use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
+                    
+                    try:
+                        comps = self.p._presenter.request_autocomplete(
+                            text=text,
+                            line=bl,
+                            column=col,
+                            namespace=namespace,
+                            fuzzy=use_fuzzy,
+                            context=managers.context
+                        )
+                        self.completer.updateCompleteList(comps)
+                    except Exception as e:
+                        print(e)
                         self.completer.updateCompleteList()
+                else:
+                    self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
         self.runLinter()
@@ -834,11 +830,23 @@ class inputClass(QTextEdit):
         return number
 
     def replaceAll(self, find, rep, case_sensitive=False):
-        text = self.toPlainText()
-        flags = 0 if case_sensitive else re.IGNORECASE
-        new_text = re.sub(re.escape(find), rep, text, flags=flags)
-        if new_text != text:
-            self.setPlainText(new_text)
+        if not find:
+            return
+            
+        cursor = self.textCursor()
+        cursor.beginEditBlock()
+        
+        # Start from beginning
+        cursor.movePosition(QTextCursor.MoveOperation.Start)
+        self.setTextCursor(cursor)
+        
+        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+        
+        while self.find(find, options):
+            self.textCursor().insertText(rep)
+            
+        cursor.endEditBlock()
+        self.completer.updateCompleteList()
 
     def wordWrap(self, state):
         if state:

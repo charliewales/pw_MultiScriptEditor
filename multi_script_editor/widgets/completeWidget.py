@@ -77,60 +77,50 @@ class completeMenuClass(QListWidget):
         self.clear()
         if lines or extra:
             self.showMe()
-            if lines:
-                for i in [x for x in lines if not x.name == 'mro']:
-                    item = QListWidgetItem(i.name)
-                    item.setData(32, i)
-                    
-                    if hasattr(i, 'type') and i.type:
-                        t = i.type
-                        if t not in self._icon_cache:
-                            # Generate a colored icon
-                            color_map = {
-                                'function': QColor(100, 180, 255),
-                                'class': QColor(150, 220, 100),
-                                'module': QColor(255, 150, 100),
-                                'statement': QColor(200, 200, 200),
-                                'keyword': QColor(255, 100, 150)
-                            }
-                            text_map = {'function': 'f', 'class': 'C', 'module': 'M', 'statement': 'V', 'keyword': 'K'}
-                            
-                            pix = QPixmap(16, 16)
-                            pix.fill(Qt.transparent)
-                            painter = QPainter(pix)
-                            painter.setRenderHint(QPainter.Antialiasing)
-                            
-                            c = color_map.get(t, QColor(150, 150, 150))
-                            painter.setBrush(c)
-                            painter.setPen(Qt.NoPen)
-                            painter.drawRect(0, 0, 16, 16)
-                            
-                            painter.setPen(Qt.black)
-                            font = QFont("Arial", 9)
-                            painter.setFont(font)
-                            char = text_map.get(t, '?')
-                            painter.drawText(pix.rect(), Qt.AlignCenter, char)
-                            painter.end()
-                            
-                            self._icon_cache[t] = QIcon(pix)
-                            
-                        item.setIcon(self._icon_cache[t])
+            all_items = (lines or []) + (extra or [])
+            for i in all_items:
+                item = QListWidgetItem(i.name)
+                item.setData(32, i)
+                
+                if hasattr(i, 'type') and i.type:
+                    t = i.type
+                    if t not in self._icon_cache:
+                        # Generate a colored icon
+                        color_map = {
+                            'function': QColor(100, 180, 255),
+                            'class': QColor(150, 220, 100),
+                            'module': QColor(255, 150, 100),
+                            'statement': QColor(200, 200, 200),
+                            'keyword': QColor(255, 100, 150)
+                        }
+                        text_map = {'function': 'f', 'class': 'C', 'module': 'M', 'statement': 'V', 'keyword': 'K'}
                         
-                    self.addItem(item)
-            if extra:
-
-                font = self.font()
-                font.setItalic(1)
-                font.setPointSize(font.pointSize()*0.8)
-                for e in extra:
-                    item = QListWidgetItem(e.name)
-                    item.setData(32, e)
-                    item.setFont(font)
-                    self.addItem(item)
+                        pix = QPixmap(16, 16)
+                        pix.fill(Qt.transparent)
+                        painter = QPainter(pix)
+                        painter.setRenderHint(QPainter.Antialiasing)
+                        
+                        c = color_map.get(t, QColor(150, 150, 150))
+                        painter.setBrush(c)
+                        painter.setPen(Qt.NoPen)
+                        painter.drawRect(0, 0, 16, 16)
+                        
+                        painter.setPen(Qt.black)
+                        font = QFont("Arial", 9)
+                        painter.setFont(font)
+                        char = text_map.get(t, '?')
+                        painter.drawText(pix.rect(), Qt.AlignCenter, char)
+                        painter.end()
+                        
+                        self._icon_cache[t] = QIcon(pix)
+                        
+                    item.setIcon(self._icon_cache[t])
+                    
+                self.addItem(item)
 
             font = QFont("monospace", self.lineHeight, False)
             fm = QFontMetrics(font)
-            width = fm.horizontalAdvance(' ') * max([len(x.name) for x in lines or extra]) + 40
+            width = fm.horizontalAdvance(' ') * max([len(x.name) for x in all_items]) + 40
 
             self.resize(max(250,width), 250)
             self.setCurrentRow(0)

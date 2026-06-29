@@ -1,6 +1,7 @@
 from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel
 from core.session_model import SessionModel
+from core.autocomplete_provider import AutocompleteProvider
 
 class MainPresenter:
     def __init__(self, view, execution_manager):
@@ -8,6 +9,7 @@ class MainPresenter:
         self.execution_manager = execution_manager
         self.settings_model = SettingsModel()
         self.session_model = SessionModel()
+        self.autocomplete_provider = AutocompleteProvider()
         
         # Connect view signals to presenter slots
         self.view.execute_command_requested.connect(self.handle_execute_command)
@@ -83,3 +85,17 @@ class MainPresenter:
             self.view.close()
             
         self.execution_manager.run_command(command, namespace, output_callback, close_callback)
+
+    def request_autocomplete(self, text, line, column, namespace, fuzzy, context):
+        """
+        Delegates the autocomplete request to the model (AutocompleteProvider).
+        Returns a list of CompletionItem objects.
+        """
+        return self.autocomplete_provider.get_completions(
+            text=text,
+            line=line,
+            column=column,
+            namespace=namespace,
+            fuzzy=fuzzy,
+            context=context
+        )
