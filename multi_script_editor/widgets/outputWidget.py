@@ -6,15 +6,15 @@ import os
 from managers import context
 
 from widgets.pythonSyntax import syntaxHighLighter
-from core.settings_model import SettingsModel
 from widgets.pythonSyntax import design
+from core.base_text_widget import BaseTextWidgetMixin
 
 # font_name = 'Courier'
 font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
-class outputClass(QTextBrowser):
-    def __init__(self):
+class outputClass(QTextBrowser, BaseTextWidgetMixin):
+    def __init__(self, theme='default'):
         super(outputClass, self).__init__()
         self.setLineWrapMode(QTextEdit.NoWrap)
         font = QFont(font_name)
@@ -32,8 +32,7 @@ class outputClass(QTextBrowser):
         else:
             self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
-        data = SettingsModel().read_settings()
-        self.applyHightLighter(data.get('theme'))
+        self.applyHightLighter(theme)
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)
@@ -93,45 +92,3 @@ class outputClass(QTextBrowser):
         self.setStyleSheet(st)
         self.blockSignals(False)
 
-    def changeFontSize(self, up):
-        if context == 'hou':
-            if up:
-                self.fs = min(30, self.fs+1)
-            else:
-                self.fs = max(8, self.fs - 1)
-            self.setTextEditFontSize(self.fs)
-        else:
-            f = self.font()
-            size = f.pointSize()
-            if up:
-                size = min(30, size+1)
-            else:
-                size = max(8, size - 1)
-            f.setPointSize(size)
-            self.setFont(f)
-
-    def wordWrap(self, state):
-        if state:
-            self.setLineWrapMode(QTextEdit.WidgetWidth)
-        else:
-            self.setLineWrapMode(QTextEdit.NoWrap)
-
-    def set_font(self, font):
-        self.setFont(font)
-
-    def render_whitespace(self, state):
-        text_option = QTextOption()
-        if state:
-            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
-            self.document().setDefaultTextOption(text_option)
-        else:
-            self.document().setDefaultTextOption(text_option)
-
-    def set_start_font(self, font_d):
-        family = font_d.get('family', 'Courier')
-        pointSize = font_d.get('pointSize', 14)
-        italic = font_d.get('italic', False)
-        weight = font_d.get('weight', 1)
-        editor_font = QFont(family, pointSize, weight, italic)
-        editor_font.setStyleHint(QFont.Monospace)
-        self.setFont(editor_font)

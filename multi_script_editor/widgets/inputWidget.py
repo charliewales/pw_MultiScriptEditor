@@ -6,6 +6,7 @@ import re
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets import completeWidget
 from core.settings_model import SettingsModel
+from core.base_text_widget import BaseTextWidgetMixin
 import managers
 from widgets.pythonSyntax import design
 
@@ -20,7 +21,7 @@ font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 
-class inputClass(QTextEdit):
+class inputClass(QTextEdit, BaseTextWidgetMixin):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()
@@ -726,35 +727,6 @@ class inputClass(QTextEdit):
         else:
             QTextEdit.wheelEvent(self, event)
 
-    def changeFontSize(self, up):
-        if managers.context == 'hou':
-            if up:
-                self.fs = min(30, self.fs+1)
-            else:
-                self.fs = max(8, self.fs - 1)
-            self.setTextEditFontSize(self.fs)
-        else:
-            f = self.font()
-            size = f.pointSize()
-            if up:
-                size = min(30, size+1)
-            else:
-                size = max(8, size - 1)
-            f.setPointSize(size)
-            f.setFamily(font_name)
-            self.setFont(f)
-
-    def setTextEditFontSize(self, size):
-        style = self.styleSheet() +'''QTextEdit
-    {
-        font-size: %spx;
-        font-family: %s;
-    }''' % (size, font_name)
-        self.setStyleSheet(style)
-        f = self.font()
-        f.setPointSize(size)
-        f.setFamily(font_name)
-        self.setFont(f)
 
     def insertFromMimeData (self, source ):
         text = source.text()
@@ -834,20 +806,6 @@ class inputClass(QTextEdit):
             
         cursor.endEditBlock()
         self.completer.updateCompleteList()
-
-    def wordWrap(self, state):
-        if state:
-            self.setLineWrapMode(QTextEdit.WidgetWidth)
-        else:
-            self.setLineWrapMode(QTextEdit.NoWrap)
-
-    def render_whitespace(self, state):
-        text_option = QTextOption()
-        if state:
-            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
-            self.document().setDefaultTextOption(text_option)
-        else:
-            self.document().setDefaultTextOption(text_option)
 
     # --- Multi-Cursor / Multi-Selection Support ---
 

@@ -52,6 +52,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out = outputWidget.outputClass()
         self.out_ly.addWidget(self.out)
         self.tab = tabWidget.tabWidgetClass(self)
+        self.tab.session_save_requested.connect(self.saveSession)
+        self.tab.execute_selected_requested.connect(self.executeSelected)
 
         # Horizontal QSplitter for outline sidebar and editor tabs
         self.horizontal_splitter = QSplitter(Qt.Horizontal)

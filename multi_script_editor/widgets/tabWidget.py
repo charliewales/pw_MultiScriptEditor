@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QCursor, QFont, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
 import os
@@ -13,6 +13,11 @@ if not os.path.exists(style):
 
 
 class tabWidgetClass(QTabWidget):
+    # Signals to decouple from MainWindow
+    tab_closed = Signal(int)
+    session_save_requested = Signal()
+    execute_selected_requested = Signal()
+
     def __init__(self, parent=None):
         super(tabWidgetClass, self).__init__(parent)
         self.setStyleSheet("""
@@ -51,9 +56,11 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
-        whitespace_act = self.p.findChild(QAction, "whitespace_act")
-        self.render_whitespace(whitespace_act.isChecked())
-        #connects
+        
+        # We will render whitespace initially based on presenter, but for now we default to False 
+        # and wait for apply_settings to trigger it.
+        
+        # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
         self.currentChanged.connect(self.hideAllCompleters)
@@ -99,25 +106,27 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
-    def addNewTab(self, name='New Tab', text = None):
+    def addNewTab(self, name='New Tab', text=None):
         # Ensure name is a string (PySide6 is stricter about types)
         name = str(name) if name is not None else 'New Tab'
-        cont = container(text, self.p, self.desk)
-        cont.edit.saveSignal.connect(self.p.saveSession)
+        cont = EditorTabContainer(text, self.p, self.desk)
+        cont.edit.saveSignal.connect(self.session_save_requested.emit)
+        cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         self.addTab(cont, name)
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         self.setCurrentIndex(self.count()-1)
 
-        ws_widget = self.p.findChildren(QAction, 'whitespace_act')[0]
-        ww_widget = self.p.findChildren(QAction, 'wordWrap_act')[0]
-
-        cont.edit.render_whitespace(ws_widget.isChecked())
-
-        cont.edit.wordWrap(not ww_widget.isChecked())
-        cont.edit.wordWrap(ww_widget.isChecked())
-
-        cont.edit.set_start_font()
+        # Apply settings from presenter instead of trying to find actions in MainWindow
+        if hasattr(self.p, '_presenter'):
+            settings = self.p._presenter.settings_model.read_settings()
+            show_whitespace = settings.get('show_whitespace', False)
+            wrap = settings.get('wrap', False)
+            font_d = settings.get('font', {})
+            
+            cont.edit.render_whitespace(show_whitespace)
+            cont.edit.wordWrap(wrap)
+            cont.edit.set_start_font(font_d)
 
         return cont.edit
 
@@ -259,15 +268,14 @@ class tabWidgetClass(QTabWidget):
         return msg_box.clickedButton() == yes_button
 
 
-class container(QWidget):
+class EditorTabContainer(QWidget):
     def __init__(self, text, parent, desk):
-        super(container, self).__init__()
+        super(EditorTabContainer, self).__init__()
         hbox = QHBoxLayout(self)
         hbox.setSpacing(0)
         hbox.setContentsMargins(0,0,0,0)
         # input widget
         self.edit = inputWidget.inputClass(parent, desk)
-        self.edit.executeSignal.connect(parent.executeSelected)
         if text:
             self.edit.addText(text)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
