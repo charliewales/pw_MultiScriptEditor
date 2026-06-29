@@ -21,6 +21,8 @@ from multi_script_editor import scriptEditor
 
 
 def show(*args, **kwargs):
+    kwargs.pop('clear', None)
+    kwargs.pop('ontop', None)
     hqt.show(scriptEditor.scriptEditorClass, *args, **kwargs)
 
 def get_widget():
