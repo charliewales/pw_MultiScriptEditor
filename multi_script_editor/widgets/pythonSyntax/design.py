@@ -183,6 +183,106 @@ predefinedThemes = {
         whitespace=(64, 62, 65),
         highlight_line=(64, 62, 65)
     ),
+    'Monokai': dict(
+        background=(39, 40, 34),
+        output_background=(39, 40, 34),
+        keywords=(249, 38, 114),
+        digits=(174, 129, 255),
+        definition=(166, 226, 46),
+        operator=(249, 38, 114),
+        extra=(102, 217, 239),
+        methods=(166, 226, 46),
+        comment=(117, 113, 94),
+        string=(230, 219, 116),
+        docstring=(117, 113, 94),
+        boolean=(174, 129, 255),
+        brace=(248, 248, 242),
+        completer_text=(248, 248, 242),
+        completer_selected_text=(255, 255, 255),
+        completer_hover_text=(255, 255, 255),
+        completer_background=(30, 31, 28),
+        completer_alt_background=(39, 40, 34),
+        completer_hover_background=(73, 72, 62),
+        completer_selected_background=(73, 72, 62),
+        default=(248, 248, 242),
+        whitespace=(73, 72, 62),
+        highlight_line=(62, 61, 50)
+    ),
+    'Solarized Dark': dict(
+        background=(0, 43, 54),
+        output_background=(0, 43, 54),
+        keywords=(133, 153, 0),
+        digits=(42, 161, 152),
+        definition=(38, 139, 210),
+        operator=(203, 75, 22),
+        extra=(38, 139, 210),
+        methods=(38, 139, 210),
+        comment=(88, 110, 117),
+        string=(42, 161, 152),
+        docstring=(88, 110, 117),
+        boolean=(211, 54, 130),
+        brace=(131, 148, 150),
+        completer_text=(131, 148, 150),
+        completer_selected_text=(253, 246, 227),
+        completer_hover_text=(253, 246, 227),
+        completer_background=(7, 54, 66),
+        completer_alt_background=(0, 43, 54),
+        completer_hover_background=(88, 110, 117),
+        completer_selected_background=(88, 110, 117),
+        default=(131, 148, 150),
+        whitespace=(7, 54, 66),
+        highlight_line=(7, 54, 66)
+    ),
+    'Kimbie Dark': dict(
+        background=(34, 26, 15),
+        output_background=(34, 26, 15),
+        keywords=(220, 57, 88),
+        digits=(247, 154, 50),
+        definition=(240, 100, 49),
+        operator=(240, 100, 49),
+        extra=(138, 177, 176),
+        methods=(138, 177, 176),
+        comment=(214, 186, 173),
+        string=(136, 155, 74),
+        docstring=(214, 186, 173),
+        boolean=(247, 154, 50),
+        brace=(211, 175, 134),
+        completer_text=(211, 175, 134),
+        completer_selected_text=(251, 235, 212),
+        completer_hover_text=(251, 235, 212),
+        completer_background=(54, 39, 18),
+        completer_alt_background=(34, 26, 15),
+        completer_hover_background=(81, 65, 44),
+        completer_selected_background=(81, 65, 44),
+        default=(211, 175, 134),
+        whitespace=(81, 65, 44),
+        highlight_line=(81, 65, 44)
+    ),
+    'Multi Script Editor Light': dict(
+        background=(253, 246, 227),
+        output_background=(245, 238, 220),
+        keywords=(215, 58, 73),
+        digits=(0, 92, 197),
+        definition=(111, 66, 193),
+        operator=(215, 58, 73),
+        extra=(0, 92, 197),
+        methods=(111, 66, 193),
+        comment=(106, 115, 125),
+        string=(3, 47, 98),
+        docstring=(106, 115, 125),
+        boolean=(0, 92, 197),
+        brace=(36, 41, 46),
+        completer_text=(36, 41, 46),
+        completer_selected_text=(255, 255, 255),
+        completer_hover_text=(255, 255, 255),
+        completer_background=(253, 246, 227),
+        completer_alt_background=(245, 238, 220),
+        completer_hover_background=(238, 232, 213),
+        completer_selected_background=(238, 232, 213),
+        default=(36, 41, 46),
+        whitespace=(225, 228, 232),
+        highlight_line=(238, 232, 213)
+    ),
     'Ayu Mirage': dict(
         background=(33, 39, 51),
         output_background=(33, 39, 51),
@@ -265,12 +365,12 @@ def getColors(theme=False):
     settings = s.read_settings()
     if not theme:
         theme = settings.get('theme')
-    
+
     if theme in predefinedThemes:
         result = {k:v for k,v in predefinedThemes[theme].items()}
     else:
         result = {k:v for k,v in defaultColors.items()}
-        
+
     if theme:
         if 'colors' in settings:
             colors = settings['colors'].get(theme)
@@ -296,7 +396,7 @@ def editorStyle(theme=None):
                     val = str(c)
                     text = text.replace(p, val)
             elif name == 'textsize':
-                text = text.replace(p, '12')
+                text = text.replace(p, '11')
         return text
 
 def applyColorToEditorStyle(colors=None):
@@ -314,6 +414,6 @@ def applyColorToEditorStyle(colors=None):
                     val = str(c)
                     text = text.replace(p, val)
             elif name == 'textsize':
-                text = text.replace(p, '12')
+                text = text.replace(p, '11')
         return text
     return ''
