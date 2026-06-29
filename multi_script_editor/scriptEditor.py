@@ -527,12 +527,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def loadSession(self):
         sessions = self._presenter.get_session_tabs()
         self.tab.clear()
+        active_index = -1
         if sessions:
             for i, s in enumerate(sessions):
                 w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'))
                 if s.get('active'):
-                    self.tab.setCurrentIndex(i)
-                w.setFontSize(s.get('size', None))
+                    active_index = i
+                if s.get('size'):
+                    w.setFontSize(s.get('size'))
+            if active_index != -1:
+                self.tab.setCurrentIndex(active_index)
         if self.tab.count() == 0:
             self.tab.addNewTab()
 
@@ -777,7 +781,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         geo = self.geometry()
         sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
         center = [geo.center().x(), geo.center().y()]
-        size = max(8, self.out.font().pointSize())
+        out_pt = self.out.font().pointSize()
+        if out_pt == -1:
+            if hasattr(self.out, 'fs'):
+                out_pt = self.out.fs
+            else:
+                out_pt = self.out.font().pixelSize()
+        size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
         out_word_wrap = self.out_wordWrap_act.isChecked()
         clear_execute = self.clear_exec_act.isChecked()
@@ -794,9 +804,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         font_data = dict()
         if self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
             editor_font = self.tab.widget(0).edit.font()
+            pt_size = editor_font.pointSize()
+            if pt_size == -1:
+                if hasattr(self.tab.widget(0).edit, 'fs'):
+                    pt_size = self.tab.widget(0).edit.fs
+                else:
+                    pt_size = editor_font.pixelSize()
+                    
             font_data.update({
                 "family": editor_font.family(),
-                "pointSize": editor_font.pointSize(),
+                "pointSize": pt_size,
                 "weight": editor_font.weight(),
                 "italic": editor_font.italic()
             })

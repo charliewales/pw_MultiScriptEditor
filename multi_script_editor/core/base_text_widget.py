@@ -27,14 +27,18 @@ class BaseTextWidgetMixin:
             self.setFont(f)
 
     def setTextEditFontSize(self, size):
-        style = self.styleSheet() + '''QTextEdit
-    {
-        font-size: %spx;
-    }''' % size
-        self.setStyleSheet(style)
         f = self.font()
         f.setPointSize(size)
         self.setFont(f)
+        import managers
+        if managers.context == 'hou':
+            family = f.family()
+            style = self.styleSheet() + '''
+            QTextEdit, QTextBrowser {
+                font-size: %spx;
+                font-family: "%s";
+            }''' % (size, family)
+            self.setStyleSheet(style)
 
     def wordWrap(self, state):
         from vendor.Qt.QtWidgets import QTextEdit
@@ -64,3 +68,12 @@ class BaseTextWidgetMixin:
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
+        
+        import managers
+        if managers.context == 'hou':
+            style = self.styleSheet() + '''
+            QTextEdit, QTextBrowser {
+                font-size: %spx;
+                font-family: "%s";
+            }''' % (pointSize, family)
+            self.setStyleSheet(style)
