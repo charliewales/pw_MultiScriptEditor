@@ -510,6 +510,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.syntaxCheck_act.setChecked(syntax_check)
         self.toggleSyntaxCheck(syntax_check)
 
+        self.updateRecentFilesMenu()
+
     def saveSettings(self):
         settings = self._current_settings
         geo = self.geometry()
