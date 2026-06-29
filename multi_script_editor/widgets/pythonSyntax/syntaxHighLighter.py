@@ -5,7 +5,7 @@ from widgets.pythonSyntax import design, keywords
 
 class PythonHighlighterClass (QSyntaxHighlighter):
     def __init__(self, document, colors=None):
-        QSyntaxHighlighter.__init__(self, document)
+        QSyntaxHighlighter.__init__(self)
 
         if colors:
             self.colors = colors
@@ -62,6 +62,8 @@ class PythonHighlighterClass (QSyntaxHighlighter):
         
         # Pre-compile regex for rapid string extraction to safely detect comments
         self.string_pattern = re.compile(r'(".*?"|\'.*?\')')
+        
+        self.setDocument(document)
     def getStyle(self, color, bold=False):
         brush = QBrush( QColor(*color))
         f = QTextCharFormat()
