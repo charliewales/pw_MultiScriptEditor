@@ -894,7 +894,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if focus_widget == self.out or self.out.isAncestorOf(focus_widget):
             target = 'output'
             
-        w = findWidget.findWidgetClass(self.out)
+        if target == 'output':
+            # Searching in log, center on editor (self.tab)
+            center_widget = self.tab
+        else:
+            # Searching in editor, center on log (self.out)
+            center_widget = self.out
+            
+        w = findWidget.findWidgetClass(self.out, center_widget)
         
         # Restore case sensitive state
         is_case_sensitive = self._current_settings.get('search_case_sensitive', False)

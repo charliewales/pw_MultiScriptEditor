@@ -6,11 +6,16 @@ class findWidgetClass(QWidget, ui.Ui_findReplace):
     searchSignal = Signal(str, bool)
     replaceSignal = Signal(list, bool)
     replaceAllSignal = Signal(list, bool)
-    def __init__(self, parent):
+    def __init__(self, parent, center_widget=None):
         super(findWidgetClass, self).__init__(parent)
         self.setupUi(self)
         self.setWindowFlags(Qt.Tool)
-        center = parent.parent().mapToGlobal(parent.geometry().center())
+        
+        if center_widget:
+            center = center_widget.mapToGlobal(center_widget.rect().center())
+        else:
+            center = parent.parent().mapToGlobal(parent.geometry().center())
+            
         myGeo = self.geometry()
         myGeo.moveCenter(center)
         self.setGeometry(myGeo)
