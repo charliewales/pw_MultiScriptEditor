@@ -471,10 +471,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.setGeometry(geo)
         if splitter:
             self.splitter.setSizes(splitter)
-        if out_wrap:
+        if out_wrap is not None:
             self.out_wordWrap_act.setChecked(out_wrap)
             self.out.wordWrap(out_wrap)
-        if wrap:
+        if wrap is not None:
             self.wordWrap_act.setChecked(wrap)
             self.tab.wordWrap(wrap)
         if clear_exec:
@@ -487,7 +487,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
         else:
             self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
-        if show_whitespace:
+        if show_whitespace is not None:
             self.tab.render_whitespace(show_whitespace)
             self.out.render_whitespace(show_whitespace)
             self.whitespace_act.setChecked(show_whitespace)
@@ -497,9 +497,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.autocomplete_act.setChecked(autocomplete)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
         self.show_docstrings_act.setChecked(show_docstrings)
-
-        self.tab.wordWrap(not wrap)
-        self.tab.wordWrap(wrap)
 
         f = self.out.font()
         f.setPointSize(outFontSize)

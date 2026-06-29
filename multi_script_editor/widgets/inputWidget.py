@@ -545,11 +545,22 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             while not lines[ind].strip():
                 ind += 1
             if lines[ind].strip()[0] == '#': # remove comment
-                result = '\n'.join([x.replace('#','',1) for x in lines])
-                ofs = -1
+                new_lines = []
+                for i, x in enumerate(lines):
+                    idx = x.find('#')
+                    if idx != -1:
+                        if len(x) > idx + 1 and x[idx+1] == ' ':
+                            new_lines.append(x[:idx] + x[idx+2:])
+                            if i == ind: ofs = -2
+                        else:
+                            new_lines.append(x[:idx] + x[idx+1:])
+                            if i == ind: ofs = -1
+                    else:
+                        new_lines.append(x)
+                result = '\n'.join(new_lines)
             else:   # add comment
-                result = '\n'.join(['#'+x for x in lines ])
-                ofs = 1
+                result = '\n'.join(['# ' + x for x in lines ])
+                ofs = 2
         return result, ofs
 
     def insertText(self, comp):

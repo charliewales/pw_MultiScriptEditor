@@ -59,9 +59,9 @@ class PythonHighlighterClass (QSyntaxHighlighter):
         # Cache formats used dynamically in highlightBlock to avoid repeated getStyle calls
         self.default_format = self.getStyle(self.colors['default'])
         self.comment_format = self.getStyle(self.colors['comment'])
-        # self.rehighlight()
-
-
+        
+        # Pre-compile regex for rapid string extraction to safely detect comments
+        self.string_pattern = re.compile(r'(".*?"|\'.*?\')')
     def getStyle(self, color, bold=False):
         brush = QBrush( QColor(*color))
         f = QTextCharFormat()
@@ -97,16 +97,8 @@ class PythonHighlighterClass (QSyntaxHighlighter):
 
 
         if '#' in text:
-            strings = re.findall(r'(".*?")|(\'.*?\')', text)
-            copy = text
-            if strings:
-                pat = []
-                for s in strings:
-                    for match in s:
-                        if match:
-                            pat.append(match)
-                for s in pat:
-                    copy = copy.replace(s, '_'*len(s))
+            # Safely replace all strings with underscores to avoid matching '#' inside strings
+            copy = self.string_pattern.sub(lambda m: '_' * len(m.group(0)), text)
             if '#' in copy:
                 index = copy.index('#')
                 length = len(copy) - index

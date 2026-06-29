@@ -51,12 +51,12 @@ class BaseTextWidgetMixin:
         self.setFont(font)
 
     def render_whitespace(self, state):
-        text_option = QTextOption()
+        text_option = self.document().defaultTextOption()
         if state:
-            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
-            self.document().setDefaultTextOption(text_option)
+            text_option.setFlags(text_option.flags() | QTextOption.ShowTabsAndSpaces)
         else:
-            self.document().setDefaultTextOption(text_option)
+            text_option.setFlags(text_option.flags() & ~QTextOption.ShowTabsAndSpaces)
+        self.document().setDefaultTextOption(text_option)
 
     def set_start_font(self, font_d=None):
         if not font_d:
