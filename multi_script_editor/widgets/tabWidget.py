@@ -106,10 +106,10 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
-    def addNewTab(self, name='New Tab', text=None):
+    def addNewTab(self, name='New Tab', text=None, file_path=None):
         # Ensure name is a string (PySide6 is stricter about types)
         name = str(name) if name is not None else 'New Tab'
-        cont = EditorTabContainer(text, self.p, self.desk)
+        cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         self.addTab(cont, name)
@@ -269,8 +269,9 @@ class tabWidgetClass(QTabWidget):
 
 
 class EditorTabContainer(QWidget):
-    def __init__(self, text, parent, desk):
+    def __init__(self, text, parent, desk, file_path=None):
         super(EditorTabContainer, self).__init__()
+        self.file_path = file_path
         hbox = QHBoxLayout(self)
         hbox.setSpacing(0)
         hbox.setContentsMargins(0,0,0,0)

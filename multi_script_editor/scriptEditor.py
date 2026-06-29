@@ -265,7 +265,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         active_index = -1
         if sessions:
             for i, s in enumerate(sessions):
-                w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'))
+                w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'), file_path=s.get('file_path'))
                 if s.get('active'):
                     active_index = i
                 if s.get('size'):
@@ -290,7 +290,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 size = widget.edit.fs
             else:
                 size = widget.edit.font().pointSize()
-            tab = {'name': name, 'text': text, 'active': item == index, 'size': size}
+            tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
             tabs.append(tab)
         path = self._presenter.save_session(tabs)
         if verbos:
@@ -355,7 +355,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.setText('')
 
     def saveScript(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        cont = self.tab.widget(index)
         text = self.tab.getCurrentText()
+        
+        # Check if the tab already has an associated file path
+        if hasattr(cont, 'file_path') and cont.file_path and os.path.exists(os.path.dirname(cont.file_path)):
+            try:
+                with open(cont.file_path, 'w') as f:
+                    f.write(text)
+                self.out.showMessage('Saved to: %s' % cont.file_path)
+            except Exception as e:
+                self.out.showMessage('Error saving file: %s (%s)' % (cont.file_path, str(e)))
+            return
+
+        # Otherwise do Save As
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
@@ -365,6 +381,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 with open(path[0], 'w') as f:
                     f.write(text)
                 self.addRecentFile(path[0])
+                if hasattr(cont, 'file_path'):
+                    cont.file_path = path[0]
+                self.tab.setTabText(index, os.path.basename(path[0]))
+                self.out.showMessage('Saved to: %s' % path[0])
             except:
                 self.out.showMessage('Error save file; %s' % path[0])
 
@@ -376,7 +396,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if path[0]:
             if os.path.exists(path[0]):
                 text = open(path[0]).read()
-                self.tab.addNewTab(os.path.basename(path[0]), text)
+                self.tab.addNewTab(os.path.basename(path[0]), text, file_path=path[0])
                 self.addRecentFile(path[0])
 
     def addRecentFile(self, path):
@@ -419,7 +439,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def openRecentFile(self, path):
         if os.path.exists(path):
             text = open(path).read()
-            self.tab.addNewTab(os.path.basename(path), text)
+            self.tab.addNewTab(os.path.basename(path), text, file_path=path)
             self.addRecentFile(path)
 
     def tabsToSpaces(self):
@@ -795,11 +815,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for item in range(self.tab.count()):
                 name_tab = self.tab.tabText(item)
                 text = self.tab.getTabText(item)
+                widget = self.tab.widget(item)
                 if managers.context == 'hou':
-                    size = self.tab.widget(item).edit.fs
+                    size = widget.edit.fs
                 else:
-                    size = self.tab.widget(item).edit.font().pointSize()
-                tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size}
+                    size = widget.edit.font().pointSize()
+                tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
                 tabs.append(tab)
             self._presenter.save_named_session(name, tabs)
             self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
@@ -817,7 +838,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.clear()
             if sessions:
                 for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'))
+                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'), file_path=s.get('file_path'))
                     if s.get('active'):
                         self.tab.setCurrentIndex(i)
                     w.setFontSize(s.get('size', None))
