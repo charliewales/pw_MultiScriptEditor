@@ -7,24 +7,14 @@ class BaseTextWidgetMixin:
     Expects to be mixed into a QTextEdit or QTextBrowser.
     """
     def changeFontSize(self, up):
-        import managers
-        if managers.context in ('hou', 'maya'):
-            if not hasattr(self, 'fs'):
-                self.fs = self.font().pointSize()
-            if up:
-                self.fs = min(30, self.fs + 1)
-            else:
-                self.fs = max(8, self.fs - 1)
-            self.setTextEditFontSize(self.fs)
+        f = self.font()
+        size = f.pointSize()
+        if up:
+            size = min(30, size + 1)
         else:
-            f = self.font()
-            size = f.pointSize()
-            if up:
-                size = min(30, size + 1)
-            else:
-                size = max(8, size - 1)
-            f.setPointSize(size)
-            self.setFont(f)
+            size = max(8, size - 1)
+        f.setPointSize(size)
+        self.setFont(f)
 
     def setTextEditFontSize(self, size):
         f = self.font()
@@ -86,12 +76,3 @@ class BaseTextWidgetMixin:
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
-
-        import managers
-        if managers.context in ('hou', 'maya'):
-            style = self.styleSheet() + '''
-            QTextEdit, QTextBrowser {
-                font-size: %spx;
-                font-family: "%s";
-            }''' % (pointSize, family)
-            self.setStyleSheet(style)
