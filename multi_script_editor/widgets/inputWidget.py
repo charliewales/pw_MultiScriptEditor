@@ -9,6 +9,7 @@ from core.settings_model import SettingsModel
 from core.base_text_widget import BaseTextWidgetMixin
 from core.autocomplete_provider import AutocompleteProvider
 from core.multi_cursor import MultiCursorManager
+from core.search_service import SearchService
 import string
 import keyword
 import managers
@@ -39,6 +40,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
         self.p = parent
         self.desk = desk
+        self.search_service = SearchService(self)
         self.multi_cursor_manager = MultiCursorManager(self)
         self.setLineWrapMode(QTextEdit.NoWrap)
         if managers.context == 'hou':
@@ -764,44 +766,10 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         return selectedText
 
     def selectWord(self, pattern, number, replace=None, case_sensitive=False):
-        text = self.toPlainText()
-        flags = 0 if case_sensitive else re.IGNORECASE
-        
-        indexis = [(m.start(0), m.end(0)) for m in re.finditer(re.escape(pattern), text, flags=flags)]
-        if not indexis:
-            return number
-            
-        if number > len(indexis)-1:
-            number = 0
-            
-        cursor = self.textCursor()
-        cursor.setPosition(indexis[number][0])
-        cursor.setPosition(indexis[number][1], QTextCursor.KeepAnchor)
-        if replace is not None:
-            cursor.removeSelectedText()
-            cursor.insertText(replace)
-        self.setTextCursor(cursor)
-        self.setFocus()
-        return number
+        return self.search_service.select_word(pattern, number, replace, case_sensitive)
 
     def replaceAll(self, find, rep, case_sensitive=False):
-        if not find:
-            return
-            
-        cursor = self.textCursor()
-        cursor.beginEditBlock()
-        
-        # Start from beginning
-        cursor.movePosition(QTextCursor.MoveOperation.Start)
-        self.setTextCursor(cursor)
-        
-        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
-        
-        while self.find(find, options):
-            self.textCursor().insertText(rep)
-            
-        cursor.endEditBlock()
-        self.completer.updateCompleteList()
+        self.search_service.replace_all(find, rep, case_sensitive)
 
     # --- Multi-Cursor / Multi-Selection Support ---
     def select_next_occurrence(self):
