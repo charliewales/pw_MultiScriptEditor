@@ -140,23 +140,23 @@ def showUi14(cls,  name=None, floating=False, position=(),
     if dialog:
         h = getHouWindow()
         dial = cls(h, *(args or []), **(kwargs or {}))
-        dial.tab.setStyleSheet("""
-            QTabBar::tab {
-                max-width: 250px;
-                min-width: 80px;
-                border-top-left-radius: 16px;
-                border-top-right-radius: 16px;
-                padding: 2px;
-            }
-            QTabBar::tab:selected {
-                background: #136fa8;
-                color: #dddddd;
-                border: 2px solid #548af5;
-                border-top-left-radius: 16px;
-                border-top-right-radius: 16px;
+        # dial.tab.setStyleSheet("""
+        #     QTabBar::tab {
+        #         max-width: 250px;
+        #         min-width: 80px;
+        #         border-top-left-radius: 16px;
+        #         border-top-right-radius: 16px;
+        #         padding: 2px;
+        #     }
+        #     QTabBar::tab:selected {
+        #         background: #136fa8;
+        #         color: #dddddd;
+        #         border: 2px solid #548af5;
+        #         border-top-left-radius: 16px;
+        #         border-top-right-radius: 16px;
 
-            }
-        """)
+        #     }
+        # """)
 
         dial.show()
 
@@ -315,4 +315,3 @@ def get_hou_style(theme=None):
         return hou.ui.qtStyleSheet()
     except AttributeError:
         return ''
-
