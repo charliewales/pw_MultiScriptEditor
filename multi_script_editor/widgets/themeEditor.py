@@ -87,16 +87,22 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 colors = design.getColors()
 
         self.colors_lwd.clear()
+        
+        # Update text size (or default to 12 if not present)
+        if 'textsize' in colors:
+            self.textSize_spb.setValue(int(colors['textsize']))
+        else:
+            self.textSize_spb.setValue(12)
+
         for x in sorted(colors.keys()):
             if x == 'textsize':
-                self.textSize_spb.setValue(colors['textsize'])
-            else:
-                item = QListWidgetItem(x)
-                pix = QPixmap(QSize(16,16))
-                pix.fill(QColor(*colors[x]))
-                item.setIcon(QIcon(pix))
-                item.setData(32, colors[x])
-                self.colors_lwd.addItem(item)
+                continue
+            item = QListWidgetItem(x)
+            pix = QPixmap(QSize(16,16))
+            pix.fill(QColor(*colors[x]))
+            item.setIcon(QIcon(pix))
+            item.setData(32, colors[x])
+            self.colors_lwd.addItem(item)
         self.updateExample()
 
     def updateExample(self):
