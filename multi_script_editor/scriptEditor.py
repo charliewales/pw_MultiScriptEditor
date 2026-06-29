@@ -104,6 +104,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.tab.count() > 0:
             QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
         self.loadSettings()
+        self.fillThemeMenu()
         self.setWindowStyle()
         self.appContextMenu()
         self.addArgs()
@@ -604,7 +605,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def openThemeEditor(self):
         self.dial = themeEditor.themeEditorClass(self, self.tab.desk)
-        self.dial.exec_()
+        getattr(self.dial, 'exec', self.dial.exec_)()
         self.fillThemeMenu()
 
     def moveEvent(self, event):

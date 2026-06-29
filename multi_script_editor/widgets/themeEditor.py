@@ -36,10 +36,21 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
 
+    def get_settings(self):
+        if self.parent() and hasattr(self.parent(), '_current_settings'):
+            return self.parent()._current_settings
+        return self.s.read_settings()
+
+    def save_settings(self, settings):
+        if self.parent() and hasattr(self.parent(), 'save_settings_requested'):
+            self.parent().save_settings_requested.emit(settings)
+        else:
+            self.s.write_settings(settings)
+
     def fillUI(self, restore=None):
         if restore is None:
             restore = self.themeList_cbb.currentText()
-        settings = self.s.read_settings()
+        settings = self.get_settings()
         self.themeList_cbb.clear()
         self.themeList_cbb.addItem('default')
         if settings.get('colors'):
@@ -59,7 +70,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             colors = design.defaultColors
         else:
             self.del_btn.setEnabled(1)
-            settings = self.s.read_settings()
+            settings = self.get_settings()
             allThemes = settings.get('colors')
             if allThemes and curTheme in allThemes:
                 colors = allThemes.get(curTheme)
@@ -115,7 +126,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             name = name[0]
             if name == 'default':
                 name = 'Not default'
-            settings = self.s.read_settings()
+            settings = self.get_settings()
             if 'colors' in settings:
                 if name in settings['colors']:
                     if not self.yes_no_question('Replace exists?'):
@@ -126,20 +137,24 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 settings['colors'][name] = colors
             else:
                 settings['colors'] = {name: colors}
-            self.s.write_settings(settings)
+            self.save_settings(settings)
             self.fillUI(name)
             self.updateUI()
+            if self.parent() and hasattr(self.parent(), 'applyTheme'):
+                self.parent().applyTheme(name)
+                if hasattr(self.parent(), 'fillThemeMenu'):
+                    self.parent().fillThemeMenu()
 
     def deleteTheme(self):
         text = self.themeList_cbb.currentText()
         if text:
             if self.yes_no_question('Remove current theme?'):
                 name = self.themeList_cbb.currentText()
-                settings = self.s.read_settings()
+                settings = self.get_settings()
                 if 'colors' in settings:
                     if name in settings['colors']:
                         del settings['colors'][name]
-                        self.s.write_settings(settings)
+                        self.save_settings(settings)
                         self.fillUI(False)
                         self.updateUI()
 
@@ -152,10 +167,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def apply(self):
         name = self.themeList_cbb.currentText()
         if name:
-            settings = self.s.read_settings()
+            settings = self.get_settings()
             settings['theme'] = name
-            self.s.write_settings(settings)
-            self.accept()
+            self.save_settings(settings)
+            if self.parent() and hasattr(self.parent(), 'applyTheme'):
+                self.parent().applyTheme(name)
+        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
