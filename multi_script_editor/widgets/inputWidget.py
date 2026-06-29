@@ -104,7 +104,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.blockSignals(True)
         colors = None
         self._highlight_color_cache = None
-        if theme or not theme =='default':
+        if theme or not theme =='Multi Script Editor':
             colors = design.getColors(theme)
             if self.completer:
                 self.completer.updateStyle(colors)
@@ -474,7 +474,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
         if getattr(self, '_highlight_color_cache', None) is None:
             data = SettingsModel().read_settings() or {}
-            theme = data.get('theme', 'default')
+            theme = data.get('theme', 'Multi Script Editor')
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
 

@@ -200,11 +200,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.theme_menu.clear()
         self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
         self.theme_menu.addSeparator()
-        self.theme_menu.addAction(QAction('default', self, triggered=lambda: self.applyTheme('default')))
+        for t in sorted(design.predefinedThemes.keys()):
+            self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
         data = self._current_settings
         if data.get('colors'):
+            added_separator = False
             for t in data.get('colors').keys():
-                self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
+                if t not in design.predefinedThemes:
+                    if not added_separator:
+                        self.theme_menu.addSeparator()
+                        added_separator = True
+                    self.theme_menu.addAction(QAction(t, self, triggered=lambda x=t: self.applyTheme(x)))
 
     def applyTheme(self, name):
         for i in range(self.tab.count()):
@@ -527,6 +533,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.toggleSyntaxCheck(syntax_check)
 
         self.updateRecentFilesMenu()
+        
+        theme = data.get('theme', 'Multi Script Editor')
+        if theme == 'default':
+            theme = 'Multi Script Editor'
+            self._current_settings['theme'] = theme
+        self.applyTheme(theme)
 
     def saveSettings(self):
         settings = self._current_settings

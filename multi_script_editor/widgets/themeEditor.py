@@ -52,10 +52,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             restore = self.themeList_cbb.currentText()
         settings = self.get_settings()
         self.themeList_cbb.clear()
-        self.themeList_cbb.addItem('default')
+        for t in sorted(design.predefinedThemes.keys()):
+            self.themeList_cbb.addItem(t)
         if settings.get('colors'):
+            added_separator = False
             for x in settings.get('colors'):
-                self.themeList_cbb.addItem(x)
+                if x not in design.predefinedThemes:
+                    if not added_separator:
+                        self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
+                        added_separator = True
+                    self.themeList_cbb.addItem(x)
         if not restore:
             restore = settings.get('theme')
         if restore:
@@ -65,9 +71,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def updateColors(self):
         curTheme = self.themeList_cbb.currentText()
-        if curTheme == 'default':
+        if curTheme in design.predefinedThemes:
             self.del_btn.setEnabled(0)
-            colors = design.defaultColors
+            colors = {k:v for k,v in design.predefinedThemes[curTheme].items()}
         else:
             self.del_btn.setEnabled(1)
             settings = self.get_settings()
@@ -124,8 +130,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         name = QInputDialog.getText(self, 'Theme name', 'Enter Theme name', QLineEdit.Normal, text)
         if name[1]:
             name = name[0]
-            if name == 'default':
-                name = 'Not default'
+            if name in design.predefinedThemes:
+                name = name + ' (Custom)'
             settings = self.get_settings()
             if 'colors' in settings:
                 if name in settings['colors']:

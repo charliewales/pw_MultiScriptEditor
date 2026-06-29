@@ -14,7 +14,7 @@ font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 class outputClass(QTextBrowser, BaseTextWidgetMixin):
-    def __init__(self, theme='default'):
+    def __init__(self, theme='Multi Script Editor'):
         super(outputClass, self).__init__()
         self.setLineWrapMode(QTextEdit.NoWrap)
         font = QFont(font_name)
@@ -85,7 +85,7 @@ class outputClass(QTextBrowser, BaseTextWidgetMixin):
     def applyHightLighter(self, theme=None, qss=None):
         self.blockSignals(True)
         colors = None
-        if theme or not theme =='default':
+        if theme or not theme =='Multi Script Editor':
             colors = design.getColors(theme)
         self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
         st = design.editorStyle(theme)
