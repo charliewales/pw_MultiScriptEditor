@@ -21,7 +21,7 @@ import ast
 import re
 
 from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QColor, QIcon, QKeySequence, QPalette, QTextCursor
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
 from widgets import scriptEditor_UIs as ui
@@ -58,8 +58,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_ly = QVBoxLayout(self.outline_panel)
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
         self.outline_title = QLabel("Outline")
-        self.outline_title.setStyleSheet("font-weight: bold; padding: 4px; color: #fff; background-color: #333;")
+        self.outline_title.setStyleSheet("font-weight: bold; padding: 4px;")
         self.outline_list = QListWidget()
+        self.outline_list.setObjectName("outlineList")
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
         self.outline_ly.addWidget(self.outline_title)
         self.outline_ly.addWidget(self.outline_list)
@@ -133,12 +134,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             accept_dialog = getattr(font_dialog, 'exec')()
         else:
             accept_dialog = font_dialog.exec_()
-        
+
         if accept_dialog:
             font = font_dialog.currentFont()
             for index in range(0, self.tab.count()):
                 self.tab.widget(index).edit.setFont(font)
             self.out.set_font(font)
+            
+            outline_font = QFont(font)
+            if outline_font.pointSize() > 0:
+                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
+            elif outline_font.pixelSize() > 0:
+                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+            self.outline_list.setFont(outline_font)
             self.saveSettings()
 
     def clear_exec(self, exec_func):
@@ -204,8 +212,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.theme_menu.clear()
         self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
         self.theme_menu.addSeparator()
+        current_theme = self._current_settings.get('theme', 'Multi Script Editor')
         for t in sorted(design.predefinedThemes.keys()):
-            self.theme_menu.addAction(QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x)))
+            act = QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x))
+            act.setCheckable(True)
+            act.setChecked(t == current_theme)
+            self.theme_menu.addAction(act)
         data = self._current_settings
         if data.get('colors'):
             added_separator = False
@@ -214,14 +226,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if not added_separator:
                         self.theme_menu.addSeparator()
                         added_separator = True
-                    self.theme_menu.addAction(QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x)))
+                    act = QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x))
+                    act.setCheckable(True)
+                    act.setChecked(t == current_theme)
+                    self.theme_menu.addAction(act)
 
     def applyTheme(self, name):
         qss = design.editorStyle(name)
         o = self.out
         o.applyHightLighter(name)
         o.setStyleSheet(qss)
+        self.outline_list.setStyleSheet(qss)
         
+        for act in self.theme_menu.actions():
+            if act.isCheckable():
+                act.setChecked(act.text() == name)
+
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
             w.edit.applyHightLighter(name)
@@ -518,6 +538,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if font:
             self.tab.set_start_font(font)
             self.out.set_start_font(font)
+            
+            outline_font = QFont(self.out.font())
+            if outline_font.pointSize() > 0:
+                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
+            elif outline_font.pixelSize() > 0:
+                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+            self.outline_list.setFont(outline_font)
         self.autocomplete_act.setChecked(autocomplete)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
         self.show_docstrings_act.setChecked(show_docstrings)
@@ -535,7 +562,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.toggleSyntaxCheck(syntax_check)
 
         self.updateRecentFilesMenu()
-        
+
         theme = data.get('theme', 'Multi Script Editor')
         if theme == 'default':
             theme = 'Multi Script Editor'
@@ -920,11 +947,9 @@ def show():
     palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     palette.setColor(QPalette.HighlightedText, Qt.black)
     app.setPalette(palette)
-    w = scriptEditorClass()
-    exec_manager = ExecutionManager()
-    presenter = MainPresenter(w, exec_manager)
+    w = create_editor_instance()
     w.show()
-    if hasattr(app, 'exec'):
+    if hasattr(app, "exec"):
         app.exec()
     else:
         app.exec_()
@@ -935,11 +960,4 @@ def create_editor_instance(parent=None):
     return w
 
 if __name__ == '__main__':
-    app = QApplication([])
-    w = create_editor_instance()
-    w.show()
-    if hasattr(app, 'exec'):
-        app.exec()
-    else:
-        app.exec_()
-    # show()
+    show()

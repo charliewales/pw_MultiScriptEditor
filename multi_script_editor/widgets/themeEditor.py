@@ -87,7 +87,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 colors = design.getColors()
 
         self.colors_lwd.clear()
-        
+
         # Update text size (or default to 11 if not present)
         self.textSize_spb.blockSignals(True)
         if 'textsize' in colors:

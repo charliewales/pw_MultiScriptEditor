@@ -5,7 +5,6 @@ QAbstractItemView
     background-color: rgb[completer_background];
     alternate-background-color: rgb[completer_alt_background];
     height: 25px;
-    font: [textsize]pt;
 }
 QListView::item:selected{
     background: rgb[completer_selected_background];
@@ -101,4 +100,11 @@ QToolTip {
     color: rgb[completer_text];
     background-color: rgb[completer_background];
     border: 1px solid rgb[completer_selected_background];
+}
+
+QListWidget#outlineList
+{
+    background-color: rgb[background];
+    color: rgb[default];
+    border: none;
 }
