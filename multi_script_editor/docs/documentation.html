@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi Script Editor - Documentation</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #1e1e1e; color: #d4d4d4; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #1e1e1e; color: #d4d4d4; }
         h1 { color: #569cd6; border-bottom: 2px solid #333; padding-bottom: 10px; }
         h2 { color: #4ec9b0; margin-top: 30px; }
         h3 { color: #ce9178; }
         ul { margin-bottom: 20px; }
-        li { margin-bottom: 5px; }
+        li { margin-bottom: 10px; }
         strong { color: #9cdcfe; }
         .shortcut { display: inline-block; background: #2d2d30; border-radius: 4px; padding: 2px 6px; font-size: 0.85em; font-family: monospace; color: #d16969; margin-left: 8px; border: 1px solid #3e3e42; }
+        .desc { display: block; margin-top: 4px; color: #a0a0a0; font-size: 0.95em; }
     </style>
 </head>
 <body>
@@ -20,95 +21,151 @@
     <h1>Multi Script Editor Documentation</h1>
 
     <h2>General Overview</h2>
-    <p>Multi Script Editor is an open-source, cross-platform, and cross-application Python editor. It can be run as a standalone application or embedded within other software applications (such as Houdini, Nuke, Maya, 3DsMax), offering the ability to script in Python efficiently and centrally.</p>
+    <p>Multi Script Editor is an open-source, cross-platform, and cross-application Python editor. It can be run as a standalone application or embedded within other software applications (such as Houdini, Nuke, Maya, 3DsMax), offering the ability to script in Python efficiently and centrally while automatically adapting to the host application's environment.</p>
 
     <h3>Key Features:</h3>
     <ul>
-        <li>Preserves and loads tabs and the code within them.</li>
-        <li>Interactive execution of selected code.</li>
-        <li>Adjustable color themes for the code editor.</li>
-        <li>Code completion (via the <code>jedi</code> module).</li>
-        <li>Context completion for different functions, such as existing nodes and scene paths depending on the integrated software.</li>
+        <li>Preserves and loads tabs and the code within them automatically across sessions.</li>
+        <li>Interactive execution of selected code blocks or single lines.</li>
+        <li>Fully adjustable and customizable color themes for the code editor and UI.</li>
+        <li>Advanced code completion (powered by the <code>jedi</code> module).</li>
+        <li>Context-aware completion for different functions, such as existing nodes and scene paths depending on the integrated host software.</li>
+        <li>Built-in syntax checking and multi-cursor editing support.</li>
     </ul>
 
     <hr>
 
     <h2>Options by Menu</h2>
-    <p>Below is a breakdown of the different actions and tools grouped by the menu where they are located within the application:</p>
+    <p>Below is a detailed breakdown of the different actions and tools grouped by the menu where they are located within the application:</p>
 
     <h3>File Menu</h3>
     <ul>
-        <li><strong>Open Script</strong><span class="shortcut">CTRL + O</span>: Opens an existing Python script file.</li>
-        <li><strong>Save Script</strong><span class="shortcut">CTRL + S</span>: Saves the script in the current tab.</li>
-        <li><strong>Save Session</strong><span class="shortcut">CTRL + SHIFT + S</span>: Saves the current session, including open tabs and their contents.</li>
-        <li><strong>Close All Tabs</strong>: Closes all open tabs, leaving only one empty tab (prompts for confirmation before closing).</li>
-        <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>: Closes the application.</li>
+        <li><strong>Open Script</strong><span class="shortcut">CTRL + O</span>
+            <span class="desc">Opens an existing Python script file from your local filesystem, loading its contents into a new tab in the editor for editing and execution.</span></li>
+        <li><strong>Save Script</strong><span class="shortcut">CTRL + S</span>
+            <span class="desc">Saves the script in the currently active tab. If the script is new and hasn't been saved yet, it will prompt for a destination file path.</span></li>
+        <li><strong>Save Session</strong><span class="shortcut">CTRL + SHIFT + S</span>
+            <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, and their specific order, ensuring they are automatically restored the next time the editor is launched.</span></li>
+        <li><strong>Close All Tabs</strong>
+            <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
+        <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
+            <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
     </ul>
 
     <h3>Edit Menu (Tools)</h3>
     <ul>
-        <li><strong>Undo</strong><span class="shortcut">CTRL + Z</span>: Undoes the last action.</li>
-        <li><strong>Redo</strong><span class="shortcut">CTRL + Y</span>: Redoes the previously undone action.</li>
-        <li><strong>Copy</strong><span class="shortcut">CTRL + C</span>: Copies the selected text to the clipboard.</li>
-        <li><strong>Cut</strong><span class="shortcut">CTRL + X</span>: Cuts the selected text to the clipboard.</li>
-        <li><strong>Paste</strong><span class="shortcut">CTRL + V</span>: Pastes the clipboard content.</li>
-        <li><strong>Delete Line</strong><span class="shortcut">CTRL + D</span>: Deletes the line where the cursor is currently located.</li>
-        <li><strong>Duplicate Line</strong><span class="shortcut">CTRL + SHIFT + D</span>: Duplicates the current line or selected text.</li>
-        <li><strong>Move Line(s) Up</strong><span class="shortcut">ALT + UP</span>: Moves the selected line(s) one position up.</li>
-        <li><strong>Move Line(s) Down</strong><span class="shortcut">ALT + DOWN</span>: Moves the selected line(s) one position down.</li>
-        <li><strong>Add Quotes</strong><span class="shortcut">ALT + Q</span>: Adds quotes around the selected text.</li>
-        <li><strong>Comment</strong><span class="shortcut">ALT + C</span>: Comments or uncomments the current line or selected text block.</li>
-        <li><strong>Select Next Occurrence</strong><span class="shortcut">CTRL + ALT + D</span>: Selects the next occurrence of the current word.</li>
-        <li><strong>Select All Occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>: Selects all occurrences of the current word.</li>
-        <li><strong>Find and Replace</strong><span class="shortcut">CTRL + F</span>: Opens the tool to find and replace text within the editor.</li>
-        <li><strong>Tab to spaces</strong>: Converts tabs in the document to spaces.</li>
-        <li><strong>Render Whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>: Shows or hides whitespace characters in the editor.</li>
-        <li><strong>Word Wrap</strong><span class="shortcut">ALT + W</span>: Toggles automatic word wrap in the code editor.</li>
-        <li><strong>Word Wrap (Output)</strong><span class="shortcut">CTRL + ALT + W</span>: Toggles word wrap in the output console.</li>
+        <li><strong>Undo</strong><span class="shortcut">CTRL + Z</span>
+            <span class="desc">Reverts the last text editing action in the active script, allowing you to step backward through your recent changes.</span></li>
+        <li><strong>Redo</strong><span class="shortcut">CTRL + Y</span>
+            <span class="desc">Re-applies the last undone action, allowing you to step forward through changes you previously undid.</span></li>
+        <li><strong>Copy</strong><span class="shortcut">CTRL + C</span>
+            <span class="desc">Copies the currently selected text to the system clipboard for pasting elsewhere.</span></li>
+        <li><strong>Cut</strong><span class="shortcut">CTRL + X</span>
+            <span class="desc">Removes the currently selected text from the document and places it into the system clipboard.</span></li>
+        <li><strong>Paste</strong><span class="shortcut">CTRL + V</span>
+            <span class="desc">Inserts the current content of the system clipboard at the cursor's location.</span></li>
+        <li><strong>Delete Line</strong><span class="shortcut">CTRL + D</span>
+            <span class="desc">Immediately deletes the entire line where the text cursor is currently located, without the need to select the whole line first.</span></li>
+        <li><strong>Duplicate Line</strong><span class="shortcut">CTRL + SHIFT + D</span>
+            <span class="desc">Duplicates the current line (if no text is selected) or the currently selected text block, inserting it immediately below the original.</span></li>
+        <li><strong>Move Line(s) Up</strong><span class="shortcut">ALT + UP</span>
+            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position upwards in the document.</span></li>
+        <li><strong>Move Line(s) Down</strong><span class="shortcut">ALT + DOWN</span>
+            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
+        <li><strong>Add Quotes</strong><span class="shortcut">ALT + Q</span>
+            <span class="desc">Wraps the currently selected text with quotation marks. Very useful for quickly converting variables or text into string literals.</span></li>
+        <li><strong>Comment</strong><span class="shortcut">ALT + C</span>
+            <span class="desc">Toggles the Python comment state (using <code>#</code>) for the current line or selected block of lines, allowing you to quickly comment out or uncomment code blocks.</span></li>
+        <li><strong>Select Next Occurrence</strong><span class="shortcut">CTRL + ALT + D</span>
+            <span class="desc">Finds and selects the next instance of the currently selected word (or the word under the cursor), enabling multi-cursor editing for rapid refactoring.</span></li>
+        <li><strong>Select All Occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>
+            <span class="desc">Selects every instance of the current word throughout the entire document, placing a cursor at each instance for simultaneous editing.</span></li>
+        <li><strong>Find and Replace</strong><span class="shortcut">CTRL + F</span>
+            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
+        <li><strong>Tab to spaces</strong>
+            <span class="desc">Converts all tab characters in the current document to standard space characters (typically 4 spaces) to ensure PEP 8 compliance and avoid indentation errors.</span></li>
+        <li><strong>Render Whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
+            <span class="desc">Toggles the visibility of whitespace characters (spaces as dots, tabs as arrows) in the editor to aid in formatting and detecting trailing spaces.</span></li>
+        <li><strong>Word Wrap</strong><span class="shortcut">ALT + W</span>
+            <span class="desc">Toggles automatic wrapping of long lines of code so they visually fit within the editor's width without requiring horizontal scrolling.</span></li>
+        <li><strong>Word Wrap (Output)</strong><span class="shortcut">CTRL + ALT + W</span>
+            <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
     </ul>
 
     <h3>Run Menu</h3>
     <ul>
-        <li><strong>Clear Output before Execution</strong><span class="shortcut">CTRL + ALT + C</span>: If enabled, clears the output console before each execution.</li>
-        <li><strong>Clear Output</strong><span class="shortcut">CTRL + SHIFT + C</span>: Manually clears the output console.</li>
-        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>: Executes the <code>dir()</code> function on the current word and displays the result in the output.</li>
-        <li><strong>help()</strong><span class="shortcut">ALT + H</span>: Executes the <code>help()</code> function on the current word and displays the documentation.</li>
-        <li><strong>print()</strong>: Adds a <code>print()</code> statement for the selected word.</li>
-        <li><strong>type()</strong><span class="shortcut">ALT + T</span>: Executes the <code>type()</code> function on the current word to display its data type.</li>
-        <li><strong>Echo Executed Command</strong><span class="shortcut">ALT + E</span>: Displays the executed code in the output console before the results.</li>
-        <li><strong>Execute All</strong><span class="shortcut">ALT + ENTER</span>: Executes all the code in the current tab.</li>
-        <li><strong>Execute Line</strong><span class="shortcut">CTRL + ALT + ENTER</span>: Executes only the line of code where the cursor is located.</li>
-        <li><strong>Execute Selected</strong><span class="shortcut">CTRL + ENTER</span>: Executes only the currently selected text block.</li>
+        <li><strong>Clear Output before Execution</strong><span class="shortcut">CTRL + ALT + C</span>
+            <span class="desc">When enabled, the application automatically clears the console output panel every time you run a script, keeping the output focused exclusively on the latest execution results.</span></li>
+        <li><strong>Clear Output</strong><span class="shortcut">CTRL + SHIFT + C</span>
+            <span class="desc">Manually clears all text currently displayed in the output console panel.</span></li>
+        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>
+            <span class="desc">Wraps the word under the cursor with the Python <code>dir()</code> function and executes it. This prints all valid attributes and methods of the selected object in the output console.</span></li>
+        <li><strong>help()</strong><span class="shortcut">ALT + H</span>
+            <span class="desc">Wraps the word under the cursor with the Python <code>help()</code> function and executes it, displaying Python's built-in documentation for that specific object or function.</span></li>
+        <li><strong>print()</strong>
+            <span class="desc">Wraps the word under the cursor in a <code>print()</code> statement, making it easy to quickly output a variable's value during debugging.</span></li>
+        <li><strong>type()</strong><span class="shortcut">ALT + T</span>
+            <span class="desc">Wraps the word under the cursor in a Python <code>type()</code> function and executes it to reveal the object's class or data type in the output.</span></li>
+        <li><strong>Echo Executed Command</strong><span class="shortcut">ALT + E</span>
+            <span class="desc">If enabled, prints the exact code snippet being executed into the output console before displaying its result, which is extremely helpful for providing context to output logs.</span></li>
+        <li><strong>Execute All</strong><span class="shortcut">ALT + ENTER</span>
+            <span class="desc">Runs the entire script present in the current active tab from top to bottom.</span></li>
+        <li><strong>Execute Line</strong><span class="shortcut">CTRL + ALT + ENTER</span>
+            <span class="desc">Runs only the specific single line of code where the text cursor is currently positioned.</span></li>
+        <li><strong>Execute Selected</strong><span class="shortcut">CTRL + ENTER</span>
+            <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
     </ul>
 
     <h3>Options Menu</h3>
     <ul>
-        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>: Toggles the basic autocomplete function.</li>
-        <li><strong>Fuzzy Autocomplete</strong>: Enables fuzzy search for autocompletion.</li>
-        <li><strong>Show Docstrings</strong>: Shows or hides docstrings during autocompletion.</li>
-        <li><strong>Show Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>: Shows or hides the code outline panel (classes and functions).</li>
-        <li><strong>Syntax Check</strong>: Toggles real-time syntax checking.</li>
-        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>: Keeps the editor window always visible on top of other windows.</li>
-        <li><strong>Choose Font...</strong><span class="shortcut">CTRL + MouseWheel</span>: Allows changing the font type and size of the editor text.</li>
-        <li><strong>Open Settings Folder</strong>: Opens the folder where the editor's configuration and session files are saved.</li>
-        <li><strong>Theme</strong>: Submenu that allows opening the theme editor (<strong>Edit...</strong>) to customize the interface colors.</li>
+        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
+            <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type.</span></li>
+        <li><strong>Fuzzy Autocomplete</strong>
+            <span class="desc">Enables a more flexible, fuzzy-matching algorithm for autocompletion, allowing you to find suggestions even if you skip characters or make minor typos.</span></li>
+        <li><strong>Show Docstrings</strong>
+            <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information.</span></li>
+        <li><strong>Show Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
+            <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
+        <li><strong>Syntax Check</strong>
+            <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
+        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
+            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
+        <li><strong>Choose Font...</strong><span class="shortcut">CTRL + MouseWheel</span>
+            <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor to suit your visual preferences.</span></li>
+        <li><strong>Open Settings Folder</strong>
+            <span class="desc">Opens your operating system's file explorer directly to the directory where Multi Script Editor stores its configuration files, custom themes, user preferences, and session data.</span></li>
+        <li><strong>Theme</strong>
+            <span class="desc">A sub-menu allowing you to apply different pre-installed color themes or open the advanced Theme Editor (<strong>Edit...</strong>) to heavily customize the syntax highlighting and UI colors down to individual elements.</span></li>
     </ul>
 
     <h3>Help Menu</h3>
     <ul>
-        <li><strong>Quick Help</strong><span class="shortcut">F1</span>: Displays a quick help guide on general usage and variables.</li>
-        <li><strong>GitHub</strong>: Opens the project repository page on GitHub (Manual).</li>
-        <li><strong>Houdini Env Variables</strong>: Opens Houdini environment variables documentation.</li>
-        <li><strong>Houdini hou package</strong>: Opens documentation for the Houdini <code>hou</code> module.</li>
-        <li><strong>Maya Commands</strong>: Opens Maya commands documentation.</li>
-        <li><strong>Nuke Dev Guide</strong>: Opens the Nuke development guide.</li>
-        <li><strong>Qt for Python</strong>: Opens the official Qt for Python (PySide) documentation.</li>
-        <li><strong>Qt Modules</strong>: Opens documentation for Qt modules.</li>
-        <li><strong>Python documentation</strong>: Opens the official Python documentation for the current version.</li>
-        <li><strong>Shortcuts</strong>: Displays the full list of keyboard shortcuts for the editor.</li>
-        <li><strong>Documentation</strong>: Opens this documentation file.</li>
-        <li><strong>Help</strong>: Displays general help information for the editor.</li>
-        <li><strong>About</strong>: Displays information about the application's version and authors.</li>
+        <li><strong>Quick Help</strong><span class="shortcut">F1</span>
+            <span class="desc">Shows a quick reference guide overlay detailing the most common features and available host-specific environment variables.</span></li>
+        <li><strong>GitHub</strong>
+            <span class="desc">Opens the official Multi Script Editor repository on GitHub in your default web browser for checking updates, reporting issues, or contributing.</span></li>
+        <li><strong>Houdini Env Variables</strong>
+            <span class="desc">Opens external web documentation specific to Houdini's environment variables.</span></li>
+        <li><strong>Houdini hou package</strong>
+            <span class="desc">Opens external web documentation for the Houdini <code>hou</code> Python module.</span></li>
+        <li><strong>Maya Commands</strong>
+            <span class="desc">Opens external web documentation for Autodesk Maya's Python commands (<code>maya.cmds</code>).</span></li>
+        <li><strong>Nuke Dev Guide</strong>
+            <span class="desc">Opens the official Nuke Python developer guide.</span></li>
+        <li><strong>Qt for Python</strong>
+            <span class="desc">Opens official documentation for Qt for Python (PySide), which is vital when building custom UIs within the editor.</span></li>
+        <li><strong>Qt Modules</strong>
+            <span class="desc">Opens the reference documentation for individual Qt modules.</span></li>
+        <li><strong>Python documentation</strong>
+            <span class="desc">Opens the official Python documentation online for the version currently being used by the editor.</span></li>
+        <li><strong>Shortcuts</strong>
+            <span class="desc">Displays a comprehensive list of all keyboard shortcuts available in the editor to help you boost your coding productivity.</span></li>
+        <li><strong>Documentation</strong>
+            <span class="desc">Opens this exact documentation file within your browser.</span></li>
+        <li><strong>Help</strong>
+            <span class="desc">Shows general application help and tips.</span></li>
+        <li><strong>About</strong>
+            <span class="desc">Displays the application version, author credits, and license information.</span></li>
     </ul>
 
 </body>
