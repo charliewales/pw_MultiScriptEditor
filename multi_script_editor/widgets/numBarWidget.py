@@ -100,22 +100,25 @@ class lineNumberBarClass(QWidget):
         offset = font_metrics.ascent() + font_metrics.descent()*0.7
         color = painter.pen().color()
         painter.setFont(font)
-        align = Qt.AlignRight
+        align = Qt.AlignRight | Qt.AlignVCenter
         while block.isValid():
             line_count += 1
             # The top left position of the block in the document
-            position = self.edit.document().documentLayout().blockBoundingRect(block).topLeft()
+            block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
+            position = block_rect.topLeft()
+            block_height = block_rect.height()
+            
             # Check if the position of the block is outside of the visible area.
             if position.y() > page_bottom:
                 break
-            if position.y() + fontSize < contents_y:
+            if position.y() + block_height < contents_y:
                 block = block.next()
                 continue
 
             rec = QRect(0,
                         round(position.y()) - contents_y,
-                        self.width()-5,
-                        fontSize + offset)
+                        self.width() - 5,
+                        round(block_height))
 
             # draw line rect
             if block == current_block:
@@ -126,7 +129,7 @@ class lineNumberBarClass(QWidget):
                     painter.drawRect(QRect(0,
                             round(position.y()) - contents_y,
                             self.width(),
-                            fontSize + (offset/2) ))
+                            round(block_height) ))
                 # restore color
                 painter.setPen(QPen(color))
 
@@ -134,7 +137,7 @@ class lineNumberBarClass(QWidget):
             if hasattr(self.edit, 'syntax_errors') and line_count in self.edit.syntax_errors:
                 painter.setBrush(QBrush(QColor("red")))
                 painter.setPen(Qt.NoPen)
-                painter.drawEllipse(3, round(position.y()) - contents_y + int(fontSize / 2) - 2, 6, 6)
+                painter.drawEllipse(3, round(position.y()) - contents_y + int(block_height / 2) - 3, 6, 6)
                 painter.setPen(QPen(color))
 
             # draw text
