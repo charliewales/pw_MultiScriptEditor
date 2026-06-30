@@ -266,6 +266,9 @@ class ScriptEditorUIBuilder:
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
+        
+        # Output Bottom toggle setup
+        editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
 
         editor.outline_timer = QTimer(editor)
         editor.outline_timer.setSingleShot(True)

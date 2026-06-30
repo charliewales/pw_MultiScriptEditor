@@ -561,6 +561,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.syntaxCheck_act.setChecked(syntax_check)
         self.toggleSyntaxCheck(syntax_check)
 
+        output_bottom = data.get('output_bottom', False)
+        self.outputBottom_act.setChecked(output_bottom)
+        self.toggleOutputBottom(output_bottom)
+
         self.updateRecentFilesMenu()
 
         theme = data.get('theme', 'Multi Script Editor')
@@ -590,6 +594,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = self.whitespace_act.isChecked()
         show_outline = self.showOutline_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
+        output_bottom = self.outputBottom_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
@@ -627,6 +632,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font=font_data,
             show_outline=show_outline,
             syntax_check=syntax_check,
+            output_bottom=output_bottom,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
@@ -736,6 +742,20 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.updateOutline()
         else:
             self.horizontal_splitter.setSizes([0, 800])
+
+    def toggleOutputBottom(self, state=None):
+        if state is None:
+            state = self.outputBottom_act.isChecked()
+        sizes = self.splitter.sizes()
+        if state:
+            self.splitter.insertWidget(0, self.verticalLayoutWidget_2)
+            self.splitter.insertWidget(1, self.verticalLayoutWidget)
+        else:
+            self.splitter.insertWidget(0, self.verticalLayoutWidget)
+            self.splitter.insertWidget(1, self.verticalLayoutWidget_2)
+        
+        if sum(sizes) > 0:
+            self.splitter.setSizes(sizes[::-1])
 
     def toggleSyntaxCheck(self, state=None):
         if state is None:
