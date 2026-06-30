@@ -97,7 +97,22 @@ class tabWidgetClass(QTabWidget):
         menu = QMenu(self)
         menu.addAction(QAction('Duplicate Current Tab', self, triggered = self.duplicateTab))
         menu.addAction(QAction('Rename Current Tab', self, triggered = self.renameTab))
+
+        index = self.currentIndex()
+        if index >= 0:
+            widget = self.widget(index)
+            if hasattr(widget, 'file_path') and widget.file_path:
+                menu.addSeparator()
+                menu.addAction(QAction('Copy File Path', self, triggered = self.copyFilePath))
+
         menu.exec_(QCursor.pos())
+
+    def copyFilePath(self):
+        index = self.currentIndex()
+        if index >= 0:
+            widget = self.widget(index)
+            if hasattr(widget, 'file_path') and widget.file_path:
+                QApplication.clipboard().setText(os.path.normpath(widget.file_path))
 
     def duplicateTab(self):
         index = self.currentIndex()
