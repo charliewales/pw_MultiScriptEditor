@@ -22,7 +22,7 @@ import re
 
 from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
 from widgets import scriptEditor_UIs as ui
 from widgets.pythonSyntax import design
@@ -62,7 +62,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_list = QListWidget()
         self.outline_list.setObjectName("outlineList")
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
+        
+        self.outline_filter = QLineEdit()
+        self.outline_filter.setPlaceholderText("Filter outline...")
+        self.outline_filter.setClearButtonEnabled(True)
+        self.outline_filter.textChanged.connect(self.filterOutline)
+        
+        esc_shortcut = QShortcut(QKeySequence("Esc"), self.outline_filter)
+        esc_shortcut.setContext(Qt.WidgetShortcut)
+        esc_shortcut.activated.connect(self.outline_filter.clear)
+        
         self.outline_ly.addWidget(self.outline_title)
+        self.outline_ly.addWidget(self.outline_filter)
         self.outline_ly.addWidget(self.outline_list)
 
         self.horizontal_splitter.addWidget(self.outline_panel)
@@ -820,6 +831,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             edit.verticalScrollBar().setValue(block_y)
             edit.highlight_current_line()
             edit.setFocus()
+
+    def filterOutline(self, text):
+        text = text.lower()
+        for i in range(self.outline_list.count()):
+            item = self.outline_list.item(i)
+            item.setHidden(text not in item.text().lower())
 
     def autoSave(self):
         tabs = []
