@@ -29,19 +29,16 @@ class lineNumberBarClass(QWidget):
         Updates the number bar to display the current set of numbers.
         Also, adjusts the width of the number bar if necessary.
         '''
-        # The + 4 is used to compensate for the current line being bold.
         self.highest_line = self.edit.document().blockCount()
-        
-        pt_size = self.edit.font().pointSize()
-        if pt_size <= 0:
-            if hasattr(self.edit, 'fs'):
-                pt_size = self.edit.fs
-            else:
-                pt_size = self.edit.font().pixelSize()
-        
-        fontSize = max(1, pt_size) * self.font_size_mult
         font = self.edit.font()
-        font.setPixelSize(int(fontSize))
+        
+        pt_size = font.pointSizeF()
+        if pt_size > 0:
+            font.setPointSizeF(max(1.0, pt_size * 0.8))
+        else:
+            px_size = font.pixelSize()
+            if px_size > 0:
+                font.setPixelSize(max(1, int(px_size * 0.8)))
         
         from vendor.Qt.QtGui import QFontMetrics
         fm = QFontMetrics(font)
@@ -81,17 +78,15 @@ class lineNumberBarClass(QWidget):
             
         line_count = block.blockNumber()
         
-        # Iterate over all visible text blocks in the document.
-        pt_size = self.edit.font().pointSize()
-        if pt_size <= 0:
-            if hasattr(self.edit, 'fs'):
-                pt_size = self.edit.fs
-            else:
-                pt_size = self.edit.font().pixelSize()
-                
-        fontSize = max(1, pt_size) * self.font_size_mult
         font = self.edit.font()
-        font.setPixelSize(int(fontSize))
+        
+        pt_size = font.pointSizeF()
+        if pt_size > 0:
+            font.setPointSizeF(max(1.0, pt_size * 0.8))
+        else:
+            px_size = font.pixelSize()
+            if px_size > 0:
+                font.setPixelSize(max(1, int(px_size * 0.8)))
         
         # update fm for paint
         from vendor.Qt.QtGui import QFontMetrics
