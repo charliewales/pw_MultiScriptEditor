@@ -30,8 +30,8 @@ class tabWidgetClass(QTabWidget):
                 border-top-right-radius: 12px;
                 padding-left: 10px;
                 padding-right: 10px;
-                padding-top: 5px;
-                padding-bottom: 5px;
+                padding-top: 3px;
+                padding-bottom: 3px;
             }
             QTabBar::tab:hover {
                 background: #b2a325;
