@@ -21,12 +21,14 @@ from multi_script_editor import scriptEditor
 
 
 def show(*args, **kwargs):
+    kwargs.pop('clear', None)
+    kwargs.pop('ontop', None)
     hqt.show(scriptEditor.scriptEditorClass, *args, **kwargs)
 
 def get_widget():
-    widget = scriptEditor.scriptEditorClass()
+    widget = scriptEditor.create_editor_instance()
     widget.setStyleSheet('')
-    widget.setStyleSheet( hqt.get_h14_style() )
+    widget.setStyleSheet( hqt.get_hou_style() )
     return widget
 
 

@@ -5,14 +5,13 @@ QAbstractItemView
     background-color: rgb[completer_background];
     alternate-background-color: rgb[completer_alt_background];
     height: 25px;
-    font: [textsize]pt;
 }
 QListView::item:selected{
     background: rgb[completer_selected_background];
 }
 
 
-QListView:item:hover
+QListView::item:hover
 {
     background-color:rgb[completer_hover_background];
     color: rgb[completer_text];
@@ -55,7 +54,7 @@ QScrollBar::add-line:vertical
 
 QScrollBar:vertical
 {
-      background: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0.0 #121212, stop: 0.2 #282828, stop: 1 #484848);
+      background: qlineargradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0.0 #121212, stop: 0.2 #282828, stop: 1 #484848);
       width: 15px;
       margin: 16px 0 16px 0;
       border: 1px solid #222222;
@@ -89,16 +88,23 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
 
 QTextEdit
 {
-    background: rgb[background];
+    background-color: rgb[background];
 }
 
 QTextBrowser
 {
-    background: rgb[output_background];
+    background-color: rgb[output_background];
 }
 
 QToolTip {
     color: rgb[completer_text];
     background-color: rgb[completer_background];
     border: 1px solid rgb[completer_selected_background];
+}
+
+QListWidget#outlineList
+{
+    background-color: rgb[background];
+    color: rgb[default];
+    border: none;
 }

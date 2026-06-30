@@ -1,11 +1,17 @@
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
 import re
-import jedi
+
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets import completeWidget
-import settingsManager
+from core.settings_model import SettingsModel
+from core.base_text_widget import BaseTextWidgetMixin
+from core.autocomplete_provider import AutocompleteProvider
+from core.multi_cursor import MultiCursorManager
+from core.search_service import SearchService
+import string
+import keyword
 import managers
 from widgets.pythonSyntax import design
 
@@ -20,7 +26,7 @@ font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 
-class inputClass(QTextEdit):
+class inputClass(QTextEdit, BaseTextWidgetMixin):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()
@@ -34,6 +40,8 @@ class inputClass(QTextEdit):
 
         self.p = parent
         self.desk = desk
+        self.search_service = SearchService(self)
+        self.multi_cursor_manager = MultiCursorManager(self)
         self.setLineWrapMode(QTextEdit.NoWrap)
         if managers.context == 'hou':
             self.setCursorWidth(2)
@@ -52,7 +60,7 @@ class inputClass(QTextEdit):
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
-        self.data = settingsManager.scriptEditorClass().readSettings()
+        self.data = SettingsModel().read_settings()
         self.applyHightLighter(self.data.get('theme'))
         self.set_start_font()
         self.changeFontSize(True)
@@ -63,8 +71,17 @@ class inputClass(QTextEdit):
         self.autocomplete_timer.setSingleShot(True)
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
+        
+        self._lint_timer = QTimer(self)
+        self._lint_timer.setSingleShot(True)
+        self._lint_timer.timeout.connect(self.runLinter)
+        
         self.multi_cursors = []
         self._highlight_color_cache = None
+        self.textChanged.connect(self._on_text_changed)
+
+    def _on_text_changed(self):
+        self.autocomplete_timer.start(200)
 
     def set_start_font(self, font_d=None):
         if font_d is None:
@@ -92,7 +109,7 @@ class inputClass(QTextEdit):
         self.blockSignals(True)
         colors = None
         self._highlight_color_cache = None
-        if theme or not theme =='default':
+        if theme or not theme =='Multi Script Editor':
             colors = design.getColors(theme)
             if self.completer:
                 self.completer.updateStyle(colors)
@@ -114,42 +131,47 @@ class inputClass(QTextEdit):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
                 self.completer.hide()
+                self._lint_timer.start(500)
+                return
+            if getattr(self, '_skip_autocomplete_once', False):
+                self._skip_autocomplete_once = False
+                self.completer.hide()
+                self._lint_timer.start(500)
                 return
             text = self.toPlainText()
             self.moveCompleter()
             if text or force:
                 tc = self.textCursor()
-                context_completer = False
                 pos = tc.position()
-                if managers.context in managers.contextCompleters:
-                    line = text[:pos].split('\n')[-1] if text else ''
-                    comp, extra = managers.contextCompleters[managers.context ](line, self.p.namespace)
-                    if comp or extra:
-                        context_completer = True
-                        self.completer.updateCompleteList(comp, extra)
-                if not context_completer:
-                    if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
-                        offs = 0
-                        if managers.context in managers.autoImport:
-                            autoImp = managers.autoImport.get(managers.context, '')
-                            text = autoImp + text
-                            offs = len(autoImp.split('\n'))-1
-                        bl = tc.blockNumber() + 1 + offs
-                        col = tc.columnNumber()
-                        if hasattr(self.p, 'namespace'):
-                            script = jedi.Interpreter(text, namespaces=[self.p.namespace])
+                
+                # Check if we should autocomplete
+                if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
+                    bl = tc.blockNumber() + 1
+                    col = tc.columnNumber()
+                    namespace = self.p.namespace if hasattr(self.p, 'namespace') else None
+                    use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
+                    
+                    try:
+                        if hasattr(self.p, '_presenter'):
+                            comps = self.p._presenter.request_autocomplete(
+                                text=text,
+                                line=bl,
+                                column=col,
+                                namespace=namespace,
+                                fuzzy=use_fuzzy,
+                                context=managers.context
+                            )
+                            self.completer.updateCompleteList(comps)
                         else:
-                            script = jedi.Script(code=text)
-                        try:
-                            use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
-                            self.completer.updateCompleteList(script.complete(line=bl, column=col, fuzzy=use_fuzzy))
-                        except:
                             self.completer.updateCompleteList()
-                    else:
+                    except Exception as e:
+                        print(e)
                         self.completer.updateCompleteList()
+                else:
+                    self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
-        self.runLinter()
+        self._lint_timer.start(500)
 
     def runLinter(self):
         main_win = self.p
@@ -158,27 +180,15 @@ class inputClass(QTextEdit):
             check_syntax = main_win.syntaxCheck_act.isChecked()
 
         code = self.toPlainText()
-        self.syntax_errors = {}
         if check_syntax and code.strip():
-            try:
-                compile(code.encode('utf-8'), '<string>', 'exec')
-            except SyntaxError as e:
-                self.syntax_errors[e.lineno] = e.msg
-            except Exception:
-                pass
-
-        if hasattr(self.parent(), 'lineNum'):
-            self.parent().lineNum.update()
-
-        if hasattr(main_win, 'updateOutline'):
-            main_win.updateOutline()
-        if hasattr(main_win, 'statusBar') and main_win.statusBar():
-            if self.syntax_errors:
-                first_err_line = list(self.syntax_errors.keys())[0]
-                msg = self.syntax_errors[first_err_line]
-                main_win.statusBar().showMessage("Syntax Error on line {0}: {1}".format(first_err_line, msg))
-            else:
-                main_win.statusBar().clearMessage()
+            # Delegate linting to the presenter
+            if hasattr(self.p, '_presenter'):
+                self.p._presenter.request_lint(code)
+        else:
+            # Clear errors if check_syntax is disabled or code is empty
+            self.syntax_errors = {}
+            if hasattr(self.p, 'show_syntax_errors'):
+                self.p.show_syntax_errors({})
 
     def moveCompleter(self):
         rec = self.cursorRect()
@@ -229,9 +239,10 @@ class inputClass(QTextEdit):
         return result
 
     def keyPressEvent(self, event):
-        self.inputSignal.emit()
-        if self.handle_multi_cursor_key(event):
+        # Multi-cursor interception
+        if self.multi_cursor_manager.handle_key_press(event):
             return
+        self.inputSignal.emit()
         parse = 0
 
         # for tab cycling
@@ -247,17 +258,20 @@ class inputClass(QTextEdit):
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
+                self._skip_autocomplete_once = True
                 self.completer.applyCurrentComplete()
                 return
+            
+            self._skip_autocomplete_once = True
+            
             # auto indent
-            else:
-                add = self.getCurrentIndent()
-                if add:
-                    QTextEdit.keyPressEvent(self, event)
-                    cursor = self.textCursor()
-                    cursor.insertText(add)
-                    self.setTextCursor(cursor)
-                    return
+            add = self.getCurrentIndent()
+            if add:
+                QTextEdit.keyPressEvent(self, event)
+                cursor = self.textCursor()
+                cursor.insertText(add)
+                self.setTextCursor(cursor)
+                return
         # comment, Alt+C
         elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
             self.p.tab.comment()
@@ -265,9 +279,11 @@ class inputClass(QTextEdit):
         # shuffle lines, Alt+up, Alt+down
         elif event.modifiers() == Qt.AltModifier:
             if event.key() == Qt.Key_Up:
+                self._skip_autocomplete_once = True
                 self.move_line_up()
                 return
             elif event.key() == Qt.Key_Down:
+                self._skip_autocomplete_once = True
                 self.move_line_down()
                 return
         # remove 4 spaces
@@ -336,6 +352,7 @@ class inputClass(QTextEdit):
         elif event.key() == Qt.Key_Tab:
             if self.completer:
                 if self.completer.isVisible():
+                    self._skip_autocomplete_once = True
                     self.completer.applyCurrentComplete()
                     return
             if self.textCursor().selection().toPlainText():
@@ -372,8 +389,8 @@ class inputClass(QTextEdit):
         QTextEdit.keyPressEvent(self, event)
 
         # start parse text (Debounced to prevent lag on keypress)
-        if parse and event.text():
-            self.autocomplete_timer.start(200) # 200 ms debounce delay
+        # Note: We now rely on textChanged signal for more reliable updates,
+        # but if we needed key-specific parsing, it would go here.
 
         self.highlight_current_line()
 
@@ -461,8 +478,8 @@ class inputClass(QTextEdit):
         selection.format.setProperty(QTextFormat.FullWidthSelection, True)
 
         if getattr(self, '_highlight_color_cache', None) is None:
-            data = settingsManager.scriptEditorClass().readSettings() or {}
-            theme = data.get('theme', 'default')
+            data = SettingsModel().read_settings() or {}
+            theme = data.get('theme', 'Multi Script Editor')
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
 
@@ -471,26 +488,7 @@ class inputClass(QTextEdit):
         selections.append(selection)
 
         # Draw multi-cursors
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            for mc in self.multi_cursors:
-                sel = QTextEdit.ExtraSelection()
-                if mc.hasSelection():
-                    sel.cursor = mc
-                    # Use a semi-transparent selection color
-                    sel.format.setBackground(QColor(40, 100, 200, 120))
-                else:
-                    # Simulated cursor block: highlight next character if possible
-                    c_copy = QTextCursor(mc)
-                    if not c_copy.atEnd():
-                        c_copy.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor)
-                        sel.cursor = c_copy
-                        # Draw simulated cursor color
-                        sel.format.setBackground(QColor(128, 128, 255, 180))
-                    else:
-                        # At the end of the line/document, we can format the cursor directly or highlight
-                        sel.cursor = c_copy
-                        sel.format.setBackground(QColor(128, 128, 255, 180))
-                selections.append(sel)
+        selections.extend(self.multi_cursor_manager.get_extra_selections())
 
         self.setExtraSelections(selections)
 
@@ -542,9 +540,18 @@ class inputClass(QTextEdit):
         text = cursor.selection().toPlainText()
         self.document().documentLayout().blockSignals(False)
         text, offset = self.addRemoveComments(text)
+        cursor.beginEditBlock()
         cursor.insertText(text)
+        cursor.endEditBlock()
         cursor.setPosition(min(pos+offset, len(self.toPlainText())))
         self.setTextCursor(cursor)
+        
+        # Prevent autocomplete dialog from popping up due to textChanged
+        if hasattr(self, 'autocomplete_timer'):
+            self.autocomplete_timer.stop()
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.hide()
+            
         self.update()
 
     def addRemoveComments(self, text):
@@ -556,11 +563,22 @@ class inputClass(QTextEdit):
             while not lines[ind].strip():
                 ind += 1
             if lines[ind].strip()[0] == '#': # remove comment
-                result = '\n'.join([x.replace('#','',1) for x in lines])
-                ofs = -1
+                new_lines = []
+                for i, x in enumerate(lines):
+                    idx = x.find('#')
+                    if idx != -1:
+                        if len(x) > idx + 1 and x[idx+1] == ' ':
+                            new_lines.append(x[:idx] + x[idx+2:])
+                            if i == ind: ofs = -2
+                        else:
+                            new_lines.append(x[:idx] + x[idx+1:])
+                            if i == ind: ofs = -1
+                    else:
+                        new_lines.append(x)
+                result = '\n'.join(new_lines)
             else:   # add comment
-                result = '\n'.join(['#'+x for x in lines ])
-                ofs = 1
+                result = '\n'.join(['# ' + x for x in lines ])
+                ofs = 2
         return result, ofs
 
     def insertText(self, comp):
@@ -727,35 +745,6 @@ class inputClass(QTextEdit):
         else:
             QTextEdit.wheelEvent(self, event)
 
-    def changeFontSize(self, up):
-        if managers.context == 'hou':
-            if up:
-                self.fs = min(30, self.fs+1)
-            else:
-                self.fs = max(8, self.fs - 1)
-            self.setTextEditFontSize(self.fs)
-        else:
-            f = self.font()
-            size = f.pointSize()
-            if up:
-                size = min(30, size+1)
-            else:
-                size = max(8, size - 1)
-            f.setPointSize(size)
-            f.setFamily(font_name)
-            self.setFont(f)
-
-    def setTextEditFontSize(self, size):
-        style = self.styleSheet() +'''QTextEdit
-    {
-        font-size: %spx;
-        font-family: %s;
-    }''' % (size, font_name)
-        self.setStyleSheet(style)
-        f = self.font()
-        f.setPointSize(size)
-        f.setFamily(font_name)
-        self.setFont(f)
 
     def insertFromMimeData (self, source ):
         text = source.text()
@@ -777,8 +766,17 @@ class inputClass(QTextEdit):
 
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        
+        if event.modifiers() & Qt.ControlModifier:
+            # Add cursor on Ctrl+Click
+            cursor = self.cursorForPosition(event.pos())
+            self.multi_cursor_manager.add_cursor_at(cursor)
+            self.highlight_current_line()
+            return
+            
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
+            
         super(inputClass, self).mousePressEvent(event)
         self.highlight_current_line()
 
@@ -796,249 +794,46 @@ class inputClass(QTextEdit):
             selectedText = cursor.selection().toPlainText()
         return selectedText
 
-    def selectWord(self, pattern, number, replace=None):
-        text = self.toPlainText()
-        if not pattern in text:
-            return number
-        cursor = self.textCursor()
-        indexis = [(m.start(0), m.end(0)) for m in re.finditer(re.escape(pattern), text)]
-        if number > len(indexis)-1:
-            number = 0
-        cursor.setPosition(indexis[number][0])
-        cursor.setPosition(indexis[number][1], QTextCursor.KeepAnchor)
-        if replace:
-            cursor.removeSelectedText()
-            cursor.insertText(replace)
-        self.setTextCursor(cursor)
-        self.setFocus()
-        return number
+    def selectWord(self, pattern, number, replace=None, case_sensitive=False):
+        return self.search_service.select_word(pattern, number, replace, case_sensitive)
 
-    def replaceAll(selfold, new):
-        pass
-
-    def wordWrap(self, state):
-        if state:
-            self.setLineWrapMode(QTextEdit.WidgetWidth)
-        else:
-            self.setLineWrapMode(QTextEdit.NoWrap)
-
-    def render_whitespace(self, state):
-        text_option = QTextOption()
-        if state:
-            text_option.setFlags(QTextOption.ShowTabsAndSpaces)
-            self.document().setDefaultTextOption(text_option)
-        else:
-            self.document().setDefaultTextOption(text_option)
+    def replaceAll(self, find, rep, case_sensitive=False):
+        self.search_service.replace_all(find, rep, case_sensitive)
 
     # --- Multi-Cursor / Multi-Selection Support ---
-
-    def handle_multi_cursor_key(self, event):
-        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
-            return False
-
-        key = event.key()
-        modifiers = event.modifiers()
-
-        # Escape key clears multi-cursor mode
-        if key == Qt.Key_Escape:
-            self.multi_cursors = []
-            self.highlight_current_line()
-            return True
-
-        # Clear on Ctrl+A
-        if key == Qt.Key_A and (modifiers & Qt.ControlModifier):
-            self.multi_cursors = []
-            self.highlight_current_line()
-            return False
-
-        # Check navigation keys
-        nav_ops = {
-            Qt.Key_Left: QTextCursor.Left,
-            Qt.Key_Right: QTextCursor.Right,
-            Qt.Key_Up: QTextCursor.Up,
-            Qt.Key_Down: QTextCursor.Down,
-            Qt.Key_Home: QTextCursor.StartOfLine,
-            Qt.Key_End: QTextCursor.EndOfLine,
-        }
-
-        if key in nav_ops:
-            op = nav_ops[key]
-            mode = QTextCursor.KeepAnchor if (modifiers & Qt.ShiftModifier) else QTextCursor.MoveAnchor
-
-            # Ctrl + Left/Right moves word by word
-            if key == Qt.Key_Left and (modifiers & Qt.ControlModifier):
-                op = QTextCursor.WordLeft
-            elif key == Qt.Key_Right and (modifiers & Qt.ControlModifier):
-                op = QTextCursor.WordRight
-
-            # Apply movement to all cursors
-            for cursor in self.multi_cursors:
-                cursor.movePosition(op, mode)
-
-            self.deduplicate_and_sort_cursors()
-
-            # Keep main cursor in sync with the first cursor in our list
-            if self.multi_cursors:
-                self.setTextCursor(self.multi_cursors[0])
-            self.highlight_current_line()
-            return True
-
-        # Text edits (typing, backspace, delete, return, tab)
-        is_edit = False
-        text = event.text()
-
-        # Sort cursors descending by position so edits at the bottom do not affect offsets of top cursors
-        sorted_cursors = sorted(self.multi_cursors, key=lambda c: c.position(), reverse=True)
-
-        main_cursor = self.textCursor()
-        main_cursor.beginEditBlock()
-        try:
-            if key == Qt.Key_Backspace:
-                is_edit = True
-                for cursor in sorted_cursors:
-                    cursor.deletePreviousChar()
-            elif key == Qt.Key_Delete:
-                is_edit = True
-                for cursor in sorted_cursors:
-                    cursor.deleteChar()
-            elif key in [Qt.Key_Return, Qt.Key_Enter]:
-                is_edit = True
-                for cursor in sorted_cursors:
-                    cursor.insertText("\n")
-            elif key == Qt.Key_Tab:
-                is_edit = True
-                for cursor in sorted_cursors:
-                    cursor.insertText("    ")
-            elif text and text.isprintable():
-                is_edit = True
-                for cursor in sorted_cursors:
-                    cursor.insertText(text)
-        finally:
-            main_cursor.endEditBlock()
-
-        if is_edit:
-            self.deduplicate_and_sort_cursors()
-            if self.multi_cursors:
-                self.setTextCursor(self.multi_cursors[0])
-            self.highlight_current_line()
-            # Trigger autocomplete parsing (with debounce)
-            self.autocomplete_timer.start(200)
-            return True
-
-        return False
-
-    def deduplicate_and_sort_cursors(self):
-        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
-            return
-        seen = set()
-        unique_cursors = []
-        # Sort by position, anchor to maintain stable order and identify duplicates
-        sorted_c = sorted(self.multi_cursors, key=lambda c: (c.position(), c.anchor()))
-        for c in sorted_c:
-            key = (c.position(), c.anchor())
-            if key not in seen:
-                seen.add(key)
-                unique_cursors.append(c)
-        self.multi_cursors = unique_cursors
-
     def select_next_occurrence(self):
-        cursor = self.textCursor()
-
-        # If no selection on the current cursor, select the word under the cursor first
-        if not cursor.hasSelection():
-            cursor.select(QTextCursor.WordUnderCursor)
-            self.setTextCursor(cursor)
-
-        if not cursor.hasSelection():
-            return
-
-        target_text = cursor.selectedText()
-        if not target_text:
-            return
-
-        if not hasattr(self, 'multi_cursors') or not self.multi_cursors:
-            self.multi_cursors = [cursor]
-
-        # Find starting position for the next search
-        last_cursor = self.multi_cursors[-1]
-        start_pos = last_cursor.position()
-
-        # Search forward
-        found_cursor = self.document().find(target_text, start_pos)
-
-        # Wrap around if not found
-        if found_cursor.isNull() or found_cursor.position() <= start_pos:
-            found_cursor = self.document().find(target_text, 0)
-
-        if not found_cursor.isNull():
-            # Check if already selected
-            already_selected = False
-            for mc in self.multi_cursors:
-                if mc.selectionStart() == found_cursor.selectionStart() and mc.selectionEnd() == found_cursor.selectionEnd():
-                    already_selected = True
-                    break
-
-            if not already_selected:
-                self.multi_cursors.append(found_cursor)
-                self.setTextCursor(found_cursor)
-
-        self.highlight_current_line()
+        self.multi_cursor_manager.select_next_occurrence()
 
     def select_all_occurrences(self):
-        cursor = self.textCursor()
-
-        # If no selection on the current cursor, select the word under the cursor first
-        if not cursor.hasSelection():
-            cursor.select(QTextCursor.WordUnderCursor)
-            self.setTextCursor(cursor)
-
-        if not cursor.hasSelection():
-            return
-
-        target_text = cursor.selectedText()
-        if not target_text:
-            return
-
-        self.multi_cursors = []
-        start_pos = 0
-        while True:
-            found_cursor = self.document().find(target_text, start_pos)
-            if found_cursor.isNull():
-                break
-            if found_cursor.position() <= start_pos:
-                break
-            self.multi_cursors.append(found_cursor)
-            start_pos = found_cursor.position()
-
-        self.highlight_current_line()
+        self.multi_cursor_manager.select_all_occurrences()
 
     # Clear multi-cursor selections on standard clipboard and undo/redo operations
     def undo(self):
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
             self.highlight_current_line()
         super(inputClass, self).undo()
 
     def redo(self):
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
             self.highlight_current_line()
         super(inputClass, self).redo()
 
     def cut(self):
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
             self.highlight_current_line()
         super(inputClass, self).cut()
 
     def copy(self):
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
             self.highlight_current_line()
         super(inputClass, self).copy()
 
     def paste(self):
-        if hasattr(self, 'multi_cursors') and self.multi_cursors:
-            self.multi_cursors = []
+        if self.multi_cursor_manager.has_cursors():
+            self.multi_cursor_manager.clear()
             self.highlight_current_line()
         super(inputClass, self).paste()

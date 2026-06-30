@@ -2,15 +2,15 @@ from __future__ import with_statement
 import json
 import os
 import codecs
-import settingsManager
+from core.settings_model import SettingsModel
 
 sessionFilename = 'pw_scriptEditor_session.json'
 backupFilename = 'pw_scriptEditor_session_backup.json'
 
 
-class sessionManagerClass(object):
+class SessionModel(object):
     def __init__(self):
-        self.path = os.path.normpath(os.path.join(settingsManager.userPrefFolder(), sessionFilename))
+        self.path = os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), sessionFilename))
         if not os.path.exists(self.path):
             folder = os.path.dirname(self.path)
             if folder and not os.path.exists(folder):
@@ -34,7 +34,7 @@ class sessionManagerClass(object):
 
     # BACKUP METHODS (Auto-save)
     def getBackupPath(self):
-        return os.path.normpath(os.path.join(settingsManager.userPrefFolder(), backupFilename))
+        return os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), backupFilename))
 
     def writeBackup(self, data):
         path = self.getBackupPath()
@@ -65,7 +65,7 @@ class sessionManagerClass(object):
 
     # NAMED SESSIONS METHODS
     def getSessionsFolder(self):
-        folder = os.path.join(settingsManager.userPrefFolder(), 'mse_sessions')
+        folder = os.path.join(SettingsModel()._get_user_pref_folder(), 'mse_sessions')
         if not os.path.exists(folder):
             try:
                 os.makedirs(folder)

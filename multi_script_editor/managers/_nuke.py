@@ -37,7 +37,7 @@ def show(panel=False):
 
 
 def showWindow():
-    se = scriptEditor.scriptEditorClass(qNuke)
+    se = scriptEditor.create_editor_instance(qNuke)
     se.runCommand('import nuke')
     se.show()
 

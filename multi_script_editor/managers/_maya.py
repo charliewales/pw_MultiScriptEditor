@@ -1,13 +1,13 @@
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QIcon
-from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout
+from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout, QWidget
+from vendor.Qt.QtCompat import wrapInstance
 import maya.OpenMayaUI as omui
+from maya import cmds, mel
 import os, sys, re
 from managers.completeWidget import contextCompleterClass
 main = __import__('__main__')
 ns = main.__dict__
-exec('import pymel.core as pm', ns)
-pm = main.__dict__['pm']
 
 # jedi completion path
 current_path = os.path.dirname(__file__)
@@ -17,8 +17,7 @@ if compPath in sys.path:
 sys.path.insert(0, compPath)
 
 def getMayaWindow():
-    from pymel.core import ui
-    return ui.Window('MayaWindow').asQtObject()
+    return wrapInstance(int(omui.MQtUtil.mainWindow()), QWidget)
 
 def show(dock=False):
     if dock:
@@ -29,27 +28,30 @@ def show(dock=False):
 def showWindow():
     from multi_script_editor import scriptEditor
 
-    editor = scriptEditor.scriptEditorClass(parent=getMayaWindow())
+    editor = scriptEditor.create_editor_instance(parent=getMayaWindow())
     editor.show()
 
 
 dockName = 'pw_scriptEditorDock'
 name = 'pw_scriptEditor'
+
 def clearDoc():
-    if pm.dockControl(dockName, q=1, ex=1):
-        pm.deleteUI(dockName)
+    if cmds.dockControl(dockName, q=1, ex=1):
+        cmds.deleteUI(dockName)
 
 def showDockControl():
-    if pm.window(name, q=1, ex=1):
-        pm.deleteUI(name)
+    if cmds.window(name, q=1, ex=1):
+        cmds.deleteUI(name)
+
     from multi_script_editor import scriptEditor
-    editor = scriptEditor.scriptEditorClass(parent=getMayaWindow())
+    editor = scriptEditor.create_editor_instance(parent=getMayaWindow())
     clearDoc()
-    pm.dockControl(dockName, area='left',
-                 content=editor.objectName(),
-                 width=700,
-                 label='Multi Script Editor',
-                 allowedArea=['right', 'left'])
+    cmds.dockControl(dockName, area='left',
+                content=editor.objectName(),
+                width=700,
+                label='Multi Script Editor',
+                allowedArea=['right', 'left']
+            )
 
 
 # Shelf button example
@@ -60,10 +62,10 @@ def showDockControl():
 #     sys.path.append(path)
 # import multi_script_editor
 # reload(multi_script_editor)
-# multi_script_editor.showMaya(dock=True)
+# multi_script_editor.showMaya(dock=False)
 
 
-nodes = pm.allNodeTypes()
+nodes = cmds.allNodeTypes()
 
 def completer(line, ns):
     # create node
@@ -80,7 +82,7 @@ def completer(line, ns):
     m = re.search(p, line)
     if m:
         name = m.group(1)
-        existsNodes = sorted(pm.cmds.ls())
+        existsNodes = sorted(cmds.ls())
         l = len(name)
         if name:
             auto = [x for x in existsNodes if x.lower().startswith(name.lower())]
@@ -189,7 +191,7 @@ class mayaIconsClass(QListWidget):
 
 
     def getIcons(self):
-        res = [ x for x in pm.resourceManager(nameFilter="*") if os.path.splitext(x)[1] in ['.png', '.svg'] ]
+        res = [ x for x in cmds.resourceManager(nameFilter="*") if os.path.splitext(x)[1] in ['.png', '.svg'] ]
         files = []
         for env in 'XBMLANGPATH', 'MAYA_FILE_ICON_PATH':
             if os.getenv(env):
@@ -237,9 +239,8 @@ class saveToShelfClass(QDialog):
         self.setGeometry(geo)
 
     def createButton(self):
-        # topShelf = pm.mel.eval('$nul = $gShelfTopLevel')
-        topShelf = pm.melGlobals['gShelfTopLevel']
-        currentShelf = pm.tabLayout(topShelf, q=1, st=1)
+        topShelf = mel.eval('$nul = $gShelfTopLevel')
+        currentShelf = cmds.tabLayout(topShelf, q=1, st=1)
 
         label = self.lineEdit.text()
         sel = self.listWidget.selectedItems()
@@ -248,17 +249,16 @@ class saveToShelfClass(QDialog):
         else:
             icon = 'pythonFamily.png'
         command = self.par.tab.getCurrentText()
-        pm.shelfButton (
+        cmds.shelfButton (
             parent=currentShelf,
             command=command,
             sourceType="python",
             label=label,
             imageOverlayLabel=label,
             image1=icon,
-            style=pm.shelfLayout(currentShelf, query=1, style=1),
-            width=pm.shelfLayout(currentShelf,query=1, cellWidth=1),
-            height=pm.shelfLayout(currentShelf, query=1, cellHeight=1)
+            style=cmds.shelfLayout(currentShelf, query=1, style=1),
+            width=cmds.shelfLayout(currentShelf,query=1, cellWidth=1),
+            height=cmds.shelfLayout(currentShelf, query=1, cellHeight=1)
             )
         self.accept()
         self.close()
-
