@@ -71,6 +71,11 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.autocomplete_timer.setSingleShot(True)
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
+        
+        self._lint_timer = QTimer(self)
+        self._lint_timer.setSingleShot(True)
+        self._lint_timer.timeout.connect(self.runLinter)
+        
         self.multi_cursors = []
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
@@ -126,12 +131,12 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
                 self.completer.hide()
-                self.runLinter()
+                self._lint_timer.start(500)
                 return
             if getattr(self, '_skip_autocomplete_once', False):
                 self._skip_autocomplete_once = False
                 self.completer.hide()
-                self.runLinter()
+                self._lint_timer.start(500)
                 return
             text = self.toPlainText()
             self.moveCompleter()
@@ -166,7 +171,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                     self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
-        self.runLinter()
+        self._lint_timer.start(500)
 
     def runLinter(self):
         main_win = self.p
