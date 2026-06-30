@@ -289,7 +289,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         active_index = -1
         if sessions:
             for i, s in enumerate(sessions):
-                w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'), file_path=s.get('file_path'))
+                text = s.get('text')
+                file_path = s.get('file_path')
+                if file_path and os.path.exists(file_path):
+                    try:
+                        text = open(file_path).read()
+                    except Exception:
+                        pass
+                w = self.tab.addNewTab(s.get('name', 'tab'), text, file_path=file_path)
                 if s.get('active'):
                     active_index = i
                 if s.get('size'):
