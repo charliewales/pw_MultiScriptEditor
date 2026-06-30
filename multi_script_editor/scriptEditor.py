@@ -299,21 +299,39 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.clear()
         active_index = -1
         if sessions:
+            self.tab.blockSignals(True)
             for i, s in enumerate(sessions):
                 text = s.get('text')
                 file_path = s.get('file_path')
-                if file_path and os.path.exists(file_path):
-                    try:
-                        text = open(file_path).read()
-                    except Exception:
-                        pass
-                w = self.tab.addNewTab(s.get('name', 'tab'), text, file_path=file_path)
-                if s.get('active'):
+                is_active = s.get('active', False)
+                w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
+                
+                if is_active:
                     active_index = i
+                    if file_path and os.path.exists(file_path):
+                        try:
+                            text = open(file_path, "r", encoding="utf-8").read()
+                        except Exception:
+                            try:
+                                text = open(file_path, "r").read()
+                            except Exception:
+                                pass
+                    if text:
+                        w.addText(text)
+                else:
+                    w.needs_loading_file = file_path
+                    w.needs_loading_text = text
+
                 if s.get('size'):
-                    w.setFontSize(s.get('size'))
+                    # w is the edit widget from addNewTab
+                    if hasattr(w, 'setFontSize'):
+                        w.setFontSize(s.get('size'))
+            
+            self.tab.blockSignals(False)
             if active_index != -1:
                 self.tab.setCurrentIndex(active_index)
+                if hasattr(self.tab, 'onTabChanged'):
+                    self.tab.onTabChanged(active_index)
         if self.tab.count() == 0:
             self.tab.addNewTab()
 

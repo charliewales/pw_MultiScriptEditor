@@ -76,7 +76,37 @@ class tabWidgetClass(QTabWidget):
         # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
-        self.currentChanged.connect(self.hideAllCompleters)
+        self.currentChanged.connect(self.onTabChanged)
+
+    def onTabChanged(self, index):
+        self.hideAllCompleters()
+        if index >= 0:
+            container = self.widget(index)
+            if hasattr(container, 'edit'):
+                edit = container.edit
+                if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
+                    text = ""
+                    file_path = getattr(edit, 'needs_loading_file', None)
+                    if file_path and os.path.exists(file_path):
+                        try:
+                            text = open(file_path, "r", encoding="utf-8").read()
+                        except Exception:
+                            try:
+                                text = open(file_path, "r").read()
+                            except Exception:
+                                text = getattr(edit, 'needs_loading_text', "") or ""
+                    else:
+                        text = getattr(edit, 'needs_loading_text', "") or ""
+                        
+                    if text:
+                        edit.addText(text)
+                        edit.moveCursor(QTextCursor.Start)
+                        edit.highlight_current_line()
+                    
+                    if hasattr(edit, 'needs_loading_file'):
+                        delattr(edit, 'needs_loading_file')
+                    if hasattr(edit, 'needs_loading_text'):
+                        delattr(edit, 'needs_loading_text')
 
     def close_current_tab(self):
         index = self.currentIndex()
@@ -134,7 +164,7 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
-    def addNewTab(self, name='New Tab', text=None, file_path=None):
+    def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True):
         # Ensure name is a string (PySide6 is stricter about types)
         name = str(name) if name is not None else 'New Tab'
         cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
@@ -143,7 +173,8 @@ class tabWidgetClass(QTabWidget):
         self.addTab(cont, name)
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
-        self.setCurrentIndex(self.count()-1)
+        if make_current:
+            self.setCurrentIndex(self.count()-1)
 
         # Apply settings from presenter instead of trying to find actions in MainWindow
         if hasattr(self.p, '_presenter'):
