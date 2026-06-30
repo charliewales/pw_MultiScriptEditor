@@ -341,6 +341,7 @@ class EditorTabContainer(QWidget):
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
+        self.edit.document().blockCountChanged.connect(lambda :self.lineNum.update())
 
         hbox.addWidget(self.lineNum)
         hbox.addWidget(self.edit)

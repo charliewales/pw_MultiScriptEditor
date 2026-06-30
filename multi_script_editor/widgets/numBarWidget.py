@@ -31,12 +31,27 @@ class lineNumberBarClass(QWidget):
         '''
         # The + 4 is used to compensate for the current line being bold.
         self.highest_line = self.edit.document().blockCount()
-        fontSize = self.edit.font().pointSize()
-        fm = self.fontMetrics()
-        text_width = fm.horizontalAdvance(str(self.highest_line)) if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line))
-        width = ((text_width + 7))*(fontSize/13.0)
-        if self.width() != width and width > 10:
+        
+        pt_size = self.edit.font().pointSize()
+        if pt_size <= 0:
+            if hasattr(self.edit, 'fs'):
+                pt_size = self.edit.fs
+            else:
+                pt_size = self.edit.font().pixelSize()
+        
+        fontSize = max(1, pt_size) * self.font_size_mult
+        font = self.edit.font()
+        font.setPixelSize(int(fontSize))
+        
+        from vendor.Qt.QtGui import QFontMetrics
+        fm = QFontMetrics(font)
+        text_width = fm.horizontalAdvance(str(self.highest_line) + "0") if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line) + "0")
+        
+        width = max(30, text_width + 10)
+        
+        if self.width() != width:
             self.setFixedWidth(width)
+            
         if hasattr(self.edit, '_highlight_color_cache') and self.edit._highlight_color_cache:
             self.bg = QColor.fromRgb(*self.edit._highlight_color_cache)
         else:
@@ -47,7 +62,6 @@ class lineNumberBarClass(QWidget):
             else:
                 v = int(bg.value()*1.1)
             self.bg = QColor.fromHsv(bg.hue(), bg.saturation(), v)
-        self.setMinimumWidth(30)
         QWidget.update(self, *args)
 
     def paintEvent(self, event):
@@ -68,9 +82,21 @@ class lineNumberBarClass(QWidget):
         line_count = block.blockNumber()
         
         # Iterate over all visible text blocks in the document.
-        fontSize = self.edit.font().pointSize()*self.font_size_mult
-        font = painter.font()
-        font.setPixelSize(fontSize)
+        pt_size = self.edit.font().pointSize()
+        if pt_size <= 0:
+            if hasattr(self.edit, 'fs'):
+                pt_size = self.edit.fs
+            else:
+                pt_size = self.edit.font().pixelSize()
+                
+        fontSize = max(1, pt_size) * self.font_size_mult
+        font = self.edit.font()
+        font.setPixelSize(int(fontSize))
+        
+        # update fm for paint
+        from vendor.Qt.QtGui import QFontMetrics
+        font_metrics = QFontMetrics(font)
+        
         offset = font_metrics.ascent() + font_metrics.descent()*0.7
         color = painter.pen().color()
         painter.setFont(font)
