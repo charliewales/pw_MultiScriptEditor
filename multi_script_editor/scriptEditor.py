@@ -62,16 +62,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_list = QListWidget()
         self.outline_list.setObjectName("outlineList")
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
-        
+
         self.outline_filter = QLineEdit()
         self.outline_filter.setPlaceholderText("Filter outline...")
         self.outline_filter.setClearButtonEnabled(True)
         self.outline_filter.textChanged.connect(self.filterOutline)
-        
+
         esc_shortcut = QShortcut(QKeySequence("Esc"), self.outline_filter)
         esc_shortcut.setContext(Qt.WidgetShortcut)
         esc_shortcut.activated.connect(self.outline_filter.clear)
-        
+
         self.outline_ly.addWidget(self.outline_title)
         self.outline_ly.addWidget(self.outline_filter)
         self.outline_ly.addWidget(self.outline_list)
@@ -305,7 +305,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 file_path = s.get('file_path')
                 is_active = s.get('active', False)
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
-                
+
                 if is_active:
                     active_index = i
                     if file_path and os.path.exists(file_path):
@@ -326,7 +326,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     # w is the edit widget from addNewTab
                     if hasattr(w, 'setFontSize'):
                         w.setFontSize(s.get('size'))
-            
+
             self.tab.blockSignals(False)
             if active_index != -1:
                 self.tab.setCurrentIndex(active_index)
@@ -991,29 +991,15 @@ except:
     except:
         pass
 
+def create_editor_instance(parent=None):
+    w = scriptEditorClass(parent)
+    return w
 
 def show():
     app = QApplication.instance()
     if not app:
         app = QApplication()
-    # Set the dark theme
-    font_color = Qt.white
-    app.setStyle("Fusion")
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor(53, 53, 53))
-    palette.setColor(QPalette.WindowText, font_color)
-    palette.setColor(QPalette.Base, QColor(25, 25, 25))
-    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-    palette.setColor(QPalette.ToolTipBase, font_color)
-    palette.setColor(QPalette.ToolTipText, font_color)
-    palette.setColor(QPalette.Text, font_color)
-    palette.setColor(QPalette.Button, QColor(53, 53, 53))
-    palette.setColor(QPalette.ButtonText, font_color)
-    palette.setColor(QPalette.BrightText, Qt.red)
-    palette.setColor(QPalette.Link, QColor(42, 130, 218))
-    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-    palette.setColor(QPalette.HighlightedText, Qt.black)
-    app.setPalette(palette)
+
     w = create_editor_instance()
     w.show()
     if hasattr(app, "exec"):
@@ -1021,10 +1007,6 @@ def show():
     else:
         app.exec_()
 
-
-def create_editor_instance(parent=None):
-    w = scriptEditorClass(parent)
-    return w
 
 if __name__ == '__main__':
     show()
