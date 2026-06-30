@@ -52,7 +52,7 @@ def show(cls, clear=False, ontop=False, name=None, floating=False, position=(), 
         hqt.showWidget()            # Just show widget
         hqt.get_hou_style()         # return qt stylesheet for current Houdini theme
     """
-    return showUi14( cls, name=name, floating=floating, position=position, size=size, pane=pane, replacePyPanel=replacePyPanel, hideTitleMenu=hideTitleMenu, dialog=dialog,useThisPanel=useThisPanel)
+    return showUi( cls, name=name, floating=floating, position=position, size=size, pane=pane, replacePyPanel=replacePyPanel, hideTitleMenu=hideTitleMenu, dialog=dialog,useThisPanel=useThisPanel)
 
 
 def anyQtWindowsAreOpen():
@@ -110,35 +110,17 @@ def getHouWindow():
     return hou.qt.mainWindow()
 
 
-def showUi14(cls,  name=None, floating=False, position=(),
+def showUi(cls,  name=None, floating=False, position=(),
             size=(), pane=None, replacePyPanel=False,
             hideTitleMenu=True, dialog=False, useThisPanel=None, args=None, kwargs=None):
     """
-    open qt ui in houdini 14
+    open qt ui in houdini
     """
     if not inspect.isclass(cls):
         raise Exception('Object should be class, not instance')
     if dialog:
         h = getHouWindow()
         dial = cls(h, *(args or []), **(kwargs or {}))
-        # dial.tab.setStyleSheet("""
-        #     QTabBar::tab {
-        #         max-width: 250px;
-        #         min-width: 80px;
-        #         border-top-left-radius: 16px;
-        #         border-top-right-radius: 16px;
-        #         padding: 2px;
-        #     }
-        #     QTabBar::tab:selected {
-        #         background: #136fa8;
-        #         color: #dddddd;
-        #         border: 2px solid #548af5;
-        #         border-top-left-radius: 16px;
-        #         border-top-right-radius: 16px;
-
-        #     }
-        # """)
-
         dial.show()
 
         return dial
