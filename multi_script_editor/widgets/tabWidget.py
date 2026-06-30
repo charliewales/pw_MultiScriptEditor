@@ -26,26 +26,35 @@ class tabWidgetClass(QTabWidget):
                 max-width: 250px;
                 min-width: 80px;
                 border: 2px solid grey;
-                border-top-left-radius: 16px;
-                border-top-right-radius: 16px;
-                padding: 4px;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 5px;
+                padding-bottom: 5px;
             }
-            QTabBar::tab:selected {
-                background: #136fa8;
-                color: #dddddd;
-                border: 2px solid #548af5;
-                border-top-left-radius: 16px;
-                border-top-right-radius: 16px;
+            QTabBar::tab:hover {
+                background: #b2a325;
+                color: black;
+                border: 2px solid #1d4d72;
+                }
 
+            QTabBar::tab:selected {
+                background: #1d4d72;
+                color: #dddddd;
+                border: 2px solid #b2a325;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
             }
+
             QTabBar::close-button {
                 image: url("%s");
                 width: 14px;
                 height: 14px;
             }
             QTabBar::close-button:hover {
-                background: rgba(255, 255, 255, 40);
-                border-radius: 2px;
+                background: rgba(255, 100, 100, 255);
+                border-radius: 6px;
             }
         """
             % icons["close_tab"].replace("\\", "/")
@@ -97,12 +106,12 @@ class tabWidgetClass(QTabWidget):
                                 text = getattr(edit, 'needs_loading_text', "") or ""
                     else:
                         text = getattr(edit, 'needs_loading_text', "") or ""
-                        
+
                     if text:
                         edit.addText(text)
                         edit.moveCursor(QTextCursor.Start)
                         edit.highlight_current_line()
-                    
+
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
                     if hasattr(edit, 'needs_loading_text'):
@@ -252,6 +261,32 @@ class tabWidgetClass(QTabWidget):
     def copy(self):
         self.current().copy()
 
+    def _apply_tab_font(self, font):
+        from vendor.Qt.QtGui import QFont
+        tab_font = QFont(font)
+        family = tab_font.family()
+        pt_size = tab_font.pointSizeF()
+        if pt_size > 0:
+            scaled_pt = max(1.0, pt_size * 0.8)
+            tab_font.setPointSizeF(scaled_pt)
+            size_css = "font-size: %spt;" % scaled_pt
+        else:
+            px_size = tab_font.pixelSize()
+            if px_size > 0:
+                scaled_px = max(1, int(px_size * 0.8))
+                tab_font.setPixelSize(scaled_px)
+                size_css = "font-size: %spx;" % scaled_px
+            else:
+                size_css = ""
+
+        self.tabBar().setFont(tab_font)
+
+        css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\n/*TAB_FONT_END*/\n" % (family, size_css)
+        import re
+        ss = self.styleSheet()
+        ss = re.sub(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', '', ss, flags=re.DOTALL)
+        self.setStyleSheet(ss + css)
+
     def render_whitespace(self, state):
         for i in range(self.count()):
             current_edit = self.widget(i).edit
@@ -265,11 +300,23 @@ class tabWidgetClass(QTabWidget):
         self.update()
 
     def set_font(self, font):
+        self._apply_tab_font(font)
         for i in range(self.count()):
             current_edit = self.widget(i).edit
             current_edit.setFont(font)
 
     def set_start_font(self, font_d=None):
+        if font_d:
+            from vendor.Qt.QtGui import QFont
+            family = font_d.get('family', '')
+            size = font_d.get('size', 0)
+            if family and size:
+                font = QFont(family)
+                if size > 0:
+                    font.setPointSize(size)
+                else:
+                    font.setPixelSize(abs(size))
+                self._apply_tab_font(font)
         for i in range(self.count()):
             current_edit = self.widget(i).edit
             current_edit.set_start_font(font_d)
