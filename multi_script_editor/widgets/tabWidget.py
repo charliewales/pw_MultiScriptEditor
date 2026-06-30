@@ -20,10 +20,12 @@ class tabWidgetClass(QTabWidget):
 
     def __init__(self, parent=None):
         super(tabWidgetClass, self).__init__(parent)
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QTabBar::tab {
                 max-width: 250px;
                 min-width: 80px;
+                border: 2px solid grey;
                 border-top-left-radius: 16px;
                 border-top-right-radius: 16px;
                 padding: 4px;
@@ -36,7 +38,18 @@ class tabWidgetClass(QTabWidget):
                 border-top-right-radius: 16px;
 
             }
-        """)
+            QTabBar::close-button {
+                image: url("%s");
+                width: 14px;
+                height: 14px;
+            }
+            QTabBar::close-button:hover {
+                background: rgba(255, 255, 255, 40);
+                border-radius: 2px;
+            }
+        """
+            % icons["close_tab"].replace("\\", "/")
+        )
         # variables
         self.p = parent
         self.lastSearch = [0, None]
@@ -56,10 +69,10 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
-        
-        # We will render whitespace initially based on presenter, but for now we default to False 
+
+        # We will render whitespace initially based on presenter, but for now we default to False
         # and wait for apply_settings to trigger it.
-        
+
         # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
@@ -123,7 +136,7 @@ class tabWidgetClass(QTabWidget):
             show_whitespace = settings.get('show_whitespace', False)
             wrap = settings.get('wrap', False)
             font_d = settings.get('font', {})
-            
+
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
             cont.edit.set_start_font(font_d)
