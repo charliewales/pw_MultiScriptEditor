@@ -140,7 +140,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for index in range(0, self.tab.count()):
                 self.tab.widget(index).edit.setFont(font)
             self.out.set_font(font)
-            
+
             outline_font = QFont(font)
             if outline_font.pointSize() > 0:
                 outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
@@ -157,7 +157,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.clear_exec_act.isChecked():
             self.toolBar.setStyleSheet('QToolBar {background-color: indianred;}')
         else:
-            self.toolBar.setStyleSheet('')
+            self.toolBar.setStyleSheet('QToolBar {}')
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
@@ -237,7 +237,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         o.applyHightLighter(name)
         o.setStyleSheet(qss)
         self.outline_list.setStyleSheet(qss)
-        
+
         for act in self.theme_menu.actions():
             if act.isCheckable():
                 act.setChecked(act.text() == name)
@@ -538,7 +538,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if font:
             self.tab.set_start_font(font)
             self.out.set_start_font(font)
-            
+
             outline_font = QFont(self.out.font())
             if outline_font.pointSize() > 0:
                 outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
@@ -753,7 +753,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             self.splitter.insertWidget(0, self.verticalLayoutWidget)
             self.splitter.insertWidget(1, self.verticalLayoutWidget_2)
-        
+
         if sum(sizes) > 0:
             self.splitter.setSizes(sizes[::-1])
 
