@@ -4,6 +4,7 @@ QAbstractItemView
     color: rgb[completer_text];
     background-color: rgb[completer_background];
     alternate-background-color: rgb[completer_alt_background];
+    font-size: [textsize]pt;
     height: 25px;
 }
 QListView::item:selected{

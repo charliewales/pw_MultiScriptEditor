@@ -38,6 +38,7 @@ defaultColors = dict(
         tab_selected_background=(19,73,133),
         tab_selected_text=(255,255,255),
         tab_selected_border=(19,73,133),
+        tab_radius=12,
 )
 
 predefinedThemes = {
@@ -408,7 +409,7 @@ def editorStyle(theme=None):
                     val = str(c)
                     text = text.replace(p, val)
             elif name == 'textsize':
-                text = text.replace(p, '11')
+                text = text.replace(p, '10')
         return text
 
 def applyColorToEditorStyle(colors=None):
@@ -426,6 +427,6 @@ def applyColorToEditorStyle(colors=None):
                     val = str(c)
                     text = text.replace(p, val)
             elif name == 'textsize':
-                text = text.replace(p, '11')
+                text = text.replace(p, '10')
         return text
     return ''

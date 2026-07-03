@@ -39,6 +39,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.apply_btn.clicked.connect(self.apply)
         self.apply_btn.setText('Close')
         self.textSize_spb.valueChanged.connect(self.updateExample)
+        self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.textSize_spb.customContextMenuRequested.connect(self.openTextSizeMenu)
+        self.tabRadius_spb.valueChanged.connect(self.updateExample)
+        self.tabRadius_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tabRadius_spb.customContextMenuRequested.connect(self.openTabRadiusMenu)
         self.fillUI()
         self.updateUI()
         self.updateColors()
@@ -116,11 +121,19 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if 'textsize' in colors:
             self.textSize_spb.setValue(int(colors['textsize']))
         else:
-            self.textSize_spb.setValue(11)
+            self.textSize_spb.setValue(10)
         self.textSize_spb.blockSignals(False)
 
+        # Update tab radius (or default to 12 if not present)
+        self.tabRadius_spb.blockSignals(True)
+        if 'tab_radius' in colors:
+            self.tabRadius_spb.setValue(int(colors['tab_radius']))
+        else:
+            self.tabRadius_spb.setValue(12)
+        self.tabRadius_spb.blockSignals(False)
+
         for x in sorted(colors.keys()):
-            if x == 'textsize':
+            if x in ['textsize', 'tab_radius']:
                 continue
             item = QListWidgetItem(x)
             pix = QPixmap(QSize(16,16))
@@ -146,6 +159,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             item = self.colors_lwd.item(i)
             colors[item.text()] = item.data(32)
         colors['textsize'] = self.textSize_spb.value()
+        colors['tab_radius'] = self.tabRadius_spb.value()
         return colors
 
     def getNewColor(self):
@@ -180,6 +194,30 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             pix = QPixmap(QSize(16,16))
             pix.fill(QColor(*default_color))
             item.setIcon(QIcon(pix))
+            self.updateExample()
+
+    def openTextSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to default", self)
+        reset_action.triggered.connect(self.resetTextSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.textSize_spb.mapToGlobal(position))
+
+    def resetTextSizeToDefault(self):
+        self.textSize_spb.setValue(10)
+        self.updateExample()
+
+    def openTabRadiusMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to default", self)
+        reset_action.triggered.connect(self.resetTabRadiusToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.tabRadius_spb.mapToGlobal(position))
+
+    def resetTabRadiusToDefault(self):
+        from widgets.pythonSyntax.design import defaultColors
+        if 'tab_radius' in defaultColors:
+            self.tabRadius_spb.setValue(defaultColors['tab_radius'])
             self.updateExample()
 
     def saveTheme(self):

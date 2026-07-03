@@ -228,8 +228,8 @@ class tabWidgetClass(QTabWidget):
                 max-width: 250px;
                 min-width: 80px;
                 border: 2px solid %(tab_border)s;
-                border-top-left-radius: 12px;
-                border-top-right-radius: 12px;
+                border-top-left-radius: %(tab_radius)s;
+                border-top-right-radius: %(tab_radius)s;
                 padding-left: 10px;
                 padding-right: 10px;
                 padding-top: 3px;
@@ -248,8 +248,8 @@ class tabWidgetClass(QTabWidget):
                 background: %(tab_selected_background)s;
                 color: %(tab_selected_text)s;
                 border: 2px solid %(tab_selected_border)s;
-                border-top-left-radius: 12px;
-                border-top-right-radius: 12px;
+                border-top-left-radius: %(tab_radius)s;
+                border-top-right-radius: %(tab_radius)s;
             }
 
             QTabBar::close-button {
@@ -272,6 +272,7 @@ class tabWidgetClass(QTabWidget):
             "tab_selected_background": c("tab_selected_background"),
             "tab_selected_text": c("tab_selected_text"),
             "tab_selected_border": c("tab_selected_border"),
+            "tab_radius": str(colors.get("tab_radius", 12)) + "px",
             "close_tab": icons["close_tab"].replace("\\", "/")
         }
         
