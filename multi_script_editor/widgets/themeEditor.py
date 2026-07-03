@@ -54,6 +54,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.tabRadius_spb.valueChanged.connect(self.updateExample)
         self.tabRadius_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabRadius_spb.customContextMenuRequested.connect(self.openTabRadiusMenu)
+        self.tabSize_spb.valueChanged.connect(self.updateExample)
+        self.tabSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tabSize_spb.customContextMenuRequested.connect(self.openTabSizeMenu)
         self.custom_font_data = None
         self.fillUI()
         self.updateUI()
@@ -142,6 +145,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             self.tabRadius_spb.setValue(12)
         self.tabRadius_spb.blockSignals(False)
+
+        # Update tab label text size percentage (or default to 10 if not present)
+        self.tabSize_spb.blockSignals(True)
+        if 'tab_text_size' in colors:
+            self.tabSize_spb.setValue(int(colors['tab_text_size']))
+        else:
+            self.tabSize_spb.setValue(10)
+        self.tabSize_spb.blockSignals(False)
         
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
@@ -159,7 +170,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.font_name_label.setText("Default (from Options)")
 
         for x in sorted(colors.keys()):
-            if x in ['textsize', 'tab_radius', 'font']:
+            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size']:
                 continue
             item = QListWidgetItem(x)
             pix = QPixmap(QSize(16,16))
@@ -205,6 +216,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             colors[item.text()] = item.data(32)
         colors['textsize'] = self.textSize_spb.value()
         colors['tab_radius'] = self.tabRadius_spb.value()
+        colors['tab_text_size'] = self.tabSize_spb.value()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:
             colors['font'] = self.custom_font_data
         return colors
@@ -338,6 +350,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if 'tab_radius' in defaultColors:
             self.tabRadius_spb.setValue(defaultColors['tab_radius'])
             self.updateExample()
+
+    def openTabSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to default", self)
+        reset_action.triggered.connect(self.resetTabSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.tabSize_spb.mapToGlobal(position))
+
+    def resetTabSizeToDefault(self):
+        self.tabSize_spb.setValue(10)
+        self.updateExample()
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'

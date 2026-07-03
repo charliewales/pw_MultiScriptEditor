@@ -43,6 +43,21 @@ class Ui_themeEditor(object):
 
         self.verticalLayout_2.addWidget(self.colors_lwd)
         
+        self.horizontalLayout_tabSize = QHBoxLayout()
+        self.horizontalLayout_tabSize.setObjectName("horizontalLayout_tabSize")
+        self.label_tabSize = QLabel(self.widget)
+        self.label_tabSize.setObjectName("label_tabSize")
+        self.horizontalLayout_tabSize.addWidget(self.label_tabSize)
+        self.tabSize_spb = QSpinBox(self.widget)
+        self.tabSize_spb.setMinimum(6)
+        self.tabSize_spb.setMaximum(30)
+        self.tabSize_spb.setProperty("value", 10)
+        self.tabSize_spb.setObjectName("tabSize_spb")
+        self.horizontalLayout_tabSize.addWidget(self.tabSize_spb)
+        spacerItemTabSize = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_tabSize.addItem(spacerItemTabSize)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_tabSize)
+        
         self.horizontalLayout_radius = QHBoxLayout()
         self.horizontalLayout_radius.setObjectName("horizontalLayout_radius")
         self.label_radius = QLabel(self.widget)
@@ -72,6 +87,7 @@ class Ui_themeEditor(object):
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+        
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout = QVBoxLayout(self.layoutWidget)
@@ -114,6 +130,7 @@ class Ui_themeEditor(object):
         themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Code Theme Editor", None))
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.label.setText(QApplication.translate("themeEditor", "Completer text size", None))
+        self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))

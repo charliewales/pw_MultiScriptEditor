@@ -148,9 +148,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if accept_dialog:
             font = font_dialog.currentFont()
-            for index in range(0, self.tab.count()):
-                self.tab.widget(index).edit.setFont(font)
-            self.out.set_font(font)
+            
+            font_data = {
+                "family": font.family(),
+                "pointSize": font.pointSize(),
+                "weight": font.weight(),
+                "italic": font.italic()
+            }
+            self.tab.set_start_font(font_data)
+            self.out.set_start_font(font_data)
 
             outline_font = QFont(font)
             if outline_font.pointSize() > 0:

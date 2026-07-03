@@ -217,6 +217,8 @@ class tabWidgetClass(QTabWidget):
             from widgets.pythonSyntax.design import defaultColors
             colors = defaultColors
 
+        self._tab_text_size = float(colors.get('tab_text_size', 10))
+
         def c(name):
             val = colors.get(name, (128,128,128))
             if isinstance(val, (list, tuple)):
@@ -301,16 +303,16 @@ class tabWidgetClass(QTabWidget):
         tab_font = QFont(font)
         family = tab_font.family()
         pt_size = tab_font.pointSizeF()
+        custom_size = getattr(self, '_tab_text_size', 10.0)
+        
         if pt_size > 0:
-            scaled_pt = max(1.0, pt_size * 0.8)
-            tab_font.setPointSizeF(scaled_pt)
-            size_css = "font-size: %spt;" % scaled_pt
+            tab_font.setPointSizeF(custom_size)
+            size_css = "font-size: %spt;" % custom_size
         else:
             px_size = tab_font.pixelSize()
             if px_size > 0:
-                scaled_px = max(1, int(px_size * 0.8))
-                tab_font.setPixelSize(scaled_px)
-                size_css = "font-size: %spx;" % scaled_px
+                tab_font.setPixelSize(int(custom_size))
+                size_css = "font-size: %spx;" % int(custom_size)
             else:
                 size_css = ""
 
