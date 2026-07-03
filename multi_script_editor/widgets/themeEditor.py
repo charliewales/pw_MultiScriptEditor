@@ -1,7 +1,7 @@
 import os
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QColor, QIcon, QPixmap
-from vendor.Qt.QtWidgets import QApplication, QColorDialog, QDialog, QInputDialog, QLineEdit, QListWidgetItem, QMessageBox
+from vendor.Qt.QtWidgets import QApplication, QColorDialog, QDialog, QInputDialog, QLineEdit, QListWidgetItem, QMessageBox, QMenu, QAction
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
 from .pythonSyntax import design
@@ -23,6 +23,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.splitter.setSizes([280, 500])
         self.s = SettingsModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
+        self.colors_lwd.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.colors_lwd.customContextMenuRequested.connect(self.openColorMenu)
         self.save_btn.clicked.connect(self.saveTheme)
         self.del_btn.clicked.connect(self.deleteTheme)
         self.themeList_cbb.currentIndexChanged.connect(self.updateColors)
@@ -145,6 +147,26 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 pix.fill(QColor(*newColor))
                 item.setIcon(QIcon(pix))
                 self.updateExample()
+
+    def openColorMenu(self, position):
+        item = self.colors_lwd.itemAt(position)
+        if item:
+            menu = QMenu(self)
+            reset_action = QAction("Reset to default", self)
+            reset_action.triggered.connect(lambda checked=False, i=item: self.resetColorToDefault(i))
+            menu.addAction(reset_action)
+            menu.exec_(self.colors_lwd.viewport().mapToGlobal(position))
+
+    def resetColorToDefault(self, item):
+        color_name = item.text()
+        from widgets.pythonSyntax.design import defaultColors
+        if color_name in defaultColors:
+            default_color = defaultColors[color_name]
+            item.setData(32, default_color)
+            pix = QPixmap(QSize(16,16))
+            pix.fill(QColor(*default_color))
+            item.setIcon(QIcon(pix))
+            self.updateExample()
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'

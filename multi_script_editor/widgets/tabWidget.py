@@ -233,6 +233,7 @@ class tabWidgetClass(QTabWidget):
                 padding-right: 10px;
                 padding-top: 3px;
                 padding-bottom: 3px;
+                margin-right: 3px;
                 background: %(tab_background)s;
                 color: %(tab_text)s;
             }
