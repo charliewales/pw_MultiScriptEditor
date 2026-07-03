@@ -49,7 +49,7 @@ class Ui_themeEditor(object):
         self.label = QLabel(self.widget)
         self.label.setObjectName("label")
         self.textSize_spb = QSpinBox(self.widget)
-        self.textSize_spb.setMinimum(9)
+        self.textSize_spb.setMinimum(6)
         self.textSize_spb.setMaximum(25)
         self.textSize_spb.setProperty("value", 10)
         self.textSize_spb.setObjectName("textSize_spb")

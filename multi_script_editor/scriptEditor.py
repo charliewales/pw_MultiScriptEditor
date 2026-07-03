@@ -107,6 +107,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.setupStatusBarWidgets()
         
+        self.tab.currentChanged.connect(self.statusBar().clearMessage)
         self.tab.currentChanged.connect(self.updateStatusBarInfo)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
 
@@ -184,6 +185,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             lang = 'Python'
         self.lbl_lang.setText(lang)
+        if lang == 'Python' and hasattr(w.edit, 'runLinter'):
+            w.edit.runLinter()
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()

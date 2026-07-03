@@ -1,3 +1,5 @@
+import os
+
 from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel
 from core.session_model import SessionModel
@@ -96,7 +98,6 @@ class MainPresenter:
         ext = '.py'
         edit = self.view.tab.widget(self.view.tab.currentIndex())
         if edit and hasattr(edit, 'file_path') and edit.file_path:
-             import os
              ext = os.path.splitext(edit.file_path)[1].lower()
              
         if ext != '.py':
@@ -116,5 +117,14 @@ class MainPresenter:
         Delegates the lint request to the model (LinterProvider).
         Updates the view with the syntax errors.
         """
+        ext = '.py'
+        edit = self.view.tab.widget(self.view.tab.currentIndex())
+        if edit and hasattr(edit, 'file_path') and edit.file_path:
+             ext = os.path.splitext(edit.file_path)[1].lower()
+             
+        if ext != '.py':
+            self.view.show_syntax_errors({})
+            return
+
         errors = self.linter_provider.check_syntax(code)
         self.view.show_syntax_errors(errors)
