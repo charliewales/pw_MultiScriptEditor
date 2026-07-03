@@ -146,7 +146,7 @@ class Ui_themeEditor(object):
         self.label_outlineSize.setText(QApplication.translate("themeEditor", "Outline text size", None))
         self.label_outputSize.setText(QApplication.translate("themeEditor", "Output text size", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
-        self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus use theme font", None))
+        self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus and status bar use theme font", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))

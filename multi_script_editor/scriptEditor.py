@@ -413,6 +413,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         s = self._current_settings
         s['theme'] = name
         self.save_settings_requested.emit(s)
+        
+        for i in range(self.tab.count()):
+            w = self.tab.widget(i)
+            w.edit.autocomplete_timer.stop()
+            w.edit.completer.hideMe()
+            w.edit._skip_autocomplete_once = True
 
     def setWindowStyle(self):
         if __name__ == '__main__':
@@ -565,6 +571,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def clearHistory(self):
         self.out.setText('')
+
+    def show_autocompletion(self):
+        idx = self.tab.currentIndex()
+        if idx >= 0:
+            w = self.tab.widget(idx)
+            if hasattr(w, 'edit'):
+                w.edit.parseText(force=True)
 
     def saveScript(self):
         index = self.tab.currentIndex()

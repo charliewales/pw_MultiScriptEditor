@@ -24,6 +24,13 @@ class completeMenuClass(QListWidget):
         else:
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window | Qt.WindowStaysOnTopHint)
             
+        from vendor.Qt.QtWidgets import QLabel
+        self.doc_tooltip = QLabel(self)
+        self.doc_tooltip.setObjectName("docTooltip")
+        self.doc_tooltip.setWindowFlags(Qt.ToolTip)
+        self.doc_tooltip.setWordWrap(True)
+        self.doc_tooltip.setContentsMargins(4, 4, 4, 4)
+
         self._icon_cache = {}
 
         @self.itemDoubleClicked.connect
@@ -36,7 +43,8 @@ class completeMenuClass(QListWidget):
 
     def onItemChanged(self, current, previous):
         if not current or not self.isVisible():
-            QToolTip.hideText()
+            if hasattr(self, 'doc_tooltip'):
+                self.doc_tooltip.hide()
             return
         
         show_docstrings = False
@@ -59,15 +67,19 @@ class completeMenuClass(QListWidget):
                         # Show tooltip near the right side of the list
                         pos = self.mapToGlobal(self.rect().topRight())
                         pos.setX(pos.x() + 10)
-                        QToolTip.showText(pos, doc, self)
+                        
+                        self.doc_tooltip.setText(doc)
+                        self.doc_tooltip.adjustSize()
+                        self.doc_tooltip.move(pos)
+                        self.doc_tooltip.show()
                     else:
-                        QToolTip.hideText()
+                        self.doc_tooltip.hide()
                 except Exception:
-                    QToolTip.hideText()
+                    self.doc_tooltip.hide()
             else:
-                QToolTip.hideText()
+                self.doc_tooltip.hide()
         else:
-            QToolTip.hideText()
+            self.doc_tooltip.hide()
 
     def updateStyle(self, colors=None):
         text = design.editorStyle()
@@ -187,4 +199,5 @@ class completeMenuClass(QListWidget):
 
     def hideMe(self):
         self.hide()
-        QToolTip.hideText()
+        if hasattr(self, 'doc_tooltip'):
+            self.doc_tooltip.hide()
