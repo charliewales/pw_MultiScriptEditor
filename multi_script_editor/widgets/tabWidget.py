@@ -20,45 +20,7 @@ class tabWidgetClass(QTabWidget):
 
     def __init__(self, parent=None):
         super(tabWidgetClass, self).__init__(parent)
-        self.setStyleSheet(
-            """
-            QTabBar::tab {
-                max-width: 250px;
-                min-width: 80px;
-                border: 2px solid grey;
-                border-top-left-radius: 12px;
-                border-top-right-radius: 12px;
-                padding-left: 10px;
-                padding-right: 10px;
-                padding-top: 3px;
-                padding-bottom: 3px;
-            }
-            QTabBar::tab:hover {
-                background: #b2a325;
-                color: black;
-                border: 2px solid #1d4d72;
-                }
-
-            QTabBar::tab:selected {
-                background: #1d4d72;
-                color: #dddddd;
-                border: 2px solid #b2a325;
-                border-top-left-radius: 12px;
-                border-top-right-radius: 12px;
-            }
-
-            QTabBar::close-button {
-                image: url("%s");
-                width: 14px;
-                height: 14px;
-            }
-            QTabBar::close-button:hover {
-                background: rgba(255, 100, 100, 255);
-                border-radius: 6px;
-            }
-        """
-            % icons["close_tab"].replace("\\", "/")
-        )
+        self.apply_tab_style()
         # variables
         self.p = parent
         self.lastSearch = [0, None]
@@ -249,6 +211,75 @@ class tabWidgetClass(QTabWidget):
             self.closeTab(current_index)
 
 ############################## editor commands
+    def apply_tab_style(self, colors=None):
+        if not colors:
+            from widgets.pythonSyntax.design import defaultColors
+            colors = defaultColors
+
+        def c(name):
+            val = colors.get(name, (128,128,128))
+            if isinstance(val, (list, tuple)):
+                return "#%02x%02x%02x" % tuple(val)
+            return str(val)
+
+        css = """
+            QTabBar::tab {
+                max-width: 250px;
+                min-width: 80px;
+                border: 2px solid %(tab_border)s;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+                padding-left: 10px;
+                padding-right: 10px;
+                padding-top: 3px;
+                padding-bottom: 3px;
+                background: %(tab_background)s;
+                color: %(tab_text)s;
+            }
+            QTabBar::tab:hover {
+                background: %(tab_hover_background)s;
+                color: %(tab_hover_text)s;
+                border: 2px solid %(tab_hover_border)s;
+            }
+
+            QTabBar::tab:selected {
+                background: %(tab_selected_background)s;
+                color: %(tab_selected_text)s;
+                border: 2px solid %(tab_selected_border)s;
+                border-top-left-radius: 12px;
+                border-top-right-radius: 12px;
+            }
+
+            QTabBar::close-button {
+                image: url("%(close_tab)s");
+                width: 14px;
+                height: 14px;
+            }
+            QTabBar::close-button:hover {
+                background: rgba(255, 100, 100, 255);
+                border-radius: 6px;
+            }
+        """ % {
+            "tab_border": c("tab_border"),
+            "tab_background": c("tab_background"),
+            "tab_text": c("tab_text"),
+            "tab_hover_background": c("tab_hover_background"),
+            "tab_hover_text": c("tab_hover_text"),
+            "tab_hover_border": c("tab_hover_border"),
+            "tab_selected_background": c("tab_selected_background"),
+            "tab_selected_text": c("tab_selected_text"),
+            "tab_selected_border": c("tab_selected_border"),
+            "close_tab": icons["close_tab"].replace("\\", "/")
+        }
+        
+        ss = self.styleSheet()
+        import re
+        font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)
+        if font_match:
+            css += '\n' + font_match.group(0)
+            
+        self.setStyleSheet(css)
+
     def undo(self):
         self.current().undo()
 

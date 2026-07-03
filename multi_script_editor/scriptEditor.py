@@ -9,7 +9,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.0.0"
+mse_version = "6.0.1"
 
 import managers
 from core.execution_manager import ExecutionManager
@@ -258,6 +258,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.applyHightLighter(name)
             w.edit.completer.setStyleSheet(qss)
             w.edit.setStyleSheet(qss)
+
+        colors = design.getColors(name)
+        self.tab.apply_tab_style(colors)
+
         s = self._current_settings
         s['theme'] = name
         self.save_settings_requested.emit(s)

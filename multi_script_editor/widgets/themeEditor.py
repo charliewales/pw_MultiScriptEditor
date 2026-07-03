@@ -20,7 +20,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd.wordWrap(False)
         self.preview_ly.addWidget(self.preview_twd)
         self.preview_twd.setPlainText(defaultText)
-        self.splitter.setSizes([200,300])
+        self.splitter.setSizes([280, 500])
         self.s = SettingsModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
         self.save_btn.clicked.connect(self.saveTheme)
@@ -29,10 +29,31 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.apply_btn.clicked.connect(self.apply)
         self.apply_btn.setText('Close')
         self.textSize_spb.valueChanged.connect(self.updateExample)
-        self.resize(self.parent().width()*0.8, self.parent().height()*0.7)
         self.fillUI()
         self.updateUI()
         self.updateColors()
+        
+        # Adjust height to fit all items
+        row_height = self.colors_lwd.sizeHintForRow(0)
+        if row_height <= 0:
+            row_height = 25
+            
+        list_needed_height = self.colors_lwd.count() * row_height
+        needed_height = list_needed_height + 200
+        
+        parent_height = self.parent().height() if self.parent() else 1000
+        ideal_height = max(int(parent_height * 0.7), needed_height)
+        
+        desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
+        if desk:
+            screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
+            ideal_height = min(ideal_height, screen_rect.height() - 100)
+            
+        parent_width = self.parent().width() if self.parent() else 1000
+        
+        self.resize(int(parent_width * 0.8), ideal_height)
+        self.setMinimumHeight(min(needed_height, ideal_height))
+        
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
 
@@ -73,18 +94,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         curTheme = self.themeList_cbb.currentText()
         if curTheme in design.predefinedThemes:
             self.del_btn.setEnabled(0)
-            colors = {k:v for k,v in design.predefinedThemes[curTheme].items()}
         else:
             self.del_btn.setEnabled(1)
-            settings = self.get_settings()
-            allThemes = settings.get('colors')
-            if allThemes and curTheme in allThemes:
-                colors = allThemes.get(curTheme)
-                for k, v in design.getColors().items():
-                    if not k in colors:
-                        colors[k] = v
-            else:
-                colors = design.getColors()
+            
+        colors = design.getColors(curTheme)
 
         self.colors_lwd.clear()
 
