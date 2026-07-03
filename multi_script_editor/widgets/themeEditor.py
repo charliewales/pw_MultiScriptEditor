@@ -151,7 +151,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if 'tab_text_size' in colors:
             self.tabSize_spb.setValue(int(colors['tab_text_size']))
         else:
-            self.tabSize_spb.setValue(10)
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.tabSize_spb.setValue(int(font_size * 0.8))
         self.tabSize_spb.blockSignals(False)
         
         self.choose_font_btn.setEnabled(True)
