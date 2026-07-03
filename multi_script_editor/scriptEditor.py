@@ -229,6 +229,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.theme_menu.clear()
         edit_action = QAction('Edit...', self, triggered=self.openThemeEditor)
         edit_action.setShortcut('Ctrl+Shift+T')
+        edit_action.setStatusTip("Edit the current color theme")
         self.theme_menu.addAction(edit_action)
         self.theme_menu.addSeparator()
         current_theme = self._current_settings.get('theme', 'Multi Script Editor')
@@ -236,6 +237,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             act = QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x))
             act.setCheckable(True)
             act.setChecked(t == current_theme)
+            act.setStatusTip(f"Apply theme: {t}")
             self.theme_menu.addAction(act)
         data = self._current_settings
         if data.get('colors'):
@@ -248,6 +250,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     act = QAction(t, self, triggered=lambda checked=False, x=t: self.applyTheme(x))
                     act.setCheckable(True)
                     act.setChecked(t == current_theme)
+                    act.setStatusTip(f"Apply theme: {t}")
                     self.theme_menu.addAction(act)
 
     def applyTheme(self, name):
@@ -530,10 +533,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if os.path.exists(path):
                 act = QAction(os.path.basename(path), self)
                 act.setToolTip(path)
+                act.setStatusTip(f"Open recent file: {path}")
                 act.triggered.connect(partial(self.openRecentFile, path))
                 self.recent_files_menu.addAction(act)
         self.recent_files_menu.addSeparator()
         clear_act = QAction("Clear Recent", self)
+        clear_act.setStatusTip("Clear the list of recent files")
         clear_act.triggered.connect(self.clearRecentFiles)
         self.recent_files_menu.addAction(clear_act)
 
@@ -930,11 +935,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         save_act = QAction("Save Current Session As...", self)
         save_act.setIcon(QIcon(icons['save']))
+        save_act.setStatusTip("Save the current state as a named session")
         save_act.triggered.connect(self.saveNamedSession)
         self.sessions_menu.addAction(save_act)
 
         restore_backup_act = QAction("Restore Crash Backup", self)
         restore_backup_act.setIcon(QIcon(icons['restore_backup']))
+        restore_backup_act.setStatusTip("Restore the last auto-saved backup session")
         restore_backup_act.triggered.connect(self.restoreBackupSession)
         if not self._presenter.backup_exists():
             restore_backup_act.setEnabled(False)
@@ -942,6 +949,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.delete_session_menu = QMenu("Delete Session", self)
         self.delete_session_menu.setIcon(QIcon(icons["clear"]))
+        self.delete_session_menu.menuAction().setStatusTip("Delete a saved session")
         self.sessions_menu.addMenu(self.delete_session_menu)
 
         self.sessions_menu.addSeparator()
@@ -950,10 +958,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if names:
             for name in names:
                 act = QAction(name, self)
+                act.setStatusTip(f"Load session: {name}")
                 act.triggered.connect(lambda checked=False, n=name: self.loadNamedSession(n))
                 self.sessions_menu.addAction(act)
 
                 del_act = QAction(name, self)
+                del_act.setStatusTip(f"Delete session: {name}")
                 del_act.triggered.connect(lambda checked=False, n=name: self.deleteNamedSession(n))
                 self.delete_session_menu.addAction(del_act)
         else:

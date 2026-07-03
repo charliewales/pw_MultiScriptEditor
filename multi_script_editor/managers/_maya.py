@@ -153,6 +153,7 @@ class mayaMenuClass(QMenu):
         self.setTearOffEnabled(1)
         self.setWindowTitle('MSE %s Maya' % self.par.ver)
         a = QAction('Save to shelf', parent, triggered=self.saveToShelfDialog)
+        a.setStatusTip("Save the current script to a Maya shelf button")
         self.addAction(a)
 
     def saveToShelfDialog(self):

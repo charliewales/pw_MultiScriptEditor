@@ -124,11 +124,23 @@ class houdiniMenuClass(hqt.QMenu):
         self.par = parent
         self.setTearOffEnabled(1)
         self.setWindowTitle('MSE %s Houdini' % self.par.ver)
-        self.addAction(hqt.QAction('Read From Node', parent, triggered=self.readFromNode))
-        self.addAction(hqt.QAction('Save To Node', parent, triggered=self.saveToNode))
+        act_read = hqt.QAction('Read From Node', parent, triggered=self.readFromNode)
+        act_read.setStatusTip("Read code from the selected Houdini node")
+        self.addAction(act_read)
+        
+        act_save = hqt.QAction('Save To Node', parent, triggered=self.saveToNode)
+        act_save.setStatusTip("Save the current script to the selected Houdini node")
+        self.addAction(act_save)
+        
         self.addSeparator()
-        self.addAction(hqt.QAction('Read from hou.session Sourse', parent, triggered=self.readFromSession))
-        self.addAction(hqt.QAction('Save to hou.session', parent, triggered=self.saveToSession))
+        
+        act_read_session = hqt.QAction('Read from hou.session Sourse', parent, triggered=self.readFromSession)
+        act_read_session.setStatusTip("Read code from hou.session module source")
+        self.addAction(act_read_session)
+        
+        act_save_session = hqt.QAction('Save to hou.session', parent, triggered=self.saveToSession)
+        act_save_session.setStatusTip("Save the current script to hou.session module source")
+        self.addAction(act_save_session)
 
 
 

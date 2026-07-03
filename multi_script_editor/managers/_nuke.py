@@ -131,11 +131,23 @@ class nukeContextMenu(QMenu):
         self.par = parent
         self.setTearOffEnabled(1)
         self.setWindowTitle('MSE %s Nuke' % self.par.ver)
-        self.addAction(QAction('Read PyScript Knob', parent, triggered=self.readPyScriptKnob))
-        self.addAction(QAction('Save To PyScript Knob', parent, triggered=self.saveToKnob))
+        act_read = QAction('Read PyScript Knob', parent, triggered=self.readPyScriptKnob)
+        act_read.setStatusTip("Read python script from a node's PyScript knob")
+        self.addAction(act_read)
+        
+        act_save = QAction('Save To PyScript Knob', parent, triggered=self.saveToKnob)
+        act_save.setStatusTip("Save the current script to a node's PyScript knob")
+        self.addAction(act_save)
+        
         self.addSeparator()
-        self.addAction(QAction('From Selected', parent, triggered=self.nodeToCode))
-        self.addAction(QAction('From Clipboard', parent, triggered=self.nodesFromClipboard))
+        
+        act_selected = QAction('From Selected', parent, triggered=self.nodeToCode)
+        act_selected.setStatusTip("Generate code to get the selected node")
+        self.addAction(act_selected)
+        
+        act_clipboard = QAction('From Clipboard', parent, triggered=self.nodesFromClipboard)
+        act_clipboard.setStatusTip("Generate node code from clipboard contents")
+        self.addAction(act_clipboard)
 
     def nodeToCode(self):
         nodes = nuke.selectedNodes()
