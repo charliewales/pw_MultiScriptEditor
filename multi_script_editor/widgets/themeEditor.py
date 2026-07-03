@@ -135,12 +135,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         self.colors_lwd.clear()
 
-        # Update text size (or default to 11 if not present)
         self.textSize_spb.blockSignals(True)
         if 'textsize' in colors:
             self.textSize_spb.setValue(int(colors['textsize']))
         else:
-            self.textSize_spb.setValue(10)
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.textSize_spb.setValue(int(font_size * 0.8))
         self.textSize_spb.blockSignals(False)
 
         # Update tab radius (or default to 12 if not present)
@@ -171,12 +172,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.outlineSize_spb.setValue(int(font_size * 0.8))
         self.outlineSize_spb.blockSignals(False)
         
-        # Update output text size
         self.outputSize_spb.blockSignals(True)
         if 'output_text_size' in colors:
             self.outputSize_spb.setValue(int(colors['output_text_size']))
         else:
-            self.outputSize_spb.setValue(self.textSize_spb.value())
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.outputSize_spb.setValue(int(font_size * 0.8))
         self.outputSize_spb.blockSignals(False)
 
         self.menuFont_cb.blockSignals(True)
@@ -364,13 +366,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def openTextSizeMenu(self, position):
         menu = QMenu(self)
-        reset_action = QAction("Reset to default", self)
+        reset_action = QAction("Reset to Default (80% of Font)", self)
         reset_action.triggered.connect(self.resetTextSizeToDefault)
         menu.addAction(reset_action)
         menu.exec_(self.textSize_spb.mapToGlobal(position))
 
     def resetTextSizeToDefault(self):
-        self.textSize_spb.setValue(10)
+        pts = self._getBaseFontPointSize()
+        self.textSize_spb.setValue(max(1, int(pts * 0.8)))
         self.updateExample()
 
     def openTabRadiusMenu(self, position):
@@ -421,13 +424,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def openOutputSizeMenu(self, position):
         menu = QMenu(self)
-        reset_action = QAction("Reset to default", self)
+        reset_action = QAction("Reset to Default (80% of Font)", self)
         reset_action.triggered.connect(self.resetOutputSizeToDefault)
         menu.addAction(reset_action)
         menu.exec_(self.outputSize_spb.mapToGlobal(position))
 
     def resetOutputSizeToDefault(self):
-        self.outputSize_spb.setValue(self.textSize_spb.value())
+        pts = self._getBaseFontPointSize()
+        self.outputSize_spb.setValue(max(1, int(pts * 0.8)))
         self.updateExample()
 
     def saveTheme(self):

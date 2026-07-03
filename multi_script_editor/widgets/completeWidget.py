@@ -35,7 +35,7 @@ class completeMenuClass(QListWidget):
         self.currentItemChanged.connect(self.onItemChanged)
 
     def onItemChanged(self, current, previous):
-        if not current:
+        if not current or not self.isVisible():
             QToolTip.hideText()
             return
         
@@ -187,3 +187,4 @@ class completeMenuClass(QListWidget):
 
     def hideMe(self):
         self.hide()
+        QToolTip.hideText()

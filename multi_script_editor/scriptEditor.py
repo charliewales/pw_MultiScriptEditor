@@ -231,7 +231,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
             else:
-                out_font_data['pointSize'] = max(1, int(colors.get('textsize', 10)))
+                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * 0.8))
             self.out.set_start_font(out_font_data)
 
             outline_font = QFont(font)
@@ -372,7 +372,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
             else:
-                out_font_data['pointSize'] = max(1, int(colors.get('textsize', 10)))
+                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * 0.8))
             self.out.set_start_font(out_font_data)
 
             base_font = QFont(font_data.get('family', ''))
