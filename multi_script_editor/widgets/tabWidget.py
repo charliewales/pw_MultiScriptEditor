@@ -74,6 +74,7 @@ class tabWidgetClass(QTabWidget):
                         edit.addText(text)
                         edit.moveCursor(QTextCursor.Start)
                         edit.highlight_current_line()
+                        edit.document().clearUndoRedoStacks()
 
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
@@ -202,6 +203,7 @@ class tabWidgetClass(QTabWidget):
     def setCurrentText(self, text):
         i = self.currentIndex()
         self.widget(i).edit.setPlainText(text)
+        self.widget(i).edit.document().clearUndoRedoStacks()
 
 
     def hideAllCompleters(self):
@@ -436,6 +438,7 @@ class EditorTabContainer(QWidget):
         self.edit = inputWidget.inputClass(parent, desk)
         if text:
             self.edit.addText(text)
+            self.edit.document().clearUndoRedoStacks()
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
