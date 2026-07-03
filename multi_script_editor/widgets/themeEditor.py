@@ -156,6 +156,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.tabSize_spb.setValue(int(font_size * 0.8))
         self.tabSize_spb.blockSignals(False)
         
+        self.menuFont_cb.blockSignals(True)
+        self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
+        self.menuFont_cb.blockSignals(False)
+        
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
             default_font = self.get_settings().get('font', {})
@@ -172,7 +176,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.font_name_label.setText("Default (from Options)")
 
         for x in sorted(colors.keys()):
-            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size']:
+            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size', 'use_theme_font_on_menus']:
                 continue
             item = QListWidgetItem(x)
             pix = QPixmap(QSize(16,16))
@@ -219,6 +223,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['textsize'] = self.textSize_spb.value()
         colors['tab_radius'] = self.tabRadius_spb.value()
         colors['tab_text_size'] = self.tabSize_spb.value()
+        colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:
             colors['font'] = self.custom_font_data
         return colors

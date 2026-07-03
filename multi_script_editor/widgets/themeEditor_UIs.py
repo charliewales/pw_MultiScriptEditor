@@ -9,7 +9,7 @@
 
 
 from vendor.Qt.QtCore import QMetaObject, QSize, Qt
-from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget, QFormLayout
+from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget, QFormLayout, QCheckBox
 
 class Ui_themeEditor(object):
     def setupUi(self, themeEditor):
@@ -73,6 +73,10 @@ class Ui_themeEditor(object):
         self.tabRadius_spb.setObjectName("tabRadius_spb")
         self.formLayout.addRow(self.label_radius, self.tabRadius_spb)
         
+        self.menuFont_cb = QCheckBox(self.widget)
+        self.menuFont_cb.setObjectName("menuFont_cb")
+        self.formLayout.addRow("", self.menuFont_cb)
+        
         self.horizontalLayout_formContainer = QHBoxLayout()
         self.horizontalLayout_formContainer.addLayout(self.formLayout)
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -122,6 +126,7 @@ class Ui_themeEditor(object):
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.label.setText(QApplication.translate("themeEditor", "Completer text size", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
+        self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus use theme font", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))

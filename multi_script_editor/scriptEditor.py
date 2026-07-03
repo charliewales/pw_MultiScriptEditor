@@ -293,9 +293,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             elif outline_font.pixelSize() > 0:
                 outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
             self.outline_list.setFont(outline_font)
-            self.menubar.setFont(outline_font)
-            for menu in self.findChildren(QMenu):
-                menu.setFont(outline_font)
+            
+            from vendor.Qt.QtWidgets import QMenu
+            if colors.get('use_theme_font_on_menus', False):
+                self.menubar.setFont(outline_font)
+                for menu in self.findChildren(QMenu):
+                    menu.setFont(outline_font)
+            else:
+                default_app_font = QFont()
+                self.menubar.setFont(default_app_font)
+                for menu in self.findChildren(QMenu):
+                    menu.setFont(default_app_font)
 
         s = self._current_settings
         s['theme'] = name
