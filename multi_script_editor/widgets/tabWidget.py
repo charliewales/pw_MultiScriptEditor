@@ -143,6 +143,11 @@ class tabWidgetClass(QTabWidget):
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         self.addTab(cont, name)
+        
+        if hasattr(self.p, 'updateStatusBarInfo'):
+            cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
+            cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
+            
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:

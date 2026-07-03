@@ -108,6 +108,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # Tab current change triggers outline refresh
         self.tab.currentChanged.connect(self.updateOutline)
 
+        self.setupStatusBarWidgets()
+        
+        self.tab.currentChanged.connect(self.updateStatusBarInfo)
+        self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
+
         # start
         self._exec_manager = ExecutionManager()
         self._presenter = MainPresenter(self, self._exec_manager)
@@ -120,6 +125,68 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.setWindowStyle()
         self.appContextMenu()
         self.addArgs()
+
+    def setupStatusBarWidgets(self):
+        self.lbl_lang = QLabel("Language")
+        self.lbl_wrap = QLabel("Wrap: OFF")
+        self.lbl_lines = QLabel("0 lines")
+        self.lbl_cursor = QLabel("Ln 1, Col 1")
+
+        for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+            lbl.setStyleSheet("padding: 0 5px;")
+            self.statusBar().addPermanentWidget(lbl)
+            
+        self.status_bar_timer = QTimer(self)
+        self.status_bar_timer.setSingleShot(True)
+        self.status_bar_timer.timeout.connect(self._updateStatusBarInfo)
+
+    def updateStatusBarInfo(self, *args):
+        self.status_bar_timer.start(50)
+
+    def _updateStatusBarInfo(self):
+        # Word Wrap
+        wrap_state = "ON" if self.wordWrap_act.isChecked() else "OFF"
+        self.lbl_wrap.setText(f"Wrap: {wrap_state}")
+
+        idx = self.tab.currentIndex()
+        if idx < 0:
+            self.lbl_lang.setText("")
+            self.lbl_lines.setText("0 lines")
+            self.lbl_cursor.setText("Ln 1, Col 1")
+            return
+
+        w = self.tab.widget(idx)
+        if not w or not hasattr(w, 'edit'):
+            return
+
+        # Cursor and Lines
+        cursor = w.edit.textCursor()
+        line = cursor.blockNumber() + 1
+        col = cursor.columnNumber() + 1
+        self.lbl_cursor.setText(f"Ln {line}, Col {col}")
+        
+        total_lines = w.edit.document().blockCount()
+        self.lbl_lines.setText(f"{total_lines} lines")
+
+        # Language
+        file_path = getattr(w, 'file_path', None)
+        if file_path:
+            ext = os.path.splitext(file_path)[1].lower()
+            lang_map = {
+                '.py': 'Python',
+                '.js': 'JavaScript',
+                '.html': 'HTML',
+                '.htm': 'HTML',
+                '.yaml': 'YAML',
+                '.yml': 'YAML',
+                '.md': 'Markdown',
+                '.css': 'CSS',
+                '.txt': 'Plain Text'
+            }
+            lang = lang_map.get(ext, 'Python')
+        else:
+            lang = 'Python'
+        self.lbl_lang.setText(lang)
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
@@ -135,6 +202,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         state = not self.wordWrap_act.isChecked()
         self.wordWrap_act.setChecked(state)
         self.tab.wordWrap(state)
+        self.updateStatusBarInfo()
 
     def choose_font(self):
         editor_font = self.tab.widget(0).edit.font()
@@ -485,7 +553,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getSaveFileName(self, 'Save script', d, "PY Files (*.py)")
+        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;All Files (*.*)")
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -502,7 +570,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getOpenFileName(self, 'Open script', d, "PY Files (*.py)")
+        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;All Files (*.*)")
         if path[0]:
             if os.path.exists(path[0]):
                 text = open(path[0]).read()
@@ -856,7 +924,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def toggleSyntaxCheck(self, state=None):
         if state is None:
             state = self.syntaxCheck_act.isChecked()
-        self.statusBar().setVisible(state)
 
         for i in range(self.tab.count()):
             w = self.tab.widget(i)

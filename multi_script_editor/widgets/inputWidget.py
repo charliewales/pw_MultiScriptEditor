@@ -3,7 +3,7 @@ from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextForma
 from vendor.Qt.QtWidgets import QTextEdit
 import re
 
-from widgets.pythonSyntax import syntaxHighLighter
+from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
 from widgets import completeWidget
 from core.settings_model import SettingsModel
 from core.base_text_widget import BaseTextWidgetMixin
@@ -107,7 +107,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         except:
             pass
 
-    def applyHightLighter(self, theme=None, qss=None):
+    def applyHightLighter(self, theme=None, qss=None, ext=None):
         self.blockSignals(True)
         colors = None
         self._highlight_color_cache = None
@@ -115,7 +115,28 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             colors = design.getColors(theme)
             if self.completer:
                 self.completer.updateStyle(colors)
-        self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
+        highlighter_class = syntaxHighLighter.PythonHighlighterClass
+        
+        if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
+            import os
+            ext = os.path.splitext(self.parent().file_path)[1]
+
+        if ext:
+            ext = ext.lower()
+            if ext == '.js':
+                highlighter_class = extraSyntaxes.JavascriptHighlighterClass
+            elif ext in ['.html', '.htm']:
+                highlighter_class = extraSyntaxes.HtmlHighlighterClass
+            elif ext in ['.yaml', '.yml']:
+                highlighter_class = extraSyntaxes.YamlHighlighterClass
+            elif ext == '.md':
+                highlighter_class = extraSyntaxes.MarkdownHighlighterClass
+            elif ext == '.css':
+                highlighter_class = extraSyntaxes.CssHighlighterClass
+            elif ext == '.txt':
+                highlighter_class = extraSyntaxes.TextHighlighterClass
+                
+        self.hgl = highlighter_class(self, colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
