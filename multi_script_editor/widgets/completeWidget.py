@@ -118,7 +118,7 @@ class completeMenuClass(QListWidget):
                     
                 self.addItem(item)
 
-            font = QFont("monospace", self.lineHeight, False)
+            font = self.font()
             fm = QFontMetrics(font)
             width = fm.horizontalAdvance(' ') * max([len(x.name) for x in all_items]) + 40
 

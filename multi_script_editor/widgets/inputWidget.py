@@ -93,6 +93,8 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.setFont(editor_font)
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()

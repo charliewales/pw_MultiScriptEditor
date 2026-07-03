@@ -264,6 +264,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         colors = design.getColors(name)
         self.tab.apply_tab_style(colors)
         
+        if name not in design.predefinedThemes:
+            self.set_font_act.setEnabled(False)
+            self.set_font_act.setText("Choose Font (from theme)")
+        else:
+            self.set_font_act.setEnabled(True)
+            self.set_font_act.setText("Choose Font...")
+        
         font_data = colors.get('font')
         if not font_data:
             font_data = self._current_settings.get('font', {})
