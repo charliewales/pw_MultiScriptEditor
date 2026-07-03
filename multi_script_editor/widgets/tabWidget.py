@@ -344,13 +344,12 @@ class tabWidgetClass(QTabWidget):
         if font_d:
             from vendor.Qt.QtGui import QFont
             family = font_d.get('family', '')
-            size = font_d.get('size', 0)
-            if family and size:
-                font = QFont(family)
-                if size > 0:
-                    font.setPointSize(size)
-                else:
-                    font.setPixelSize(abs(size))
+            size = font_d.get('pointSize', 10)
+            weight = font_d.get('weight', -1)
+            italic = font_d.get('italic', False)
+            
+            if family:
+                font = QFont(family, size, weight, italic)
                 self._apply_tab_font(font)
         for i in range(self.count()):
             current_edit = self.widget(i).edit
