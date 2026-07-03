@@ -29,15 +29,15 @@ defaultColors = dict(
         default=(210,210,210),
         whitespace=(70,70,70),
         highlight_line=(85, 85, 85),
-        tab_background=(128,128,128),
-        tab_text=(200,200,200),
-        tab_border=(128,128,128),
+        tab_background=(236,227,217),
+        tab_text=(0,0,0),
+        tab_border=(236,227,217),
         tab_hover_background=(178,163,37),
         tab_hover_text=(0,0,0),
         tab_hover_border=(29,77,114),
-        tab_selected_background=(29,77,114),
-        tab_selected_text=(221,221,221),
-        tab_selected_border=(178,163,37),
+        tab_selected_background=(19,73,133),
+        tab_selected_text=(255,255,255),
+        tab_selected_border=(19,73,133),
 )
 
 predefinedThemes = {
