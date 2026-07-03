@@ -27,6 +27,20 @@ class Ui_themeEditor(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.colors_lwd = QListWidget(self.widget)
         self.colors_lwd.setObjectName("colors_lwd")
+        
+        self.horizontalLayout_font = QHBoxLayout()
+        self.horizontalLayout_font.setObjectName("horizontalLayout_font")
+        self.choose_font_btn = QPushButton(self.widget)
+        self.choose_font_btn.setObjectName("choose_font_btn")
+        self.horizontalLayout_font.addWidget(self.choose_font_btn)
+
+        self.font_name_label = QLabel(self.widget)
+        self.font_name_label.setObjectName("font_name_label")
+        self.horizontalLayout_font.addWidget(self.font_name_label)
+        spacerItemFont = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_font.addItem(spacerItemFont)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_font)
+
         self.verticalLayout_2.addWidget(self.colors_lwd)
         
         self.horizontalLayout_radius = QHBoxLayout()
@@ -103,4 +117,6 @@ class Ui_themeEditor(object):
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))
+        self.choose_font_btn.setText(QApplication.translate("themeEditor", "Choose Font", None))
+        self.font_name_label.setText(QApplication.translate("themeEditor", "Default", None))
 

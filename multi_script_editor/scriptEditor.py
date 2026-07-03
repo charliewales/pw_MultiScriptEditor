@@ -221,7 +221,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def fillThemeMenu(self):
         self.theme_menu.clear()
-        self.theme_menu.addAction(QAction('Edit...', self, triggered=self.openThemeEditor))
+        edit_action = QAction('Edit...', self, triggered=self.openThemeEditor)
+        edit_action.setShortcut('Ctrl+Shift+T')
+        self.theme_menu.addAction(edit_action)
         self.theme_menu.addSeparator()
         current_theme = self._current_settings.get('theme', 'Multi Script Editor')
         for t in sorted(design.predefinedThemes.keys()):
@@ -261,6 +263,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         colors = design.getColors(name)
         self.tab.apply_tab_style(colors)
+        
+        font_data = colors.get('font')
+        if not font_data:
+            font_data = self._current_settings.get('font', {})
+            
+        if font_data:
+            self.tab.set_start_font(font_data)
+            self.out.set_start_font(font_data)
+            
+            from vendor.Qt.QtGui import QFont
+            outline_font = QFont(font_data.get('family', ''))
+            outline_font.setPointSize(font_data.get('pointSize', 10))
+            if outline_font.pointSize() > 0:
+                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
+            elif outline_font.pixelSize() > 0:
+                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+            self.outline_list.setFont(outline_font)
 
         s = self._current_settings
         s['theme'] = name
@@ -525,6 +544,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def apply_settings(self, settings):
         self._current_settings = settings
+        if hasattr(self, 's') and hasattr(self.s, 'write_settings'):
+            self.s.write_settings(settings)
         self.loadSettings()
 
     def loadSettings(self):
@@ -641,8 +662,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
 
+        current_theme_name = settings.get('theme', 'Multi Script Editor')
+        theme_colors = design.getColors(current_theme_name)
+        theme_has_custom_font = 'font' in theme_colors and theme_colors['font']
+
         font_data = dict()
-        if self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
+        if not theme_has_custom_font and self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
             editor_font = self.tab.widget(0).edit.font()
             pt_size = editor_font.pointSize()
             if pt_size == -1:
