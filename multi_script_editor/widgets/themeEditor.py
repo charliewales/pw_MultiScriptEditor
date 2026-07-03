@@ -18,12 +18,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_tab_widget.addNewTab("Active Tab", defaultText, make_current=False)
         self.preview_tab_widget.addNewTab("Inactive Tab", defaultText, make_current=False)
         self.preview_tab_widget.setCurrentIndex(0)
-        
+
         self.preview_ly.addWidget(self.preview_tab_widget)
-        
+
         self.preview_twd = self.preview_tab_widget.widget(0).edit
         self.preview_twd2 = self.preview_tab_widget.widget(1).edit
-        
+
         self.preview_twd.setEnabled(False)
         self.preview_twd2.setEnabled(False)
         self.preview_twd.wordWrap(False)
@@ -38,16 +38,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.themeList_cbb.currentIndexChanged.connect(self.updateColors)
         self.apply_btn.clicked.connect(self.apply)
         self.choose_font_btn.clicked.connect(self.chooseFont)
-        
+
         self.choose_font_btn.setContextMenuPolicy(Qt.CustomContextMenu)
         self.choose_font_btn.customContextMenuRequested.connect(self.showFontContextMenu)
         self.apply_btn.setText('Ok')
-        
+
         from vendor.Qt.QtWidgets import QPushButton
         self.cancel_btn = QPushButton("Cancel", self)
         self.horizontalLayout_2.addWidget(self.cancel_btn)
         self.cancel_btn.clicked.connect(self.cancel)
-        
+
         self.textSize_spb.valueChanged.connect(self.updateExample)
         self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.textSize_spb.customContextMenuRequested.connect(self.openTextSizeMenu)
@@ -61,28 +61,28 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.fillUI()
         self.updateUI()
         self.updateColors()
-        
+
         # Adjust height to fit all items
         row_height = self.colors_lwd.sizeHintForRow(0)
         if row_height <= 0:
             row_height = 25
-            
+
         list_needed_height = self.colors_lwd.count() * row_height
         needed_height = list_needed_height + 200
-        
+
         parent_height = self.parent().height() if self.parent() else 1000
         ideal_height = max(int(parent_height * 0.7), needed_height)
-        
+
         desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
         if desk:
             screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
             ideal_height = min(ideal_height, screen_rect.height() - 100)
-            
+
         parent_width = self.parent().width() if self.parent() else 1000
-        
+
         self.resize(int(parent_width * 0.8), ideal_height)
         self.setMinimumHeight(min(needed_height, ideal_height))
-        
+
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
 
@@ -125,7 +125,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.del_btn.setEnabled(0)
         else:
             self.del_btn.setEnabled(1)
-            
+
         colors = design.getColors(curTheme)
 
         self.colors_lwd.clear()
@@ -155,11 +155,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             font_size = default_font.get('pointSize', 12)
             self.tabSize_spb.setValue(int(font_size * 0.8))
         self.tabSize_spb.blockSignals(False)
-        
+
         self.menuFont_cb.blockSignals(True)
         self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
         self.menuFont_cb.blockSignals(False)
-        
+
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
             default_font = self.get_settings().get('font', {})
@@ -188,11 +188,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def updateExample(self):
         colors = self.getCurrentColors()
-        
+
         font_data = colors.get('font')
         if not font_data:
             font_data = self.get_settings().get('font', {})
-            
+
         if font_data:
             font = QFont(
                 font_data.get('family', ''),
@@ -202,7 +202,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             )
         else:
             font = QFont()
-                
+
         if hasattr(self, 'preview_tab_widget'):
             self.preview_tab_widget.apply_tab_style(colors)
             for i in range(self.preview_tab_widget.count()):
@@ -239,7 +239,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def resetFont(self):
         curTheme = self.themeList_cbb.currentText()
         settings = self.get_settings()
-        
+
         global_font_data = settings.get('font', {})
         if not global_font_data:
             if self.parent() and hasattr(self.parent(), 'tab') and self.parent().tab.count() > 0:
@@ -250,13 +250,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     "weight": editor_font.weight(),
                     "italic": editor_font.italic()
                 }
-        
+
         self.custom_font_data = global_font_data
         if global_font_data:
             self.font_name_label.setText("{} {}".format(global_font_data.get('family', 'monospace'), global_font_data.get('pointSize', 10)))
         else:
             self.font_name_label.setText("Default")
-            
+
         self.updateExample()
 
     def chooseFont(self):
@@ -279,7 +279,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 )
             else:
                 init_font = QFont()
-                    
+
         font_dialog = QFontDialog(self)
         font_dialog.setCurrentFont(init_font)
         font_dialog.resize(self.width() * 0.8, self.height() * 0.7)
@@ -287,7 +287,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             accept_dialog = getattr(font_dialog, 'exec')()
         else:
             accept_dialog = font_dialog.exec_()
-            
+
         if accept_dialog:
             font = font_dialog.currentFont()
             font_data = {
@@ -437,38 +437,38 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         curTheme = self.themeList_cbb.currentText()
         if not curTheme:
             return False
-            
+
         current_colors = self.getCurrentColors()
         saved_colors = design.getColors(curTheme)
-        
+
         for k, v in current_colors.items():
             saved_v = saved_colors.get(k)
             if saved_v is None:
                 return True
-                
+
             if isinstance(v, list): v = tuple(v)
             if isinstance(saved_v, list): saved_v = tuple(saved_v)
-            
+
             if v != saved_v:
                 return True
-                
+
         return False
 
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):
             event.accept()
             return
-            
+
         if self.hasUnsavedChanges():
             from vendor.Qt.QtWidgets import QMessageBox
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
-            msg_box.setText("You have unsaved changes in the Code Theme Editor.\nDo you want to save them before closing?")
+            msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
             cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
             msg_box.exec_()
-            
+
             if msg_box.clickedButton() == save_btn:
                 if self.saveTheme():
                     event.accept()
