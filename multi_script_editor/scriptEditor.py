@@ -224,7 +224,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 "italic": font.italic()
             }
             self.tab.set_start_font(font_data)
-            self.out.set_start_font(font_data)
+            
+            current_theme = self._current_settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(current_theme)
+            out_font_data = font_data.copy()
+            if 'output_text_size' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
+            else:
+                out_font_data['pointSize'] = max(1, int(colors.get('textsize', 10)))
+            self.out.set_start_font(out_font_data)
 
             outline_font = QFont(font)
             if outline_font.pointSize() > 0:
@@ -343,6 +351,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.setStyleSheet(qss)
 
         colors = design.getColors(name)
+        self.tab._tab_text_size = colors.get('tab_text_size', None)
         self.tab.apply_tab_style(colors)
 
         if name not in design.predefinedThemes:
@@ -358,7 +367,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if font_data:
             self.tab.set_start_font(font_data)
-            self.out.set_start_font(font_data)
+            
+            out_font_data = font_data.copy()
+            if 'output_text_size' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
+            else:
+                out_font_data['pointSize'] = max(1, int(colors.get('textsize', 10)))
+            self.out.set_start_font(out_font_data)
 
             base_font = QFont(font_data.get('family', ''))
             base_font.setStyleHint(QFont.Monospace)
