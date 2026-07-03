@@ -9,7 +9,7 @@
 
 
 from vendor.Qt.QtCore import QMetaObject, QSize, Qt
-from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget
+from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget, QFormLayout
 
 class Ui_themeEditor(object):
     def setupUi(self, themeEditor):
@@ -43,50 +43,41 @@ class Ui_themeEditor(object):
 
         self.verticalLayout_2.addWidget(self.colors_lwd)
         
-        self.horizontalLayout_tabSize = QHBoxLayout()
-        self.horizontalLayout_tabSize.setObjectName("horizontalLayout_tabSize")
-        self.label_tabSize = QLabel(self.widget)
-        self.label_tabSize.setObjectName("label_tabSize")
-        self.horizontalLayout_tabSize.addWidget(self.label_tabSize)
-        self.tabSize_spb = QSpinBox(self.widget)
-        self.tabSize_spb.setMinimum(6)
-        self.tabSize_spb.setMaximum(30)
-        self.tabSize_spb.setProperty("value", 10)
-        self.tabSize_spb.setObjectName("tabSize_spb")
-        self.horizontalLayout_tabSize.addWidget(self.tabSize_spb)
-        spacerItemTabSize = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.horizontalLayout_tabSize.addItem(spacerItemTabSize)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_tabSize)
+        self.formLayout = QFormLayout()
+        self.formLayout.setObjectName("formLayout")
         
-        self.horizontalLayout_radius = QHBoxLayout()
-        self.horizontalLayout_radius.setObjectName("horizontalLayout_radius")
-        self.label_radius = QLabel(self.widget)
-        self.label_radius.setObjectName("label_radius")
-        self.horizontalLayout_radius.addWidget(self.label_radius)
-        self.tabRadius_spb = QSpinBox(self.widget)
-        self.tabRadius_spb.setMinimum(0)
-        self.tabRadius_spb.setMaximum(50)
-        self.tabRadius_spb.setProperty("value", 12)
-        self.tabRadius_spb.setObjectName("tabRadius_spb")
-        self.horizontalLayout_radius.addWidget(self.tabRadius_spb)
-        spacerItemRadius = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.horizontalLayout_radius.addItem(spacerItemRadius)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_radius)
-
-        self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.label = QLabel(self.widget)
         self.label.setObjectName("label")
-        self.horizontalLayout_3.addWidget(self.label)
         self.textSize_spb = QSpinBox(self.widget)
         self.textSize_spb.setMinimum(9)
         self.textSize_spb.setMaximum(25)
         self.textSize_spb.setProperty("value", 10)
         self.textSize_spb.setObjectName("textSize_spb")
-        self.horizontalLayout_3.addWidget(self.textSize_spb)
+        self.formLayout.addRow(self.label, self.textSize_spb)
+        
+        self.label_tabSize = QLabel(self.widget)
+        self.label_tabSize.setObjectName("label_tabSize")
+        self.tabSize_spb = QSpinBox(self.widget)
+        self.tabSize_spb.setMinimum(6)
+        self.tabSize_spb.setMaximum(30)
+        self.tabSize_spb.setProperty("value", 10)
+        self.tabSize_spb.setObjectName("tabSize_spb")
+        self.formLayout.addRow(self.label_tabSize, self.tabSize_spb)
+        
+        self.label_radius = QLabel(self.widget)
+        self.label_radius.setObjectName("label_radius")
+        self.tabRadius_spb = QSpinBox(self.widget)
+        self.tabRadius_spb.setMinimum(0)
+        self.tabRadius_spb.setMaximum(50)
+        self.tabRadius_spb.setProperty("value", 12)
+        self.tabRadius_spb.setObjectName("tabRadius_spb")
+        self.formLayout.addRow(self.label_radius, self.tabRadius_spb)
+        
+        self.horizontalLayout_formContainer = QHBoxLayout()
+        self.horizontalLayout_formContainer.addLayout(self.formLayout)
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.horizontalLayout_3.addItem(spacerItem)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+        self.horizontalLayout_formContainer.addItem(spacerItem)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_formContainer)
         
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
