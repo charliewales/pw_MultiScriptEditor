@@ -55,6 +55,15 @@ class Ui_themeEditor(object):
         self.textSize_spb.setObjectName("textSize_spb")
         self.formLayout.addRow(self.label, self.textSize_spb)
         
+        self.label_outlineSize = QLabel(self.widget)
+        self.label_outlineSize.setObjectName("label_outlineSize")
+        self.outlineSize_spb = QSpinBox(self.widget)
+        self.outlineSize_spb.setMinimum(6)
+        self.outlineSize_spb.setMaximum(30)
+        self.outlineSize_spb.setProperty("value", 10)
+        self.outlineSize_spb.setObjectName("outlineSize_spb")
+        self.formLayout.addRow(self.label_outlineSize, self.outlineSize_spb)
+        
         self.label_tabSize = QLabel(self.widget)
         self.label_tabSize.setObjectName("label_tabSize")
         self.tabSize_spb = QSpinBox(self.widget)
@@ -125,6 +134,7 @@ class Ui_themeEditor(object):
         themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Code Theme Editor", None))
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.label.setText(QApplication.translate("themeEditor", "Completer text size", None))
+        self.label_outlineSize.setText(QApplication.translate("themeEditor", "Outline text size", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
         self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus use theme font", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))

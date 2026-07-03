@@ -57,6 +57,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.tabSize_spb.valueChanged.connect(self.updateExample)
         self.tabSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabSize_spb.customContextMenuRequested.connect(self.openTabSizeMenu)
+        self.outlineSize_spb.valueChanged.connect(self.updateExample)
+        self.outlineSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.outlineSize_spb.customContextMenuRequested.connect(self.openOutlineSizeMenu)
         self.custom_font_data = None
         self.fillUI()
         self.updateUI()
@@ -156,6 +159,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.tabSize_spb.setValue(int(font_size * 0.8))
         self.tabSize_spb.blockSignals(False)
 
+        # Update outline text size (or default to 80% if not present)
+        self.outlineSize_spb.blockSignals(True)
+        if 'outline_text_size' in colors:
+            self.outlineSize_spb.setValue(int(colors['outline_text_size']))
+        else:
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.outlineSize_spb.setValue(int(font_size * 0.8))
+        self.outlineSize_spb.blockSignals(False)
+
         self.menuFont_cb.blockSignals(True)
         self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
         self.menuFont_cb.blockSignals(False)
@@ -176,7 +189,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.font_name_label.setText("Default (from Options)")
 
         for x in sorted(colors.keys()):
-            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size', 'use_theme_font_on_menus']:
+            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size', 'outline_text_size', 'use_theme_font_on_menus']:
                 continue
             item = QListWidgetItem(x)
             pix = QPixmap(QSize(16,16))
@@ -223,6 +236,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['textsize'] = self.textSize_spb.value()
         colors['tab_radius'] = self.tabRadius_spb.value()
         colors['tab_text_size'] = self.tabSize_spb.value()
+        colors['outline_text_size'] = self.outlineSize_spb.value()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:
             colors['font'] = self.custom_font_data
@@ -360,13 +374,35 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def openTabSizeMenu(self, position):
         menu = QMenu(self)
-        reset_action = QAction("Reset to default", self)
+        reset_action = QAction("Reset to Default (80% of Font)", self)
         reset_action.triggered.connect(self.resetTabSizeToDefault)
         menu.addAction(reset_action)
         menu.exec_(self.tabSize_spb.mapToGlobal(position))
 
+    def _getBaseFontPointSize(self):
+        colors = self.getCurrentColors()
+        font_data = colors.get('font')
+        if not font_data:
+            font_data = self.get_settings().get('font', {})
+        if font_data:
+            return font_data.get('pointSize', 10)
+        return 10
+
     def resetTabSizeToDefault(self):
-        self.tabSize_spb.setValue(10)
+        pts = self._getBaseFontPointSize()
+        self.tabSize_spb.setValue(max(1, int(pts * 0.8)))
+        self.updateExample()
+
+    def openOutlineSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to Default (80% of Font)", self)
+        reset_action.triggered.connect(self.resetOutlineSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.outlineSize_spb.mapToGlobal(position))
+
+    def resetOutlineSizeToDefault(self):
+        pts = self._getBaseFontPointSize()
+        self.outlineSize_spb.setValue(max(1, int(pts * 0.8)))
         self.updateExample()
 
     def saveTheme(self):

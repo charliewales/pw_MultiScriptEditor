@@ -62,11 +62,11 @@ class MainPresenter:
     def delete_named_session(self, name):
         self.session_model.deleteNamedSession(name)
 
-    def handle_update_outline(self, code):
+    def handle_update_outline(self, code, ext):
         """
         Parses the code for the outline view and updates the UI.
         """
-        symbols = OutlineParser.parse(code)
+        symbols = OutlineParser.parse(code, ext)
         self.view.set_outline_symbols(symbols)
 
     def handle_execute_command(self, command, echo_command=False, clear_history=False):
@@ -93,6 +93,15 @@ class MainPresenter:
         Delegates the autocomplete request to the model (AutocompleteProvider).
         Returns a list of CompletionItem objects.
         """
+        ext = '.py'
+        edit = self.view.tab.widget(self.view.tab.currentIndex())
+        if edit and hasattr(edit, 'file_path') and edit.file_path:
+             import os
+             ext = os.path.splitext(edit.file_path)[1].lower()
+             
+        if ext != '.py':
+            return []
+            
         return self.autocomplete_provider.get_completions(
             text=text,
             line=line,

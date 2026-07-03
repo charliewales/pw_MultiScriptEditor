@@ -562,9 +562,7 @@ QTabWidget::pane  { /* The tab widget frame */
     border-top: 1px solid #696969;
 }
 
-QTabWidget::tab-bar  {
-    left: 10px; /* move to the right by 5px */
-}
+
 
 QTabBar::tab  {
     background: #3b3c3e;

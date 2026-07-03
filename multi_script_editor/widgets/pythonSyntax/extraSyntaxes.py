@@ -10,6 +10,8 @@ class BaseHighlighterClass(QSyntaxHighlighter):
             self.colors = design.getColors()
         
         self.default_format = self.getStyle(self.colors.get('default', (200, 200, 200)))
+        self.whitespace_format = self.getStyle(self.colors.get('whitespace', (100, 100, 100)))
+        self.whitespace_regex = re.compile(r"\s")
         
         # We will populate self.rules in subclasses
         self.rules = []
@@ -25,6 +27,10 @@ class BaseHighlighterClass(QSyntaxHighlighter):
 
     def highlightBlock(self, text):
         self.setFormat(0, len(text), self.default_format)
+
+        if hasattr(self, 'whitespace_regex'):
+            for match in self.whitespace_regex.finditer(text):
+                self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
 
         for expression, nth, format in self.rules:
             for match in expression.finditer(text):
@@ -86,7 +92,7 @@ class YamlHighlighterClass(BaseHighlighterClass):
         rules = []
         
         # Keys
-        rules.append((r'^\s*[\w\-]+\s*:', 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        rules.append((r'^\s*([\w\-]+\s*:)', 1, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
         # Strings
         rules.append((r'".*?"|\'.*?\'', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
         # Booleans and Nulls
@@ -125,7 +131,7 @@ class CssHighlighterClass(BaseHighlighterClass):
         rules = []
         
         # Selectors
-        rules.append((r'^[^\{]+(?=\{)', 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        rules.append((r'^\s*([^\{]+?)(?=\{)', 1, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
         # Properties
         rules.append((r'\b[a-zA-Z\-]+(?=\s*:)', 0, self.getStyle(self.colors.get('methods', (0,255,0)))))
         # Values (Numbers)

@@ -30,7 +30,7 @@ from widgets.pythonSyntax import design
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)
-    update_outline_requested = Signal(str)
+    update_outline_requested = Signal(str, str)
     save_settings_requested = Signal(dict)
     load_settings_requested = Signal()
 
@@ -57,8 +57,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_panel = QWidget()
         self.outline_ly = QVBoxLayout(self.outline_panel)
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
-        self.outline_title = QLabel("Outline")
-        self.outline_title.setStyleSheet("font-weight: bold; padding: 4px;")
         self.outline_list = QListWidget()
         self.outline_list.setObjectName("outlineList")
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
@@ -72,7 +70,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         esc_shortcut.setContext(Qt.WidgetShortcut)
         esc_shortcut.activated.connect(self.outline_filter.clear)
 
-        self.outline_ly.addWidget(self.outline_title)
         self.outline_ly.addWidget(self.outline_filter)
         self.outline_ly.addWidget(self.outline_list)
 
@@ -228,10 +225,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             outline_font = QFont(font)
             if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
+                outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
             elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
             self.outline_list.setFont(outline_font)
+            self.current_outline_font = outline_font
+            self.outline_filter.setFont(outline_font)
+            for i in range(self.outline_list.count()):
+                self.outline_list.item(i).setFont(outline_font)
             self.saveSettings()
 
     def clear_exec(self, exec_func):
@@ -356,25 +357,40 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.set_start_font(font_data)
             self.out.set_start_font(font_data)
 
-            outline_font = QFont(font_data.get('family', ''))
-            outline_font.setStyleHint(QFont.Monospace)
-            outline_font.setPointSize(font_data.get('pointSize', 10))
-            if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
-            elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+            base_font = QFont(font_data.get('family', ''))
+            base_font.setStyleHint(QFont.Monospace)
+            base_font.setPointSize(font_data.get('pointSize', 10))
+
+            outline_font = QFont(base_font)
+            if 'outline_text_size' in colors:
+                outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
+            else:
+                outline_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
+                
             self.outline_list.setFont(outline_font)
+            self.current_outline_font = outline_font
+            self.outline_filter.setFont(outline_font)
+            for i in range(self.outline_list.count()):
+                self.outline_list.item(i).setFont(outline_font)
             
             from vendor.Qt.QtWidgets import QMenu
             if colors.get('use_theme_font_on_menus', False):
-                self.menubar.setFont(outline_font)
+                self.menubar.setFont(base_font)
                 for menu in self.findChildren(QMenu):
-                    menu.setFont(outline_font)
+                    menu.setFont(base_font)
+                if self.statusBar():
+                    self.statusBar().setFont(base_font)
+                    for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                        lbl.setFont(base_font)
             else:
                 default_app_font = QFont()
                 self.menubar.setFont(default_app_font)
                 for menu in self.findChildren(QMenu):
                     menu.setFont(default_app_font)
+                if self.statusBar():
+                    self.statusBar().setFont(default_app_font)
+                    for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                        lbl.setFont(default_app_font)
 
         s = self._current_settings
         s['theme'] = name
@@ -701,10 +717,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             outline_font = QFont(self.out.font())
             if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
+                outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
             elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
+                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
             self.outline_list.setFont(outline_font)
+            self.current_outline_font = outline_font
+            self.outline_filter.setFont(outline_font)
+            for i in range(self.outline_list.count()):
+                self.outline_list.item(i).setFont(outline_font)
         self.autocomplete_act.setChecked(autocomplete)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
         self.show_docstrings_act.setChecked(show_docstrings)
@@ -948,7 +968,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not edit:
             return
         code = edit.toPlainText()
-        self.update_outline_requested.emit(code)
+        
+        ext = '.py'
+        w = self.tab.widget(self.tab.currentIndex())
+        if w and hasattr(w, 'file_path') and w.file_path:
+             ext = os.path.splitext(w.file_path)[1].lower()
+             
+        self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols):
         self.outline_list.clear()
@@ -958,8 +984,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             item.setData(Qt.UserRole, sym['line'])
             if sym['type'] == 'class':
                 item.setForeground(QColor("#56B6C2"))
+            elif sym['type'] == 'yaml':
+                colors = ["#E06C75", "#D19A66", "#E5C07B", "#98C379", "#56B6C2", "#61AFEF", "#C678DD"]
+                color = colors[sym['indent'] % len(colors)]
+                item.setForeground(QColor(color))
             else:
                 item.setForeground(QColor("#E06C75"))
+            item.setFont(getattr(self, 'current_outline_font', self.outline_list.font()))
             self.outline_list.addItem(item)
 
     def outlineItemClicked(self, item):

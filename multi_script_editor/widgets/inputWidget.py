@@ -729,7 +729,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         if self.completer:
                 self.completer.updateCompleteList()
         self.blockSignals(True)
-        self.append(text)
+        self.setPlainText(text)
         self.document().clearUndoRedoStacks()
         self.blockSignals(False)
 
