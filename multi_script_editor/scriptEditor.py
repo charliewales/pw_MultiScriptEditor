@@ -148,7 +148,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if accept_dialog:
             font = font_dialog.currentFont()
-            
+
             font_data = {
                 "family": font.family(),
                 "pointSize": font.pointSize(),
@@ -269,30 +269,33 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         colors = design.getColors(name)
         self.tab.apply_tab_style(colors)
-        
+
         if name not in design.predefinedThemes:
             self.set_font_act.setEnabled(False)
             self.set_font_act.setText("Choose Font (from theme)")
         else:
             self.set_font_act.setEnabled(True)
             self.set_font_act.setText("Choose Font...")
-        
+
         font_data = colors.get('font')
         if not font_data:
             font_data = self._current_settings.get('font', {})
-            
+
         if font_data:
             self.tab.set_start_font(font_data)
             self.out.set_start_font(font_data)
-            
-            from vendor.Qt.QtGui import QFont
+
             outline_font = QFont(font_data.get('family', ''))
+            outline_font.setStyleHint(QFont.Monospace)
             outline_font.setPointSize(font_data.get('pointSize', 10))
             if outline_font.pointSize() > 0:
                 outline_font.setPointSize(max(1, outline_font.pointSize() - 1))
             elif outline_font.pixelSize() > 0:
                 outline_font.setPixelSize(max(1, outline_font.pixelSize() - 1))
             self.outline_list.setFont(outline_font)
+            self.menubar.setFont(outline_font)
+            for menu in self.findChildren(QMenu):
+                menu.setFont(outline_font)
 
         s = self._current_settings
         s['theme'] = name
