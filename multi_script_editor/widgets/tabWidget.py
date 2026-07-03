@@ -345,13 +345,14 @@ class tabWidgetClass(QTabWidget):
     def set_start_font(self, font_d=None):
         if font_d:
             from vendor.Qt.QtGui import QFont
-            family = font_d.get('family', '')
+            family = font_d.get('family', 'monospace')
             size = font_d.get('pointSize', 10)
             weight = font_d.get('weight', -1)
             italic = font_d.get('italic', False)
             
             if family:
                 font = QFont(family, size, weight, italic)
+                font.setStyleHint(QFont.Monospace)
                 self._apply_tab_font(font)
         for i in range(self.count()):
             current_edit = self.widget(i).edit

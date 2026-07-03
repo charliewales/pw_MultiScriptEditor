@@ -157,7 +157,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
             default_font = self.get_settings().get('font', {})
-            font_family = default_font.get('family', 'Courier')
+            font_family = default_font.get('family', 'monospace')
             font_size = default_font.get('pointSize', 12)
             self.font_name_label.setText("{} {}".format(font_family, font_size))
             self.custom_font_data = None
@@ -246,7 +246,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         
         self.custom_font_data = global_font_data
         if global_font_data:
-            self.font_name_label.setText("{} {}".format(global_font_data.get('family', 'Courier'), global_font_data.get('pointSize', 10)))
+            self.font_name_label.setText("{} {}".format(global_font_data.get('family', 'monospace'), global_font_data.get('pointSize', 10)))
         else:
             self.font_name_label.setText("Default")
             

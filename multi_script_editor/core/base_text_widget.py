@@ -42,7 +42,7 @@ class BaseTextWidgetMixin:
     def set_start_font(self, font_d=None):
         if not font_d:
             return
-        family = font_d.get('family', 'Courier')
+        family = font_d.get('family', 'monospace')
         pointSize = font_d.get('pointSize', 14)
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1)

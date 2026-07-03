@@ -21,7 +21,7 @@ addEndBracket = True
 indentLen = 4
 minimumFontSize = 10
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
-# font_name = 'Courier'
+# font_name = 'monospace'
 font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
@@ -86,7 +86,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
     def set_start_font(self, font_d=None):
         if font_d is None:
             font_d = self.data.get('font', {})
-        family = font_d.get('family', 'Courier')
+        family = font_d.get('family', 'monospace')
         pointSize = font_d.get('pointSize', 10)
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1.0)
