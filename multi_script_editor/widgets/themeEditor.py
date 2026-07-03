@@ -120,7 +120,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if restore:
             index = self.themeList_cbb.findText(restore)
             self.themeList_cbb.setCurrentIndex(index)
-        self.updateExample()
 
     def updateColors(self):
         curTheme = self.themeList_cbb.currentText()
@@ -188,8 +187,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.custom_font_data = None
                 self.font_name_label.setText("Default (from Options)")
 
+        self._current_colors_cache = colors
         for x in sorted(colors.keys()):
-            if x in ['textsize', 'tab_radius', 'font', 'tab_text_size', 'outline_text_size', 'use_theme_font_on_menus']:
+            if not isinstance(colors[x], (list, tuple)):
                 continue
             item = QListWidgetItem(x)
             pix = QPixmap(QSize(16,16))
@@ -229,7 +229,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.preview_twd.set_start_font(font_data)
 
     def getCurrentColors(self):
-        colors = {}
+        colors = getattr(self, '_current_colors_cache', {}).copy()
         for i in range(self.colors_lwd.count()):
             item = self.colors_lwd.item(i)
             colors[item.text()] = item.data(32)
