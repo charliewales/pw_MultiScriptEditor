@@ -14,7 +14,7 @@ from vendor.Qt.QtWidgets import QAction, QApplication, QFrame, QMenu, QMenuBar, 
 class Ui_scriptEditor(object):
     def setupUi(self, scriptEditor):
         scriptEditor.setObjectName("scriptEditor")
-        scriptEditor.resize(800, 609)
+        scriptEditor.resize(1280, 720)
         self.centralwidget = QWidget(scriptEditor)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_2 = QVBoxLayout(self.centralwidget)

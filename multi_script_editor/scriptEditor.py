@@ -537,7 +537,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         geo = data.get('geometry', None)
         out_wrap = data.get('out_wrap', None)
         outFontSize = data.get('outFontSize', 10)
-        splitter = data.get('splitter', None)
+        splitter = data.get('splitter', [600, 400])
         wrap = data.get('wrap', None)
         show_whitespace = data.get('show_whitespace', False)
         font = data.get('font', False)
@@ -548,6 +548,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if geo:
             self.move(geo[0], geo[1])
             self.resize(geo[2], geo[3])
+        else:
+            self.resize(1280, 720)
         if center:
             x, y = center
             geo = self.geometry()
