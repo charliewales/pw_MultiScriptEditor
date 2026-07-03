@@ -957,6 +957,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.updateOutline()
         else:
             self.horizontal_splitter.setSizes([0, 800])
+        self.showOutline_act.setChecked(state)
+        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
+            self.tab.toggleOutline_btn.blockSignals(True)
+            self.tab.toggleOutline_btn.setChecked(state)
+            self.tab.toggleOutline_btn.blockSignals(False)
 
     def toggleOutputBottom(self, state=None):
         if state is None:

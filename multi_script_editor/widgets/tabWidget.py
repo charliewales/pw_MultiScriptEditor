@@ -30,16 +30,35 @@ class tabWidgetClass(QTabWidget):
         self.tabCloseRequested.connect(self.closeTab)
         self.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabBar().customContextMenuRequested.connect(self.openMenu)
-        newTabButton = QPushButton(self)
+        # Corner Widget Layout
+        self.corner_widget = QWidget(self)
+        self.corner_layout = QHBoxLayout(self.corner_widget)
+        self.corner_layout.setContentsMargins(0, 0, 10, 0)
+        self.corner_layout.setSpacing(2)
+
+        self.toggleOutline_btn = QPushButton(self.corner_widget)
+        self.toggleOutline_btn.setMaximumWidth(30)
+        self.toggleOutline_btn.setCursor(Qt.ArrowCursor)
+        self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
+        self.toggleOutline_btn.setToolTip("Toggle Code Outline")
+        self.toggleOutline_btn.setCheckable(True)
+        self.toggleOutline_btn.toggled.connect(self.toggle_outline)
+
+        newTabButton = QPushButton(self.corner_widget)
         newTabButton.setMaximumWidth(30)
-        self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
-        if hasattr(self.p, 'toolBar'):
-            self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
+
+        self.corner_layout.addWidget(self.toggleOutline_btn)
+        self.corner_layout.addWidget(newTabButton)
+        self.setCornerWidget(self.corner_widget, Qt.TopLeftCorner)
+
+        if hasattr(self.p, 'toolBar'):
+            self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
+            
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
 
         # We will render whitespace initially based on presenter, but for now we default to False
@@ -49,6 +68,10 @@ class tabWidgetClass(QTabWidget):
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
         self.currentChanged.connect(self.onTabChanged)
+
+    def toggle_outline(self, state):
+        if hasattr(self.p, 'toggleOutline'):
+            self.p.toggleOutline(state)
 
     def onTabChanged(self, index):
         self.hideAllCompleters()
