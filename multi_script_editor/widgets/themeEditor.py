@@ -13,13 +13,21 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def __init__(self, parent = None, desk=None):
         super(themeEditorClass, self).__init__(parent)
         self.setupUi(self)
-        self.preview_twd = inputWidget.inputClass(self, desk)
+        from widgets.tabWidget import tabWidgetClass
+        self.preview_tab_widget = tabWidgetClass(self)
+        self.preview_tab_widget.addNewTab("Active Tab", defaultText, make_current=False)
+        self.preview_tab_widget.addNewTab("Inactive Tab", defaultText, make_current=False)
+        self.preview_tab_widget.setCurrentIndex(0)
+        
+        self.preview_ly.addWidget(self.preview_tab_widget)
+        
+        self.preview_twd = self.preview_tab_widget.widget(0).edit
+        self.preview_twd2 = self.preview_tab_widget.widget(1).edit
+        
         self.preview_twd.setEnabled(False)
-        self.preview_twd.wordWrap(True)
-        self.preview_twd.render_whitespace(True)
+        self.preview_twd2.setEnabled(False)
         self.preview_twd.wordWrap(False)
-        self.preview_ly.addWidget(self.preview_twd)
-        self.preview_twd.setPlainText(defaultText)
+        self.preview_twd2.wordWrap(False)
         self.splitter.setSizes([280, 500])
         self.s = SettingsModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
@@ -124,7 +132,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def updateExample(self):
         colors = self.getCurrentColors()
-        self.preview_twd.applyPreviewStyle(colors)
+        if hasattr(self, 'preview_tab_widget'):
+            self.preview_tab_widget.apply_tab_style(colors)
+            for i in range(self.preview_tab_widget.count()):
+                w = self.preview_tab_widget.widget(i)
+                w.edit.applyPreviewStyle(colors)
+        else:
+            self.preview_twd.applyPreviewStyle(colors)
 
     def getCurrentColors(self):
         colors = {}

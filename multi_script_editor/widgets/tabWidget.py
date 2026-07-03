@@ -33,7 +33,8 @@ class tabWidgetClass(QTabWidget):
         newTabButton = QPushButton(self)
         newTabButton.setMaximumWidth(30)
         self.setCornerWidget(newTabButton, Qt.TopLeftCorner)
-        self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
+        if hasattr(self.p, 'toolBar'):
+            self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.clicked.connect(self.addNewTab)
@@ -255,6 +256,7 @@ class tabWidgetClass(QTabWidget):
                 image: url("%(close_tab)s");
                 width: 14px;
                 height: 14px;
+                margin-right: 4px;
             }
             QTabBar::close-button:hover {
                 background: rgba(255, 100, 100, 255);
