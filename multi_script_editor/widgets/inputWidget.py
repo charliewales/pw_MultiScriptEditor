@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QTextOption, QTextDocument
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat
 from vendor.Qt.QtWidgets import QTextEdit
 import re
 
@@ -7,11 +7,8 @@ from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
 from widgets import completeWidget
 from core.settings_model import SettingsModel
 from core.base_text_widget import BaseTextWidgetMixin
-from core.autocomplete_provider import AutocompleteProvider
 from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
-import string
-import keyword
 import managers
 from widgets.pythonSyntax import design
 

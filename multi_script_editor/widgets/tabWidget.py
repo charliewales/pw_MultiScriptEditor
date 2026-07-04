@@ -1,9 +1,8 @@
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtGui import QCursor, QFont, QIcon, QKeySequence, QTextCursor
+from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
 import os
 from widgets import numBarWidget, inputWidget
-from managers import context
 from icons import *
 
 

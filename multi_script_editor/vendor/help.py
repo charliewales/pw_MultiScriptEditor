@@ -14,12 +14,10 @@ QtCore_url = 'https://doc.qt.io/qtforpython-{}/PySide{}/QtCore'
 
 try:
     try:
-        import PySide2
         QtCore_url = QtCore_url.format("5", "2")
         QtWidgets_url = QtWidgets_url.format("5", "2")
         QtGui_url = QtGui_url.format("5", "2")
     except:
-        import PySide6
         QtCore_url = QtCore_url.format("6", "6")
         QtWidgets_url = QtWidgets_url.format("6", "6")
         QtGui_url = QtGui_url.format("6", "6")

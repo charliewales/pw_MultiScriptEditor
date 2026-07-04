@@ -1,4 +1,3 @@
-import re
 import managers
 
 class CompletionItem:

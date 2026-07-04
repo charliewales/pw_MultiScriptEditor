@@ -17,11 +17,9 @@ from presenters.main_presenter import MainPresenter
 import vendor.Qt
 from icons import *
 from vendor.help import get_help
-import ast
-import re
 
-from vendor.Qt.QtCore import QCoreApplication, QPoint, QSize, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
+from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
 from widgets import scriptEditor_UIs as ui

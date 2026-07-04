@@ -1,9 +1,8 @@
-import os
 import sys
 from functools import partial
 from vendor.Qt.QtCore import Qt, QSize, QTimer
 from vendor.Qt.QtGui import QIcon, QKeySequence
-from vendor.Qt.QtWidgets import QShortcut, QMenu, QAction, QStyle
+from vendor.Qt.QtWidgets import QShortcut, QMenu
 from icons import icons
 import managers
 

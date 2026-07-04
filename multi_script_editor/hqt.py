@@ -11,7 +11,7 @@ to environment PATH. If PySide installed in different folder you mast append thi
 qt = 0
 
 import hou
-import sys, os, inspect
+import os, inspect
 
 # import hqt to main
 main = __import__('__main__')
@@ -21,8 +21,8 @@ if not __name__ in ns:
 
 # Cleaned up global/wildcard imports to use explicit imports from vendor.Qt for better performance and maintainability
 from vendor.Qt.QtCore import QEventLoop, QTimer, Qt
-from vendor.Qt.QtGui import QColor, QIcon, QCursor
-from vendor.Qt.QtWidgets import QAction, QApplication, QGridLayout, QLabel, QLineEdit, QMainWindow, QMenu, QScrollArea, QVBoxLayout, QWidget
+from vendor.Qt.QtGui import QIcon, QCursor
+from vendor.Qt.QtWidgets import QAction, QApplication, QMenu
 
 import tempfile
 
@@ -268,7 +268,7 @@ class houdiniMenu(QMenu):
 ############################################################
 ############  RESOURCES  ###################################
 ############################################################
-import os, re, glob
+import os
 
 # import hqt
 # s = hqt.get_hou_style('Houdini Dark')

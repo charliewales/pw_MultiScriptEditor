@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QTextCursor, QColor, QTextFormat, QTextDocument
+from vendor.Qt.QtGui import QTextCursor, QColor
 from vendor.Qt.QtWidgets import QTextEdit
 
 class MultiCursorManager:

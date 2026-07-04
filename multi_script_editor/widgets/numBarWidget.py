@@ -1,7 +1,6 @@
 from vendor.Qt.QtCore import QRect, Qt, QPoint
 from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen
 from vendor.Qt.QtWidgets import QApplication, QWidget
-import managers
 
 class lineNumberBarClass(QWidget):
     def __init__(self, edit, parent=None):

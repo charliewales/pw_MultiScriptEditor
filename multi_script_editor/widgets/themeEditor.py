@@ -5,8 +5,6 @@ from vendor.Qt.QtWidgets import QApplication, QColorDialog, QDialog, QInputDialo
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
 from .pythonSyntax import design
-from .pythonSyntax import syntaxHighLighter
-from . import inputWidget
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):

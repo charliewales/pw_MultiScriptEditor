@@ -1,7 +1,7 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
-from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QToolTip
-import os, re
+from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem
+import os
 from . pythonSyntax import design
 import managers
 style = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'style', 'completer.qss')

@@ -1,9 +1,7 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextOption
+from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor
 from vendor.Qt.QtWidgets import QTextBrowser, QTextEdit
 
-import os
-from managers import context
 
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets.pythonSyntax import design
