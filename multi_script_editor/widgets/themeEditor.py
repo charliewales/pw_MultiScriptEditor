@@ -61,6 +61,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.outputSize_spb.valueChanged.connect(self.updateExample)
         self.outputSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.outputSize_spb.customContextMenuRequested.connect(self.openOutputSizeMenu)
+        self.statusBarSize_spb.valueChanged.connect(self.updateExample)
+        self.statusBarSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.statusBarSize_spb.customContextMenuRequested.connect(self.openStatusBarSizeMenu)
         self.custom_font_data = None
         self.fillUI()
         self.updateUI()
@@ -179,6 +182,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.outputSize_spb.setValue(int(font_size * 0.8))
         self.outputSize_spb.blockSignals(False)
 
+        self.statusBarSize_spb.blockSignals(True)
+        if 'status_bar_text_size' in colors:
+            self.statusBarSize_spb.setValue(int(colors['status_bar_text_size']))
+        else:
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.statusBarSize_spb.setValue(int(font_size * 0.8))
+        self.statusBarSize_spb.blockSignals(False)
+
         self.menuFont_cb.blockSignals(True)
         self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
         self.menuFont_cb.blockSignals(False)
@@ -251,6 +263,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['tab_text_size'] = self.tabSize_spb.value()
         colors['outline_text_size'] = self.outlineSize_spb.value()
         colors['output_text_size'] = self.outputSize_spb.value()
+        colors['status_bar_text_size'] = self.statusBarSize_spb.value()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:
             colors['font'] = self.custom_font_data
@@ -430,6 +443,18 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def resetOutputSizeToDefault(self):
         pts = self._getBaseFontPointSize()
         self.outputSize_spb.setValue(max(1, int(pts * 0.8)))
+        self.updateExample()
+
+    def openStatusBarSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to Default (80% of Font)", self)
+        reset_action.triggered.connect(self.resetStatusBarSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.statusBarSize_spb.mapToGlobal(position))
+
+    def resetStatusBarSizeToDefault(self):
+        pts = self._getBaseFontPointSize()
+        self.statusBarSize_spb.setValue(max(1, int(pts * 0.8)))
         self.updateExample()
 
     def saveTheme(self):

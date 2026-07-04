@@ -73,6 +73,15 @@ class Ui_themeEditor(object):
         self.outputSize_spb.setObjectName("outputSize_spb")
         self.formLayout.addRow(self.label_outputSize, self.outputSize_spb)
         
+        self.label_statusBarSize = QLabel(self.widget)
+        self.label_statusBarSize.setObjectName("label_statusBarSize")
+        self.statusBarSize_spb = QSpinBox(self.widget)
+        self.statusBarSize_spb.setMinimum(6)
+        self.statusBarSize_spb.setMaximum(25)
+        self.statusBarSize_spb.setProperty("value", 10)
+        self.statusBarSize_spb.setObjectName("statusBarSize_spb")
+        self.formLayout.addRow(self.label_statusBarSize, self.statusBarSize_spb)
+        
         self.label_tabSize = QLabel(self.widget)
         self.label_tabSize.setObjectName("label_tabSize")
         self.tabSize_spb = QSpinBox(self.widget)
@@ -145,6 +154,7 @@ class Ui_themeEditor(object):
         self.label.setText(QApplication.translate("themeEditor", "Completer text size", None))
         self.label_outlineSize.setText(QApplication.translate("themeEditor", "Outline text size", None))
         self.label_outputSize.setText(QApplication.translate("themeEditor", "Output text size", None))
+        self.label_statusBarSize.setText(QApplication.translate("themeEditor", "Status bar text size", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
         self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus and status bar use theme font", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))

@@ -394,19 +394,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.menubar.setFont(base_font)
                 for menu in self.findChildren(QMenu):
                     menu.setFont(base_font)
-                if self.statusBar():
-                    self.statusBar().setFont(base_font)
-                    for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
-                        lbl.setFont(base_font)
+                status_bar_font = QFont(base_font)
             else:
                 default_app_font = QFont()
                 self.menubar.setFont(default_app_font)
                 for menu in self.findChildren(QMenu):
                     menu.setFont(default_app_font)
-                if self.statusBar():
-                    self.statusBar().setFont(default_app_font)
-                    for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
-                        lbl.setFont(default_app_font)
+                status_bar_font = QFont(default_app_font)
+
+            if 'status_bar_text_size' in colors:
+                status_bar_font.setPointSize(max(1, int(colors['status_bar_text_size'])))
+            elif colors.get('use_theme_font_on_menus', False):
+                status_bar_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
+
+            if self.statusBar():
+                self.statusBar().setFont(status_bar_font)
+                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                    lbl.setFont(status_bar_font)
 
         s = self._current_settings
         s['theme'] = name
