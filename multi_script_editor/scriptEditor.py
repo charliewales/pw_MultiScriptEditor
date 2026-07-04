@@ -390,17 +390,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.outline_list.item(i).setFont(outline_font)
             
             from vendor.Qt.QtWidgets import QMenu
+            
             if colors.get('use_theme_font_on_menus', False):
-                self.menubar.setFont(base_font)
-                for menu in self.findChildren(QMenu):
-                    menu.setFont(base_font)
+                menu_font = QFont(base_font)
                 status_bar_font = QFont(base_font)
             else:
-                default_app_font = QFont()
-                self.menubar.setFont(default_app_font)
-                for menu in self.findChildren(QMenu):
-                    menu.setFont(default_app_font)
-                status_bar_font = QFont(default_app_font)
+                menu_font = QFont()
+                status_bar_font = QFont()
+                
+            if 'menu_text_size' in colors:
+                menu_font.setPointSize(max(1, int(colors['menu_text_size'])))
+            elif colors.get('use_theme_font_on_menus', False):
+                menu_font.setPointSize(max(1, int(base_font.pointSize())))
+
+            self.menubar.setFont(menu_font)
+            for menu in self.findChildren(QMenu):
+                menu.setFont(menu_font)
 
             if 'status_bar_text_size' in colors:
                 status_bar_font.setPointSize(max(1, int(colors['status_bar_text_size'])))

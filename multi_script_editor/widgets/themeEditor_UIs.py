@@ -54,6 +54,15 @@ class Ui_themeEditor(object):
         self.textSize_spb.setProperty("value", 10)
         self.textSize_spb.setObjectName("textSize_spb")
         self.formLayout.addRow(self.label, self.textSize_spb)
+
+        self.label_menuSize = QLabel(self.widget)
+        self.label_menuSize.setObjectName("label_menuSize")
+        self.menuSize_spb = QSpinBox(self.widget)
+        self.menuSize_spb.setMinimum(6)
+        self.menuSize_spb.setMaximum(25)
+        self.menuSize_spb.setProperty("value", 10)
+        self.menuSize_spb.setObjectName("menuSize_spb")
+        self.formLayout.addRow(self.label_menuSize, self.menuSize_spb)
         
         self.label_outlineSize = QLabel(self.widget)
         self.label_outlineSize.setObjectName("label_outlineSize")
@@ -152,6 +161,7 @@ class Ui_themeEditor(object):
         themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Code Theme Editor", None))
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.label.setText(QApplication.translate("themeEditor", "Completer text size", None))
+        self.label_menuSize.setText(QApplication.translate("themeEditor", "Menu text size", None))
         self.label_outlineSize.setText(QApplication.translate("themeEditor", "Outline text size", None))
         self.label_outputSize.setText(QApplication.translate("themeEditor", "Output text size", None))
         self.label_statusBarSize.setText(QApplication.translate("themeEditor", "Status bar text size", None))

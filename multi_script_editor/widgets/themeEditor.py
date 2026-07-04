@@ -49,6 +49,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.textSize_spb.valueChanged.connect(self.updateExample)
         self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.textSize_spb.customContextMenuRequested.connect(self.openTextSizeMenu)
+        self.menuSize_spb.valueChanged.connect(self.updateExample)
+        self.menuSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.menuSize_spb.customContextMenuRequested.connect(self.openMenuSizeMenu)
         self.tabRadius_spb.valueChanged.connect(self.updateExample)
         self.tabRadius_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabRadius_spb.customContextMenuRequested.connect(self.openTabRadiusMenu)
@@ -144,6 +147,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             font_size = default_font.get('pointSize', 12)
             self.textSize_spb.setValue(int(font_size * 0.8))
         self.textSize_spb.blockSignals(False)
+
+        self.menuSize_spb.blockSignals(True)
+        if 'menu_text_size' in colors:
+            self.menuSize_spb.setValue(int(colors['menu_text_size']))
+        else:
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.menuSize_spb.setValue(int(font_size))
+        self.menuSize_spb.blockSignals(False)
 
         # Update tab radius (or default to 12 if not present)
         self.tabRadius_spb.blockSignals(True)
@@ -259,6 +271,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             item = self.colors_lwd.item(i)
             colors[item.text()] = item.data(32)
         colors['textsize'] = self.textSize_spb.value()
+        colors['menu_text_size'] = self.menuSize_spb.value()
         colors['tab_radius'] = self.tabRadius_spb.value()
         colors['tab_text_size'] = self.tabSize_spb.value()
         colors['outline_text_size'] = self.outlineSize_spb.value()
@@ -385,6 +398,18 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def resetTextSizeToDefault(self):
         pts = self._getBaseFontPointSize()
         self.textSize_spb.setValue(max(1, int(pts * 0.8)))
+        self.updateExample()
+
+    def openMenuSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to Default (100% of Font)", self)
+        reset_action.triggered.connect(self.resetMenuSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.menuSize_spb.mapToGlobal(position))
+
+    def resetMenuSizeToDefault(self):
+        pts = self._getBaseFontPointSize()
+        self.menuSize_spb.setValue(max(1, int(pts)))
         self.updateExample()
 
     def openTabRadiusMenu(self, position):
