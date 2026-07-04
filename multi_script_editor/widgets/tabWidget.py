@@ -1,7 +1,8 @@
+import os
+
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
-import os
 from widgets import numBarWidget, inputWidget
 from icons import *
 
@@ -57,7 +58,7 @@ class tabWidgetClass(QTabWidget):
 
         if hasattr(self.p, 'toolBar'):
             self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
-            
+
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
 
         # We will render whitespace initially based on presenter, but for now we default to False
@@ -166,11 +167,11 @@ class tabWidgetClass(QTabWidget):
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         self.addTab(cont, name)
-        
+
         if hasattr(self.p, 'updateStatusBarInfo'):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
             cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
-            
+
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:
@@ -310,13 +311,13 @@ class tabWidgetClass(QTabWidget):
             "tab_radius": str(colors.get("tab_radius", 12)) + "px",
             "close_tab": icons["close_tab"].replace("\\", "/")
         }
-        
+
         ss = self.styleSheet()
         import re
         font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)
         if font_match:
             css += '\n' + font_match.group(0)
-            
+
         self.setStyleSheet(css)
 
     def undo(self):
@@ -342,7 +343,7 @@ class tabWidgetClass(QTabWidget):
                 custom_size = pt_size * 0.8
             else:
                 custom_size = tab_font.pixelSize() * 0.8 if tab_font.pixelSize() > 0 else 10.0
-        
+
         if pt_size > 0:
             tab_font.setPointSizeF(custom_size)
             size_css = "font-size: %spt;" % custom_size
@@ -387,7 +388,7 @@ class tabWidgetClass(QTabWidget):
             size = font_d.get('pointSize', 10)
             weight = font_d.get('weight', -1)
             italic = font_d.get('italic', False)
-            
+
             if family:
                 font = QFont(family, size, weight, italic)
                 font.setStyleHint(QFont.Monospace)

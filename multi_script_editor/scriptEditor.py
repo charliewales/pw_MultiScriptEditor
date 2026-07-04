@@ -250,7 +250,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
-            self.toolBar.setStyleSheet('QToolBar {background-color: indianred;}')
+            self.toolBar.setStyleSheet('QToolBar {border: 1px solid indianred;}')
         else:
             self.toolBar.setStyleSheet('QToolBar {}')
 
