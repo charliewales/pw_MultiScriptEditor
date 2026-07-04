@@ -298,6 +298,13 @@ class tabWidgetClass(QTabWidget):
                 background: rgba(255, 100, 100, 255);
                 border-radius: 6px;
             }
+            
+            QTabBar QToolButton::right-arrow {
+                image: url("%(right_arrow)s");
+            }
+            QTabBar QToolButton::left-arrow {
+                image: url("%(left_arrow)s");
+            }
         """ % {
             "tab_border": c("tab_border"),
             "tab_background": c("tab_background"),
@@ -309,7 +316,9 @@ class tabWidgetClass(QTabWidget):
             "tab_selected_text": c("tab_selected_text"),
             "tab_selected_border": c("tab_selected_border"),
             "tab_radius": str(colors.get("tab_radius", 12)) + "px",
-            "close_tab": icons["close_tab"].replace("\\", "/")
+            "close_tab": icons["close_tab"].replace("\\", "/"),
+            "left_arrow": icons.get("left_arrow", "").replace("\\", "/"),
+            "right_arrow": icons.get("right_arrow", "").replace("\\", "/")
         }
 
         ss = self.styleSheet()

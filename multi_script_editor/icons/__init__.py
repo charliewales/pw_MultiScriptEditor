@@ -44,4 +44,6 @@ icons = dict(
     file_recent=os.path.join(root, "file_recent.png"),
     restore_backup=os.path.join(root, "restore_backup.png"),
     outline=os.path.join(root, "outline.png"),
+    left_arrow=os.path.join(root, "left_arrow.png"),
+    right_arrow=os.path.join(root, "right_arrow.png"),
 )
