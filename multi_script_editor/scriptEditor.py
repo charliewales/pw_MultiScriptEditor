@@ -690,7 +690,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 act.triggered.connect(partial(self.openRecentFile, path))
                 self.recent_files_menu.addAction(act)
         self.recent_files_menu.addSeparator()
-        clear_act = QAction("Clear Recent", self)
+        clear_act = QAction("Clear recent", self)
         clear_act.setStatusTip("Clear the list of recent files")
         clear_act.triggered.connect(self.clearRecentFiles)
         self.recent_files_menu.addAction(clear_act)
@@ -1105,13 +1105,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def fillSessionsMenu(self):
         self.sessions_menu.clear()
 
-        save_act = QAction("Save Current Session As...", self)
+        save_act = QAction("Save current session as...", self)
         save_act.setIcon(QIcon(icons['save']))
         save_act.setStatusTip("Save the current state as a named session")
         save_act.triggered.connect(self.saveNamedSession)
         self.sessions_menu.addAction(save_act)
 
-        restore_backup_act = QAction("Restore Crash Backup", self)
+        restore_backup_act = QAction("Restore crash backup", self)
         restore_backup_act.setIcon(QIcon(icons['restore_backup']))
         restore_backup_act.setStatusTip("Restore the last auto-saved backup session")
         restore_backup_act.triggered.connect(self.restoreBackupSession)
@@ -1119,7 +1119,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             restore_backup_act.setEnabled(False)
         self.sessions_menu.addAction(restore_backup_act)
 
-        self.delete_session_menu = QMenu("Delete Session", self)
+        self.delete_session_menu = QMenu("Delete session", self)
         self.delete_session_menu.setIcon(QIcon(icons["clear"]))
         self.delete_session_menu.menuAction().setStatusTip("Delete a saved session")
         self.sessions_menu.addMenu(self.delete_session_menu)
