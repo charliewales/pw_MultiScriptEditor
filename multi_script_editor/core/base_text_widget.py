@@ -79,3 +79,5 @@ class BaseTextWidgetMixin:
         
         if hasattr(self, 'completer') and self.completer:
             self.completer.setFont(editor_font)
+            if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
+                self.completer.doc_tooltip.setFont(editor_font)

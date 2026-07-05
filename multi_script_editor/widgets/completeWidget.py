@@ -27,7 +27,10 @@ class completeMenuClass(QListWidget):
         from vendor.Qt.QtWidgets import QLabel
         self.doc_tooltip = QLabel(self)
         self.doc_tooltip.setObjectName("docTooltip")
-        self.doc_tooltip.setWindowFlags(Qt.ToolTip)
+        self.doc_tooltip.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.doc_tooltip.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.doc_tooltip.setTextFormat(Qt.PlainText)
+        self.doc_tooltip.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.doc_tooltip.setWordWrap(True)
         self.doc_tooltip.setContentsMargins(4, 4, 4, 4)
 
@@ -84,6 +87,11 @@ class completeMenuClass(QListWidget):
     def updateStyle(self, colors=None):
         text = design.editorStyle()
         self.setStyleSheet(text)
+        if hasattr(self, 'e') and self.e:
+            editor_font = self.e.font()
+            self.setFont(editor_font)
+            if hasattr(self, 'doc_tooltip'):
+                self.doc_tooltip.setFont(editor_font)
 
     def updateCompleteList(self, lines=None, extra=None):
         self.clear()

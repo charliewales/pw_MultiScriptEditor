@@ -94,7 +94,16 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.setFont(editor_font)
         if hasattr(self, 'completer') and self.completer:
             self.completer.setFont(editor_font)
+            if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
+                self.completer.doc_tooltip.setFont(editor_font)
         self.blockSignals(False)
+
+    def setFont(self, font):
+        super(inputClass, self).setFont(font)
+        if hasattr(self, 'completer') and self.completer:
+            self.completer.setFont(font)
+            if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
+                self.completer.doc_tooltip.setFont(font)
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()
