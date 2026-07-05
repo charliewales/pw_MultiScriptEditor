@@ -1,4 +1,5 @@
 import os
+import json
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QColor, QIcon, QPixmap, QFont
 from vendor.Qt.QtWidgets import (
@@ -17,6 +18,7 @@ from vendor.Qt.QtWidgets import (
     QMenu,
     QFontDialog,
     QPushButton,
+    QFileDialog,
 )
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
@@ -77,6 +79,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.colors_lwd.customContextMenuRequested.connect(self.openColorMenu)
         self.save_btn.clicked.connect(self.saveTheme)
         self.del_btn.clicked.connect(self.deleteTheme)
+        self.export_btn.clicked.connect(self.exportTheme)
+        self.import_btn.clicked.connect(self.importTheme)
         self.themeList_cbb.currentIndexChanged.connect(self.updateColors)
         self.apply_btn.clicked.connect(self.apply)
         self.choose_font_btn.clicked.connect(self.chooseFont)
@@ -609,6 +613,58 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                         self.save_settings(settings)
                         self.fillUI(False)
                         self.updateUI()
+
+    def exportTheme(self):
+        name = self.themeList_cbb.currentText()
+        if not name:
+            return
+        
+        path, _ = QFileDialog.getSaveFileName(self, "Export Theme", name + ".json", "JSON Files (*.json)")
+        if path:
+            colors = self.getCurrentColors()
+            try:
+                with open(path, 'w') as f:
+                    json.dump(colors, f, indent=4)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", "Could not export theme:\n" + str(e))
+
+    def importTheme(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Import Theme", "", "JSON Files (*.json)")
+        if path:
+            try:
+                with open(path, 'r') as f:
+                    colors = json.load(f)
+                
+                # Extract filename without extension to use as theme name
+                base_name = os.path.basename(path)
+                name, _ = os.path.splitext(base_name)
+                
+                name_input = QInputDialog.getText(self, 'Theme name', 'Enter Theme name', QLineEdit.Normal, name)
+                if name_input[1]:
+                    name = name_input[0]
+                    if name in design.predefinedThemes:
+                        name = name + ' (Custom)'
+                    
+                    settings = self.get_settings()
+                    if 'colors' in settings:
+                        if name in settings['colors']:
+                            if not self.yes_no_question('Replace exists?'):
+                                return
+                    
+                    if 'colors' in settings:
+                        settings['colors'][name] = colors
+                    else:
+                        settings['colors'] = {name: colors}
+                        
+                    self.save_settings(settings)
+                    self.fillUI(name)
+                    self.updateUI()
+                    if self.parent() and hasattr(self.parent(), 'applyTheme'):
+                        self.parent().applyTheme(name)
+                        if hasattr(self.parent(), 'fillThemeMenu'):
+                            self.parent().fillThemeMenu()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", "Could not import theme:\n" + str(e))
 
     def updateUI(self):
         if not self.themeList_cbb.count():

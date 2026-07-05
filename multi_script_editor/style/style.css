@@ -461,13 +461,13 @@ QSpinBox::up-button,QTimeEdit::up-button  {
     subcontrol-origin: border;
     subcontrol-position: top right;
      width: 16px;
-    border: 1px solid #3a3939;
+    /* border: 1px solid #3a3939; */
 }
 QSpinBox::down-button,  QTimeEdit::down-button{
     subcontrol-origin: border;
     subcontrol-position: bottom right;
-     width: 16px;
-    border: 1px solid #3a3939;
+    width: 16px;
+    /* border: 1px solid #3a3939; */
 }
 QSpinBox::up-button:hover, QSpinBox::down-button:hover,
 QTimeEdit::up-button:hover , QTimeEdit::down-button:hover

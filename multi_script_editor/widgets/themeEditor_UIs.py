@@ -27,7 +27,7 @@ class Ui_themeEditor(object):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.colors_lwd = QListWidget(self.widget)
         self.colors_lwd.setObjectName("colors_lwd")
-        
+
         self.horizontalLayout_font = QHBoxLayout()
         self.horizontalLayout_font.setObjectName("horizontalLayout_font")
         self.choose_font_btn = QPushButton(self.widget)
@@ -42,10 +42,10 @@ class Ui_themeEditor(object):
         self.verticalLayout_2.addLayout(self.horizontalLayout_font)
 
         self.verticalLayout_2.addWidget(self.colors_lwd)
-        
+
         self.formLayout = QFormLayout()
         self.formLayout.setObjectName("formLayout")
-        
+
         self.fontSize_groupBox = QGroupBox(self.widget)
         self.fontSize_groupBox.setObjectName("fontSize_groupBox")
         self.fontSize_groupBox.setAlignment(Qt.AlignLeft)
@@ -71,7 +71,7 @@ class Ui_themeEditor(object):
         self.menuSize_spb.setObjectName("menuSize_spb")
         self.fontSize_layout.addWidget(self.label_menuSize, 0, 2)
         self.fontSize_layout.addWidget(self.menuSize_spb, 0, 3)
-        
+
         self.label_outlineSize = QLabel(self.fontSize_groupBox)
         self.label_outlineSize.setObjectName("label_outlineSize")
         self.outlineSize_spb = QSpinBox(self.fontSize_groupBox)
@@ -81,7 +81,7 @@ class Ui_themeEditor(object):
         self.outlineSize_spb.setObjectName("outlineSize_spb")
         self.fontSize_layout.addWidget(self.label_outlineSize, 1, 0)
         self.fontSize_layout.addWidget(self.outlineSize_spb, 1, 1)
-        
+
         self.label_outputSize = QLabel(self.fontSize_groupBox)
         self.label_outputSize.setObjectName("label_outputSize")
         self.outputSize_spb = QSpinBox(self.fontSize_groupBox)
@@ -91,7 +91,7 @@ class Ui_themeEditor(object):
         self.outputSize_spb.setObjectName("outputSize_spb")
         self.fontSize_layout.addWidget(self.label_outputSize, 1, 2)
         self.fontSize_layout.addWidget(self.outputSize_spb, 1, 3)
-        
+
         self.label_statusBarSize = QLabel(self.fontSize_groupBox)
         self.label_statusBarSize.setObjectName("label_statusBarSize")
         self.statusBarSize_spb = QSpinBox(self.fontSize_groupBox)
@@ -101,7 +101,7 @@ class Ui_themeEditor(object):
         self.statusBarSize_spb.setObjectName("statusBarSize_spb")
         self.fontSize_layout.addWidget(self.label_statusBarSize, 2, 0)
         self.fontSize_layout.addWidget(self.statusBarSize_spb, 2, 1)
-        
+
         self.label_tabSize = QLabel(self.fontSize_groupBox)
         self.label_tabSize.setObjectName("label_tabSize")
         self.tabSize_spb = QSpinBox(self.fontSize_groupBox)
@@ -114,7 +114,7 @@ class Ui_themeEditor(object):
         self.fontSize_layout.setColumnStretch(4, 1)
 
         self.formLayout.addRow(self.fontSize_groupBox)
-        
+
         self.label_radius = QLabel(self.widget)
         self.label_radius.setObjectName("label_radius")
         self.tabRadius_spb = QSpinBox(self.widget)
@@ -132,32 +132,32 @@ class Ui_themeEditor(object):
         self.completerFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.completerFont_cb.setObjectName("completerFont_cb")
         self.useThemeFont_layout.addWidget(self.completerFont_cb, 0, 0)
-        
+
         self.menuFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.menuFont_cb.setObjectName("menuFont_cb")
         self.useThemeFont_layout.addWidget(self.menuFont_cb, 0, 1)
-        
+
         self.outlineFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.outlineFont_cb.setObjectName("outlineFont_cb")
         self.useThemeFont_layout.addWidget(self.outlineFont_cb, 1, 0)
-        
+
         self.statusBarFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.statusBarFont_cb.setObjectName("statusBarFont_cb")
         self.useThemeFont_layout.addWidget(self.statusBarFont_cb, 1, 1)
-        
+
         self.tabFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.tabFont_cb.setObjectName("tabFont_cb")
         self.useThemeFont_layout.addWidget(self.tabFont_cb, 2, 0)
         self.useThemeFont_layout.setColumnStretch(2, 1)
-        
+
         self.formLayout.addRow(self.useThemeFont_groupBox)
-        
+
         self.horizontalLayout_formContainer = QHBoxLayout()
         self.horizontalLayout_formContainer.addLayout(self.formLayout)
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_formContainer.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.horizontalLayout_formContainer)
-        
+
         self.layoutWidget = QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout = QVBoxLayout(self.layoutWidget)
@@ -169,13 +169,17 @@ class Ui_themeEditor(object):
         self.themeList_cbb.setObjectName("themeList_cbb")
         self.horizontalLayout.addWidget(self.themeList_cbb)
         self.save_btn = QPushButton(self.layoutWidget)
-        self.save_btn.setMaximumSize(QSize(60, 16777215))
         self.save_btn.setObjectName("save_btn")
         self.horizontalLayout.addWidget(self.save_btn)
         self.del_btn = QPushButton(self.layoutWidget)
-        self.del_btn.setMaximumSize(QSize(60, 16777215))
         self.del_btn.setObjectName("del_btn")
         self.horizontalLayout.addWidget(self.del_btn)
+        self.export_btn = QPushButton(self.layoutWidget)
+        self.export_btn.setObjectName("export_btn")
+        self.horizontalLayout.addWidget(self.export_btn)
+        self.import_btn = QPushButton(self.layoutWidget)
+        self.import_btn.setObjectName("import_btn")
+        self.horizontalLayout.addWidget(self.import_btn)
         self.horizontalLayout.setStretch(0, 1)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.preview_ly = QVBoxLayout()
@@ -200,7 +204,7 @@ class Ui_themeEditor(object):
         themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Code Theme Editor", None))
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.tabRadius_spb.setToolTip(QApplication.translate("themeEditor", "Set the border radius (roundness) for the tabs", None))
-        
+
         self.fontSize_groupBox.setTitle(QApplication.translate("themeEditor", "Font size", None))
         self.label.setText(QApplication.translate("themeEditor", "Completer", None))
         self.textSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the completer list", None))
@@ -214,7 +218,7 @@ class Ui_themeEditor(object):
         self.statusBarSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the status bar", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label", None))
         self.tabSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the tab labels", None))
-        
+
         self.useThemeFont_groupBox.setTitle(QApplication.translate("themeEditor", "Use theme font", None))
         self.completerFont_cb.setText(QApplication.translate("themeEditor", "Completer", None))
         self.completerFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the completer list", None))
@@ -226,15 +230,18 @@ class Ui_themeEditor(object):
         self.statusBarFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the status bar", None))
         self.tabFont_cb.setText(QApplication.translate("themeEditor", "Tab label", None))
         self.tabFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the tab labels", None))
-        
+
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.save_btn.setToolTip(QApplication.translate("themeEditor", "Save current settings to a new theme", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.del_btn.setToolTip(QApplication.translate("themeEditor", "Delete the selected theme", None))
+        self.export_btn.setText(QApplication.translate("themeEditor", "Export", None))
+        self.export_btn.setToolTip(QApplication.translate("themeEditor", "Export the selected theme to a JSON file", None))
+        self.import_btn.setText(QApplication.translate("themeEditor", " Import", None))
+        self.import_btn.setToolTip(QApplication.translate("themeEditor", "Import a theme from a JSON file", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.apply_btn.setToolTip(QApplication.translate("themeEditor", "Apply the selected theme to the editor", None))
         self.choose_font_btn.setText(QApplication.translate("themeEditor", "Choose Font", None))
         self.choose_font_btn.setToolTip(QApplication.translate("themeEditor", "Select a custom font family", None))
         self.font_name_label.setText(QApplication.translate("themeEditor", "Default", None))
         self.themeList_cbb.setToolTip(QApplication.translate("themeEditor", "Select a theme to edit or apply", None))
-
