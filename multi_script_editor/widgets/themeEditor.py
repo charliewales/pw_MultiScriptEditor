@@ -78,6 +78,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.statusBarSize_spb.valueChanged.connect(self.updateExample)
         self.statusBarSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.statusBarSize_spb.customContextMenuRequested.connect(self.openStatusBarSizeMenu)
+        self.completerFont_cb.stateChanged.connect(self.updateExample)
+        self.menuFont_cb.stateChanged.connect(self.updateExample)
+        self.outlineFont_cb.stateChanged.connect(self.updateExample)
+        self.statusBarFont_cb.stateChanged.connect(self.updateExample)
+        self.tabFont_cb.stateChanged.connect(self.updateExample)
         self.custom_font_data = None
         self.fillUI()
         self.updateUI()
