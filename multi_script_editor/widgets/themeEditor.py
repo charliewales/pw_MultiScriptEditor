@@ -9,8 +9,12 @@ from vendor.Qt.QtWidgets import (
     QLineEdit,
     QListWidgetItem,
     QMessageBox,
-    QMenu,
+    QMenuBar,
+    QStatusBar,
+    QMainWindow,
+    QLabel,
     QAction,
+    QMenu,
     QFontDialog,
     QPushButton,
 )
@@ -24,12 +28,40 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         super(themeEditorClass, self).__init__(parent)
         self.setupUi(self)
         from widgets.tabWidget import tabWidgetClass
-        self.preview_tab_widget = tabWidgetClass(self)
+        self.preview_main_window = QMainWindow(self)
+        self.preview_main_window.setWindowFlags(Qt.Widget)
+        
+        self.preview_menubar = QMenuBar(self.preview_main_window)
+        self.preview_menu_file = QMenu("File", self.preview_menubar)
+        self.preview_menu_file.addAction("Open")
+        self.preview_menu_file.addAction("Save")
+        self.preview_menubar.addMenu(self.preview_menu_file)
+        
+        self.preview_menu_edit = QMenu("Edit", self.preview_menubar)
+        self.preview_menu_edit.addAction("Undo")
+        self.preview_menu_edit.addAction("Redo")
+        self.preview_menubar.addMenu(self.preview_menu_edit)
+        self.preview_main_window.setMenuBar(self.preview_menubar)
+
+        self.preview_statusbar = QStatusBar(self.preview_main_window)
+        self.lbl_lang = QLabel("Python |")
+        self.lbl_wrap = QLabel("Wrap: OFF |")
+        self.lbl_lines = QLabel("1 lines |")
+        self.lbl_cursor = QLabel("Ln 1, Col 1 |")
+
+        for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+            lbl.setStyleSheet("padding: 0 5px;")
+            self.preview_statusbar.addPermanentWidget(lbl)
+            
+        self.preview_main_window.setStatusBar(self.preview_statusbar)
+
+        self.preview_tab_widget = tabWidgetClass(self.preview_main_window)
         self.preview_tab_widget.addNewTab("Active Tab", defaultText, make_current=False)
         self.preview_tab_widget.addNewTab("Inactive Tab", defaultText, make_current=False)
         self.preview_tab_widget.setCurrentIndex(0)
-
-        self.preview_ly.addWidget(self.preview_tab_widget)
+        
+        self.preview_main_window.setCentralWidget(self.preview_tab_widget)
+        self.preview_ly.addWidget(self.preview_main_window)
 
         self.preview_twd = self.preview_tab_widget.widget(0).edit
         self.preview_twd2 = self.preview_tab_widget.widget(1).edit
@@ -291,7 +323,26 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             for i in range(self.preview_tab_widget.count()):
                 w = self.preview_tab_widget.widget(i)
                 w.edit.applyPreviewStyle(colors)
-                # w.edit.set_start_font(font_data) is handled by self.preview_tab_widget.set_start_font(font_data)
+
+            if colors.get('use_theme_font_on_menus', False) and font_data:
+                menu_font = QFont(font.family(), colors.get('menu_text_size', 10), font.weight(), font.italic())
+                self.preview_menubar.setFont(menu_font)
+                self.preview_menu_file.setFont(menu_font)
+                self.preview_menu_edit.setFont(menu_font)
+            else:
+                self.preview_menubar.setFont(QFont())
+                self.preview_menu_file.setFont(QFont())
+                self.preview_menu_edit.setFont(QFont())
+
+            if colors.get('use_theme_font_on_status_bar', False) and font_data:
+                status_font = QFont(font.family(), colors.get('status_bar_text_size', 10), font.weight(), font.italic())
+                self.preview_statusbar.setFont(status_font)
+                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                    lbl.setFont(status_font)
+            else:
+                self.preview_statusbar.setFont(QFont())
+                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                    lbl.setFont(QFont())
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
