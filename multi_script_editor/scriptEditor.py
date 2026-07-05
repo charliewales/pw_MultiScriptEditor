@@ -602,7 +602,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 cursor = edit_widget.textCursor()
                 cursor.setPosition(block.position())
                 edit_widget.setTextCursor(cursor)
-                edit_widget.centerCursor()
+                
+                # Center the block vertically
+                block_rect = edit_widget.document().documentLayout().blockBoundingRect(block)
+                cursor_y = block_rect.center().y()
+                viewport_height = edit_widget.viewport().height()
+                edit_widget.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
+                
                 edit_widget.setFocus()
 
     def saveScript(self):
