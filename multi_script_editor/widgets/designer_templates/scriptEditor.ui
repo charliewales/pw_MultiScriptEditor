@@ -106,6 +106,7 @@
     <addaction name="add_quotes_act"/>
     <addaction name="separator"/>
     <addaction name="find_act"/>
+    <addaction name="gotoLine_act"/>
    </widget>
    <widget class="QMenu" name="options_menu">
     <property name="tearOffEnabled">
@@ -256,6 +257,11 @@
   <action name="find_act">
    <property name="text">
     <string>Find and Replace</string>
+   </property>
+  </action>
+  <action name="gotoLine_act">
+   <property name="text">
+    <string>Go to line</string>
    </property>
   </action>
   <action name="undo_act">

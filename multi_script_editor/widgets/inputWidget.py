@@ -76,6 +76,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.multi_cursors = []
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
+        self.cursorPositionChanged.connect(self.highlight_current_line)
 
     def _on_text_changed(self):
         self.autocomplete_timer.start(200)

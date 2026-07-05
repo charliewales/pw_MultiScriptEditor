@@ -35,6 +35,7 @@ Select All Occurrences                      >   CTRL + SHIFT + ALT + D
 Copy                                        >   CTRL + C
 Delete line                                 >   CTRL + D
 Find and Replace                            >   CTRL + F
+Go to Line                                  >   CTRL + G
 Paste                                       >   CTRL + V
 New Tab                                     >   CTRL + T
 Close Tab                                   >   CTRL + W

@@ -586,6 +586,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if hasattr(w, 'edit'):
                 w.edit.parseText(force=True)
 
+    def gotoLine(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        
+        # Get maximum line count
+        edit_widget = self.tab.widget(index).edit
+        max_lines = edit_widget.document().blockCount()
+
+        line_num, ok = QInputDialog.getInt(self, "Go to line", "Enter line number:", 1, 1, max_lines)
+        if ok:
+            block = edit_widget.document().findBlockByLineNumber(line_num - 1)
+            if block.isValid():
+                cursor = edit_widget.textCursor()
+                cursor.setPosition(block.position())
+                edit_widget.setTextCursor(cursor)
+                edit_widget.centerCursor()
+                edit_widget.setFocus()
+
     def saveScript(self):
         index = self.tab.currentIndex()
         if index < 0:
