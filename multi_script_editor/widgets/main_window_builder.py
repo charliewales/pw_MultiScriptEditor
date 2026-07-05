@@ -96,7 +96,7 @@ class ScriptEditorUIBuilder:
         editor.documentation_act.setIcon(QIcon(icons['pw']))
         editor.printHelp_act.triggered.connect(editor.mse_help)
         editor.printHelp_act.setIcon(QIcon(icons['print_help']))
-        
+
         # editor
         editor.undo_act.triggered.connect(editor.tab.undo)
         editor.undo_act.setShortcut('Ctrl+Z')
@@ -266,7 +266,7 @@ class ScriptEditorUIBuilder:
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
-        
+
         # Output Bottom toggle setup
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
 
@@ -323,7 +323,7 @@ class ScriptEditorUIBuilder:
             editor.moveLineUp_act: "Move the current line or selection up",
             editor.moveLineDown_act: "Move the current line or selection down",
             editor.comment_cat: "Toggle comment on the current line or selection",
-            editor.add_quotes_act: "Add quotes around the selected text",
+            editor.add_quotes_act: "Add quotes around selected text or select text inside quotes",
             editor.autocomplete_act: "Toggle code autocomplete functionality",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",

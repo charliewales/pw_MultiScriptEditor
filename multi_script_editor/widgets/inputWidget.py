@@ -538,15 +538,88 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
     def addQuotesSelected(self):
         cursor = self.textCursor()
-        self.document().documentLayout().blockSignals(True)
-        if not cursor.hasSelection():
+        
+        if cursor.hasSelection():
+            text = cursor.selection().toPlainText()
+            is_quoted = False
+            if len(text) >= 6 and (text.startswith("'''") and text.endswith("'''") or text.startswith('"""') and text.endswith('"""')):
+                is_quoted = True
+            elif len(text) >= 2 and (text.startswith("'") and text.endswith("'") or text.startswith('"') and text.endswith('"')):
+                is_quoted = True
+                
+            if not is_quoted:
+                doc = self.document()
+                start = cursor.selectionStart()
+                end = cursor.selectionEnd()
+                
+                cursor_copy = QTextCursor(cursor)
+                text_before_3 = ""
+                text_after_3 = ""
+                if start >= 3:
+                    cursor_copy.setPosition(start - 3)
+                    cursor_copy.setPosition(start, QTextCursor.KeepAnchor)
+                    text_before_3 = cursor_copy.selectedText()
+                if end <= doc.characterCount() - 1 - 3:
+                    cursor_copy.setPosition(end)
+                    cursor_copy.setPosition(end + 3, QTextCursor.KeepAnchor)
+                    text_after_3 = cursor_copy.selectedText()
+                    
+                if (text_before_3 == '"""' and text_after_3 == '"""') or \
+                   (text_before_3 == "'''" and text_after_3 == "'''"):
+                    is_quoted = True
+                else:
+                    text_before_1 = ""
+                    text_after_1 = ""
+                    if start >= 1:
+                        cursor_copy.setPosition(start - 1)
+                        cursor_copy.setPosition(start, QTextCursor.KeepAnchor)
+                        text_before_1 = cursor_copy.selectedText()
+                    if end <= doc.characterCount() - 1 - 1:
+                        cursor_copy.setPosition(end)
+                        cursor_copy.setPosition(end + 1, QTextCursor.KeepAnchor)
+                        text_after_1 = cursor_copy.selectedText()
+                        
+                    if (text_before_1 == '"' and text_after_1 == '"') or \
+                       (text_before_1 == "'" and text_after_1 == "'"):
+                        is_quoted = True
+
+            if not is_quoted:
+                self.document().documentLayout().blockSignals(True)
+                cursor.insertText('"' + text + '"')
+                self.document().documentLayout().blockSignals(False)
+                self.setTextCursor(cursor)
+                self.update()
+            return
+
+        text = self.toPlainText()
+        pos = cursor.position()
+        pattern = r"('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\"|'(?:[^\\']|\\.)*?'|\"(?:[^\\\"]|\\.)*?\")"
+        
+        best_match = None
+        for match in re.finditer(pattern, text):
+            start, end = match.span()
+            if start <= pos <= end:
+                if match.group(1).startswith("'''") or match.group(1).startswith('"""'):
+                    inner_start, inner_end = start + 3, end - 3
+                else:
+                    inner_start, inner_end = start + 1, end - 1
+                best_match = (inner_start, inner_end)
+                break
+
+        if best_match:
+            inner_start, inner_end = best_match
+            cursor.setPosition(inner_start)
+            cursor.setPosition(inner_end, QTextCursor.KeepAnchor)
+            self.setTextCursor(cursor)
+        else:
+            self.document().documentLayout().blockSignals(True)
             cursor.select(QTextCursor.WordUnderCursor)
-        text = cursor.selection().toPlainText()
-        if text:
-            cursor.insertText('"' + text + '"')
-        self.document().documentLayout().blockSignals(False)
-        self.setTextCursor(cursor)
-        self.update()
+            sel_text = cursor.selection().toPlainText()
+            if sel_text:
+                cursor.insertText('"' + sel_text + '"')
+            self.document().documentLayout().blockSignals(False)
+            self.setTextCursor(cursor)
+            self.update()
 
     def commentSelected(self):
         cursor = self.textCursor()
@@ -555,17 +628,54 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         pos = cursor.position()
         start = cursor.selectionStart()
         end = cursor.selectionEnd()
+        has_selection = cursor.hasSelection()
+
         cursor.setPosition(start)
         cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+        block_start = cursor.position()
         cursor.setPosition(end,QTextCursor.KeepAnchor)
         cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
         text = cursor.selection().toPlainText()
         self.document().documentLayout().blockSignals(False)
-        text, offset = self.addRemoveComments(text)
+        
+        new_text, offset, shifts = self.addRemoveComments(text)
+        
+        def map_pos(p):
+            rel_p = p - block_start
+            lines = text.split('\n')
+            current_old_len = 0
+            current_new_len = 0
+            for i, line in enumerate(lines):
+                line_len = len(line) + 1 # +1 for \n
+                if rel_p < current_old_len + line_len:
+                    offset_in_line = rel_p - current_old_len
+                    idx, shift = shifts[i]
+                    if idx != -1 and offset_in_line > idx:
+                        offset_in_line = max(idx, offset_in_line + shift)
+                    return block_start + current_new_len + offset_in_line
+                current_old_len += line_len
+                idx, shift = shifts[i] if i < len(shifts) else (-1, 0)
+                current_new_len += line_len + shift
+            return block_start + current_new_len
+
+        new_start = map_pos(start)
+        new_end = map_pos(end)
+        new_pos = map_pos(pos)
+
         cursor.beginEditBlock()
-        cursor.insertText(text)
+        cursor.insertText(new_text)
         cursor.endEditBlock()
-        cursor.setPosition(min(pos+offset, len(self.toPlainText())))
+        
+        if has_selection:
+            if pos == end:
+                cursor.setPosition(new_start)
+                cursor.setPosition(new_end, QTextCursor.KeepAnchor)
+            else:
+                cursor.setPosition(new_end)
+                cursor.setPosition(new_start, QTextCursor.KeepAnchor)
+        else:
+            cursor.setPosition(new_pos)
+            
         self.setTextCursor(cursor)
         
         # Prevent autocomplete dialog from popping up due to textChanged
@@ -579,29 +689,37 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
     def addRemoveComments(self, text):
         result = text
         ofs = 0
+        shifts = []
         if text.strip():
             lines = text.split('\n')
             ind = 0
-            while not lines[ind].strip():
+            while ind < len(lines) and not lines[ind].strip():
                 ind += 1
-            if lines[ind].strip()[0] == '#': # remove comment
+            if ind < len(lines) and lines[ind].strip()[0] == '#': # remove comment
                 new_lines = []
                 for i, x in enumerate(lines):
                     idx = x.find('#')
+                    shift = 0
                     if idx != -1:
                         if len(x) > idx + 1 and x[idx+1] == ' ':
                             new_lines.append(x[:idx] + x[idx+2:])
+                            shift = -2
                             if i == ind: ofs = -2
                         else:
                             new_lines.append(x[:idx] + x[idx+1:])
+                            shift = -1
                             if i == ind: ofs = -1
                     else:
                         new_lines.append(x)
+                    shifts.append((idx, shift))
                 result = '\n'.join(new_lines)
             else:   # add comment
                 result = '\n'.join(['# ' + x for x in lines ])
+                shifts = [(0, 2)] * len(lines)
                 ofs = 2
-        return result, ofs
+        else:
+            shifts = [(0, 0)] * (text.count('\n') + 1)
+        return result, ofs, shifts
 
     def insertText(self, comp):
         cursor = self.textCursor()
