@@ -92,18 +92,18 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         editor_font.setStyleHint(QFont.Monospace)
         self.blockSignals(True)
         self.setFont(editor_font)
-        if hasattr(self, 'completer') and self.completer:
-            self.completer.setFont(editor_font)
-            if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
-                self.completer.doc_tooltip.setFont(editor_font)
         self.blockSignals(False)
 
     def setFont(self, font):
         super(inputClass, self).setFont(font)
         if hasattr(self, 'completer') and self.completer:
-            self.completer.setFont(font)
+            completer_size = self.completer.font().pointSize()
+            new_font = QFont(font)
+            if completer_size > 0:
+                new_font.setPointSize(completer_size)
+            self.completer.setFont(new_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
-                self.completer.doc_tooltip.setFont(font)
+                self.completer.doc_tooltip.setFont(new_font)
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()

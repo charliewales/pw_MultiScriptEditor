@@ -89,9 +89,13 @@ class completeMenuClass(QListWidget):
         self.setStyleSheet(text)
         if hasattr(self, 'e') and self.e:
             editor_font = self.e.font()
-            self.setFont(editor_font)
+            completer_size = self.font().pointSize()
+            new_font = QFont(editor_font)
+            if completer_size > 0:
+                new_font.setPointSize(completer_size)
+            self.setFont(new_font)
             if hasattr(self, 'doc_tooltip'):
-                self.doc_tooltip.setFont(editor_font)
+                self.doc_tooltip.setFont(new_font)
 
     def updateCompleteList(self, lines=None, extra=None):
         self.clear()
