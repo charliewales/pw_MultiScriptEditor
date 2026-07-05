@@ -1,7 +1,19 @@
 import os
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QColor, QIcon, QPixmap, QFont
-from vendor.Qt.QtWidgets import QApplication, QColorDialog, QDialog, QInputDialog, QLineEdit, QListWidgetItem, QMessageBox, QMenu, QAction, QFontDialog
+from vendor.Qt.QtWidgets import (
+    QApplication,
+    QColorDialog,
+    QDialog,
+    QInputDialog,
+    QLineEdit,
+    QListWidgetItem,
+    QMessageBox,
+    QMenu,
+    QAction,
+    QFontDialog,
+    QPushButton,
+)
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
 from .pythonSyntax import design
@@ -41,7 +53,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.choose_font_btn.customContextMenuRequested.connect(self.showFontContextMenu)
         self.apply_btn.setText('Ok')
 
-        from vendor.Qt.QtWidgets import QPushButton
         self.cancel_btn = QPushButton("Cancel", self)
         self.horizontalLayout_2.addWidget(self.cancel_btn)
         self.cancel_btn.clicked.connect(self.cancel)
@@ -184,7 +195,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             font_size = default_font.get('pointSize', 12)
             self.outlineSize_spb.setValue(int(font_size * 0.8))
         self.outlineSize_spb.blockSignals(False)
-        
+
         self.outputSize_spb.blockSignals(True)
         if 'output_text_size' in colors:
             self.outputSize_spb.setValue(int(colors['output_text_size']))
