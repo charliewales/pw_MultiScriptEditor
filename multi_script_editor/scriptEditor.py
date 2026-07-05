@@ -377,10 +377,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             base_font.setStyleHint(QFont.Monospace)
             base_font.setPointSize(font_data.get('pointSize', 10))
 
-            outline_font = QFont(base_font)
+            if colors.get('use_theme_font_on_outline', True):
+                outline_font = QFont(base_font)
+            else:
+                outline_font = QFont()
             if 'outline_text_size' in colors:
                 outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
-            else:
+            elif colors.get('use_theme_font_on_outline', True):
                 outline_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
                 
             self.outline_list.setFont(outline_font)
@@ -393,9 +396,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
-                status_bar_font = QFont(base_font)
             else:
                 menu_font = QFont()
+
+            if colors.get('use_theme_font_on_status_bar', False):
+                status_bar_font = QFont(base_font)
+            else:
                 status_bar_font = QFont()
                 
             if 'menu_text_size' in colors:
@@ -409,7 +415,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if 'status_bar_text_size' in colors:
                 status_bar_font.setPointSize(max(1, int(colors['status_bar_text_size'])))
-            elif colors.get('use_theme_font_on_menus', False):
+            elif colors.get('use_theme_font_on_status_bar', False):
                 status_bar_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
 
             if self.statusBar():

@@ -214,9 +214,25 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.statusBarSize_spb.setValue(int(font_size * 0.8))
         self.statusBarSize_spb.blockSignals(False)
 
+        self.completerFont_cb.blockSignals(True)
+        self.completerFont_cb.setChecked(bool(colors.get('use_theme_font_on_completer', True)))
+        self.completerFont_cb.blockSignals(False)
+
         self.menuFont_cb.blockSignals(True)
         self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
         self.menuFont_cb.blockSignals(False)
+
+        self.outlineFont_cb.blockSignals(True)
+        self.outlineFont_cb.setChecked(bool(colors.get('use_theme_font_on_outline', True)))
+        self.outlineFont_cb.blockSignals(False)
+
+        self.statusBarFont_cb.blockSignals(True)
+        self.statusBarFont_cb.setChecked(bool(colors.get('use_theme_font_on_status_bar', False)))
+        self.statusBarFont_cb.blockSignals(False)
+
+        self.tabFont_cb.blockSignals(True)
+        self.tabFont_cb.setChecked(bool(colors.get('use_theme_font_on_tab_label', True)))
+        self.tabFont_cb.blockSignals(False)
 
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
@@ -288,7 +304,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['outline_text_size'] = self.outlineSize_spb.value()
         colors['output_text_size'] = self.outputSize_spb.value()
         colors['status_bar_text_size'] = self.statusBarSize_spb.value()
+        colors['use_theme_font_on_completer'] = self.completerFont_cb.isChecked()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
+        colors['use_theme_font_on_outline'] = self.outlineFont_cb.isChecked()
+        colors['use_theme_font_on_status_bar'] = self.statusBarFont_cb.isChecked()
+        colors['use_theme_font_on_tab_label'] = self.tabFont_cb.isChecked()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:
             colors['font'] = self.custom_font_data
         return colors

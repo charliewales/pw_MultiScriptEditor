@@ -108,10 +108,25 @@ class Ui_themeEditor(object):
         self.tabRadius_spb.setProperty("value", 12)
         self.tabRadius_spb.setObjectName("tabRadius_spb")
         self.formLayout.addRow(self.label_radius, self.tabRadius_spb)
+        self.completerFont_cb = QCheckBox(self.widget)
+        self.completerFont_cb.setObjectName("completerFont_cb")
+        self.formLayout.addRow("", self.completerFont_cb)
         
         self.menuFont_cb = QCheckBox(self.widget)
         self.menuFont_cb.setObjectName("menuFont_cb")
         self.formLayout.addRow("", self.menuFont_cb)
+        
+        self.outlineFont_cb = QCheckBox(self.widget)
+        self.outlineFont_cb.setObjectName("outlineFont_cb")
+        self.formLayout.addRow("", self.outlineFont_cb)
+        
+        self.statusBarFont_cb = QCheckBox(self.widget)
+        self.statusBarFont_cb.setObjectName("statusBarFont_cb")
+        self.formLayout.addRow("", self.statusBarFont_cb)
+        
+        self.tabFont_cb = QCheckBox(self.widget)
+        self.tabFont_cb.setObjectName("tabFont_cb")
+        self.formLayout.addRow("", self.tabFont_cb)
         
         self.horizontalLayout_formContainer = QHBoxLayout()
         self.horizontalLayout_formContainer.addLayout(self.formLayout)
@@ -166,7 +181,11 @@ class Ui_themeEditor(object):
         self.label_outputSize.setText(QApplication.translate("themeEditor", "Output text size", None))
         self.label_statusBarSize.setText(QApplication.translate("themeEditor", "Status bar text size", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label text size", None))
-        self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus and status bar use theme font", None))
+        self.completerFont_cb.setText(QApplication.translate("themeEditor", "Completer uses theme font", None))
+        self.menuFont_cb.setText(QApplication.translate("themeEditor", "Menus use theme font", None))
+        self.outlineFont_cb.setText(QApplication.translate("themeEditor", "Outline uses theme font", None))
+        self.statusBarFont_cb.setText(QApplication.translate("themeEditor", "Status bar use theme font", None))
+        self.tabFont_cb.setText(QApplication.translate("themeEditor", "Tab label uses theme font", None))
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))

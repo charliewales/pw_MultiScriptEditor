@@ -246,6 +246,8 @@ class tabWidgetClass(QTabWidget):
         if not colors:
             from widgets.pythonSyntax.design import defaultColors
             colors = defaultColors
+        
+        self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
 
         tab_text_size = colors.get('tab_text_size', None)
         if tab_text_size is not None:
@@ -343,8 +345,15 @@ class tabWidgetClass(QTabWidget):
 
     def _apply_tab_font(self, font):
         from vendor.Qt.QtGui import QFont
-        tab_font = QFont(font)
-        family = tab_font.family()
+        
+        use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)
+        if use_theme_font:
+            tab_font = QFont(font)
+            family = tab_font.family()
+        else:
+            tab_font = QFont()
+            family = tab_font.family() or "sans-serif"
+            
         pt_size = tab_font.pointSizeF()
         custom_size = getattr(self, '_tab_text_size', None)
         if custom_size is None:

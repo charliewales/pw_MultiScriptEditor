@@ -98,7 +98,13 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         super(inputClass, self).setFont(font)
         if hasattr(self, 'completer') and self.completer:
             completer_size = self.completer.font().pointSize()
-            new_font = QFont(font)
+            use_theme_font = True
+            if hasattr(self, 'p') and self.p and hasattr(self.p, '_current_colors_cache'):
+                use_theme_font = self.p._current_colors_cache.get('use_theme_font_on_completer', True)
+            if use_theme_font:
+                new_font = QFont(font)
+            else:
+                new_font = QFont()
             if completer_size > 0:
                 new_font.setPointSize(completer_size)
             self.completer.setFont(new_font)

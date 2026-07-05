@@ -39,6 +39,11 @@ defaultColors = dict(
         tab_selected_text=(255,255,255),
         tab_selected_border=(19,73,133),
         tab_radius=12,
+        use_theme_font_on_completer=True,
+        use_theme_font_on_menus=False,
+        use_theme_font_on_outline=True,
+        use_theme_font_on_status_bar=False,
+        use_theme_font_on_tab_label=True,
 )
 
 predefinedThemes = {

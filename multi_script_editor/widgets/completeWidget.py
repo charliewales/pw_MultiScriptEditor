@@ -88,9 +88,18 @@ class completeMenuClass(QListWidget):
         text = design.editorStyle()
         self.setStyleSheet(text)
         if hasattr(self, 'e') and self.e:
-            editor_font = self.e.font()
+            use_theme_font = True
+            if colors and 'use_theme_font_on_completer' in colors:
+                use_theme_font = colors['use_theme_font_on_completer']
+            elif hasattr(self.e, 'p') and hasattr(self.e.p, '_current_colors_cache'):
+                use_theme_font = self.e.p._current_colors_cache.get('use_theme_font_on_completer', True)
+            
+            if use_theme_font:
+                new_font = QFont(self.e.font())
+            else:
+                new_font = QFont()
+                
             completer_size = self.font().pointSize()
-            new_font = QFont(editor_font)
             if completer_size > 0:
                 new_font.setPointSize(completer_size)
             self.setFont(new_font)
