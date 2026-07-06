@@ -1112,30 +1112,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             theme_name = self._current_settings.get('theme', 'Dark')
             theme_colors = design.getColors(theme_name)
 
+        from widgets.outline_utils import create_symbol_item
+        font = getattr(self, 'current_outline_font', self.outline_list.font())
+
         for sym in symbols:
-            indent_spaces = "  " * sym['indent']
-            item = QListWidgetItem("{0}{1}".format(indent_spaces, sym['name']))
-            item.setData(Qt.UserRole, sym['line'])
-
-            if sym['type'] == 'yaml':
-                colors = ["#E06C75", "#D19A66", "#E5C07B", "#98C379", "#56B6C2", "#61AFEF", "#C678DD"]
-                color = colors[sym['indent'] % len(colors)]
-                item.setForeground(QColor(color))
-            else:
-                if theme_colors:
-                    if sym['type'] == 'class':
-                        c = theme_colors.get('keywords', (78, 201, 176))
-                        item.setForeground(QColor(*c))
-                    else:
-                        c = theme_colors.get('methods', (220, 220, 170))
-                        item.setForeground(QColor(*c))
-                else:
-                    if sym['type'] == 'class':
-                        item.setForeground(QColor("#4EC9B0"))
-                    else:
-                        item.setForeground(QColor("#DCDCAA"))
-
-            item.setFont(getattr(self, 'current_outline_font', self.outline_list.font()))
+            item = create_symbol_item(sym, theme_colors, font)
             self.outline_list.addItem(item)
 
     def outlineItemClicked(self, item):

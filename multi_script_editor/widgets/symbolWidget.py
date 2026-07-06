@@ -53,36 +53,12 @@ class SymbolWidget(QDialog):
         self.list_widget.clear()
         filter_text = filter_text.lower()
         
+        from widgets.outline_utils import create_symbol_item
+        
         for sym in self.symbols:
             name = sym.get('name', '')
             if filter_text in name.lower():
-                item = QListWidgetItem()
-                
-                # Add indentation visually
-                indent = sym.get('indent', 0)
-                display_name = ("  " * indent) + name
-                
-                item.setText(display_name)
-                item.setData(Qt.UserRole, sym.get('line', 1))
-                if self._font:
-                    item.setFont(self._font)
-                
-                # Add type color
-                if self.colors:
-                    if sym.get('type') == 'class':
-                        # Use 'keywords' color for class/struct
-                        c = self.colors.get('keywords', (78, 201, 176))
-                        item.setForeground(QColor(*c))
-                    else:
-                        # Use 'methods' color for functions
-                        c = self.colors.get('methods', (220, 220, 170))
-                        item.setForeground(QColor(*c))
-                else:
-                    if sym.get('type') == 'class':
-                        item.setForeground(QColor("#4EC9B0")) # VS Code Class color
-                    else:
-                        item.setForeground(QColor("#DCDCAA")) # VS Code Function color
-                    
+                item = create_symbol_item(sym, self.colors, self._font)
                 self.list_widget.addItem(item)
                 
         if self.list_widget.count() > 0:
