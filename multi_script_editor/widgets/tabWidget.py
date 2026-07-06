@@ -53,7 +53,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.setIconSize(QSize(24, 24))
-        newTabButton.clicked.connect(self.addNewTab)
+        newTabButton.clicked.connect(lambda checked=False: self.addNewTab())
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
 
@@ -166,8 +166,11 @@ class tabWidgetClass(QTabWidget):
         return text
 
     def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True):
-        # Ensure name is a string (PySide6 is stricter about types)
-        name = str(name) if name is not None else 'New Tab'
+        # Ensure name is a string and handle PySide6 signal boolean parameter
+        if isinstance(name, bool) or name is None:
+            name = 'New Tab'
+        else:
+            name = str(name)
         cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
