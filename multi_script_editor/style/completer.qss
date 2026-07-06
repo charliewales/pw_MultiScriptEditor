@@ -107,5 +107,13 @@ QListWidget#outlineList
 {
     background-color: rgb[background];
     color: rgb[default];
-    border: none;
+    border: 1px solid gray;
+}
+
+QLineEdit#outlineFilter
+{
+    background-color: rgb[background];
+    color: rgb[default];
+    border: 1px solid gray;
+    padding: 2px;
 }

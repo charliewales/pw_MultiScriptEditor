@@ -58,6 +58,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # Horizontal QSplitter for outline sidebar and editor tabs
         self.horizontal_splitter = QSplitter(Qt.Horizontal)
         self.outline_panel = QWidget()
+        self.outline_panel.setObjectName("outlinePanel")
         self.outline_ly = QVBoxLayout(self.outline_panel)
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
         self.outline_list = QListWidget()
@@ -65,6 +66,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
 
         self.outline_filter = QLineEdit()
+        self.outline_filter.setObjectName("outlineFilter")
         self.outline_filter.setPlaceholderText("Filter outline...")
         self.outline_filter.setClearButtonEnabled(True)
         self.outline_filter.textChanged.connect(self.filterOutline)
@@ -340,7 +342,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         o = self.out
         o.applyHightLighter(name)
         o.setStyleSheet(qss)
-        self.outline_list.setStyleSheet(qss)
+        self.outline_panel.setStyleSheet(qss)
 
         for act in self.theme_menu.actions():
             if act.isCheckable():
