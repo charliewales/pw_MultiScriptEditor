@@ -73,7 +73,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd2.setEnabled(False)
         self.preview_twd.wordWrap(False)
         self.preview_twd2.wordWrap(False)
-        self.splitter.setSizes([280, 500])
+        self.splitter.setSizes([280, 800])
         self.s = SettingsModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
         self.colors_lwd.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -137,17 +137,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         list_needed_height = self.colors_lwd.count() * row_height
         needed_height = list_needed_height + 200
 
-        parent_height = self.parent().height() if self.parent() else 1000
-        ideal_height = max(int(parent_height * 0.7), needed_height)
+        ideal_height = needed_height
 
         desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
         if desk:
             screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
             ideal_height = min(ideal_height, screen_rect.height() - 100)
 
-        parent_width = self.parent().width() if self.parent() else 1000
-
-        self.resize(int(parent_width * 0.8), ideal_height)
+        self.resize(1100, ideal_height)
         self.setMinimumHeight(min(needed_height, ideal_height))
 
         self.preview_twd.completer.updateCompleteList()

@@ -236,7 +236,10 @@ class tabWidgetClass(QTabWidget):
             self.widget(i).edit.completer.hideMe()
 
     def current(self):
-        return self.widget(self.currentIndex()).edit
+        w = self.widget(self.currentIndex())
+        if w:
+            return w.edit
+        return None
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:

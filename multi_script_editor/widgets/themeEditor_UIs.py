@@ -232,7 +232,7 @@ class Ui_themeEditor(object):
         self.statusBarSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the status bar", None))
         self.label_symbolsSize.setText(QApplication.translate("themeEditor", "Symbols", None))
         self.symbolsSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the symbols", None))
-        self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label", None))
+        self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab labels", None))
         self.tabSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the tab labels", None))
 
         self.useThemeFont_groupBox.setTitle(QApplication.translate("themeEditor", "Use theme font", None))
@@ -246,7 +246,7 @@ class Ui_themeEditor(object):
         self.statusBarFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the status bar", None))
         self.symbolsFont_cb.setText(QApplication.translate("themeEditor", "Symbols", None))
         self.symbolsFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the symbols", None))
-        self.tabFont_cb.setText(QApplication.translate("themeEditor", "Tab label", None))
+        self.tabFont_cb.setText(QApplication.translate("themeEditor", "Tab labels", None))
         self.tabFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the tab labels", None))
 
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
