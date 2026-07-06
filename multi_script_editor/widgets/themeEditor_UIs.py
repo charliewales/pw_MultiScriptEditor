@@ -102,6 +102,16 @@ class Ui_themeEditor(object):
         self.fontSize_layout.addWidget(self.label_statusBarSize, 2, 0)
         self.fontSize_layout.addWidget(self.statusBarSize_spb, 2, 1)
 
+        self.label_symbolsSize = QLabel(self.fontSize_groupBox)
+        self.label_symbolsSize.setObjectName("label_symbolsSize")
+        self.symbolsSize_spb = QSpinBox(self.fontSize_groupBox)
+        self.symbolsSize_spb.setMinimum(6)
+        self.symbolsSize_spb.setMaximum(25)
+        self.symbolsSize_spb.setProperty("value", 10)
+        self.symbolsSize_spb.setObjectName("symbolsSize_spb")
+        self.fontSize_layout.addWidget(self.label_symbolsSize, 3, 0)
+        self.fontSize_layout.addWidget(self.symbolsSize_spb, 3, 1)
+
         self.label_tabSize = QLabel(self.fontSize_groupBox)
         self.label_tabSize.setObjectName("label_tabSize")
         self.tabSize_spb = QSpinBox(self.fontSize_groupBox)
@@ -220,6 +230,8 @@ class Ui_themeEditor(object):
         self.outputSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the output console", None))
         self.label_statusBarSize.setText(QApplication.translate("themeEditor", "Status bar", None))
         self.statusBarSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the status bar", None))
+        self.label_symbolsSize.setText(QApplication.translate("themeEditor", "Symbols", None))
+        self.symbolsSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the symbols", None))
         self.label_tabSize.setText(QApplication.translate("themeEditor", "Tab label", None))
         self.tabSize_spb.setToolTip(QApplication.translate("themeEditor", "Set the font size for the tab labels", None))
 

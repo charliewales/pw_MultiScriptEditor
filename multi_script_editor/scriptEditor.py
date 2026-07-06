@@ -645,6 +645,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font_data = colors.get('font') or self._current_settings.get('font', {})
             if font_data:
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+                if 'symbols_text_size' in colors:
+                    font.setPointSize(int(colors['symbols_text_size']))
             
         self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors)
         

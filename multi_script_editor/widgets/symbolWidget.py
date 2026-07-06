@@ -12,6 +12,7 @@ class SymbolWidget(QDialog):
         
         self.symbols = symbols
         self.colors = colors
+        self._font = font
 
         # Layout
         layout = QVBoxLayout(self)
@@ -63,6 +64,8 @@ class SymbolWidget(QDialog):
                 
                 item.setText(display_name)
                 item.setData(Qt.UserRole, sym.get('line', 1))
+                if self._font:
+                    item.setFont(self._font)
                 
                 # Add type color
                 if self.colors:

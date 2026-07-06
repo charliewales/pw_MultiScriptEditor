@@ -115,6 +115,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.statusBarSize_spb.valueChanged.connect(self.updateExample)
         self.statusBarSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.statusBarSize_spb.customContextMenuRequested.connect(self.openStatusBarSizeMenu)
+        self.symbolsSize_spb.valueChanged.connect(self.updateExample)
+        self.symbolsSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.symbolsSize_spb.customContextMenuRequested.connect(self.openSymbolsSizeMenu)
         self.completerFont_cb.stateChanged.connect(self.updateExample)
         self.menuFont_cb.stateChanged.connect(self.updateExample)
         self.outlineFont_cb.stateChanged.connect(self.updateExample)
@@ -248,6 +251,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.outputSize_spb.setValue(int(font_size * 0.8))
         self.outputSize_spb.blockSignals(False)
 
+        self.symbolsSize_spb.blockSignals(True)
+        if 'symbols_text_size' in colors:
+            self.symbolsSize_spb.setValue(int(colors['symbols_text_size']))
+        else:
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.symbolsSize_spb.setValue(int(font_size * 1.0))
+        self.symbolsSize_spb.blockSignals(False)
+
         self.statusBarSize_spb.blockSignals(True)
         if 'status_bar_text_size' in colors:
             self.statusBarSize_spb.setValue(int(colors['status_bar_text_size']))
@@ -370,6 +382,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['outline_text_size'] = self.outlineSize_spb.value()
         colors['output_text_size'] = self.outputSize_spb.value()
         colors['status_bar_text_size'] = self.statusBarSize_spb.value()
+        colors['symbols_text_size'] = self.symbolsSize_spb.value()
         colors['use_theme_font_on_completer'] = self.completerFont_cb.isChecked()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         colors['use_theme_font_on_outline'] = self.outlineFont_cb.isChecked()
@@ -578,6 +591,18 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def resetStatusBarSizeToDefault(self):
         pts = self._getBaseFontPointSize()
         self.statusBarSize_spb.setValue(max(1, int(pts * 0.8)))
+        self.updateExample()
+
+    def openSymbolsSizeMenu(self, position):
+        menu = QMenu(self)
+        reset_action = QAction("Reset to Default (100% of Font)", self)
+        reset_action.triggered.connect(self.resetSymbolsSizeToDefault)
+        menu.addAction(reset_action)
+        menu.exec_(self.symbolsSize_spb.mapToGlobal(position))
+
+    def resetSymbolsSizeToDefault(self):
+        pts = self._getBaseFontPointSize()
+        self.symbolsSize_spb.setValue(max(1, int(pts * 1.0)))
         self.updateExample()
 
     def saveTheme(self):
