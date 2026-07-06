@@ -256,9 +256,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
-            self.toolBar.setStyleSheet('QToolBar {border: 1px solid indianred;}')
+            self.toolBar.setStyleSheet('QToolBar {border: 1px solid indianred; margin: 1px;}')
         else:
-            self.toolBar.setStyleSheet('QToolBar {}')
+            self.toolBar.setStyleSheet('QToolBar {border: none;}')
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
