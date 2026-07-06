@@ -46,4 +46,7 @@ icons = dict(
     outline=os.path.join(root, "outline.png"),
     left_arrow=os.path.join(root, "left_arrow.png"),
     right_arrow=os.path.join(root, "right_arrow.png"),
+    goto_line=os.path.join(root, "goto_line.png"),
+    goto_symbol=os.path.join(root, "goto_symbol.png"),
+    spaces_to_tabs=os.path.join(root, "spaces_to_tabs.png"),
 )

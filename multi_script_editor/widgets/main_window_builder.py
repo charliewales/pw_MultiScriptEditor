@@ -131,12 +131,17 @@ class ScriptEditorUIBuilder:
         editor.gotoLine_act.triggered.connect(editor.gotoLine)
         editor.gotoLine_act.setShortcut('Ctrl+G')
         editor.gotoLine_act.setShortcutContext(Qt.WindowShortcut)
+        editor.gotoLine_act.setIcon(QIcon(icons['goto_line']))
 
         editor.goToSymbol_act.triggered.connect(editor.goToSymbol)
         editor.goToSymbol_act.setShortcut('Ctrl+R')
         editor.goToSymbol_act.setShortcutContext(Qt.WindowShortcut)
+        editor.goToSymbol_act.setIcon(QIcon(icons['goto_symbol']))
 
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
+
+        editor.spacesToTabs_act.triggered.connect(editor.spacesToTabs)
+        editor.spacesToTabs_act.setIcon(QIcon(icons['spaces_to_tabs']))
 
         editor.print_command_act.setCheckable(True)
 

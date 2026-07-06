@@ -770,6 +770,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         text = text.replace('\t', '    ')
         self.tab.setCurrentText(text)
 
+    def spacesToTabs(self):
+        text = self.tab.getCurrentText()
+        text = text.replace('    ', '\t')
+        self.tab.setCurrentText(text)
+
     def insertText(self, text):
         self.tab.addToCurrent(text)
 
