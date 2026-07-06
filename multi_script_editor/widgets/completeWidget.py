@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
-from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem
+from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel
 import os
 from . pythonSyntax import design
 import managers
@@ -24,7 +24,6 @@ class completeMenuClass(QListWidget):
         else:
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window | Qt.WindowStaysOnTopHint)
             
-        from vendor.Qt.QtWidgets import QLabel
         self.doc_tooltip = QLabel(self)
         self.doc_tooltip.setObjectName("docTooltip")
         self.doc_tooltip.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)

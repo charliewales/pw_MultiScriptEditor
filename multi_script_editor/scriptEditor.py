@@ -25,6 +25,10 @@ from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, theme
 from widgets import scriptEditor_UIs as ui
 from widgets.pythonSyntax import design
 
+from widgets.main_window_builder import ScriptEditorUIBuilder
+from core.settings_model import SettingsModel
+from style.links import links
+
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)
@@ -92,7 +96,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 'self_context': managers.context,
             }
         )
-        from widgets.main_window_builder import ScriptEditorUIBuilder
         ScriptEditorUIBuilder.setup_ui(self)
 
         # Auto-Save timer (every 60 seconds)
@@ -391,8 +394,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.outline_filter.setFont(outline_font)
             for i in range(self.outline_list.count()):
                 self.outline_list.item(i).setFont(outline_font)
-            
-            from vendor.Qt.QtWidgets import QMenu
             
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
@@ -894,7 +895,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.save_settings_requested.emit(settings)
 
     def openSettingsFile(self):
-        from core.settings_model import SettingsModel
         path = SettingsModel()._get_user_pref_folder()
         self.out.showMessage('>>> Settings folder: %s' % path.replace('\\', '/'))
 
@@ -923,8 +923,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).resizeEvent(event)
 
     def openLink(self, name, extra=""):
-        from style.links import links
-
         webbrowser.open(f"{links[name]}{extra}")
 
     def openDocumentation(self):

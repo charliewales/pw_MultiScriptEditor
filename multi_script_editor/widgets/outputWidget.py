@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor
+from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QTextBrowser, QTextEdit
 
 
@@ -42,7 +42,6 @@ class outputClass(QTextBrowser, BaseTextWidgetMixin):
 
     def search(self, text=None, case_sensitive=False):
         if text:
-            from vendor.Qt.QtGui import QTextDocument
             if not hasattr(self, 'lastSearch'):
                 self.lastSearch = [text, 0, case_sensitive]
 

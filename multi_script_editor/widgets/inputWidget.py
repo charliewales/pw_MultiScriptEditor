@@ -1,7 +1,8 @@
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QGuiApplication
 from vendor.Qt.QtWidgets import QTextEdit
 import re
+import os
 
 from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
 from widgets import completeWidget
@@ -133,7 +134,6 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         highlighter_class = syntaxHighLighter.PythonHighlighterClass
         
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
-            import os
             ext = os.path.splitext(self.parent().file_path)[1]
 
         if ext:
@@ -236,7 +236,6 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             if self.desk:
                 currentScreen = self.desk.screenGeometry(self.mapToGlobal(rec.bottomRight()))
             else:
-                from vendor.Qt.QtGui import QGuiApplication
                 screen = QGuiApplication.screenAt(self.mapToGlobal(rec.bottomRight()))
                 if screen is None:
                     screen = QGuiApplication.primaryScreen()

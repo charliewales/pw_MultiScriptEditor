@@ -1,7 +1,9 @@
 import os
 
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor
+from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont
+from widgets.pythonSyntax.design import defaultColors
+import re
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
 from widgets import numBarWidget, inputWidget
 from icons import *
@@ -244,7 +246,6 @@ class tabWidgetClass(QTabWidget):
 ############################## editor commands
     def apply_tab_style(self, colors=None):
         if not colors:
-            from widgets.pythonSyntax.design import defaultColors
             colors = defaultColors
         
         self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
@@ -324,7 +325,6 @@ class tabWidgetClass(QTabWidget):
         }
 
         ss = self.styleSheet()
-        import re
         font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)
         if font_match:
             css += '\n' + font_match.group(0)
@@ -344,8 +344,6 @@ class tabWidgetClass(QTabWidget):
         self.current().copy()
 
     def _apply_tab_font(self, font):
-        from vendor.Qt.QtGui import QFont
-        
         use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)
         if use_theme_font:
             tab_font = QFont(font)
@@ -376,7 +374,6 @@ class tabWidgetClass(QTabWidget):
         self.tabBar().setFont(tab_font)
 
         css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\n/*TAB_FONT_END*/\n" % (family, size_css)
-        import re
         ss = self.styleSheet()
         ss = re.sub(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', '', ss, flags=re.DOTALL)
         self.setStyleSheet(ss + css)
@@ -401,7 +398,6 @@ class tabWidgetClass(QTabWidget):
 
     def set_start_font(self, font_d=None):
         if font_d:
-            from vendor.Qt.QtGui import QFont
             family = font_d.get('family', 'monospace')
             size = font_d.get('pointSize', 10)
             weight = font_d.get('weight', -1)

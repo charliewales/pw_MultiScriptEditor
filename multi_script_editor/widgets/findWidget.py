@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import QTimer, Qt, Signal
-from vendor.Qt.QtWidgets import QWidget
+from vendor.Qt.QtWidgets import QWidget, QCheckBox
 from widgets import findWidget_UIs as ui
 
 class findWidgetClass(QWidget, ui.Ui_findReplace):
@@ -27,7 +27,6 @@ class findWidgetClass(QWidget, ui.Ui_findReplace):
         self.replace_le.returnPressed.connect(self.replace)
         self.replaceAll_btn.clicked.connect(self.replaceAll)
         
-        from vendor.Qt.QtWidgets import QCheckBox
         self.case_cb = QCheckBox("Case Sensitive", self)
         self.gridLayout.addWidget(self.case_cb, 2, 0, 1, 1)
     def setReplaceEnabled(self, state):

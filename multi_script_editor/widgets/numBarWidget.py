@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import QRect, Qt, QPoint
-from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen
+from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen, QGuiApplication, QFontMetrics
 from vendor.Qt.QtWidgets import QApplication, QWidget
 
 class lineNumberBarClass(QWidget):
@@ -10,7 +10,6 @@ class lineNumberBarClass(QWidget):
             desktop = QApplication.desktop()
             screen_resolution = desktop.screenGeometry()
         else:
-            from vendor.Qt.QtGui import QGuiApplication
             screen_resolution = QGuiApplication.primaryScreen().geometry()
         width, height = screen_resolution.width(), screen_resolution.height()
 
@@ -39,7 +38,6 @@ class lineNumberBarClass(QWidget):
             if px_size > 0:
                 font.setPixelSize(max(1, int(px_size * 0.8)))
         
-        from vendor.Qt.QtGui import QFontMetrics
         fm = QFontMetrics(font)
         text_width = fm.horizontalAdvance(str(self.highest_line) + "0") if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line) + "0")
         
@@ -88,7 +86,6 @@ class lineNumberBarClass(QWidget):
                 font.setPixelSize(max(1, int(px_size * 0.8)))
         
         # update fm for paint
-        from vendor.Qt.QtGui import QFontMetrics
         font_metrics = QFontMetrics(font)
         
         offset = font_metrics.ascent() + font_metrics.descent()*0.7

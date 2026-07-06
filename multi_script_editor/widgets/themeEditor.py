@@ -23,13 +23,14 @@ from vendor.Qt.QtWidgets import (
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
 from .pythonSyntax import design
+from widgets.pythonSyntax.design import defaultColors, getColors
+from widgets.tabWidget import tabWidgetClass
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def __init__(self, parent = None, desk=None):
         super(themeEditorClass, self).__init__(parent)
         self.setupUi(self)
-        from widgets.tabWidget import tabWidgetClass
         self.preview_main_window = QMainWindow(self)
         self.preview_main_window.setWindowFlags(Qt.Widget)
         
@@ -716,7 +717,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             return
 
         if self.hasUnsavedChanges():
-            from vendor.Qt.QtWidgets import QMessageBox
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")

@@ -1,4 +1,5 @@
-from vendor.Qt.QtGui import QFont, QTextOption
+from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase
+from vendor.Qt.QtWidgets import QTextEdit
 
 class BaseTextWidgetMixin:
     """
@@ -22,7 +23,6 @@ class BaseTextWidgetMixin:
         self.setFont(f)
 
     def wordWrap(self, state):
-        from vendor.Qt.QtWidgets import QTextEdit
         if state:
             self.setLineWrapMode(QTextEdit.WidgetWidth)
         else:
@@ -48,7 +48,6 @@ class BaseTextWidgetMixin:
         weight = font_d.get('weight', 1)
 
         # Cross-compatibility patch for PySide2 (NF) vs PySide6 (Nerd Font)
-        from vendor.Qt.QtGui import QFontDatabase
         try:
             families = QFontDatabase.families()
         except TypeError:
