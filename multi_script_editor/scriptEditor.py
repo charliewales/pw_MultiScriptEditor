@@ -1037,12 +1037,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     # NEW FEATURES METHODS
     def toggleOutline(self, state):
+        self.showOutline_act.setChecked(state)
         if state:
             self.horizontal_splitter.setSizes([200, 600])
-            self.updateOutline()
+            self._updateOutlineNow()
         else:
             self.horizontal_splitter.setSizes([0, 800])
-        self.showOutline_act.setChecked(state)
+            
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
             self.tab.toggleOutline_btn.blockSignals(True)
             self.tab.toggleOutline_btn.setChecked(state)
@@ -1099,18 +1100,35 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def set_outline_symbols(self, symbols):
         self.outline_list.clear()
+        
+        theme_colors = None
+        if hasattr(self, '_current_settings'):
+            theme_name = self._current_settings.get('theme', 'Dark')
+            theme_colors = design.getColors(theme_name)
+
         for sym in symbols:
             indent_spaces = "  " * sym['indent']
             item = QListWidgetItem("{0}{1}".format(indent_spaces, sym['name']))
             item.setData(Qt.UserRole, sym['line'])
-            if sym['type'] == 'class':
-                item.setForeground(QColor("#56B6C2"))
-            elif sym['type'] == 'yaml':
+            
+            if sym['type'] == 'yaml':
                 colors = ["#E06C75", "#D19A66", "#E5C07B", "#98C379", "#56B6C2", "#61AFEF", "#C678DD"]
                 color = colors[sym['indent'] % len(colors)]
                 item.setForeground(QColor(color))
             else:
-                item.setForeground(QColor("#E06C75"))
+                if theme_colors:
+                    if sym['type'] == 'class':
+                        c = theme_colors.get('keywords', (78, 201, 176))
+                        item.setForeground(QColor(*c))
+                    else:
+                        c = theme_colors.get('methods', (220, 220, 170))
+                        item.setForeground(QColor(*c))
+                else:
+                    if sym['type'] == 'class':
+                        item.setForeground(QColor("#4EC9B0"))
+                    else:
+                        item.setForeground(QColor("#DCDCAA"))
+                        
             item.setFont(getattr(self, 'current_outline_font', self.outline_list.font()))
             self.outline_list.addItem(item)
 
