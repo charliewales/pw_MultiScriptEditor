@@ -145,9 +145,13 @@ class Ui_themeEditor(object):
         self.statusBarFont_cb.setObjectName("statusBarFont_cb")
         self.useThemeFont_layout.addWidget(self.statusBarFont_cb, 1, 1)
 
+        self.symbolsFont_cb = QCheckBox(self.useThemeFont_groupBox)
+        self.symbolsFont_cb.setObjectName("symbolsFont_cb")
+        self.useThemeFont_layout.addWidget(self.symbolsFont_cb, 2, 0)
+
         self.tabFont_cb = QCheckBox(self.useThemeFont_groupBox)
         self.tabFont_cb.setObjectName("tabFont_cb")
-        self.useThemeFont_layout.addWidget(self.tabFont_cb, 2, 0)
+        self.useThemeFont_layout.addWidget(self.tabFont_cb, 2, 1)
         self.useThemeFont_layout.setColumnStretch(2, 1)
 
         self.formLayout.addRow(self.useThemeFont_groupBox)
@@ -228,6 +232,8 @@ class Ui_themeEditor(object):
         self.outlineFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the outline view", None))
         self.statusBarFont_cb.setText(QApplication.translate("themeEditor", "Status bar", None))
         self.statusBarFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the status bar", None))
+        self.symbolsFont_cb.setText(QApplication.translate("themeEditor", "Symbols", None))
+        self.symbolsFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the symbols", None))
         self.tabFont_cb.setText(QApplication.translate("themeEditor", "Tab label", None))
         self.tabFont_cb.setToolTip(QApplication.translate("themeEditor", "Use the custom theme font for the tab labels", None))
 

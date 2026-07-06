@@ -5,12 +5,13 @@ from vendor.Qt.QtGui import QColor, QFont
 class SymbolWidget(QDialog):
     symbolSelected = Signal(int)  # emits the line number
 
-    def __init__(self, symbols, parent=None, center_widget=None):
+    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None):
         super(SymbolWidget, self).__init__(parent)
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         self.setFixedSize(QSize(400, 300))
         
         self.symbols = symbols
+        self.colors = colors
 
         # Layout
         layout = QVBoxLayout(self)
@@ -21,37 +22,20 @@ class SymbolWidget(QDialog):
         self.search_le = QLineEdit(self)
         self.search_le.setPlaceholderText("Search symbol...")
         self.search_le.textChanged.connect(self.filter_symbols)
+        if font:
+            self.search_le.setFont(font)
         layout.addWidget(self.search_le)
 
         # List
         self.list_widget = QListWidget(self)
         self.list_widget.itemClicked.connect(self.on_item_clicked)
+        if font:
+            self.list_widget.setFont(font)
         layout.addWidget(self.list_widget)
 
-        # Styling to match the editor
-        self.setStyleSheet("""
-            QDialog {
-                border: 1px solid #3e3e42;
-                background-color: #252526;
-            }
-            QLineEdit {
-                background-color: #3c3c3c;
-                color: #cccccc;
-                border: 1px solid #3e3e42;
-                padding: 4px;
-            }
-            QListWidget {
-                background-color: #1e1e1e;
-                color: #cccccc;
-                border: none;
-            }
-            QListWidget::item:selected {
-                background-color: #094771;
-            }
-            QListWidget::item:hover {
-                background-color: #2a2d2e;
-            }
-        """)
+        if qss:
+            # We add a generic border for the floating dialog if not defined
+            self.setStyleSheet(qss + "\nQDialog { border: 1px solid #555555; }")
 
         self.populate_list("")
         
@@ -80,11 +64,21 @@ class SymbolWidget(QDialog):
                 item.setText(display_name)
                 item.setData(Qt.UserRole, sym.get('line', 1))
                 
-                # Add type color (optional, basic indication)
-                if sym.get('type') == 'class':
-                    item.setForeground(QColor("#4EC9B0")) # VS Code Class color
+                # Add type color
+                if self.colors:
+                    if sym.get('type') == 'class':
+                        # Use 'keywords' color for class/struct
+                        c = self.colors.get('keywords', (78, 201, 176))
+                        item.setForeground(QColor(*c))
+                    else:
+                        # Use 'methods' color for functions
+                        c = self.colors.get('methods', (220, 220, 170))
+                        item.setForeground(QColor(*c))
                 else:
-                    item.setForeground(QColor("#DCDCAA")) # VS Code Function color
+                    if sym.get('type') == 'class':
+                        item.setForeground(QColor("#4EC9B0")) # VS Code Class color
+                    else:
+                        item.setForeground(QColor("#DCDCAA")) # VS Code Function color
                     
                 self.list_widget.addItem(item)
                 

@@ -118,6 +118,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.completerFont_cb.stateChanged.connect(self.updateExample)
         self.menuFont_cb.stateChanged.connect(self.updateExample)
         self.outlineFont_cb.stateChanged.connect(self.updateExample)
+        self.symbolsFont_cb.stateChanged.connect(self.updateExample)
         self.statusBarFont_cb.stateChanged.connect(self.updateExample)
         self.tabFont_cb.stateChanged.connect(self.updateExample)
         self.custom_font_data = None
@@ -268,6 +269,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.outlineFont_cb.setChecked(bool(colors.get('use_theme_font_on_outline', True)))
         self.outlineFont_cb.blockSignals(False)
 
+        self.symbolsFont_cb.blockSignals(True)
+        self.symbolsFont_cb.setChecked(bool(colors.get('use_theme_font_on_symbols', True)))
+        self.symbolsFont_cb.blockSignals(False)
+
         self.statusBarFont_cb.blockSignals(True)
         self.statusBarFont_cb.setChecked(bool(colors.get('use_theme_font_on_status_bar', False)))
         self.statusBarFont_cb.blockSignals(False)
@@ -368,6 +373,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors['use_theme_font_on_completer'] = self.completerFont_cb.isChecked()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         colors['use_theme_font_on_outline'] = self.outlineFont_cb.isChecked()
+        colors['use_theme_font_on_symbols'] = self.symbolsFont_cb.isChecked()
         colors['use_theme_font_on_status_bar'] = self.statusBarFont_cb.isChecked()
         colors['use_theme_font_on_tab_label'] = self.tabFont_cb.isChecked()
         if hasattr(self, 'custom_font_data') and self.custom_font_data is not None:

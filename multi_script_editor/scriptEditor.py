@@ -636,7 +636,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not symbols:
             return
             
-        self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget)
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+        
+        font = None
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font') or self._current_settings.get('font', {})
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            
+        self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors)
         
         def _jump_to_line(line_num):
             block = edit_widget.document().findBlockByLineNumber(line_num - 1)
