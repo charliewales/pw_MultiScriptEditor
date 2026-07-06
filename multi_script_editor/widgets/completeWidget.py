@@ -168,7 +168,9 @@ class completeMenuClass(QListWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
-            self.close()
+            self.hideMe()
+            self.editor().setFocus()
+            return
         # elif event.text():
         #     self.editor().setFocus()
         elif event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
