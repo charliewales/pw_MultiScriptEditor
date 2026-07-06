@@ -83,8 +83,14 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.autocomplete_timer.start(200)
 
     def set_start_font(self, font_d=None):
-        if font_d is None:
-            font_d = self.data.get('font', {})
+        if not font_d:
+            self.data = SettingsModel().read_settings()
+            theme_name = self.data.get('theme', 'Multi Script Editor')
+            from widgets.pythonSyntax import design
+            colors = design.getColors(theme_name)
+            font_d = colors.get('font')
+            if not font_d:
+                font_d = self.data.get('font', {})
         family = font_d.get('family', 'monospace')
         pointSize = font_d.get('pointSize', 10)
         italic = font_d.get('italic', False)

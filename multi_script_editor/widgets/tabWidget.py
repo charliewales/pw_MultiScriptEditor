@@ -186,7 +186,14 @@ class tabWidgetClass(QTabWidget):
             settings = self.p._presenter.settings_model.read_settings()
             show_whitespace = settings.get('show_whitespace', False)
             wrap = settings.get('wrap', False)
-            font_d = settings.get('font', {})
+            
+            # Resolve font: theme font first, then general settings font
+            theme_name = settings.get('theme', 'Multi Script Editor')
+            from widgets.pythonSyntax import design
+            colors = design.getColors(theme_name)
+            font_d = colors.get('font')
+            if not font_d:
+                font_d = settings.get('font', {})
 
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
