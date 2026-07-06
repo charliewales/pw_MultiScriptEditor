@@ -461,13 +461,11 @@ QSpinBox::up-button,QTimeEdit::up-button  {
     subcontrol-origin: border;
     subcontrol-position: top right;
      width: 16px;
-    /* border: 1px solid #3a3939; */
 }
 QSpinBox::down-button,  QTimeEdit::down-button{
     subcontrol-origin: border;
     subcontrol-position: bottom right;
     width: 16px;
-    /* border: 1px solid #3a3939; */
 }
 QSpinBox::up-button:hover, QSpinBox::down-button:hover,
 QTimeEdit::up-button:hover , QTimeEdit::down-button:hover
@@ -494,7 +492,6 @@ QSpinBox::up-arrow  {
 
 QComboBox,QDateEdit,QDateTimeEdit,QSpinBox
 {
-    selection-background-color: #78879b;
     background-color: #201F1F;
     border-style: solid;
     border: 1px solid #3A3939;
@@ -513,7 +510,6 @@ QComboBox:on, QDateEdit:on,QDateTimeEdit:on, QSpinBox:on
     background-color: #282a2d;
     padding-top: 2px;
     padding-left: 2px;
-    selection-background-color: #4a4a4a;
 }
 
 QComboBox QAbstractItemView
@@ -521,38 +517,12 @@ QComboBox QAbstractItemView
     background-color: #201F1F;
     border-radius: 0px;
     border: 1px solid #3A3939;
-    selection-background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1,
-      stop: 0 #78879b, stop: 1 #78879b);
 }
-
-QComboBox::drop-down, QDateEdit::drop-down, QDateTimeEdit::drop-down
-{
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 20px;
-
-    border-left-width: 1px;
-    border-left-color: #505050;
-    border-left-style: solid;
-    border-top-right-radius: 0px;
-    border-bottom-right-radius: 0px;
-   background-color: #272525;
-}
-QComboBox::down-arrow , QDateEdit::drop-down, QDateTimeEdit::drop-down{
-     image: url(:/arrow_down.png);
-}
-QComboBox::drop-down:pressed, QDateEdit::drop-down:pressed, QDateTimeEdit::drop-down:pressed
-{
-   background-color: #404040;
-}
-
-
 
 QComboBox QAbstractItemView {
     border: 1px solid darkgray;
     color: white;
     padding: 1px 1px 1px 1px;
-    selection-background-color: #505153;
     outline:none;
 }
 
