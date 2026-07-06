@@ -171,6 +171,10 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 self.completer.hide()
                 self._lint_timer.start(500)
                 return
+            if getattr(self, '_suppress_autocomplete', False) and not force:
+                self.completer.hide()
+                self._lint_timer.start(500)
+                return
             if getattr(self, '_skip_autocomplete_once', False):
                 self._skip_autocomplete_once = False
                 self.completer.hide()
@@ -276,6 +280,11 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         return result
 
     def keyPressEvent(self, event):
+        # unsuppress autocomplete if alphanumeric or dot/underscore
+        text = event.text()
+        if text and (text.isalnum() or text in ['.', '_']):
+            self._suppress_autocomplete = False
+
         # Multi-cursor interception
         if self.multi_cursor_manager.handle_key_press(event):
             return
@@ -408,6 +417,8 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             return
         # close completer
         elif event.key() in escapeButtons:
+            if event.key() == Qt.Key_Escape:
+                self._suppress_autocomplete = True
             if self.completer:
                 self.completer.updateCompleteList()
             self.setFocus()

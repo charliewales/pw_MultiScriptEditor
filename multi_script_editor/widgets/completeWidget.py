@@ -168,8 +168,10 @@ class completeMenuClass(QListWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
+            event.accept()
             self.hideMe()
             self.editor().setFocus()
+            self.editor()._suppress_autocomplete = True
             return
         # elif event.text():
         #     self.editor().setFocus()
