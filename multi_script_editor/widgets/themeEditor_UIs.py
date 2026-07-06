@@ -233,11 +233,11 @@ class Ui_themeEditor(object):
 
         self.save_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.save_btn.setToolTip(QApplication.translate("themeEditor", "Save current settings to a new theme", None))
-        self.del_btn.setText(QApplication.translate("themeEditor", "Del", None))
+        self.del_btn.setText(QApplication.translate("themeEditor", "Delete", None))
         self.del_btn.setToolTip(QApplication.translate("themeEditor", "Delete the selected theme", None))
         self.export_btn.setText(QApplication.translate("themeEditor", "Export", None))
         self.export_btn.setToolTip(QApplication.translate("themeEditor", "Export the selected theme to a JSON file", None))
-        self.import_btn.setText(QApplication.translate("themeEditor", " Import", None))
+        self.import_btn.setText(QApplication.translate("themeEditor", "Import", None))
         self.import_btn.setToolTip(QApplication.translate("themeEditor", "Import a theme from a JSON file", None))
         self.apply_btn.setText(QApplication.translate("themeEditor", "Save", None))
         self.apply_btn.setToolTip(QApplication.translate("themeEditor", "Apply the selected theme to the editor", None))
