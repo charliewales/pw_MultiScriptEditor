@@ -42,7 +42,7 @@ class tabWidgetClass(QTabWidget):
         self.toggleOutline_btn.setMaximumWidth(30)
         self.toggleOutline_btn.setCursor(Qt.ArrowCursor)
         self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
-        self.toggleOutline_btn.setToolTip("Toggle Code Outline")
+        self.toggleOutline_btn.setToolTip("Toggle Code Outline (Ctrl+Shift+O)")
         self.toggleOutline_btn.setCheckable(True)
         self.toggleOutline_btn.toggled.connect(self.toggle_outline)
 
@@ -68,7 +68,7 @@ class tabWidgetClass(QTabWidget):
 
         # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
-        QShortcut(QKeySequence("Ctrl+R"), self, self.renameTab)
+        QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
         self.currentChanged.connect(self.onTabChanged)
 
     def toggle_outline(self, state):
@@ -124,7 +124,7 @@ class tabWidgetClass(QTabWidget):
     def openMenu(self):
         menu = QMenu(self)
         menu.addAction(QAction('Duplicate Current Tab', self, triggered = self.duplicateTab))
-        menu.addAction(QAction('Rename Current Tab', self, triggered = self.renameTab))
+        menu.addAction(QAction('Rename Current Tab  (Alt+R)', self, triggered = self.renameTab))
 
         index = self.currentIndex()
         if index >= 0:
@@ -247,7 +247,7 @@ class tabWidgetClass(QTabWidget):
     def apply_tab_style(self, colors=None):
         if not colors:
             colors = defaultColors
-        
+
         self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
 
         tab_text_size = colors.get('tab_text_size', None)
@@ -301,7 +301,7 @@ class tabWidgetClass(QTabWidget):
                 background: rgba(255, 100, 100, 255);
                 border-radius: 6px;
             }
-            
+
             QTabBar QToolButton::right-arrow {
                 image: url("%(right_arrow)s");
             }
@@ -351,7 +351,7 @@ class tabWidgetClass(QTabWidget):
         else:
             tab_font = QFont()
             family = tab_font.family() or "sans-serif"
-            
+
         pt_size = tab_font.pointSizeF()
         custom_size = getattr(self, '_tab_text_size', None)
         if custom_size is None:
