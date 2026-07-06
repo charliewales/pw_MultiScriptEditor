@@ -1,6 +1,6 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal
+from vendor.Qt.QtCore import Qt, Signal, QSize
 from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont
 from widgets.pythonSyntax.design import defaultColors
 import re
@@ -42,6 +42,7 @@ class tabWidgetClass(QTabWidget):
         self.toggleOutline_btn.setMaximumWidth(30)
         self.toggleOutline_btn.setCursor(Qt.ArrowCursor)
         self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
+        self.toggleOutline_btn.setIconSize(QSize(24, 24))
         self.toggleOutline_btn.setToolTip("Toggle Code Outline (Ctrl+Shift+O)")
         self.toggleOutline_btn.setCheckable(True)
         self.toggleOutline_btn.toggled.connect(self.toggle_outline)
@@ -50,6 +51,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setMaximumWidth(30)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
+        newTabButton.setIconSize(QSize(24, 24))
         newTabButton.clicked.connect(self.addNewTab)
         newTabButton.setToolTip("Add Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
