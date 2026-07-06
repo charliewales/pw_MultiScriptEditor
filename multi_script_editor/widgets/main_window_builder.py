@@ -132,6 +132,10 @@ class ScriptEditorUIBuilder:
         editor.gotoLine_act.setShortcut('Ctrl+G')
         editor.gotoLine_act.setShortcutContext(Qt.WindowShortcut)
 
+        editor.goToSymbol_act.triggered.connect(editor.goToSymbol)
+        editor.goToSymbol_act.setShortcut('Ctrl+R')
+        editor.goToSymbol_act.setShortcutContext(Qt.WindowShortcut)
+
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
         editor.print_command_act.setCheckable(True)
@@ -320,6 +324,7 @@ class ScriptEditorUIBuilder:
             editor.paste_act: "Paste text from the clipboard",
             editor.find_act: "Find and replace text in the editor",
             editor.gotoLine_act: "Go to a specific line in the editor",
+            editor.goToSymbol_act: "Go to a symbol in the editor",
             editor.print_command_act: "Echo executed commands in the output panel",
             editor.clear_exec_act: "Clear the output panel before executing code",
             editor.whitespace_act: "Show or hide whitespace characters in the editor",

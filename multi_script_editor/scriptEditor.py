@@ -21,8 +21,9 @@ from vendor.help import get_help
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit
-from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor
+from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget
 from widgets import scriptEditor_UIs as ui
+from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
 
 from widgets.main_window_builder import ScriptEditorUIBuilder
@@ -617,6 +618,44 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 edit_widget.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
                 
                 edit_widget.setFocus()
+
+    def goToSymbol(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+            
+        edit_widget = self.tab.widget(index).edit
+        code = edit_widget.toPlainText()
+        
+        # Determine extension based on file_path or fallback to .py
+        ext = '.py'
+        if hasattr(self.tab.widget(index), 'file_path') and self.tab.widget(index).file_path:
+            _, ext = os.path.splitext(self.tab.widget(index).file_path)
+            
+        symbols = OutlineParser.parse(code, ext)
+        if not symbols:
+            return
+            
+        self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget)
+        
+        def _jump_to_line(line_num):
+            block = edit_widget.document().findBlockByLineNumber(line_num - 1)
+            if block.isValid():
+                cursor = edit_widget.textCursor()
+                cursor.setPosition(block.position())
+                edit_widget.setTextCursor(cursor)
+                
+                # Center the block vertically
+                block_rect = edit_widget.document().documentLayout().blockBoundingRect(block)
+                cursor_y = block_rect.center().y()
+                viewport_height = edit_widget.viewport().height()
+                edit_widget.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
+                
+                edit_widget.setFocus()
+                
+        self.symbol_widget.symbolSelected.connect(_jump_to_line)
+        self.symbol_widget.show()
+        self.symbol_widget.search_le.setFocus()
 
     def saveScript(self):
         index = self.tab.currentIndex()
