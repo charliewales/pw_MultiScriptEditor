@@ -108,7 +108,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.currentChanged.connect(self.updateOutline)
 
         self.setupStatusBarWidgets()
-        
+
         self.tab.currentChanged.connect(self.statusBar().clearMessage)
         self.tab.currentChanged.connect(self.updateStatusBarInfo)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
@@ -135,7 +135,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
             lbl.setStyleSheet("padding: 0 5px;")
             self.statusBar().addPermanentWidget(lbl)
-            
+
         self.status_bar_timer = QTimer(self)
         self.status_bar_timer.setSingleShot(True)
         self.status_bar_timer.timeout.connect(self._updateStatusBarInfo)
@@ -164,7 +164,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         line = cursor.blockNumber() + 1
         col = cursor.columnNumber() + 1
         self.lbl_cursor.setText(f"Ln {line}, Col {col}")
-        
+
         total_lines = w.edit.document().blockCount()
         self.lbl_lines.setText(f"{total_lines} lines")
 
@@ -226,7 +226,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 "italic": font.italic()
             }
             self.tab.set_start_font(font_data)
-            
+
             current_theme = self._current_settings.get('theme', 'Multi Script Editor')
             colors = design.getColors(current_theme)
             out_font_data = font_data.copy()
@@ -369,7 +369,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if font_data:
             self.tab.set_start_font(font_data)
-            
+
             out_font_data = font_data.copy()
             if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
@@ -389,13 +389,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
             elif colors.get('use_theme_font_on_outline', True):
                 outline_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
-                
+
             self.outline_list.setFont(outline_font)
             self.current_outline_font = outline_font
             self.outline_filter.setFont(outline_font)
             for i in range(self.outline_list.count()):
                 self.outline_list.item(i).setFont(outline_font)
-            
+
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
             else:
@@ -405,7 +405,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 status_bar_font = QFont(base_font)
             else:
                 status_bar_font = QFont()
-                
+
             if 'menu_text_size' in colors:
                 menu_font.setPointSize(max(1, int(colors['menu_text_size'])))
             elif colors.get('use_theme_font_on_menus', False):
@@ -428,7 +428,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         s = self._current_settings
         s['theme'] = name
         self.save_settings_requested.emit(s)
-        
+
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
             w.edit.autocomplete_timer.stop()
@@ -598,7 +598,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         index = self.tab.currentIndex()
         if index < 0:
             return
-        
+
         # Get maximum line count
         edit_widget = self.tab.widget(index).edit
         max_lines = edit_widget.document().blockCount()
@@ -610,36 +610,36 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 cursor = edit_widget.textCursor()
                 cursor.setPosition(block.position())
                 edit_widget.setTextCursor(cursor)
-                
+
                 # Center the block vertically
                 block_rect = edit_widget.document().documentLayout().blockBoundingRect(block)
                 cursor_y = block_rect.center().y()
                 viewport_height = edit_widget.viewport().height()
                 edit_widget.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
-                
+
                 edit_widget.setFocus()
 
     def goToSymbol(self):
         index = self.tab.currentIndex()
         if index < 0:
             return
-            
+
         edit_widget = self.tab.widget(index).edit
         code = edit_widget.toPlainText()
-        
+
         # Determine extension based on file_path or fallback to .py
         ext = '.py'
         if hasattr(self.tab.widget(index), 'file_path') and self.tab.widget(index).file_path:
             _, ext = os.path.splitext(self.tab.widget(index).file_path)
-            
+
         symbols = OutlineParser.parse(code, ext)
         if not symbols:
             return
-            
+
         theme_name = self._current_settings.get('theme', 'Dark')
         qss = design.editorStyle(theme_name)
         colors = design.getColors(theme_name)
-        
+
         if colors.get('use_theme_font_on_symbols', True):
             font_data = colors.get('font')
             if font_data:
@@ -648,27 +648,27 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 font = QFont(edit_widget.font())
         else:
             font = QFont()
-            
+
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
-            
+
         self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors)
-        
+
         def _jump_to_line(line_num):
             block = edit_widget.document().findBlockByLineNumber(line_num - 1)
             if block.isValid():
                 cursor = edit_widget.textCursor()
                 cursor.setPosition(block.position())
                 edit_widget.setTextCursor(cursor)
-                
+
                 # Center the block vertically
                 block_rect = edit_widget.document().documentLayout().blockBoundingRect(block)
                 cursor_y = block_rect.center().y()
                 viewport_height = edit_widget.viewport().height()
                 edit_widget.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
-                
+
                 edit_widget.setFocus()
-                
+
         self.symbol_widget.symbolSelected.connect(_jump_to_line)
         self.symbol_widget.show()
         self.symbol_widget.search_le.setFocus()
@@ -808,7 +808,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.move(geo[0], geo[1])
             self.resize(geo[2], geo[3])
         else:
-            self.resize(1280, 720)
+            self.resize(1080, 1080)
         if center:
             x, y = center
             geo = self.geometry()
@@ -1049,7 +1049,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self._updateOutlineNow()
         else:
             self.horizontal_splitter.setSizes([0, 800])
-            
+
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
             self.tab.toggleOutline_btn.blockSignals(True)
             self.tab.toggleOutline_btn.setChecked(state)
@@ -1096,17 +1096,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not edit:
             return
         code = edit.toPlainText()
-        
+
         ext = '.py'
         w = self.tab.widget(self.tab.currentIndex())
         if w and hasattr(w, 'file_path') and w.file_path:
              ext = os.path.splitext(w.file_path)[1].lower()
-             
+
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols):
         self.outline_list.clear()
-        
+
         theme_colors = None
         if hasattr(self, '_current_settings'):
             theme_name = self._current_settings.get('theme', 'Dark')
@@ -1116,7 +1116,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             indent_spaces = "  " * sym['indent']
             item = QListWidgetItem("{0}{1}".format(indent_spaces, sym['name']))
             item.setData(Qt.UserRole, sym['line'])
-            
+
             if sym['type'] == 'yaml':
                 colors = ["#E06C75", "#D19A66", "#E5C07B", "#98C379", "#56B6C2", "#61AFEF", "#C678DD"]
                 color = colors[sym['indent'] % len(colors)]
@@ -1134,7 +1134,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         item.setForeground(QColor("#4EC9B0"))
                     else:
                         item.setForeground(QColor("#DCDCAA"))
-                        
+
             item.setFont(getattr(self, 'current_outline_font', self.outline_list.font()))
             self.outline_list.addItem(item)
 
