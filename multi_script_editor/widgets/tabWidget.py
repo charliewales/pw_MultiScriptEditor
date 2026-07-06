@@ -6,6 +6,7 @@ from widgets.pythonSyntax.design import defaultColors
 import re
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
 from widgets import numBarWidget, inputWidget
+from widgets.pythonSyntax import design
 from icons import *
 
 
@@ -186,10 +187,10 @@ class tabWidgetClass(QTabWidget):
             settings = self.p._presenter.settings_model.read_settings()
             show_whitespace = settings.get('show_whitespace', False)
             wrap = settings.get('wrap', False)
-            
+
             # Resolve font: theme font first, then general settings font
             theme_name = settings.get('theme', 'Multi Script Editor')
-            from widgets.pythonSyntax import design
+
             colors = design.getColors(theme_name)
             font_d = colors.get('font')
             if not font_d:

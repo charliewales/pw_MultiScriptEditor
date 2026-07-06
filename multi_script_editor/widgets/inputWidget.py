@@ -69,11 +69,11 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         self.autocomplete_timer.setSingleShot(True)
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
-        
+
         self._lint_timer = QTimer(self)
         self._lint_timer.setSingleShot(True)
         self._lint_timer.timeout.connect(self.runLinter)
-        
+
         self.multi_cursors = []
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
@@ -86,7 +86,6 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         if not font_d:
             self.data = SettingsModel().read_settings()
             theme_name = self.data.get('theme', 'Multi Script Editor')
-            from widgets.pythonSyntax import design
             colors = design.getColors(theme_name)
             font_d = colors.get('font')
             if not font_d:
@@ -138,7 +137,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             if self.completer:
                 self.completer.updateStyle(colors)
         highlighter_class = syntaxHighLighter.PythonHighlighterClass
-        
+
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
             ext = os.path.splitext(self.parent().file_path)[1]
 
@@ -156,7 +155,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 highlighter_class = extraSyntaxes.CssHighlighterClass
             elif ext == '.txt':
                 highlighter_class = extraSyntaxes.TextHighlighterClass
-                
+
         self.hgl = highlighter_class(self, colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
@@ -191,14 +190,14 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             if text or force:
                 tc = self.textCursor()
                 pos = tc.position()
-                
+
                 # Check if we should autocomplete
                 if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
                     bl = tc.blockNumber() + 1
                     col = tc.columnNumber()
                     namespace = self.p.namespace if hasattr(self.p, 'namespace') else None
                     use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
-                    
+
                     try:
                         if hasattr(self.p, '_presenter'):
                             comps = self.p._presenter.request_autocomplete(
@@ -313,9 +312,9 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 self._skip_autocomplete_once = True
                 self.completer.applyCurrentComplete()
                 return
-            
+
             self._skip_autocomplete_once = True
-            
+
             # auto indent
             add = self.getCurrentIndent()
             if add:
@@ -570,7 +569,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
     def addQuotesSelected(self):
         cursor = self.textCursor()
-        
+
         if cursor.hasSelection():
             text = cursor.selection().toPlainText()
             is_quoted = False
@@ -578,12 +577,12 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 is_quoted = True
             elif len(text) >= 2 and (text.startswith("'") and text.endswith("'") or text.startswith('"') and text.endswith('"')):
                 is_quoted = True
-                
+
             if not is_quoted:
                 doc = self.document()
                 start = cursor.selectionStart()
                 end = cursor.selectionEnd()
-                
+
                 cursor_copy = QTextCursor(cursor)
                 text_before_3 = ""
                 text_after_3 = ""
@@ -595,7 +594,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                     cursor_copy.setPosition(end)
                     cursor_copy.setPosition(end + 3, QTextCursor.KeepAnchor)
                     text_after_3 = cursor_copy.selectedText()
-                    
+
                 if (text_before_3 == '"""' and text_after_3 == '"""') or \
                    (text_before_3 == "'''" and text_after_3 == "'''"):
                     is_quoted = True
@@ -610,7 +609,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                         cursor_copy.setPosition(end)
                         cursor_copy.setPosition(end + 1, QTextCursor.KeepAnchor)
                         text_after_1 = cursor_copy.selectedText()
-                        
+
                     if (text_before_1 == '"' and text_after_1 == '"') or \
                        (text_before_1 == "'" and text_after_1 == "'"):
                         is_quoted = True
@@ -626,7 +625,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         text = self.toPlainText()
         pos = cursor.position()
         pattern = r"('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\"|'(?:[^\\']|\\.)*?'|\"(?:[^\\\"]|\\.)*?\")"
-        
+
         best_match = None
         for match in re.finditer(pattern, text):
             start, end = match.span()
@@ -669,9 +668,9 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
         text = cursor.selection().toPlainText()
         self.document().documentLayout().blockSignals(False)
-        
+
         new_text, offset, shifts = self.addRemoveComments(text)
-        
+
         def map_pos(p):
             rel_p = p - block_start
             lines = text.split('\n')
@@ -697,7 +696,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         cursor.beginEditBlock()
         cursor.insertText(new_text)
         cursor.endEditBlock()
-        
+
         if has_selection:
             if pos == end:
                 cursor.setPosition(new_start)
@@ -707,15 +706,15 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 cursor.setPosition(new_start, QTextCursor.KeepAnchor)
         else:
             cursor.setPosition(new_pos)
-            
+
         self.setTextCursor(cursor)
-        
+
         # Prevent autocomplete dialog from popping up due to textChanged
         if hasattr(self, 'autocomplete_timer'):
             self.autocomplete_timer.stop()
         if hasattr(self, 'completer') and self.completer:
             self.completer.hide()
-            
+
         self.update()
 
     def addRemoveComments(self, text):
@@ -778,7 +777,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         if hasattr(comp, 'get_completion_prefix_length'):
             comp_len = len(comp.complete) if comp.complete else 0
             to_remove = comp.get_completion_prefix_length() + comp_len
-            
+
         before = start[:-to_remove] if to_remove > 0 else start
         br = ''
         ofs = 0
@@ -939,17 +938,17 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
-        
+
         if event.modifiers() & Qt.ControlModifier:
             # Add cursor on Ctrl+Click
             cursor = self.cursorForPosition(event.pos())
             self.multi_cursor_manager.add_cursor_at(cursor)
             self.highlight_current_line()
             return
-            
+
         if self.multi_cursor_manager.has_cursors():
             self.multi_cursor_manager.clear()
-            
+
         super(inputClass, self).mousePressEvent(event)
         self.highlight_current_line()
 
