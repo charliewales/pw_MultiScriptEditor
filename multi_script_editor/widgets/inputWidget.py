@@ -897,6 +897,16 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         QTextEdit.dragLeaveEvent(self,event)
 
     def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if os.path.isfile(file_path):
+                        if hasattr(self.p, 'openRecentFile'):
+                            self.p.openRecentFile(file_path)
+            return
+
         event.acceptProposedAction()
         if managers.context in managers.dropEvents and event.mimeData().hasText():
             mim = event.mimeData()
