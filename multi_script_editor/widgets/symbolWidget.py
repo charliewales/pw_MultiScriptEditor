@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt, Signal, QSize
 from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget, QListWidgetItem
-from vendor.Qt.QtGui import QColor, QFont
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics
 from widgets.outline_utils import HtmlDelegate
 
 class SymbolWidget(QDialog):
@@ -9,12 +9,44 @@ class SymbolWidget(QDialog):
     def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py'):
         super(SymbolWidget, self).__init__(parent)
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
-        self.setFixedSize(QSize(400, 300))
-        
+
         self.symbols = symbols
         self.colors = colors
         self._font = font
         self.ext = ext
+
+        # Calculate dynamic size
+        if font:
+            fm = QFontMetrics(font)
+        else:
+            fm = QFontMetrics(self.font())
+
+        max_text_width = 0
+        for sym in self.symbols:
+            name = sym.get('name', '')
+            indent = sym.get('indent', 0)
+            # Indentation in HtmlDelegate is usually around 15-20 pixels per level
+            w = fm.horizontalAdvance(name) if hasattr(fm, 'horizontalAdvance') else fm.width(name)
+            w += indent * 20
+            if w > max_text_width:
+                max_text_width = w
+
+        # Base padding: icon (16) + margins + scrollbar (20) + safe area
+        calculated_width = max_text_width + 120
+
+        if center_widget:
+            max_w = center_widget.width()
+            final_width = min(calculated_width, max_w)
+        else:
+            final_width = calculated_width
+
+        final_height = final_width / 2
+
+        # Enforce minimum size of 400x300
+        final_width = max(final_width, 400.0)
+        final_height = max(final_height, 200.0)
+
+        self.setFixedSize(QSize(int(final_width), int(final_height)))
 
         # Layout
         layout = QVBoxLayout(self)
@@ -42,7 +74,7 @@ class SymbolWidget(QDialog):
             self.setStyleSheet(qss + "\nQDialog { border: 1px solid #555555; }")
 
         self.populate_list("")
-        
+
         # Position
         if center_widget:
             center = center_widget.mapToGlobal(center_widget.rect().center())
@@ -51,30 +83,30 @@ class SymbolWidget(QDialog):
             # Offset it to top-center of the editor
             myGeo.moveTop(center_widget.mapToGlobal(center_widget.rect().topLeft()).y() + 20)
             self.move(myGeo.topLeft())
-            
+
     def populate_list(self, filter_text):
         self.list_widget.clear()
         filter_text = filter_text.lower()
-        
+
         from widgets.outline_utils import create_symbol_item
-        
+
         for sym in self.symbols:
             name = sym.get('name', '')
             if filter_text in name.lower():
                 item = create_symbol_item(sym, self.colors, self._font, ext=self.ext)
                 self.list_widget.addItem(item)
-                
+
         if self.list_widget.count() > 0:
             self.list_widget.setCurrentRow(0)
-            
+
     def filter_symbols(self, text):
         self.populate_list(text)
-        
+
     def on_item_clicked(self, item):
         line = item.data(Qt.UserRole)
         self.symbolSelected.emit(line)
         self.accept()
-        
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.reject()
