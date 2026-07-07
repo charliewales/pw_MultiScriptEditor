@@ -2,10 +2,10 @@ from vendor.Qt.QtWidgets import QListWidgetItem
 from vendor.Qt.QtGui import QColor
 from vendor.Qt.QtCore import Qt
 
-def create_symbol_item(sym, theme_colors=None, font=None):
+def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     """
     Creates and formats a QListWidgetItem for a given symbol,
-    applying appropriate indentation, colors, and fonts.
+    applying appropriate indentation, colors, and fonts based on file extension.
     """
     name = sym.get('name', '')
     indent = sym.get('indent', 0)
@@ -17,27 +17,32 @@ def create_symbol_item(sym, theme_colors=None, font=None):
     if font:
         item.setFont(font)
 
-    if sym.get('type') == 'yaml':
-        colors = ["#E06C75", "#D19A66", "#E5C07B", "#98C379", "#56B6C2", "#61AFEF", "#C678DD"]
-        color = colors[indent % len(colors)]
-        item.setForeground(QColor(color))
-    else:
-        if theme_colors:
-            if sym.get('type') == 'class':
-                c = theme_colors.get('keywords', (78, 201, 176))
-                item.setForeground(QColor(*c))
-            elif sym.get('type') == 'usd':
-                c = theme_colors.get('methods', (120, 190, 205))
-                item.setForeground(QColor(*c))
-            else:
-                c = theme_colors.get('methods', (220, 220, 170))
-                item.setForeground(QColor(*c))
+    if not theme_colors:
+        theme_colors = {}
+        
+    sym_type = sym.get('type')
+    
+    c_def = theme_colors.get('definition', (255, 160, 250))
+    c_meth = theme_colors.get('methods', (120, 190, 205))
+    c_kw = theme_colors.get('keywords', (65, 255, 130))
+    
+    if ext == '.py':
+        if sym_type == 'class':
+            item.setForeground(QColor(*c_def))
         else:
-            if sym.get('type') == 'class':
-                item.setForeground(QColor("#4EC9B0"))
-            elif sym.get('type') == 'usd':
-                item.setForeground(QColor("#78BECD"))
-            else:
-                item.setForeground(QColor("#DCDCAA"))
-                
+            item.setForeground(QColor(*c_meth))
+            
+    elif ext in ['.js', '.jsx', '.ts', '.tsx', '.cpp', '.c', '.h', '.hpp', '.vex', '.mel']:
+        if sym_type == 'class':
+            item.setForeground(QColor(*c_kw))
+        else:
+            item.setForeground(QColor(*c_meth))
+            
+    elif ext in ['.usd', '.usda']:
+        item.setForeground(QColor(*c_meth))
+        
+    else:
+        # Markdown headers, HTML tags, CSS selectors, YAML keys all use keywords color in extraSyntaxes
+        item.setForeground(QColor(*c_kw))
+
     return item

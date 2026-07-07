@@ -5,7 +5,7 @@ from vendor.Qt.QtGui import QColor, QFont
 class SymbolWidget(QDialog):
     symbolSelected = Signal(int)  # emits the line number
 
-    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None):
+    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py'):
         super(SymbolWidget, self).__init__(parent)
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
         self.setFixedSize(QSize(400, 300))
@@ -13,6 +13,7 @@ class SymbolWidget(QDialog):
         self.symbols = symbols
         self.colors = colors
         self._font = font
+        self.ext = ext
 
         # Layout
         layout = QVBoxLayout(self)
@@ -58,7 +59,7 @@ class SymbolWidget(QDialog):
         for sym in self.symbols:
             name = sym.get('name', '')
             if filter_text in name.lower():
-                item = create_symbol_item(sym, self.colors, self._font)
+                item = create_symbol_item(sym, self.colors, self._font, ext=self.ext)
                 self.list_widget.addItem(item)
                 
         if self.list_widget.count() > 0:

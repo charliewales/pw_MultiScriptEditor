@@ -654,7 +654,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
 
-        self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors)
+        self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors, ext=ext)
 
         def _jump_to_line(line_num):
             block = edit_widget.document().findBlockByLineNumber(line_num - 1)
@@ -1111,7 +1111,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.update_outline_requested.emit(code, ext)
 
-    def set_outline_symbols(self, symbols):
+    def set_outline_symbols(self, symbols, ext='.py'):
+        self.outline_list.clear()
+        if not symbols:
+            return
+
         self.outline_list.clear()
 
         theme_colors = None
@@ -1123,7 +1127,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         font = getattr(self, 'current_outline_font', self.outline_list.font())
 
         for sym in symbols:
-            item = create_symbol_item(sym, theme_colors, font)
+            item = create_symbol_item(sym, theme_colors, font, ext=ext)
             self.outline_list.addItem(item)
 
     def outlineItemClicked(self, item):
