@@ -85,6 +85,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.horizontal_splitter.addWidget(self.outline_panel)
         self.horizontal_splitter.addWidget(self.tab)
         self.in_ly.addWidget(self.horizontal_splitter)
+        self.horizontal_splitter.setStretchFactor(0, 0)
+        self.horizontal_splitter.setStretchFactor(1, 1)
         self.horizontal_splitter.setSizes([0, 800])  # Start with outline panel collapsed
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
@@ -808,6 +810,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         out_wrap = data.get('out_wrap', None)
         outFontSize = data.get('outFontSize', 10)
         splitter = data.get('splitter', [600, 400])
+        horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
         wrap = data.get('wrap', None)
         show_whitespace = data.get('show_whitespace', False)
         font = data.get('font', False)
@@ -827,6 +830,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.setGeometry(geo)
         if splitter:
             self.splitter.setSizes(splitter)
+        if horizontal_splitter_sizes:
+            self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
         if out_wrap is not None:
             self.out_wordWrap_act.setChecked(out_wrap)
             self.out.wordWrap(out_wrap)
@@ -902,6 +907,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 out_pt = self.out.font().pixelSize()
         size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
+        horizontal_split_sizes = self.horizontal_splitter.sizes()
+        if horizontal_split_sizes[0] == 0:
+            horizontal_split_sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
         out_word_wrap = self.out_wordWrap_act.isChecked()
         clear_execute = self.clear_exec_act.isChecked()
         echo_execute = self.print_command_act.isChecked()
@@ -943,6 +951,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             center=center,
             outFontSize=size,
             splitter=split_sizes,
+            horizontal_splitter=horizontal_split_sizes,
             wrap=word_wrap,
             out_wrap=out_word_wrap,
             echo_execute=echo_execute,
@@ -1056,9 +1065,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def toggleOutline(self, state):
         self.showOutline_act.setChecked(state)
         if state:
-            self.horizontal_splitter.setSizes([200, 600])
+            sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
+            if sizes[0] == 0:
+                sizes = [200, 600]
+            self.horizontal_splitter.setSizes(sizes)
             self._updateOutlineNow()
         else:
+            if self.horizontal_splitter.sizes()[0] != 0:
+                self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
             self.horizontal_splitter.setSizes([0, 800])
 
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
