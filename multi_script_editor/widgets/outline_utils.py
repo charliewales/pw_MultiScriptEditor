@@ -1,17 +1,48 @@
-from vendor.Qt.QtWidgets import QListWidgetItem
-from vendor.Qt.QtGui import QColor
-from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtWidgets import QListWidgetItem, QStyledItemDelegate, QApplication, QStyle
+from vendor.Qt.QtGui import QColor, QTextDocument, QAbstractTextDocumentLayout
+from vendor.Qt.QtCore import Qt, QSize, QRectF
+
+class HtmlDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        options = option
+        self.initStyleOption(options, index)
+
+        painter.save()
+        
+        doc = QTextDocument()
+        doc.setHtml(options.text)
+        doc.setDefaultFont(options.font)
+        
+        # Clear text to prevent default painting
+        options.text = ""
+        
+        style = options.widget.style() if options.widget else QApplication.style()
+        style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)
+        
+        painter.translate(options.rect.left(), options.rect.top())
+        clip = QRectF(0, 0, options.rect.width(), options.rect.height())
+        doc.drawContents(painter, clip)
+        
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        options = option
+        self.initStyleOption(options, index)
+        doc = QTextDocument()
+        doc.setHtml(options.text)
+        doc.setDefaultFont(options.font)
+        return QSize(int(doc.idealWidth()), int(doc.size().height()))
 
 def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     """
     Creates and formats a QListWidgetItem for a given symbol,
     applying appropriate indentation, colors, and fonts based on file extension.
+    Uses HTML for multi-color support inside the item.
     """
     name = sym.get('name', '')
     indent = sym.get('indent', 0)
-    display_name = ("  " * indent) + name
     
-    item = QListWidgetItem(display_name)
+    item = QListWidgetItem()
     item.setData(Qt.UserRole, sym.get('line', 1))
     
     if font:
@@ -22,27 +53,57 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
         
     sym_type = sym.get('type')
     
-    c_def = theme_colors.get('definition', (255, 160, 250))
-    c_meth = theme_colors.get('methods', (120, 190, 205))
-    c_kw = theme_colors.get('keywords', (65, 255, 130))
+    def rgb2hex(rgb):
+        if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
+            return "#ffffff"
+        return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
     
-    if ext == '.py':
-        if sym_type == 'class':
-            item.setForeground(QColor(*c_def))
-        else:
-            item.setForeground(QColor(*c_meth))
-            
-    elif ext in ['.js', '.jsx', '.ts', '.tsx', '.cpp', '.c', '.h', '.hpp', '.vex', '.mel']:
-        if sym_type == 'class':
-            item.setForeground(QColor(*c_kw))
-        else:
-            item.setForeground(QColor(*c_meth))
-            
-    elif ext in ['.usd', '.usda']:
-        item.setForeground(QColor(*c_meth))
-        
+    c_def = rgb2hex(theme_colors.get('definition', (255, 160, 250)))
+    c_meth = rgb2hex(theme_colors.get('methods', (120, 190, 205)))
+    c_kw = rgb2hex(theme_colors.get('keywords', (65, 255, 130)))
+    c_str = rgb2hex(theme_colors.get('string', (128, 255, 128)))
+    
+    html_name = name
+    
+    if ext in ['.usd', '.usda']:
+        parts = name.split(' ', 2)
+        if len(parts) >= 2:
+            kw = parts[0]
+            node_type = parts[1]
+            rest = parts[2] if len(parts) > 2 else ''
+            html_name = f'<span style="color:{c_kw}">{kw}</span> <span style="color:{c_meth}">{node_type}</span> <span style="color:{c_str}">{rest}</span>'
+    elif ext in ['.yaml', '.yml']:
+        html_name = f'<span style="color:{c_kw}">{name}</span>'
+    elif ext in ['.html', '.htm']:
+        parts = name.split(' ', 1)
+        if len(parts) == 2:
+            html_name = f'<span style="color:{c_kw}">{parts[0]}</span> <span style="color:{c_meth}">{parts[1]}</span>'
+    elif ext in ['.css', '.scss', '.less']:
+        html_name = f'<span style="color:{c_kw}">{name}</span>'
+    elif ext in ['.md', '.markdown']:
+        html_name = f'<span style="color:{c_kw}">{name}</span>'
     else:
-        # Markdown headers, HTML tags, CSS selectors, YAML keys all use keywords color in extraSyntaxes
-        item.setForeground(QColor(*c_kw))
+        # Programming languages (Python, JS, C++, etc)
+        first_space = name.find(' ')
+        if first_space != -1:
+            kw = name[:first_space]
+            rest = name[first_space+1:]
+            
+            # Python 'class' and 'def' use definition color in editor
+            if ext == '.py' and kw in ['def', 'class']:
+                kw_html = f'<span style="color:{c_def}">{kw}</span>'
+            else:
+                kw_html = f'<span style="color:{c_kw}">{kw}</span>'
+                
+            # Class and function names are colored using methods color
+            rest_html = f'<span style="color:{c_meth}">{rest}</span>'
+                
+            html_name = f'{kw_html} {rest_html}'
+        else:
+            html_name = f'<span style="color:{c_meth}">{name}</span>'
 
+    # Add HTML non-breaking spaces for indentation
+    display_name = ("&nbsp;&nbsp;" * indent) + html_name
+    item.setText(display_name)
+    
     return item

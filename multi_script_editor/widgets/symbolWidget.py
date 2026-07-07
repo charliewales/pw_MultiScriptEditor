@@ -1,6 +1,7 @@
 from vendor.Qt.QtCore import Qt, Signal, QSize
 from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget, QListWidgetItem
 from vendor.Qt.QtGui import QColor, QFont
+from widgets.outline_utils import HtmlDelegate
 
 class SymbolWidget(QDialog):
     symbolSelected = Signal(int)  # emits the line number
@@ -30,6 +31,7 @@ class SymbolWidget(QDialog):
 
         # List
         self.list_widget = QListWidget(self)
+        self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
         self.list_widget.itemClicked.connect(self.on_item_clicked)
         if font:
             self.list_widget.setFont(font)

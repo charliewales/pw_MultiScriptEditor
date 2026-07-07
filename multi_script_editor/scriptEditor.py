@@ -9,7 +9,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.1.1"
+mse_version = "6.2.0"
 
 import managers
 from core.execution_manager import ExecutionManager
@@ -20,11 +20,12 @@ from vendor.help import get_help
 
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QTextCursor
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
+from widgets.outline_utils import HtmlDelegate
 
 from widgets.main_window_builder import ScriptEditorUIBuilder
 from core.settings_model import SettingsModel
@@ -63,6 +64,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
         self.outline_list = QListWidget()
         self.outline_list.setObjectName("outlineList")
+        self.outline_list.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.outline_list.setFocusPolicy(Qt.NoFocus)
+        self.outline_list.setItemDelegate(HtmlDelegate(self.outline_list))
         self.outline_list.itemClicked.connect(self.outlineItemClicked)
 
         self.outline_filter = QLineEdit()
