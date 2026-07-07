@@ -58,6 +58,10 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         # Pre-compile regex for rapid string extraction to safely detect comments
         self.string_pattern = re.compile(r'(".*?"|\'.*?\')')
         
+        # Whitespace
+        self.whitespace_regex = re.compile(r"\s")
+        self.whitespace_format = self.getStyle(self.colors['whitespace'])
+        
         QSyntaxHighlighter.__init__(self, document)
 
     def getStyle(self, color, bold=False):
@@ -97,6 +101,10 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         in_multiline = self.match_multiline(text, *self.tri_single)
         if not in_multiline:
             in_multiline = self.match_multiline(text, *self.tri_double)
+
+        # Re-apply whitespace formatting on top of multiline strings
+        for match in self.whitespace_regex.finditer(text):
+            self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
 
     def match_multiline(self, text, delimiter, in_state, style):
         """Do highlighting of multi-line strings."""

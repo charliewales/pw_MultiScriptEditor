@@ -26,12 +26,17 @@ def create_symbol_item(sym, theme_colors=None, font=None):
             if sym.get('type') == 'class':
                 c = theme_colors.get('keywords', (78, 201, 176))
                 item.setForeground(QColor(*c))
+            elif sym.get('type') == 'usd':
+                c = theme_colors.get('methods', (120, 190, 205))
+                item.setForeground(QColor(*c))
             else:
                 c = theme_colors.get('methods', (220, 220, 170))
                 item.setForeground(QColor(*c))
         else:
             if sym.get('type') == 'class':
                 item.setForeground(QColor("#4EC9B0"))
+            elif sym.get('type') == 'usd':
+                item.setForeground(QColor("#78BECD"))
             else:
                 item.setForeground(QColor("#DCDCAA"))
                 

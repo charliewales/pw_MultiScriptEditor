@@ -115,5 +115,15 @@ class OutlineParser:
                     name = yaml_match.group(2)
                     symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'yaml'})
                     continue
+                    
+            elif ext in ['.usd', '.usda']:
+                usd_match = re.match(r'^(\s*)(def|class|over)\s+([^{]+)', line)
+                if usd_match:
+                    indent_str = usd_match.group(1)
+                    indent = len(indent_str) // 4
+                    keyword = usd_match.group(2)
+                    decl = usd_match.group(3).strip()
+                    symbols.append({'name': "{0} {1}".format(keyword, decl), 'line': line_num, 'indent': indent, 'type': 'usd'})
+                    continue
 
         return symbols

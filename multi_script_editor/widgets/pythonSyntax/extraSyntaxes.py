@@ -105,6 +105,74 @@ class YamlHighlighterClass(BaseHighlighterClass):
         self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
 
 
+class UsdHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(UsdHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        # Multiline strings """
+        self.tri_double = (re.compile('"""'), 2, self.getStyle(self.colors.get('string', (128,255,128))))
+        
+        # Keywords
+        usd_keywords = ['def', 'class', 'over', 'rel', 'custom', 'uniform', 'variantSet', 'asset', 'token', 'int', 'float', 'double', 'string', 'bool', 'matrix4d', 'double3', 'float3', 'color3f', 'quatf', 'timecode', 'dictionary', 'references', 'payload', 'inherits', 'specializes', 'subLayers', 'upAxis', 'metersPerUnit', 'defaultPrim', 'doc', 'config']
+        keywords_pattern = r'\b(' + '|'.join(usd_keywords) + r')\b'
+        rules.append((keywords_pattern, 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        
+        # Node Types (after def, class, over)
+        rules.append((r'\b(?:def|class|over)\s+([A-Za-z0-9_]+)', 1, self.getStyle(self.colors.get('methods', (0,255,0)))))
+        
+        # Strings
+        rules.append((r'".*?"|\'.*?\'', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        
+        # Numbers
+        rules.append((r"\b[-+]?[\d.]+\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        
+        # Comments
+        rules.append((r'#.*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
+
+    def highlightBlock(self, text):
+        super(UsdHighlighterClass, self).highlightBlock(text)
+        
+        self.setCurrentBlockState(0)
+        self.match_multiline(text, *self.tri_double)
+
+        if hasattr(self, 'whitespace_regex'):
+            for match in self.whitespace_regex.finditer(text):
+                self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
+
+    def match_multiline(self, text, delimiter, in_state, style):
+        if self.previousBlockState() == in_state:
+            start = 0
+            add = 0
+        else:
+            match = delimiter.search(text)
+            start = match.start() if match else -1
+            add = match.end() - match.start() if match else 0
+
+        while start >= 0:
+            match = delimiter.search(text, start + add)
+            end = match.start() if match else -1
+            matchedLength = match.end() - match.start() if match else 0
+                
+            if end >= 0:
+                length = end - start + matchedLength
+                self.setCurrentBlockState(0)
+            else:
+                self.setCurrentBlockState(in_state)
+                length = len(text) - start
+            
+            self.setFormat(start, length, style)
+            
+            match = delimiter.search(text, start + length)
+            start = match.start() if match else -1
+            add = match.end() - match.start() if match else 0
+
+        return self.currentBlockState() == in_state
+
+
+
 class MarkdownHighlighterClass(BaseHighlighterClass):
     def __init__(self, document, colors=None):
         super(MarkdownHighlighterClass, self).__init__(document, colors)

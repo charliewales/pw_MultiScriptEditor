@@ -155,6 +155,8 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
                 highlighter_class = extraSyntaxes.CssHighlighterClass
             elif ext == '.txt':
                 highlighter_class = extraSyntaxes.TextHighlighterClass
+            elif ext in ['.usd', '.usda']:
+                highlighter_class = extraSyntaxes.UsdHighlighterClass
 
         self.hgl = highlighter_class(self, colors)
         st = design.editorStyle(theme)

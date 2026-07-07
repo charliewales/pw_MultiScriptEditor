@@ -696,7 +696,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;All Files (*.*)")
+        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt *.usd *.usda);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;USD Files (*.usd *.usda);;All Files (*.*)")
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -713,7 +713,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;All Files (*.*)")
+        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt *.usd *.usda);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;USD Files (*.usd *.usda);;All Files (*.*)")
         if path[0]:
             if os.path.exists(path[0]):
                 text = open(path[0]).read()
