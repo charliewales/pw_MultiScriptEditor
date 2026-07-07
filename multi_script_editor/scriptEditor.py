@@ -1134,10 +1134,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             block = edit.document().findBlockByNumber(line - 1)
             cursor.setPosition(block.position())
             edit.setTextCursor(cursor)
-            # Make sure the block is at the top of the view
-            # Using block bounding rect for QTextEdit
-            block_y = edit.document().documentLayout().blockBoundingRect(block).top()
-            edit.verticalScrollBar().setValue(block_y)
+            # Center the block vertically
+            block_rect = edit.document().documentLayout().blockBoundingRect(block)
+            cursor_y = block_rect.center().y()
+            viewport_height = edit.viewport().height()
+            edit.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
             edit.highlight_current_line()
             edit.setFocus()
 
