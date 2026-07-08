@@ -72,7 +72,7 @@ class tabWidgetClass(QTabWidget):
         # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
-        sc = QShortcut(QKeySequence("Ctrl+Alt+C"), self, self.copyFilePath)
+        sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
         self.currentChanged.connect(self.onTabChanged)
 
@@ -156,7 +156,7 @@ class tabWidgetClass(QTabWidget):
         if hasattr(widget, 'file_path') and widget.file_path:
             menu.addSeparator()
             copy_action = QAction('Copy File Path', self)
-            copy_action.setShortcut('Ctrl+Alt+C')
+            copy_action.setShortcut('Alt+Shift+C')
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
