@@ -1378,11 +1378,72 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 user_snippets[k] = v
         snippets_model.write_settings({'snippets': user_snippets})
 
+    def importSnippets(self):
+        path, _ = QFileDialog.getOpenFileName(self, 'Import Snippets', '', "JSON Files (*.json);;All Files (*.*)")
+        if not path:
+            return
+
+        import json, codecs
+        try:
+            with codecs.open(path, "r", "utf-16") as stream:
+                data = json.load(stream)
+            imported_snippets = data.get("snippets", {})
+            if not imported_snippets:
+                raise ValueError("Empty or invalid format")
+        except Exception:
+            try:
+                with codecs.open(path, "r", "utf-8") as stream:
+                    data = json.load(stream)
+                imported_snippets = data.get("snippets", {})
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Could not read the file:\n{e}")
+                return
+
+        if not imported_snippets:
+            QMessageBox.information(self, "Import Snippets", "No snippets found in the selected file.")
+            return
+
+        current_snippets = self._get_snippets()
+        conflicts = [name for name in imported_snippets if name in current_snippets]
+        
+        overwrite = False
+        if conflicts:
+            reply = QMessageBox.question(
+                self, 
+                "Import Snippets", 
+                f"{len(conflicts)} snippets already exist. Do you want to overwrite them?", 
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, 
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Cancel:
+                return
+            overwrite = (reply == QMessageBox.Yes)
+
+        added = 0
+        for name, code in imported_snippets.items():
+            if name in conflicts and not overwrite:
+                continue
+            current_snippets[name] = code
+            added += 1
+
+        if added > 0:
+            self._save_snippets(current_snippets)
+            self.fillSnippetsMenu()
+            self.out.showMessage(f">>> Successfully imported {added} snippet(s).")
+        else:
+            self.out.showMessage(">>> No new snippets were imported.")
+
     def fillSnippetsMenu(self):
         self.snippets_menu.clear()
 
         self.manageSnippet_act.setIcon(QIcon(icons['snippets']))
         self.snippets_menu.addAction(self.manageSnippet_act)
+
+        import_act = QAction("Import snippets...", self)
+        import_act.setStatusTip("Import snippets from another file")
+        import_act.setIcon(QIcon(icons["open"]))
+        import_act.triggered.connect(self.importSnippets)
+        self.snippets_menu.addAction(import_act)
 
         self.delete_snippet_menu = QMenu("Delete snippet", self)
         self.delete_snippet_menu.setIcon(QIcon(icons["clear"]))
