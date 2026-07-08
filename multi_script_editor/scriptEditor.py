@@ -1464,7 +1464,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if name in defaults and not added_defaults_separator:
                     if has_user_snippets:
                         self.snippets_menu.addSeparator()
-                        self.delete_snippet_menu.addSeparator()
                     added_defaults_separator = True
 
                 act = QAction(name, self)
@@ -1472,10 +1471,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 act.triggered.connect(lambda checked=False, n=name: self._insert_snippet_text(snippets[n]))
                 self.snippets_menu.addAction(act)
 
-                del_act = QAction(name, self)
-                del_act.setStatusTip(f"Delete snippet: {name}")
-                del_act.triggered.connect(lambda checked=False, n=name: self.deleteSnippet(n))
-                self.delete_snippet_menu.addAction(del_act)
+                if name not in defaults:
+                    del_act = QAction(name, self)
+                    del_act.setStatusTip(f"Delete snippet: {name}")
+                    del_act.triggered.connect(lambda checked=False, n=name: self.deleteSnippet(n))
+                    self.delete_snippet_menu.addAction(del_act)
+
+            if not has_user_snippets:
+                no_del_act = QAction("No saved snippets", self)
+                no_del_act.setEnabled(False)
+                self.delete_snippet_menu.addAction(no_del_act)
         else:
             no_snippets_act = QAction("No saved snippets", self)
             no_snippets_act.setEnabled(False)
@@ -1572,14 +1577,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget.setFocus()
 
     def deleteSnippet(self, name):
-        snippets_model = SnippetsModel()
-        defaults = snippets_model.get_defaults().get('snippets', {})
-        user_snippets = snippets_model.read_settings().get('snippets', {})
-        
-        if name in defaults and name not in user_snippets:
-            QMessageBox.warning(self, "Delete Snippet", f"'{name}' is a default snippet and cannot be deleted.")
-            return
-
         res = QMessageBox.question(
             self,
             "Delete Snippet",
@@ -1591,6 +1588,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if name in snippets:
                 del snippets[name]
                 self._save_snippets(snippets)
+                
+                snippets_model = SnippetsModel()
+                defaults = snippets_model.get_defaults().get('snippets', {})
                 if name in defaults:
                     self.out.showMessage(">>> Reverted snippet '{0}' to default.".format(name))
                 else:
