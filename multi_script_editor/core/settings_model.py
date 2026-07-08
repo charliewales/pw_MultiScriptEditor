@@ -84,8 +84,8 @@ class SnippetsModel(SettingsModel):
                     SnippetsModel._cached_settings = json.load(stream)
                     return SnippetsModel._cached_settings
                 except Exception:
-                    return self.get_defaults()
-        return self.get_defaults()
+                    return {'snippets': {}}
+        return {'snippets': {}}
 
     def write_settings(self, data):
         SnippetsModel._cached_settings = data
@@ -97,4 +97,10 @@ class SnippetsModel(SettingsModel):
 
     @staticmethod
     def get_defaults():
-        return dict(snippets={})
+        return dict(snippets={
+            "Python: Main block": "if __name__ == '__main__':\n    # Main code here\n    pass",
+            "Python: Class Template": "class MyClass(object):\n    def __init__(self):\n        super(MyClass, self).__init__()\n        pass",
+            "Python: Try/Except": "import traceback\ntry:\n    pass\nexcept Exception as e:\n    print(f\"Error: {e}\")\n    traceback.print_exc()",
+            "Python: If/Else": "if condition:\n    pass\nelse:\n    pass",
+            "Qt: Basic Window": "from PySide2.QtWidgets import QMainWindow, QApplication\nimport sys\n\nclass MyWindow(QMainWindow):\n    def __init__(self, parent=None):\n        super(MyWindow, self).__init__(parent)\n        self.setWindowTitle(\"My UI\")\n        self.resize(400, 300)\n\nif __name__ == '__main__':\n    app = QApplication(sys.argv)\n    win = MyWindow()\n    win.show()\n    sys.exit(app.exec_())"
+        })

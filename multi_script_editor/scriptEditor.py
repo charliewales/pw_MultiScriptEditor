@@ -1343,18 +1343,40 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def _get_snippets(self):
         snippets_model = SnippetsModel()
         snippets_data = snippets_model.read_settings()
-        if not snippets_data.get('snippets'):
+        user_snippets = snippets_data.get('snippets', {})
+        defaults = snippets_model.get_defaults().get('snippets', {})
+
+        if not user_snippets:
             # Fallback for migration
             settings = SettingsModel()
             old_data = settings.read_settings()
             if 'snippets' in old_data and old_data['snippets']:
-                snippets_data['snippets'] = old_data['snippets']
-                snippets_model.write_settings(snippets_data)
-        return snippets_data.get('snippets', {})
+                old_snippets = old_data['snippets']
+                filtered_old = {k: v for k, v in old_snippets.items() if k not in defaults or defaults[k] != v}
+                if filtered_old:
+                    user_snippets = filtered_old
+                    snippets_data['snippets'] = filtered_old
+                    snippets_model.write_settings(snippets_data)
+
+        # Build final dict with user snippets first, then defaults
+        all_snippets = {}
+        for k in sorted(user_snippets.keys()):
+            all_snippets[k] = user_snippets[k]
+        
+        for k in sorted(defaults.keys()):
+            if k not in all_snippets:
+                all_snippets[k] = defaults[k]
+
+        return all_snippets
 
     def _save_snippets(self, snippets_dict):
         snippets_model = SnippetsModel()
-        snippets_model.write_settings({'snippets': snippets_dict})
+        defaults = snippets_model.get_defaults().get('snippets', {})
+        user_snippets = {}
+        for k, v in snippets_dict.items():
+            if k not in defaults or defaults[k] != v:
+                user_snippets[k] = v
+        snippets_model.write_settings({'snippets': user_snippets})
 
     def fillSnippetsMenu(self):
         self.snippets_menu.clear()
@@ -1372,7 +1394,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         snippets = self._get_snippets()
 
         if snippets:
-            for name in sorted(snippets.keys()):
+            snippets_model = SnippetsModel()
+            defaults = snippets_model.get_defaults().get('snippets', {})
+            added_defaults_separator = False
+            has_user_snippets = any(name not in defaults for name in snippets)
+
+            for name in snippets.keys():
+                if name in defaults and not added_defaults_separator:
+                    if has_user_snippets:
+                        self.snippets_menu.addSeparator()
+                        self.delete_snippet_menu.addSeparator()
+                    added_defaults_separator = True
+
                 act = QAction(name, self)
                 act.setStatusTip(f"Insert snippet: {name}")
                 act.triggered.connect(lambda checked=False, n=name: self._insert_snippet_text(snippets[n]))
@@ -1478,6 +1511,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget.setFocus()
 
     def deleteSnippet(self, name):
+        snippets_model = SnippetsModel()
+        defaults = snippets_model.get_defaults().get('snippets', {})
+        user_snippets = snippets_model.read_settings().get('snippets', {})
+        
+        if name in defaults and name not in user_snippets:
+            QMessageBox.warning(self, "Delete Snippet", f"'{name}' is a default snippet and cannot be deleted.")
+            return
+
         res = QMessageBox.question(
             self,
             "Delete Snippet",
@@ -1489,7 +1530,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if name in snippets:
                 del snippets[name]
                 self._save_snippets(snippets)
-                self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
+                if name in defaults:
+                    self.out.showMessage(">>> Reverted snippet '{0}' to default.".format(name))
+                else:
+                    self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
                 self.fillSnippetsMenu()
 
 try:
