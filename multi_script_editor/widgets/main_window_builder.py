@@ -28,11 +28,6 @@ class ScriptEditorUIBuilder:
         editor.saveAs_act.setIcon(QIcon(icons['save']))
         editor.saveAs_act.setShortcut("Ctrl+Shift+S")
 
-        editor.recent_files_menu = QMenu("Recent files", editor)
-        editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
-        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.recent_files_menu)
-        editor.updateRecentFilesMenu()
-
         editor.saveSeccion_act.triggered.connect(lambda: editor.saveSession(True))
         editor.saveSeccion_act.setIcon(QIcon(icons['save']))
         editor.saveSeccion_act.setShortcut("Ctrl+Alt+S")
@@ -290,33 +285,37 @@ class ScriptEditorUIBuilder:
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
 
+        # Recent files Submenu
+        editor.recent_files_menu = QMenu("Recent files", editor)
+        editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
+        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.recent_files_menu)
+        editor.updateRecentFilesMenu()
+        editor.file_menu.addSeparator()
+
         # Sessions Submenu in File menu
         editor.sessions_menu = QMenu("Sessions", editor)
         editor.sessions_menu.setIcon(QIcon(icons['open']))
         editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
-        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.sessions_menu)
+        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.sessions_menu)
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
         editor.snippets_menu.setIcon(QIcon(icons['snippets']))
         editor.snippets_menu.menuAction().setStatusTip("Manage code snippets")
-        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.snippets_menu)
+        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.snippets_menu)
+        editor.file_menu.addSeparator()
 
         # Snippets actions shortcuts
-        editor.saveSnippet_act = QAction("Save snippet", editor)
-        editor.saveSnippet_act.setShortcut('Alt+Shift+S')
-        editor.saveSnippet_act.setShortcutContext(Qt.WindowShortcut)
-        editor.saveSnippet_act.triggered.connect(editor.saveSnippet)
-        editor.addAction(editor.saveSnippet_act)
-
-        editor.insertSnippet_act = QAction("Insert snippet", editor)
-        editor.insertSnippet_act.setShortcut('Alt+S')
-        editor.insertSnippet_act.setShortcutContext(Qt.WindowShortcut)
-        editor.insertSnippet_act.triggered.connect(editor.insertSnippet)
-        editor.addAction(editor.insertSnippet_act)
+        editor.manageSnippet_act = QAction("Insert/save snippet", editor)
+        editor.manageSnippet_act.setShortcut('Alt+S')
+        editor.manageSnippet_act.setShortcutContext(Qt.WindowShortcut)
+        editor.manageSnippet_act.setStatusTip("Insert a snippet, or save selection as a new snippet")
+        editor.manageSnippet_act.triggered.connect(editor.handleSnippetShortcut)
+        editor.addAction(editor.manageSnippet_act)
 
         # Status tips for actions
         status_tips = {
+            editor.manageSnippet_act: "Insert a snippet, or save selection as a new snippet",
             editor.load_act: "Open an existing script file",
             editor.save_act: "Save the current script",
             editor.saveSeccion_act: "Save the current session tabs and layout",

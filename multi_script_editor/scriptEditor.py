@@ -1328,14 +1328,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage("No crash backup found.")
 
 
+    def handleSnippetShortcut(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        edit_widget = self.tab.widget(index).edit
+        if edit_widget.textCursor().hasSelection():
+            self.saveSnippet()
+        else:
+            self.insertSnippet()
+
     def fillSnippetsMenu(self):
         self.snippets_menu.clear()
 
-        self.saveSnippet_act.setIcon(QIcon(icons['save']))
-        self.snippets_menu.addAction(self.saveSnippet_act)
-
-        self.insertSnippet_act.setIcon(QIcon(icons['open']))
-        self.snippets_menu.addAction(self.insertSnippet_act)
+        self.manageSnippet_act.setIcon(QIcon(icons['snippets']))
+        self.snippets_menu.addAction(self.manageSnippet_act)
 
         self.delete_snippet_menu = QMenu("Delete snippet", self)
         self.delete_snippet_menu.setIcon(QIcon(icons["clear"]))
@@ -1383,17 +1390,38 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> No text selected to save as snippet.")
             return
 
-        name, ok = QInputDialog.getText(self, "Save Snippet", "Enter snippet name:")
-        if ok and name.strip():
-            name = name.strip()
-            settings = SettingsModel()
-            data = settings.read_settings()
+        settings = SettingsModel()
+        data = settings.read_settings()
+        snippets = data.get('snippets', {})
+
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                font = QFont(self.font())
+        else:
+            font = QFont()
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(int(colors['symbols_text_size']))
+
+        self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors, mode="save")
+        
+        def do_save(name):
             if 'snippets' not in data:
                 data['snippets'] = {}
             data['snippets'][name] = selected_text
             settings.write_settings(data)
             self.out.showMessage(">>> Snippet '{0}' saved successfully.".format(name))
             self.fillSnippetsMenu()
+
+        self.snippet_widget.snippetNameSelected.connect(do_save)
+        self.snippet_widget.exec_()
 
     def insertSnippet(self):
         settings = SettingsModel()

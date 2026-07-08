@@ -4,14 +4,16 @@ from vendor.Qt.QtGui import QFontMetrics
 
 class SnippetWidget(QDialog):
     snippetSelected = Signal(str)  # emits the snippet content
+    snippetNameSelected = Signal(str)  # emits the snippet name for save mode
 
-    def __init__(self, snippets, parent=None, center_widget=None, qss=None, font=None, colors=None):
+    def __init__(self, snippets, parent=None, center_widget=None, qss=None, font=None, colors=None, mode="insert"):
         super(SnippetWidget, self).__init__(parent)
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
 
         self.snippets = snippets  # Dict of {name: content}
         self.colors = colors
         self._font = font
+        self.mode = mode
 
         # Calculate dynamic size
         if font:
@@ -49,7 +51,10 @@ class SnippetWidget(QDialog):
 
         # Search field
         self.search_le = QLineEdit(self)
-        self.search_le.setPlaceholderText("Search snippet...")
+        if self.mode == "save":
+            self.search_le.setPlaceholderText("Enter snippet name to save...")
+        else:
+            self.search_le.setPlaceholderText("Search snippet...")
         self.search_le.textChanged.connect(self.filter_snippets)
         if font:
             self.search_le.setFont(font)
@@ -94,17 +99,26 @@ class SnippetWidget(QDialog):
         self.populate_list(text)
 
     def on_item_clicked(self, item):
-        content = item.data(Qt.UserRole)
-        self.snippetSelected.emit(content)
-        self.accept()
+        if self.mode == "save":
+            self.search_le.setText(item.text())
+        else:
+            content = item.data(Qt.UserRole)
+            self.snippetSelected.emit(content)
+            self.accept()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.reject()
         elif event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            item = self.list_widget.currentItem()
-            if item:
-                self.on_item_clicked(item)
+            if self.mode == "save":
+                name = self.search_le.text().strip()
+                if name:
+                    self.snippetNameSelected.emit(name)
+                    self.accept()
+            else:
+                item = self.list_widget.currentItem()
+                if item:
+                    self.on_item_clicked(item)
         elif event.key() == Qt.Key_Up:
             row = self.list_widget.currentRow()
             if row > 0:
