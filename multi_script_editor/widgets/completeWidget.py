@@ -38,6 +38,21 @@ class completeMenuClass(QListWidget):
         self.doc_tooltip.setWordWrap(True)
         self.doc_tooltip.setContentsMargins(4, 4, 4, 4)
 
+        def doc_tooltip_focusOutEvent(event):
+            QLabel.focusOutEvent(self.doc_tooltip, event)
+            from vendor.Qt.QtWidgets import QApplication
+            from vendor.Qt.QtCore import QTimer
+
+            def _check_focus():
+                fw = QApplication.focusWidget()
+                if fw and (fw == self or self.isAncestorOf(fw) or fw == self.doc_tooltip):
+                    return
+                self.hideMe()
+
+            QTimer.singleShot(10, _check_focus)
+
+        self.doc_tooltip.focusOutEvent = doc_tooltip_focusOutEvent
+
         self._icon_cache = {}
 
         @self.itemDoubleClicked.connect
@@ -239,6 +254,19 @@ class completeMenuClass(QListWidget):
     def showMe(self):
         self.show()
         self.e.moveCompleter()
+
+    def focusOutEvent(self, event):
+        super(completeMenuClass, self).focusOutEvent(event)
+        from vendor.Qt.QtWidgets import QApplication
+        from vendor.Qt.QtCore import QTimer
+
+        def _check_focus():
+            fw = QApplication.focusWidget()
+            if fw and (fw == self or self.isAncestorOf(fw) or fw == getattr(self, 'doc_tooltip', None)):
+                return
+            self.hideMe()
+
+        QTimer.singleShot(10, _check_focus)
 
     def hideMe(self):
         self.hide()
