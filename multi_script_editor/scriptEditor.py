@@ -570,6 +570,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if text:
             self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
+    def deleteLine(self):
+        i = self.tab.currentIndex()
+        if i >= 0:
+            self.tab.widget(i).edit.deleteLine()
+
+    def duplicateLine(self):
+        i = self.tab.currentIndex()
+        if i >= 0:
+            self.tab.widget(i).edit.duplicate()
+
     def get_word_help(self):
         i = self.tab.currentIndex()
         text = self.tab.widget(i).edit.get_current_word()

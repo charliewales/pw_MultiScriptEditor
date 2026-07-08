@@ -43,9 +43,12 @@ class ScriptEditorUIBuilder:
         editor.duplicateLine_act.setShortcut('Ctrl+Shift+D')
         editor.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.duplicateLine_act.setIcon(QIcon(icons['duplicate_line']))
+        editor.duplicateLine_act.triggered.connect(editor.duplicateLine)
+        
         editor.deleteLine_act.setShortcut('Ctrl+D')
         editor.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.deleteLine_act.setIcon(QIcon(icons['delete_line']))
+        editor.deleteLine_act.triggered.connect(editor.deleteLine)
 
         editor.set_font_act.triggered.connect(editor.choose_font)
         editor.set_font_act.setIcon(QIcon(icons['font']))

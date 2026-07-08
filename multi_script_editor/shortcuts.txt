@@ -29,11 +29,11 @@ Toggle Clear Output before Execute          >   CTRL + ALT + C
 Toggle Output Word Wrap                     >   CTRL + ALT + W
 Toggle Always On Top                        >   CTRL + ALT + T
 Clear Output                                >   CTRL + SHIFT + C
-Duplicate line or selected text             >   CTRL + SHIFT + D
+Duplicate line(s) or selected text          >   CTRL + SHIFT + D
 Select Next Occurrence                      >   CTRL + ALT + D
 Select All Occurrences                      >   CTRL + SHIFT + ALT + D
 Copy                                        >   CTRL + C
-Delete line                                 >   CTRL + D
+Delete line(s)                              >   CTRL + D
 Find and Replace                            >   CTRL + F
 Go to Line                                  >   CTRL + G
 Paste                                       >   CTRL + V

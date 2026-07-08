@@ -893,13 +893,44 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
 
     def deleteLine(self):
         cursor = self.textCursor()
-        current_cursor_pos = cursor.position()
-        cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
-        cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
-        selected_text = cursor.selectedText()
-        cursor.removeSelectedText();
-        cursor.deleteChar();
-        cursor.setPosition(current_cursor_pos)
+        cursor.beginEditBlock()
+        
+        if cursor.hasSelection():
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            
+            if end > start:
+                cursor.setPosition(end)
+                if cursor.atBlockStart():
+                    end -= 1
+
+            cursor.setPosition(start)
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+            cursor.setPosition(end, QTextCursor.KeepAnchor)
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.KeepAnchor)
+            
+            cursor.removeSelectedText()
+            if cursor.atEnd() and cursor.position() > 0:
+                cursor.deletePreviousChar()
+            else:
+                cursor.deleteChar()
+        else:
+            current_cursor_pos = cursor.position()
+            cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
+            cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.KeepAnchor)
+            
+            cursor.removeSelectedText()
+            if cursor.atEnd() and cursor.position() > 0:
+                cursor.deletePreviousChar()
+            else:
+                cursor.deleteChar()
+            
+            max_pos = self.document().characterCount() - 1
+            if current_cursor_pos > max_pos:
+                current_cursor_pos = max_pos
+            cursor.setPosition(current_cursor_pos)
+
+        cursor.endEditBlock()
         self.setTextCursor(cursor)
         self.highlight_current_line()
 
