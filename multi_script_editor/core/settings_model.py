@@ -2,7 +2,7 @@ import json
 import os
 import codecs
 from managers import context
-
+from vendor.Qt.QtGui import QFont
 class SettingsModel:
     settings_filename = 'pw_scriptEditor_pref.json'
     _cached_settings = None
@@ -36,6 +36,42 @@ class SettingsModel:
                 json.dump(self.get_defaults(), stream, indent=4)
         return path
 
+    def _sanitize_font_weights(self, data):
+        try:
+            normal_weight = int(getattr(QFont, 'Normal', getattr(QFont.Weight, 'Normal', 50)))
+        except Exception:
+            normal_weight = 50
+
+        def convert_weight(w):
+            if w in (-1, 1, 1.0): return w
+            if normal_weight == 400:
+                if w <= 99:
+                    if w <= 25: return 300
+                    if w <= 50: return 400
+                    if w <= 63: return 600
+                    if w <= 75: return 700
+                    return 900
+            elif normal_weight == 50:
+                if w > 99:
+                    if w <= 300: return 25
+                    if w <= 500: return 50
+                    if w <= 600: return 63
+                    if w <= 700: return 75
+                    return 87
+            return w
+
+        def traverse(obj):
+            if isinstance(obj, dict):
+                if 'weight' in obj and isinstance(obj['weight'], int):
+                    obj['weight'] = convert_weight(obj['weight'])
+                for v in obj.values():
+                    traverse(v)
+            elif isinstance(obj, list):
+                for v in obj:
+                    traverse(v)
+
+        traverse(data)
+
     def read_settings(self):
         if SettingsModel._cached_settings is not None:
             return SettingsModel._cached_settings
@@ -43,6 +79,7 @@ class SettingsModel:
             with codecs.open(self.path, "r", "utf-16") as stream:
                 try:
                     SettingsModel._cached_settings = json.load(stream)
+                    self._sanitize_font_weights(SettingsModel._cached_settings)
                     return SettingsModel._cached_settings
                 except Exception:
                     return self.get_defaults()
