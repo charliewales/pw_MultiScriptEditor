@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
 from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextFormat, QGuiApplication
-from vendor.Qt.QtWidgets import QTextEdit
+from vendor.Qt.QtWidgets import QTextEdit, QApplication
 import re
 import os
 
@@ -120,6 +120,32 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
     def focusOutEvent(self, event):
         self.saveSignal.emit()
         QTextEdit.focusOutEvent(self,event)
+        QTimer.singleShot(10, self._check_focus_loss)
+
+    def _check_focus_loss(self):
+        focus_w = QApplication.focusWidget()
+        main_window = self.window()
+        
+        # Hide symbol widget if focus didn't move to it
+        is_symbol = False
+        if hasattr(main_window, 'symbol_widget') and main_window.symbol_widget:
+            if focus_w and (focus_w == main_window.symbol_widget or main_window.symbol_widget.isAncestorOf(focus_w)):
+                is_symbol = True
+        
+        if not is_symbol and hasattr(main_window, 'symbol_widget') and main_window.symbol_widget:
+            main_window.symbol_widget.hide()
+
+        # Hide completer and docstrings
+        is_completer = False
+        if hasattr(self, 'completer') and self.completer:
+            if focus_w and (focus_w == self.completer or self.completer.isAncestorOf(focus_w) or focus_w == getattr(self.completer, 'doc_tooltip', None)):
+                is_completer = True
+                
+        if not is_completer and hasattr(self, 'completer') and self.completer:
+            if hasattr(self.completer, 'hideMe'):
+                self.completer.hideMe()
+            else:
+                self.completer.hide()
 
     def hideEvent(self, event):
         self.completer.updateCompleteList()
