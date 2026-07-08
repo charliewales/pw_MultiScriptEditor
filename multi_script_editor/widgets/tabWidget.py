@@ -287,7 +287,6 @@ class tabWidgetClass(QTabWidget):
 
         css = """
             QTabBar::tab {
-                max-width: 250px;
                 min-width: 80px;
                 border: 2px solid %(tab_border)s;
                 border-top-left-radius: %(tab_radius)s;
