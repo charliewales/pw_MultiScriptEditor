@@ -712,6 +712,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     cont.file_path = path[0]
                 self.tab.setTabText(index, os.path.basename(path[0]))
                 self.out.showMessage('Saved to: %s' % path[0])
+                if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
+                    cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
             except:
                 self.out.showMessage('Error save file; %s' % path[0])
 

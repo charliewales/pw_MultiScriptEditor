@@ -208,6 +208,7 @@ class tabWidgetClass(QTabWidget):
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
             cont.edit.set_start_font(font_d)
+            cont.edit.applyHightLighter(theme_name)
 
         return cont.edit
 
