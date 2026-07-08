@@ -1474,7 +1474,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
         edit_widget = self.tab.widget(index).edit
         cursor = edit_widget.textCursor()
-        cursor.insertText(text)
+        cursor.insertText(text + "\n")
         edit_widget.setFocus()
 
     def deleteSnippet(self, name):
