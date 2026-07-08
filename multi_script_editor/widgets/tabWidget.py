@@ -113,16 +113,22 @@ class tabWidgetClass(QTabWidget):
         index = self.currentIndex()
         self.closeTab(index)
         # set focus on previous Tab
-        current_editor = self.currentWidget().edit
-        current_editor.setFocus()
+        current_widget = self.currentWidget()
+        if current_widget:
+            current_widget.edit.setFocus()
 
     def closeTab(self, i):
-        if self.count() > 1:
-            if self.getCurrentText(i).strip():
-                if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
-                    self.removeTab(i)
-            else:
+        removed = False
+        if self.getCurrentText(i).strip():
+            if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
                 self.removeTab(i)
+                removed = True
+        else:
+            self.removeTab(i)
+            removed = True
+
+        if removed and self.count() == 0:
+            self.addNewTab()
 
     def openMenu(self):
         menu = QMenu(self)
