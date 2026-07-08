@@ -94,6 +94,32 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
         pointSize = font_d.get('pointSize', 10)
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1.0)
+        
+        from vendor.Qt.QtGui import QFontDatabase
+        try:
+            families = QFontDatabase.families()
+        except TypeError:
+            db = QFontDatabase()
+            families = db.families()
+            
+        if family not in families:
+            variations = [
+                family.replace(" NFM", " Nerd Font Mono"),
+                family.replace(" Nerd Font Mono", " NFM"),
+                family.replace(" NFP", " Nerd Font Propo"),
+                family.replace(" Nerd Font Propo", " NFP"),
+                family.replace(" NF", " Nerd Font"),
+                family.replace(" Nerd Font", " NF"),
+                family.replace(" Nerd Font Mono", " Nerd Font"),
+                family.replace(" Nerd Font Propo", " Nerd Font"),
+                family.replace(" Nerd Font", " Nerd Font Mono"),
+                family.replace(" Nerd Font", " Nerd Font Propo")
+            ]
+            for alt in variations:
+                if alt in families:
+                    family = alt
+                    break
+
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.blockSignals(True)
