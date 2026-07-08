@@ -206,7 +206,6 @@ class Ui_scriptEditor(object):
         self.file_menu.addAction(self.load_act)
         self.file_menu.addAction(self.save_act)
         self.file_menu.addAction(self.saveAs_act)
-        self.file_menu.addSeparator()
         self.file_menu.addAction(self.saveSeccion_act)
         self.file_menu.addAction(self.closeAllTabs_act)
         self.file_menu.addSeparator()

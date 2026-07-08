@@ -285,25 +285,26 @@ class ScriptEditorUIBuilder:
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
 
-        # Recent files Submenu
-        editor.recent_files_menu = QMenu("Recent files", editor)
-        editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
-        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.recent_files_menu)
-        editor.updateRecentFilesMenu()
-        editor.file_menu.addSeparator()
-
         # Sessions Submenu in File menu
         editor.sessions_menu = QMenu("Sessions", editor)
         editor.sessions_menu.setIcon(QIcon(icons['open']))
         editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.sessions_menu)
+        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
+
+        # Recent files Submenu
+        editor.recent_files_menu = QMenu("Recent files", editor)
+        editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
+        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.recent_files_menu)
+        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
+        editor.updateRecentFilesMenu()
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
         editor.snippets_menu.setIcon(QIcon(icons['snippets']))
         editor.snippets_menu.menuAction().setStatusTip("Manage code snippets")
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.snippets_menu)
-        editor.file_menu.addSeparator()
+        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Snippets actions shortcuts
         editor.manageSnippet_act = QAction("Insert/save snippet", editor)
