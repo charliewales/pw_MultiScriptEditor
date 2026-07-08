@@ -23,7 +23,6 @@ from vendor.Qt.QtWidgets import (
 from widgets import themeEditor_UIs as ui
 from core.settings_model import SettingsModel
 from .pythonSyntax import design
-from widgets.pythonSyntax.design import defaultColors, getColors
 from widgets.tabWidget import tabWidgetClass
 
 

@@ -1,5 +1,5 @@
 from vendor.Qt.QtWidgets import QListWidgetItem, QStyledItemDelegate, QApplication, QStyle
-from vendor.Qt.QtGui import QColor, QTextDocument, QAbstractTextDocumentLayout
+from vendor.Qt.QtGui import QTextDocument
 from vendor.Qt.QtCore import Qt, QSize, QRectF
 
 class HtmlDelegate(QStyledItemDelegate):

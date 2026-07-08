@@ -8,7 +8,7 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from vendor.Qt.QtCore import QMetaObject, QSize, Qt
+from vendor.Qt.QtCore import QMetaObject, Qt
 from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget, QFormLayout, QCheckBox, QGroupBox, QGridLayout
 
 class Ui_themeEditor(object):

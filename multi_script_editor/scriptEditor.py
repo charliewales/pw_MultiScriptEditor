@@ -19,8 +19,8 @@ from icons import *
 from vendor.help import get_help
 
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QTextCursor
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QListWidgetItem, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
+from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser

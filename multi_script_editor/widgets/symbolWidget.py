@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt, Signal, QSize
-from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget, QListWidgetItem
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics
+from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget
+from vendor.Qt.QtGui import QFontMetrics
 from widgets.outline_utils import HtmlDelegate
 
 class SymbolWidget(QDialog):

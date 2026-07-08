@@ -9,7 +9,7 @@ syntax = {"extension": [
                         # Comparison
                         "!=", "<", ">",
                         # Arithmetic
-                        "+", "\-", "*", "/", "%", "*",
+                        "+", r"\-", "*", "/", "%", "*",
                         # Bitwise
                         "^", "|", "&"],
           "keywords": [ "and",
@@ -125,5 +125,5 @@ syntax = {"extension": [
                     "coerce",
                     "intern"
                   ],
-          "braces" :['\{', '\}', '\(', '\)', '\[', '\]'],
+          "braces" :[r'\{', r'\}', r'\(', r'\)', r'\[', r'\]'],
 }
