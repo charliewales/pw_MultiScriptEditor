@@ -90,6 +90,8 @@ class SnippetWidget(QDialog):
             if filter_text in name.lower():
                 item = QListWidgetItem(name)
                 item.setData(Qt.UserRole, content)
+                if self._font:
+                    item.setFont(self._font)
                 self.list_widget.addItem(item)
 
         if self.list_widget.count() > 0:

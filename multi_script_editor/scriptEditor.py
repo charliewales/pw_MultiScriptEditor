@@ -1516,7 +1516,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if font_data:
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
             else:
-                font = QFont(self.font())
+                font = QFont(edit_widget.font())
         else:
             font = QFont()
 
@@ -1545,23 +1545,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         qss = design.editorStyle(theme_name)
         colors = design.getColors(theme_name)
 
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+            
+        edit_widget = self.tab.widget(index).edit
+
         if colors.get('use_theme_font_on_symbols', True):
             font_data = colors.get('font')
             if font_data:
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
             else:
-                font = QFont(self.font())
+                font = QFont(edit_widget.font())
         else:
             font = QFont()
 
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
 
-        index = self.tab.currentIndex()
-        if index < 0:
-            return
-            
-        edit_widget = self.tab.widget(index).edit
         
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
