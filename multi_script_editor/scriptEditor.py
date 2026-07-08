@@ -21,7 +21,7 @@ from vendor.help import get_help
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
-from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget
+from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
@@ -125,6 +125,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._exec_manager = ExecutionManager()
         self._presenter = MainPresenter(self, self._exec_manager)
         self.fillSessionsMenu()
+        self.fillSnippetsMenu()
         self.loadSession()
         if self.tab.count() > 0:
             QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
@@ -1326,6 +1327,133 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             self.out.showMessage("No crash backup found.")
 
+
+    def fillSnippetsMenu(self):
+        self.snippets_menu.clear()
+
+        self.saveSnippet_act.setIcon(QIcon(icons['save']))
+        self.snippets_menu.addAction(self.saveSnippet_act)
+
+        self.insertSnippet_act.setIcon(QIcon(icons['open']))
+        self.snippets_menu.addAction(self.insertSnippet_act)
+
+        self.delete_snippet_menu = QMenu("Delete snippet", self)
+        self.delete_snippet_menu.setIcon(QIcon(icons["clear"]))
+        self.delete_snippet_menu.menuAction().setStatusTip("Delete a saved snippet")
+        self.snippets_menu.addMenu(self.delete_snippet_menu)
+
+        self.snippets_menu.addSeparator()
+
+        settings = SettingsModel()
+        data = settings.read_settings()
+        snippets = data.get('snippets', {})
+
+        if snippets:
+            for name in sorted(snippets.keys()):
+                act = QAction(name, self)
+                act.setStatusTip(f"Insert snippet: {name}")
+                act.triggered.connect(lambda checked=False, n=name: self._insert_snippet_text(snippets[n]))
+                self.snippets_menu.addAction(act)
+
+                del_act = QAction(name, self)
+                del_act.setStatusTip(f"Delete snippet: {name}")
+                del_act.triggered.connect(lambda checked=False, n=name: self.deleteSnippet(n))
+                self.delete_snippet_menu.addAction(del_act)
+        else:
+            no_snippets_act = QAction("No saved snippets", self)
+            no_snippets_act.setEnabled(False)
+            self.snippets_menu.addAction(no_snippets_act)
+
+            no_del_act = QAction("No saved snippets", self)
+            no_del_act.setEnabled(False)
+            self.delete_snippet_menu.addAction(no_del_act)
+
+    def saveSnippet(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        
+        edit_widget = self.tab.widget(index).edit
+        cursor = edit_widget.textCursor()
+        selected_text = cursor.selectedText()
+        # Replace the special paragraph separator used by Qt with newlines
+        selected_text = selected_text.replace('\u2029', '\n')
+
+        if not selected_text:
+            self.out.showMessage(">>> No text selected to save as snippet.")
+            return
+
+        name, ok = QInputDialog.getText(self, "Save Snippet", "Enter snippet name:")
+        if ok and name.strip():
+            name = name.strip()
+            settings = SettingsModel()
+            data = settings.read_settings()
+            if 'snippets' not in data:
+                data['snippets'] = {}
+            data['snippets'][name] = selected_text
+            settings.write_settings(data)
+            self.out.showMessage(">>> Snippet '{0}' saved successfully.".format(name))
+            self.fillSnippetsMenu()
+
+    def insertSnippet(self):
+        settings = SettingsModel()
+        data = settings.read_settings()
+        snippets = data.get('snippets', {})
+
+        if not snippets:
+            self.out.showMessage(">>> No snippets saved yet.")
+            return
+
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                font = QFont(self.font())
+        else:
+            font = QFont()
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(int(colors['symbols_text_size']))
+
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+            
+        edit_widget = self.tab.widget(index).edit
+        
+        self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
+        self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
+        self.snippet_widget.exec_()
+
+    def _insert_snippet_text(self, text):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        edit_widget = self.tab.widget(index).edit
+        cursor = edit_widget.textCursor()
+        cursor.insertText(text)
+        edit_widget.setFocus()
+
+    def deleteSnippet(self, name):
+        res = QMessageBox.question(
+            self,
+            "Delete Snippet",
+            "Are you sure you want to delete snippet '{0}'?".format(name),
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if res == QMessageBox.Yes:
+            settings = SettingsModel()
+            data = settings.read_settings()
+            if 'snippets' in data and name in data['snippets']:
+                del data['snippets'][name]
+                settings.write_settings(data)
+                self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
+                self.fillSnippetsMenu()
 
 try:
     from PySide2.QtCore import QTextCodec

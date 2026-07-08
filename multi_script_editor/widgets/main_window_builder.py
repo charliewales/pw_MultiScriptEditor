@@ -2,7 +2,7 @@ import sys
 from functools import partial
 from vendor.Qt.QtCore import Qt, QSize, QTimer
 from vendor.Qt.QtGui import QIcon, QKeySequence
-from vendor.Qt.QtWidgets import QShortcut, QMenu
+from vendor.Qt.QtWidgets import QShortcut, QMenu, QAction
 from icons import icons
 import managers
 
@@ -295,6 +295,25 @@ class ScriptEditorUIBuilder:
         editor.sessions_menu.setIcon(QIcon(icons['open']))
         editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
         editor.file_menu.insertMenu(editor.saveSeccion_act, editor.sessions_menu)
+
+        # Snippets Submenu
+        editor.snippets_menu = QMenu("Snippets", editor)
+        editor.snippets_menu.setIcon(QIcon(icons['snippets']))
+        editor.snippets_menu.menuAction().setStatusTip("Manage code snippets")
+        editor.file_menu.insertMenu(editor.saveSeccion_act, editor.snippets_menu)
+
+        # Snippets actions shortcuts
+        editor.saveSnippet_act = QAction("Save snippet", editor)
+        editor.saveSnippet_act.setShortcut('Alt+Shift+S')
+        editor.saveSnippet_act.setShortcutContext(Qt.WindowShortcut)
+        editor.saveSnippet_act.triggered.connect(editor.saveSnippet)
+        editor.addAction(editor.saveSnippet_act)
+
+        editor.insertSnippet_act = QAction("Insert snippet", editor)
+        editor.insertSnippet_act.setShortcut('Alt+S')
+        editor.insertSnippet_act.setShortcutContext(Qt.WindowShortcut)
+        editor.insertSnippet_act.triggered.connect(editor.insertSnippet)
+        editor.addAction(editor.insertSnippet_act)
 
         # Status tips for actions
         status_tips = {
