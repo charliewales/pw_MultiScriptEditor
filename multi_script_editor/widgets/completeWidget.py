@@ -21,6 +21,8 @@ class completeMenuClass(QListWidget):
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         if managers._s == 'x':
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window | Qt.WindowStaysOnTopHint)
+        elif managers._s == 'l':
+            self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Tool)
         else:
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window)
             
