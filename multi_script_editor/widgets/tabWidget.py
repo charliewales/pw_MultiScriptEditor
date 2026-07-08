@@ -72,6 +72,8 @@ class tabWidgetClass(QTabWidget):
         # connects
         QShortcut(QKeySequence("Ctrl+W"), self, self.close_current_tab)
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
+        sc = QShortcut(QKeySequence("Ctrl+Alt+C"), self, self.copyFilePath)
+        sc.setContext(Qt.WidgetWithChildrenShortcut)
         self.currentChanged.connect(self.onTabChanged)
 
     def toggle_outline(self, state):
@@ -130,37 +132,60 @@ class tabWidgetClass(QTabWidget):
         if removed and self.count() == 0:
             self.addNewTab()
 
-    def openMenu(self):
-        menu = QMenu(self)
-        menu.addAction(QAction('Duplicate Current Tab', self, triggered = self.duplicateTab))
-        menu.addAction(QAction('Rename Current Tab  (Alt+R)', self, triggered = self.renameTab))
+    def openMenu(self, pos=None):
+        if pos is not None and not isinstance(pos, bool):
+            index = self.tabBar().tabAt(pos)
+        else:
+            index = self.currentIndex()
 
-        index = self.currentIndex()
-        if index >= 0:
-            widget = self.widget(index)
-            if hasattr(widget, 'file_path') and widget.file_path:
-                menu.addSeparator()
-                menu.addAction(QAction('Copy File Path', self, triggered = self.copyFilePath))
+        if index < 0:
+            return
+
+        menu = QMenu(self)
+
+        dup_action = QAction('Duplicate Tab', self)
+        dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
+        menu.addAction(dup_action)
+
+        ren_action = QAction('Rename Tab', self)
+        ren_action.setShortcut('Alt+R')
+        ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
+        menu.addAction(ren_action)
+
+        widget = self.widget(index)
+        if hasattr(widget, 'file_path') and widget.file_path:
+            menu.addSeparator()
+            copy_action = QAction('Copy File Path', self)
+            copy_action.setShortcut('Ctrl+Alt+C')
+            copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
+            menu.addAction(copy_action)
 
         menu.exec_(QCursor.pos())
 
-    def copyFilePath(self):
-        index = self.currentIndex()
+    def copyFilePath(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
         if index >= 0:
             widget = self.widget(index)
             if hasattr(widget, 'file_path') and widget.file_path:
                 QApplication.clipboard().setText(os.path.normpath(widget.file_path))
 
-    def duplicateTab(self):
-        index = self.currentIndex()
+    def duplicateTab(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
         name = self.tabText(index)
         text = self.getCurrentText(index)
         new_name = name + " (copy)"
         self.addNewTab(new_name, text)
         self.setCurrentIndex(self.count() - 1)
 
-    def renameTab(self):
-        index = self.currentIndex()
+    def renameTab(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
         text = self.tabText(index)
         result = QInputDialog.getText(self, 'New name', 'Enter New Name', text=text)
         if result[1]:
