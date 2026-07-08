@@ -19,10 +19,10 @@ class completeMenuClass(QListWidget):
         self.lineHeight = 18
         self.e = editor
         self.setAttribute(Qt.WA_ShowWithoutActivating)
-        if managers._s == 'w':
-            self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window)
-        else:
+        if managers._s == 'x':
             self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window | Qt.WindowStaysOnTopHint)
+        else:
+            self.setWindowFlags(Qt.FramelessWindowHint |  Qt.Window)
             
         self.doc_tooltip = QLabel(self)
         self.doc_tooltip.setObjectName("docTooltip")
