@@ -28,7 +28,10 @@ class completeMenuClass(QListWidget):
             
         self.doc_tooltip = QLabel(self)
         self.doc_tooltip.setObjectName("docTooltip")
-        self.doc_tooltip.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
+        if managers._s == 'l':
+            self.doc_tooltip.setWindowFlags(Qt.ToolTip)
+        else:
+            self.doc_tooltip.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
         self.doc_tooltip.setAttribute(Qt.WA_ShowWithoutActivating)
         self.doc_tooltip.setTextFormat(Qt.PlainText)
         self.doc_tooltip.setTextInteractionFlags(Qt.TextSelectableByMouse)
