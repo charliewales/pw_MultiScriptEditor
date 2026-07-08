@@ -1036,11 +1036,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def about(self):
         dial = about.aboutClass(self)
-        dial.exec_()
+        if hasattr(dial, 'exec'):
+            dial.exec()
+        else:
+            dial.exec_()
 
     def shortcuts(self):
         dial = shortcuts.shortcutsClass(self)
-        dial.exec_()
+        if hasattr(dial, 'exec'):
+            dial.exec()
+        else:
+            dial.exec_()
 
     def findWidget(self):
         focus_widget = QApplication.focusWidget()
@@ -1532,7 +1538,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.fillSnippetsMenu()
 
         self.snippet_widget.snippetNameSelected.connect(do_save)
-        self.snippet_widget.exec_()
+        if hasattr(self.snippet_widget, 'exec'):
+            self.snippet_widget.exec()
+        else:
+            self.snippet_widget.exec_()
 
     def insertSnippet(self):
         snippets = self._get_snippets()
@@ -1566,7 +1575,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
-        self.snippet_widget.exec_()
+        if hasattr(self.snippet_widget, 'exec'):
+            self.snippet_widget.exec()
+        else:
+            self.snippet_widget.exec_()
 
     def _insert_snippet_text(self, text):
         index = self.tab.currentIndex()
