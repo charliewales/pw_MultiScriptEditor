@@ -100,7 +100,7 @@ QTextBrowser
 QToolTip, QLabel#docTooltip {
     color: rgb[completer_text];
     background-color: rgb[completer_background];
-    border: 1px solid rgb[completer_selected_background];
+    border: 1px solid gray;
 }
 
 QListWidget#outlineList
