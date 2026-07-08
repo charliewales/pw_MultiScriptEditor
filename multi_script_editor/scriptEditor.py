@@ -263,9 +263,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def show_clear_exec(self):
         if self.clear_exec_act.isChecked():
-            self.toolBar.setStyleSheet('QToolBar {border: 1px solid indianred; margin: 1px;}')
+            self.toolBar.setStyleSheet("""
+                QToolBar {
+                        border: 1px solid indianred;
+                        border-radius: 6px;
+                    }
+                """
+            )
         else:
-            self.toolBar.setStyleSheet('QToolBar {border: none;}')
+            self.toolBar.setStyleSheet('QToolBar {border: 1px solid transparent;}')
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
@@ -704,7 +710,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             d = os.path.expanduser('~')
         if hasattr(cont, 'file_path') and cont.file_path:
             d = os.path.dirname(cont.file_path)
-            
+
         path = QFileDialog.getSaveFileName(self, 'Save script as', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt *.usd *.usda);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;USD Files (*.usd *.usda);;All Files (*.*)")
         if path[0]:
             try:
@@ -1378,7 +1384,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         all_snippets = {}
         for k in sorted(user_snippets.keys()):
             all_snippets[k] = user_snippets[k]
-        
+
         for k in sorted(defaults.keys()):
             if k not in all_snippets:
                 all_snippets[k] = defaults[k]
@@ -1421,14 +1427,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         current_snippets = self._get_snippets()
         conflicts = [name for name in imported_snippets if name in current_snippets]
-        
+
         overwrite = False
         if conflicts:
             reply = QMessageBox.question(
-                self, 
-                "Import Snippets", 
-                f"{len(conflicts)} snippets already exist. Do you want to overwrite them?", 
-                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, 
+                self,
+                "Import Snippets",
+                f"{len(conflicts)} snippets already exist. Do you want to overwrite them?",
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
                 QMessageBox.No
             )
             if reply == QMessageBox.Cancel:
@@ -1510,7 +1516,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         index = self.tab.currentIndex()
         if index < 0:
             return
-        
+
         edit_widget = self.tab.widget(index).edit
         cursor = edit_widget.textCursor()
         selected_text = cursor.selectedText()
@@ -1540,7 +1546,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font.setPointSize(int(colors['symbols_text_size']))
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors, mode="save")
-        
+
         def do_save(name):
             snippets[name] = selected_text
             self._save_snippets(snippets)
@@ -1567,7 +1573,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         index = self.tab.currentIndex()
         if index < 0:
             return
-            
+
         edit_widget = self.tab.widget(index).edit
 
         if colors.get('use_theme_font_on_symbols', True):
@@ -1582,7 +1588,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
 
-        
+
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
         if hasattr(self.snippet_widget, 'exec'):
@@ -1611,7 +1617,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if name in snippets:
                 del snippets[name]
                 self._save_snippets(snippets)
-                
+
                 snippets_model = SnippetsModel()
                 defaults = snippets_model.get_defaults().get('snippets', {})
                 if name in defaults:
