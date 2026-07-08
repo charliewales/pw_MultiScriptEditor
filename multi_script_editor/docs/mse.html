@@ -32,6 +32,8 @@
         <li>Advanced code completion (powered by the <code>jedi</code> module) and docstring visualizers.</li>
         <li>Context-aware completion for different functions, such as existing nodes and scene paths depending on the integrated host software.</li>
         <li>Built-in syntax checking and multi-cursor editing support.</li>
+        <li>Code snippets functionality for quickly inserting predefined blocks of code.</li>
+        <li>Confirmation prompts for critical actions to prevent accidental data loss.</li>
     </ul>
 
     <hr>
@@ -46,12 +48,32 @@
         <li><strong>Save script</strong><span class="shortcut">CTRL + S</span>
             <span class="desc">Saves the script in the currently active tab. If the script is new and hasn't been saved yet, it will prompt for a destination file path.</span></li>
         <li><strong>Save script as</strong><span class="shortcut">CTRL + SHIFT + S</span>
+            <span class="desc">Saves the script in the currently active tab to a new file and opens it in a new separate tab.</span></li>
         <li><strong>Save session</strong><span class="shortcut">CTRL + ALT + S</span>
             <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, and their specific order, ensuring they are automatically restored the next time the editor is launched.</span></li>
+        <li><strong>Snippets</strong>
+            <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion.
+                <ul class="feature-list">
+                    <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet.</li>
+                    <li><strong>Import / Export</strong>: Import snippet collections from JSON files or export them for backup.</li>
+                    <li><strong>Delete snippet</strong>: Allows removing custom snippets.</li>
+                </ul>
+            </span>
+        </li>
         <li><strong>Close all tabs</strong>
             <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
         <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
             <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
+    </ul>
+
+    <h3>Tab Context Menu (Right-Click)</h3>
+    <ul>
+        <li><strong>Duplicate Tab</strong>
+            <span class="desc">Creates a copy of the current tab with the same text.</span></li>
+        <li><strong>Rename Tab</strong><span class="shortcut">ALT + R</span>
+            <span class="desc">Renames the label of the current tab. Tab labels now display the full file name.</span></li>
+        <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
+            <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
     </ul>
 
     <h3>Edit Menu</h3>
