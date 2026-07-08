@@ -66,3 +66,35 @@ class SettingsModel:
                     font={"family": "monospace", "pointSize": 12, "weight": 1, "italic": False},
                     recent_files=[]
                     )
+
+
+class SnippetsModel(SettingsModel):
+    settings_filename = 'pw_scriptEditor_snippets.json'
+    _cached_settings = None
+
+    def _get_settings_file_path(self):
+        return os.path.normpath(os.path.join(self._get_user_pref_folder(), self.settings_filename)).replace('\\','/')
+
+    def read_settings(self):
+        if SnippetsModel._cached_settings is not None:
+            return SnippetsModel._cached_settings
+        if os.path.exists(self.path) and os.path.isfile(self.path):
+            with codecs.open(self.path, "r", "utf-16") as stream:
+                try:
+                    SnippetsModel._cached_settings = json.load(stream)
+                    return SnippetsModel._cached_settings
+                except Exception:
+                    return self.get_defaults()
+        return self.get_defaults()
+
+    def write_settings(self, data):
+        SnippetsModel._cached_settings = data
+        folder = os.path.dirname(self.path)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+        with codecs.open(self.path, "w", "utf-16") as stream:
+            json.dump(data, stream, indent=4)
+
+    @staticmethod
+    def get_defaults():
+        return dict(snippets={})

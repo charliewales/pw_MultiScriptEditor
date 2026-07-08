@@ -54,7 +54,7 @@ class SnippetWidget(QDialog):
         if self.mode == "save":
             self.search_le.setPlaceholderText("Enter snippet name to save...")
         else:
-            self.search_le.setPlaceholderText("Search snippet...")
+            self.search_le.setPlaceholderText("Search snippet to insert...")
         self.search_le.textChanged.connect(self.filter_snippets)
         if font:
             self.search_le.setFont(font)
@@ -113,6 +113,11 @@ class SnippetWidget(QDialog):
             if self.mode == "save":
                 name = self.search_le.text().strip()
                 if name:
+                    if name in self.snippets:
+                        from vendor.Qt.QtWidgets import QMessageBox
+                        reply = QMessageBox.question(self, 'Overwrite Snippet', f"A snippet named '{name}' already exists. Overwrite?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        if reply == QMessageBox.No:
+                            return
                     self.snippetNameSelected.emit(name)
                     self.accept()
             else:

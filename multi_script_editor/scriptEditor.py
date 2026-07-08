@@ -28,7 +28,7 @@ from widgets.pythonSyntax import design
 from widgets.outline_utils import HtmlDelegate
 
 from widgets.main_window_builder import ScriptEditorUIBuilder
-from core.settings_model import SettingsModel
+from core.settings_model import SettingsModel, SnippetsModel
 from style.links import links
 
 
@@ -788,10 +788,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.recent_files_menu.addAction(clear_act)
 
     def clearRecentFiles(self):
-        data = self._current_settings
-        data['recent_files'] = []
-        self.save_settings_requested.emit(data)
-        self.updateRecentFilesMenu()
+        reply = QMessageBox.question(self, 'Clear Recent Files', 'Are you sure you want to clear the recent files list?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            data = self._current_settings
+            data['recent_files'] = []
+            self.save_settings_requested.emit(data)
+            self.updateRecentFilesMenu()
 
     def openRecentFile(self, path):
         if os.path.exists(path):
@@ -1338,6 +1340,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             self.insertSnippet()
 
+    def _get_snippets(self):
+        snippets_model = SnippetsModel()
+        snippets_data = snippets_model.read_settings()
+        if not snippets_data.get('snippets'):
+            # Fallback for migration
+            settings = SettingsModel()
+            old_data = settings.read_settings()
+            if 'snippets' in old_data and old_data['snippets']:
+                snippets_data['snippets'] = old_data['snippets']
+                snippets_model.write_settings(snippets_data)
+        return snippets_data.get('snippets', {})
+
+    def _save_snippets(self, snippets_dict):
+        snippets_model = SnippetsModel()
+        snippets_model.write_settings({'snippets': snippets_dict})
+
     def fillSnippetsMenu(self):
         self.snippets_menu.clear()
 
@@ -1351,9 +1369,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.snippets_menu.addSeparator()
 
-        settings = SettingsModel()
-        data = settings.read_settings()
-        snippets = data.get('snippets', {})
+        snippets = self._get_snippets()
 
         if snippets:
             for name in sorted(snippets.keys()):
@@ -1390,9 +1406,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> No text selected to save as snippet.")
             return
 
-        settings = SettingsModel()
-        data = settings.read_settings()
-        snippets = data.get('snippets', {})
+        snippets = self._get_snippets()
 
         theme_name = self._current_settings.get('theme', 'Dark')
         qss = design.editorStyle(theme_name)
@@ -1413,10 +1427,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors, mode="save")
         
         def do_save(name):
-            if 'snippets' not in data:
-                data['snippets'] = {}
-            data['snippets'][name] = selected_text
-            settings.write_settings(data)
+            snippets[name] = selected_text
+            self._save_snippets(snippets)
             self.out.showMessage(">>> Snippet '{0}' saved successfully.".format(name))
             self.fillSnippetsMenu()
 
@@ -1424,9 +1436,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.snippet_widget.exec_()
 
     def insertSnippet(self):
-        settings = SettingsModel()
-        data = settings.read_settings()
-        snippets = data.get('snippets', {})
+        snippets = self._get_snippets()
 
         if not snippets:
             self.out.showMessage(">>> No snippets saved yet.")
@@ -1475,11 +1485,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             QMessageBox.Yes | QMessageBox.No
         )
         if res == QMessageBox.Yes:
-            settings = SettingsModel()
-            data = settings.read_settings()
-            if 'snippets' in data and name in data['snippets']:
-                del data['snippets'][name]
-                settings.write_settings(data)
+            snippets = self._get_snippets()
+            if name in snippets:
+                del snippets[name]
+                self._save_snippets(snippets)
                 self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
                 self.fillSnippetsMenu()
 
