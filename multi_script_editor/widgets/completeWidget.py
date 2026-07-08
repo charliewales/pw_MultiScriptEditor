@@ -209,6 +209,20 @@ class completeMenuClass(QListWidget):
 
         QListWidget.keyPressEvent(self, event)
 
+    def updateDocTooltipPosition(self):
+        if hasattr(self, 'doc_tooltip') and self.doc_tooltip.isVisible():
+            pos = self.mapToGlobal(self.rect().topRight())
+            pos.setX(pos.x() + 10)
+            self.doc_tooltip.move(pos)
+
+    def moveEvent(self, event):
+        super(completeMenuClass, self).moveEvent(event)
+        self.updateDocTooltipPosition()
+
+    def resizeEvent(self, event):
+        super(completeMenuClass, self).resizeEvent(event)
+        self.updateDocTooltipPosition()
+
     def sendText(self, comp):
         self.editor().insertText(comp)
 
