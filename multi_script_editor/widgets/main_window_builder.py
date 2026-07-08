@@ -24,6 +24,9 @@ class ScriptEditorUIBuilder:
         editor.save_act.triggered.connect(editor.saveScript)
         editor.save_act.setIcon(QIcon(icons['save']))
         editor.save_act.setShortcut("Ctrl+S")
+        editor.saveAs_act.triggered.connect(editor.saveScriptAs)
+        editor.saveAs_act.setIcon(QIcon(icons['save']))
+        editor.saveAs_act.setShortcut("Ctrl+Shift+S")
 
         editor.recent_files_menu = QMenu("Recent files", editor)
         editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
@@ -32,7 +35,7 @@ class ScriptEditorUIBuilder:
 
         editor.saveSeccion_act.triggered.connect(lambda: editor.saveSession(True))
         editor.saveSeccion_act.setIcon(QIcon(icons['save']))
-        editor.saveSeccion_act.setShortcut("Ctrl+Shift+S")
+        editor.saveSeccion_act.setShortcut("Ctrl+Alt+S")
         editor.closeAllTabs_act.triggered.connect(editor.closeAllTabsWithConfirm)
         editor.closeAllTabs_act.setIcon(QIcon(icons['close_all_tabs']))
         editor.exit_act.triggered.connect(editor.close)

@@ -681,6 +681,31 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.symbol_widget.show()
         self.symbol_widget.search_le.setFocus()
 
+    def saveScriptAs(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        cont = self.tab.widget(index)
+        text = self.tab.getCurrentText()
+
+        d = os.getenv('HOME')
+        if not d:
+            d = os.path.expanduser('~')
+        if hasattr(cont, 'file_path') and cont.file_path:
+            d = os.path.dirname(cont.file_path)
+            
+        path = QFileDialog.getSaveFileName(self, 'Save script as', d, "All Supported Files (*.py *.js *.html *.htm *.yaml *.yml *.md *.css *.txt *.usd *.usda);;Python Files (*.py);;JavaScript Files (*.js);;HTML Files (*.html *.htm);;YAML Files (*.yaml *.yml);;Markdown Files (*.md);;CSS Files (*.css);;Text Files (*.txt);;USD Files (*.usd *.usda);;All Files (*.*)")
+        if path[0]:
+            try:
+                with open(path[0], 'w') as f:
+                    f.write(text)
+                self.addRecentFile(path[0])
+                self.tab.addNewTab(os.path.basename(path[0]), text, file_path=path[0])
+                self.out.showMessage('Saved to: %s' % path[0])
+            except Exception as e:
+                self.out.showMessage('Error saving file: %s (%s)' % (path[0], str(e)))
+
+
     def saveScript(self):
         index = self.tab.currentIndex()
         if index < 0:

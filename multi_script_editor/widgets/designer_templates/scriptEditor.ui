@@ -69,6 +69,7 @@
     </property>
     <addaction name="saveSeccion_act"/>
     <addaction name="save_act"/>
+    <addaction name="saveAs_act"/>
     <addaction name="load_act"/>
    </widget>
    <widget class="QMenu" name="help_menu">
@@ -167,6 +168,11 @@
   <action name="save_act">
    <property name="text">
     <string>Save Script</string>
+   </property>
+  </action>
+  <action name="saveAs_act">
+   <property name="text">
+    <string>Save script as</string>
    </property>
   </action>
   <action name="load_act">

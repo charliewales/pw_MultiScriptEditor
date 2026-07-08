@@ -45,7 +45,8 @@ Undo                                        >   CTRL + Z
 Wrap dropped nodes (Maya and Houdini)       >   MMB Drag + ALT
 Open File                                   >   CTRL + O
 Save File                                   >   CTRL + S
-Save Session                                >   CTRL + SHIFT + S
+Save Script As                              >   CTRL + SHIFT + S
+Save Session                                >   CTRL + ALT + S
 Quit                                        >   CTRL + Q
 Show Code Outline                           >   CTRL + SHIFT + O
 Toggle Show Whitespace                      >   CTRL + SHIFT + W
