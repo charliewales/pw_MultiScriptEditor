@@ -80,3 +80,11 @@ class BaseTextWidgetMixin:
             self.completer.setFont(editor_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
                 self.completer.doc_tooltip.setFont(editor_font)
+
+    def contextMenuEvent(self, event):
+        menu = self.createStandardContextMenu()
+        main_win = self.window()
+        if hasattr(main_win, 'menubar'):
+            menu.setFont(main_win.menubar.font())
+        menu.exec_(event.globalPos())
+        del menu

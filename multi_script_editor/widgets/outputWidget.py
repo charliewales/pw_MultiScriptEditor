@@ -11,7 +11,7 @@ from core.base_text_widget import BaseTextWidgetMixin
 font_name = 'monospace'
 
 
-class outputClass(QTextBrowser, BaseTextWidgetMixin):
+class outputClass(BaseTextWidgetMixin, QTextBrowser):
     def __init__(self, theme='Multi Script Editor'):
         super(outputClass, self).__init__()
         self.setLineWrapMode(QTextEdit.NoWrap)

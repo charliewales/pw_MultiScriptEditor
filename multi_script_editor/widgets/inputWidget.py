@@ -32,7 +32,7 @@ font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 
-class inputClass(QTextEdit, BaseTextWidgetMixin):
+class inputClass(BaseTextWidgetMixin, QTextEdit):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()

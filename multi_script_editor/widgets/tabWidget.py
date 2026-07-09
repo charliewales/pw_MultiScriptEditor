@@ -142,6 +142,8 @@ class tabWidgetClass(QTabWidget):
             return
 
         menu = QMenu(self)
+        if hasattr(self.p, 'menubar'):
+            menu.setFont(self.p.menubar.font())
 
         dup_action = QAction('Duplicate Tab', self)
         dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
