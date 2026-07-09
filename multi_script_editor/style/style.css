@@ -417,47 +417,53 @@ QTabWidget::pane  { /* The tab widget frame */
 
 QTabBar::tab {
     min-width: 80px;
-    border: 2px solid rgb[tab_border];
+    border: 1px solid rgb[tab_border];
     border-top-left-radius: [tab_radius];
     border-top-right-radius: [tab_radius];
     padding-left: 10px;
     padding-right: 10px;
     padding-top: 3px;
     padding-bottom: 3px;
-    margin-right: 3px;
+    margin-right: 2px;
     background: rgb[tab_background];
     color: rgb[tab_text];
 }
+
 QTabBar::tab:hover {
     background: rgb[tab_hover_background];
+    border: 1px solid rgb[tab_hover_border];
     color: rgb[tab_hover_text];
-    border: 2px solid rgb[tab_hover_border];
 }
 
 QTabBar::tab:selected {
     background: rgb[tab_selected_background];
     color: rgb[tab_selected_text];
-    border: 2px solid rgb[tab_selected_border];
-    border-top-left-radius: [tab_radius];
-    border-top-right-radius: [tab_radius];
+    border: 1px solid rgb[tab_selected_border];
+    border-bottom-color: rgb[tab_selected_background];
 }
 
 QTabBar::close-button {
-    image: url("../icons/close_tab.png");
+    image: url("../icons/close_tab_grey.png");
     width: 14px;
     height: 14px;
     margin-right: 4px;
 }
+
 QTabBar::close-button:hover {
-    background: rgba(255, 100, 100, 255);
+    image: url("../icons/close_tab.png");
     border-radius: 6px;
 }
 
+/* Botón normal para la pestaña activa */
+QTabBar::close-button:selected {
+    image: url("../icons/close_tab.png");
+}
+
 QTabBar QToolButton::right-arrow {
-    image: url("../icons/arrow_right.png");
+    image: url("../icons/right_arrow.png");
 }
 QTabBar QToolButton::left-arrow {
-    image: url("../icons/arrow_left.png");
+    image: url("../icons/left_arrow.png");
 }
 
 QCheckBox::indicator:hover

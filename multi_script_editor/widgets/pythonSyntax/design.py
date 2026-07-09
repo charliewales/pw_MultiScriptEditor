@@ -28,15 +28,6 @@ defaultColors = dict(
         default=(210,210,210),
         whitespace=(70,70,70),
         highlight_line=(85, 85, 85),
-        tab_background=(215,199,182),
-        tab_text=(0,0,0),
-        tab_border=(215,199,182),
-        tab_hover_background=(178,163,37),
-        tab_hover_text=(0,0,0),
-        tab_hover_border=(178,163,37),
-        tab_selected_background=(19,73,133),
-        tab_selected_text=(255,255,255),
-        tab_selected_border=(19,73,133),
         tab_radius=12,
         use_theme_font_on_completer=True,
         use_theme_font_on_menus=False,
@@ -364,12 +355,31 @@ def getColors(theme=False):
     else:
         result = {k:v for k,v in defaultColors.items()}
 
-    if theme:
         if 'colors' in settings:
             colors = settings['colors'].get(theme)
             if colors:
                 for k, v in colors.items():
                     result[k] = v
+
+    if 'tab_background' not in result:
+        result['tab_background'] = result.get('window', (50, 50, 50))
+    if 'tab_border' not in result:
+        result['tab_border'] = result.get('highlight_line', (85, 85, 85))
+    if 'tab_text' not in result:
+        result['tab_text'] = result.get('default', (210, 210, 210))
+    if 'tab_hover_background' not in result:
+        result['tab_hover_background'] = result.get('highlight_line', (85, 85, 85))
+    if 'tab_hover_border' not in result:
+        result['tab_hover_border'] = result.get('highlight_line', (85, 85, 85))
+    if 'tab_hover_text' not in result:
+        result['tab_hover_text'] = result.get('default', (210, 210, 210))
+    if 'tab_selected_background' not in result:
+        result['tab_selected_background'] = result.get('background', (40, 40, 40))
+    if 'tab_selected_border' not in result:
+        result['tab_selected_border'] = result.get('background', (40, 40, 40))
+    if 'tab_selected_text' not in result:
+        result['tab_selected_text'] = result.get('default', (210, 210, 210))
+
     return result
 
 def editorStyle(theme=None):
