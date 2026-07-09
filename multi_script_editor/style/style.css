@@ -19,7 +19,7 @@ QWidget:focus
 
 QWidget:item:hover
 {
-    background-color: #504f4f;
+    background-color: rgb[highlight_line];
     color: white;
 }
 
@@ -65,7 +65,7 @@ QToolBar QToolButton:pressed
 
 QMainWindow::separator
 {
-    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #161616, stop: 0.5 #151515, stop: 0.6 #212121, stop:1 #343434);
+    background-color: rgb[highlight_line];
     color: white;
     padding-left: 4px;
     border: 1px solid rgb[highlight_line];
@@ -75,7 +75,7 @@ QMainWindow::separator
 QMainWindow::separator:hover
 {
 
-    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d7801a, stop:0.5 #b56c17 stop:1 #ffa02f);
+    background-color: rgb[highlight_line];
     color: white;
     padding-left: 4px;
     border: 1px solid rgb[highlight_line];
@@ -93,7 +93,7 @@ QMenuBar::item
 QMenuBar::item:selected
 {
     /*background: transparent;*/
-    background-color: #555555;
+    background-color: rgb[highlight_line];
     color: #fff;
 
 }
@@ -102,12 +102,7 @@ QMenuBar::item:pressed
 {
     background: #444;
     border: 1px solid rgb[highlight_line];
-    background-color: QLinearGradient(
-        x1:0, y1:0,
-        x2:0, y2:1,
-        stop:1 #212121,
-        stop:0.4 #343434
-    );
+    background-color: rgb[highlight_line];
     margin-bottom:-1px;
     padding-bottom:1px;
 }
@@ -178,15 +173,26 @@ QMenu::item
 
 QMenu::item:selected
 {
-    /* color: rgb[keywords]; */
     color: white;
+    background-color: rgb[highlight_line];
+}
+
+QMenu::tearoff
+{
+    background-color: rgb[background];
+    border: 1px dashed rgb[highlight_line];
+    height: 4px;
+}
+
+QMenu::tearoff:selected
+{
     background-color: rgb[highlight_line];
 }
 
 QMenu::separator
 {
     height: 2px;
-    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #161616, stop: 0.5 #151515, stop: 0.6 #212121, stop:1 #343434);
+    background-color: rgb[highlight_line];
     color: white;
     padding-left: 4px;
     margin-left: 20px;
