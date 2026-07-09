@@ -39,17 +39,17 @@ QWidget:item:selected
 /*     background-color: rgb[window]; */
 /* } */
 
-QToolButton
+QToolBar QToolButton
 {
     background: transparent;
     border: none;
 }
-QToolButton:hover
+QToolBar QToolButton:hover
 {
     background: rgba(255, 255, 255, 20);
     border-radius: 6px;
 }
-QToolButton:pressed
+QToolBar QToolButton:pressed
 {
     background: rgba(255, 255, 255, 40);
 }
