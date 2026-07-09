@@ -18,74 +18,7 @@ QListView::item:hover
     color: rgb[completer_text];
 }
 
-/***********SCROLLBAR***************/
 
-QScrollBar::handle:vertical
-{
-    background:  #565656;
-    min-height: 20px;
-    border-radius: 2px;
-}
-QScrollBar::handle:vertical:pressed
-{
-    background:  #5b5a5a;
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical
-{
-    border: 1px solid #1b1b19;
-    border-radius: 1px;
-    background: #565656;
-    height: 14px;
-    subcontrol-origin: margin;
-}
-QScrollBar::add-line:vertical:pressed, QScrollBar::sub-line:vertical:pressed
-{
-      background:  #5b5a5a;
-}
-
-QScrollBar::sub-line:vertical
-{
-      subcontrol-position: top;
-}
-QScrollBar::add-line:vertical
-{
-      subcontrol-position: bottom;
-}
-
-QScrollBar:vertical
-{
-      background: qlineargradient( x1: 0, y1: 0, x2: 1, y2: 0, stop: 0.0 #121212, stop: 0.2 #282828, stop: 1 #484848);
-      width: 15px;
-      margin: 16px 0 16px 0;
-      border: 1px solid #222222;
-}
-
-QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical
-{
-      border: 0px;
-      width: 10px;
-      height: 10px;
-      background: #565656;
-}
-QScrollBar::up-arrow:vertical:pressed, QScrollBar::down-arrow:vertical:pressed
-{
-      background: #5b5a5a;
-}
-
-QScrollBar::up-arrow:vertical
-{
-     border-image: url(:/arrow_up.png) 1;
-}
-QScrollBar::down-arrow:vertical
-{
-     border-image: url(:/arrow_down.png) 1;
-}
-
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
-{
-      background: none;
-}
 
 QTextEdit
 {
@@ -100,20 +33,20 @@ QTextBrowser
 QToolTip, QLabel#docTooltip {
     color: rgb[completer_text];
     background-color: rgb[completer_background];
-    border: 1px solid gray;
+    border: 1px solid rgb[highlight_line];
 }
 
 QListWidget#outlineList
 {
     background-color: rgb[background];
     color: rgb[default];
-    border: 1px solid gray;
+    border: 1px solid rgb[highlight_line];
 }
 
 QLineEdit#outlineFilter
 {
     background-color: rgb[background];
     color: rgb[default];
-    border: 1px solid gray;
+    border: 1px solid rgb[highlight_line];
     padding: 2px;
 }

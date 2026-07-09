@@ -25,7 +25,6 @@ class Ui_Dialog(object):
         self.label = QLabel(Dialog)
         font = QFont()
         font.setPointSize(12)
-        font.setWeight(75)
         font.setItalic(False)
         font.setBold(True)
         self.label.setFont(font)
