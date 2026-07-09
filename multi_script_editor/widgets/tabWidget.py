@@ -10,9 +10,6 @@ from widgets.pythonSyntax import design
 from icons import *
 
 
-style = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'style', 'completer.qss')
-if not os.path.exists(style):
-    style=None
 
 
 class tabWidgetClass(QTabWidget):
@@ -306,79 +303,12 @@ class tabWidgetClass(QTabWidget):
         else:
             self._tab_text_size = None
 
-        def c(name):
-            val = colors.get(name, (128,128,128))
-            if isinstance(val, (list, tuple)):
-                return "#%02x%02x%02x" % tuple(val)
-            return str(val)
-
-        css = """
-            QTabBar::tab {
-                min-width: 80px;
-                border: 2px solid %(tab_border)s;
-                border-top-left-radius: %(tab_radius)s;
-                border-top-right-radius: %(tab_radius)s;
-                padding-left: 10px;
-                padding-right: 10px;
-                padding-top: 3px;
-                padding-bottom: 3px;
-                margin-right: 3px;
-                background: %(tab_background)s;
-                color: %(tab_text)s;
-            }
-            QTabBar::tab:hover {
-                background: %(tab_hover_background)s;
-                color: %(tab_hover_text)s;
-                border: 2px solid %(tab_hover_border)s;
-            }
-
-            QTabBar::tab:selected {
-                background: %(tab_selected_background)s;
-                color: %(tab_selected_text)s;
-                border: 2px solid %(tab_selected_border)s;
-                border-top-left-radius: %(tab_radius)s;
-                border-top-right-radius: %(tab_radius)s;
-            }
-
-            QTabBar::close-button {
-                image: url("%(close_tab)s");
-                width: 14px;
-                height: 14px;
-                margin-right: 4px;
-            }
-            QTabBar::close-button:hover {
-                background: rgba(255, 100, 100, 255);
-                border-radius: 6px;
-            }
-
-            QTabBar QToolButton::right-arrow {
-                image: url("%(right_arrow)s");
-            }
-            QTabBar QToolButton::left-arrow {
-                image: url("%(left_arrow)s");
-            }
-        """ % {
-            "tab_border": c("tab_border"),
-            "tab_background": c("tab_background"),
-            "tab_text": c("tab_text"),
-            "tab_hover_background": c("tab_hover_background"),
-            "tab_hover_text": c("tab_hover_text"),
-            "tab_hover_border": c("tab_hover_border"),
-            "tab_selected_background": c("tab_selected_background"),
-            "tab_selected_text": c("tab_selected_text"),
-            "tab_selected_border": c("tab_selected_border"),
-            "tab_radius": str(colors.get("tab_radius", 12)) + "px",
-            "close_tab": icons["close_tab"].replace("\\", "/"),
-            "left_arrow": icons.get("left_arrow", "").replace("\\", "/"),
-            "right_arrow": icons.get("right_arrow", "").replace("\\", "/")
-        }
-
         ss = self.styleSheet()
         font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)
         if font_match:
-            css += '\n' + font_match.group(0)
-
-        self.setStyleSheet(css)
+            self.setStyleSheet(font_match.group(0))
+        else:
+            self.setStyleSheet('')
 
     def undo(self):
         self.current().undo()

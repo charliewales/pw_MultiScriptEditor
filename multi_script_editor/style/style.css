@@ -415,48 +415,49 @@ QTabWidget::pane  { /* The tab widget frame */
 
 
 
-QTabBar::tab  {
-    background: #3b3c3e;
-    border: 1px solid rgb[highlight_line];
-    border-bottom-color: rgb[highlight_line];
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    min-width: 25ex;
-    padding-left: 5px;
-    padding-right: 5px;
+QTabBar::tab {
+    min-width: 80px;
+    border: 2px solid rgb[tab_border];
+    border-top-left-radius: [tab_radius];
+    border-top-right-radius: [tab_radius];
+    padding-left: 10px;
+    padding-right: 10px;
     padding-top: 3px;
-    padding-bottom: 2px;
+    padding-bottom: 3px;
+    margin-right: 3px;
+    background: rgb[tab_background];
+    color: rgb[tab_text];
+}
+QTabBar::tab:hover {
+    background: rgb[tab_hover_background];
+    color: rgb[tab_hover_text];
+    border: 2px solid rgb[tab_hover_border];
 }
 
-QTabBar::tab:selected, QTabBar::tab:hover  {
-    background:#505153;
+QTabBar::tab:selected {
+    background: rgb[tab_selected_background];
+    color: rgb[tab_selected_text];
+    border: 2px solid rgb[tab_selected_border];
+    border-top-left-radius: [tab_radius];
+    border-top-right-radius: [tab_radius];
 }
 
-QTabBar::tab:selected  {
-    border-color: rgb[highlight_line];
-    border-bottom-color: rgb[highlight_line];
+QTabBar::close-button {
+    image: url("../icons/close_tab.png");
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+}
+QTabBar::close-button:hover {
+    background: rgba(255, 100, 100, 255);
+    border-radius: 6px;
 }
 
-/*QTabBar::tab:!selected  {
-    margin-top: 2px;
+QTabBar QToolButton::right-arrow {
+    image: url("../icons/arrow_right.png");
 }
-
-QTabBar::tab:selected  {
-
-    margin-left: -4px;
-    margin-right: -4px;
-}*/
-
-QTabBar::tab:first:selected  {
-    margin-left: 0;
-}
-
-QTabBar::tab:last:selected  {
-    margin-right:0;
-}
-
-QTabBar::tab:only-one  {
-    margin: 0;
+QTabBar QToolButton::left-arrow {
+    image: url("../icons/arrow_left.png");
 }
 
 QCheckBox::indicator:hover
@@ -520,4 +521,44 @@ QHeaderView{
     background: rgb[highlight_line];
     border: 1px solid rgb[highlight_line];
     padding: 2px 3px 2px 3px;
+}
+
+/*********** COMPLETER & SYMBOL WIDGET **************/
+completeMenuClass, SymbolWidget QListWidget
+{
+    color: rgb[completer_text];
+    background-color: rgb[completer_background];
+    alternate-background-color: rgb[completer_alt_background];
+    font-size: [textsize]pt;
+    height: 25px;
+}
+completeMenuClass::item:selected, SymbolWidget QListWidget::item:selected {
+    background: rgb[completer_selected_background];
+}
+
+completeMenuClass::item:hover, SymbolWidget QListWidget::item:hover
+{
+    background-color: rgb[completer_hover_background];
+    color: rgb[completer_text];
+}
+
+QToolTip, QLabel#docTooltip {
+    color: rgb[completer_text];
+    background-color: rgb[completer_background];
+    border: 1px solid rgb[highlight_line];
+}
+
+QListWidget#outlineList
+{
+    background-color: rgb[background];
+    color: rgb[default];
+    border: 1px solid rgb[highlight_line];
+}
+
+QLineEdit#outlineFilter
+{
+    background-color: rgb[background];
+    color: rgb[default];
+    border: 1px solid rgb[highlight_line];
+    padding: 2px;
 }

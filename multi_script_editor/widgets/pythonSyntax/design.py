@@ -1,9 +1,7 @@
 from core.settings_model import SettingsModel
 import os, re
 
-EditorStyle = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'style', 'completer.qss')
-if not os.path.exists(EditorStyle):
-    EditorStyle=None
+
 
 defaultColors = dict(
         background = (40,40,40),
@@ -377,46 +375,15 @@ def getColors(theme=False):
 def editorStyle(theme=None):
     colors = getColors(theme)
     colors = {k:tuple(v) if isinstance(v, list) else v for k,v in colors.items()}
-    if EditorStyle:
-        text = open(EditorStyle).read()
-        proxys = re.findall(r'\[.*\]', text)
-        for p in proxys:
-            name = p[1:-1]
-            if name in colors:
-                c = colors[name]
-                if isinstance(c, (list, tuple)):
-                    val = '#%02x%02x%02x' % (c[0], c[1], c[2])
-                    text = text.replace(f'rgb{p}', val)
-                else:
-                    val = str(c)
-                    text = text.replace(p, val)
-            elif name == 'textsize':
-                text = text.replace(p, '10')
-        return text
+    return applyColorToMainStyle(colors)
 
-def applyColorToEditorStyle(colors=None):
-    if EditorStyle:
-        text = open(EditorStyle).read()
-        proxys = re.findall(r'\[.*\]', text)
-        for p in proxys:
-            name = p[1:-1]
-            if name in colors:
-                c = colors[name]
-                if isinstance(c, (list, tuple)):
-                    val = '#%02x%02x%02x' % (c[0], c[1], c[2])
-                    text = text.replace(f'rgb{p}', val)
-                else:
-                    val = str(c)
-                    text = text.replace(p, val)
-            elif name == 'textsize':
-                text = text.replace(p, '10')
-        return text
-    return ''
 
 def applyColorToMainStyle(colors=None):
     StyleCss = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'style', 'style.css')
+    icons_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'icons').replace('\\', '/')
     if os.path.exists(StyleCss):
         text = open(StyleCss).read()
+        text = text.replace("../icons", icons_dir)
         proxys = re.findall(r'\[.*\]', text)
         for p in proxys:
             name = p[1:-1]

@@ -228,7 +228,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.blockSignals(True)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
-        qss = design.applyColorToEditorStyle(colors)
+        qss = design.applyColorToMainStyle(colors)
         self.setStyleSheet(qss)
         self.completer.setStyleSheet(qss)
         self.blockSignals(False)
