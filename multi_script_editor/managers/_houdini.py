@@ -6,6 +6,7 @@ from vendor.Qt.QtWidgets import QMenu, QAction, QWidget
 from vendor.Qt.QtCore import Qt
 
 from managers.completeWidget import contextCompleterClass
+import managers
 
 path = os.path.join(os.path.dirname(__file__), 'houdini')
 
@@ -44,7 +45,10 @@ def show(*args, **kwargs):
     if _houdini_window is None:
         parent = getMainWindow()
         editor = scriptEditor.create_editor_instance(parent)
-        editor.setParent(parent, Qt.Window)
+
+        if managers._s == "l":
+            editor.setParent(parent, Qt.Dialog)
+
         _houdini_window = editor
     else:
         editor = _houdini_window
