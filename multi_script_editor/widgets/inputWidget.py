@@ -191,11 +191,11 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def applyHightLighter(self, theme=None, qss=None, ext=None):
         self.blockSignals(True)
         colors = None
-        self._highlight_color_cache = None
         if theme or not theme =='Multi Script Editor':
             colors = design.getColors(theme)
             if self.completer:
                 self.completer.updateStyle(colors)
+        self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         highlighter_class = syntaxHighLighter.PythonHighlighterClass
 
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
@@ -222,6 +222,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
+        self.highlight_current_line()
 
     def applyPreviewStyle(self, colors):
         self.blockSignals(True)
@@ -231,6 +232,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.setStyleSheet(qss)
         self.completer.setStyleSheet(qss)
         self.blockSignals(False)
+        self.highlight_current_line()
 
     def parseText(self, force=False):
         if self.completer:
