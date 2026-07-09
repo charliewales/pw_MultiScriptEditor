@@ -45,14 +45,10 @@ def show(*args, **kwargs):
         parent = hou.ui.mainQtWindow()
         editor = scriptEditor.create_editor_instance(parent)
         editor.setWindowFlags(Qt.Window)
-        try:
-            editor.setStyleSheet(hou.ui.qtStyleSheet())
-        except AttributeError:
-            pass
         _houdini_window = editor
     else:
         editor = _houdini_window
-    
+
     editor.show()
     return editor
 

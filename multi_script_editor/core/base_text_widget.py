@@ -86,5 +86,6 @@ class BaseTextWidgetMixin:
         main_win = self.window()
         if hasattr(main_win, 'menubar'):
             menu.setFont(main_win.menubar.font())
+            menu.setStyleSheet(main_win.menubar.styleSheet())
         menu.exec_(event.globalPos())
         del menu

@@ -357,6 +357,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def applyTheme(self, name):
         qss = design.editorStyle(name)
+        colors = design.getColors(name)
+        
+        main_css = design.applyColorToMainStyle(colors)
+        if main_css:
+            self.menubar.setStyleSheet(main_css)
+            for menu in self.findChildren(QMenu):
+                menu.setStyleSheet(main_css)
+
         o = self.out
         o.applyHightLighter(name)
         o.setStyleSheet(qss)
@@ -372,7 +380,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.completer.setStyleSheet(qss)
             w.edit.setStyleSheet(qss)
 
-        colors = design.getColors(name)
         self.tab._tab_text_size = colors.get('tab_text_size', None)
         self.tab.apply_tab_style(colors)
 
@@ -458,12 +465,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.setWindowStyle()
 
     def setWindowStyle(self):
-        if __name__ == '__main__':
-            theme = self._current_settings.get('theme', 'Multi Script Editor')
-            colors = design.getColors(theme)
-            css = design.applyColorToMainStyle(colors)
-            if css:
-                self.setStyleSheet(css)
+        theme = self._current_settings.get('theme', 'Multi Script Editor')
+        colors = design.getColors(theme)
+        css = design.applyColorToMainStyle(colors)
+        if css:
+            self.setStyleSheet(css)
+            if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
 
     def show_syntax_errors(self, errors):
