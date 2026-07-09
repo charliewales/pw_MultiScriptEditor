@@ -94,14 +94,14 @@ QMenuBar::item:selected
 {
     /*background: transparent;*/
     background-color: rgb[highlight_line];
-    color: #fff;
+    color: white;
 
 }
 
 QMenuBar::item:pressed
 {
     background-color: rgb[highlight_line];
-    color: #fff;
+    color: white;
 }
 
 
@@ -113,24 +113,30 @@ QAbstractItemView
 }
 
 QListView::item:selected{
-    background: #6b6a6a;
+    background: rgb[highlight_line];
 }
 
 /***************PUSHBUTTON***********/
 
 QPushButton
 {
-    color: #b1b1b1;
+    color: white;
     background-color: rgb[background];
     border-width: 1px;
-    padding: 3px;
-    padding-left: 7px;
-    padding-right: 7px;
+    padding: 6px;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+QPushButton:hover {
+    background-color: rgb[highlight_line];
+    color: white;
 }
 
 QPushButton:pressed
 {
-    background-color: rgb[window];
+    background-color: rgb[highlight_line];
+    color: white;
 }
 QPushButton:disabled
 {
