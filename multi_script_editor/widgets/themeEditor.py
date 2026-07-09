@@ -169,7 +169,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.themeList_cbb.addItem(t)
         if settings.get('colors'):
             added_separator = False
-            for x in settings.get('colors'):
+            for x in sorted(settings.get('colors')):
                 if x not in design.predefinedThemes:
                     if not added_separator:
                         self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
