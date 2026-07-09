@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import Qt, Signal, QSize
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
 from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget, QListWidgetItem
 from vendor.Qt.QtGui import QFontMetrics
 
@@ -58,6 +58,7 @@ class SnippetWidget(QDialog):
         self.search_le.textChanged.connect(self.filter_snippets)
         if font:
             self.search_le.setFont(font)
+        self.search_le.installEventFilter(self)
         layout.addWidget(self.search_le)
 
         # List
@@ -100,6 +101,13 @@ class SnippetWidget(QDialog):
     def filter_snippets(self, text):
         self.populate_list(text)
 
+    def eventFilter(self, obj, event):
+        if obj == self.search_le and event.type() == QEvent.KeyPress:
+            if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End):
+                self.keyPressEvent(event)
+                return True
+        return super(SnippetWidget, self).eventFilter(obj, event)
+
     def on_item_clicked(self, item):
         if self.mode == "save":
             self.search_le.setText(item.text())
@@ -134,6 +142,8 @@ class SnippetWidget(QDialog):
             row = self.list_widget.currentRow()
             if row < self.list_widget.count() - 1:
                 self.list_widget.setCurrentRow(row + 1)
+        elif event.key() in (Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End):
+            self.list_widget.keyPressEvent(event)
         else:
             # Pass other keys to the search line edit
             self.search_le.keyPressEvent(event)
