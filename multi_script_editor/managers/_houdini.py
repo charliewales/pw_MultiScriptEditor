@@ -42,9 +42,9 @@ def show(*args, **kwargs):
     kwargs.pop('position', None)
 
     if _houdini_window is None:
-        parent = hou.ui.mainQtWindow()
+        parent = getMainWindow()
         editor = scriptEditor.create_editor_instance(parent)
-        editor.setWindowFlags(Qt.Window)
+        editor.setParent(parent, Qt.Window)
         _houdini_window = editor
     else:
         editor = _houdini_window
