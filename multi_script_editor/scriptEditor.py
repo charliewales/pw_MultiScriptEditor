@@ -344,7 +344,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         data = self._current_settings
         if data.get('colors'):
             added_separator = False
-            for t in data.get('colors').keys():
+            for t in sorted(data.get('colors').keys()):
                 if t not in design.predefinedThemes:
                     if not added_separator:
                         self.theme_menu.addSeparator()
