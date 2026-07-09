@@ -290,7 +290,7 @@ QScrollBar::left-arrow:horizontal:pressed {
 }
 
 QScrollBar::up-arrow:vertical {
-    border-image: url(../icons/left_arrow.png) 1;
+    border-image: url(../icons/arrow_left.png) 1;
 }
 
 QScrollBar::down-arrow:vertical {
@@ -308,7 +308,7 @@ QScrollBar::left-arrow:horizontal {
 
 QScrollBar::add-page:vertical,
 QScrollBar::sub-page:vertical {
-    background: none;
+    background: rgb[background];
 }
 
 
@@ -458,7 +458,6 @@ QTabBar::close-button:hover {
     border-radius: 6px;
 }
 
-/* Botón normal para la pestaña activa */
 QTabBar::close-button:selected {
     image: url("../icons/close_tab.png");
 }
