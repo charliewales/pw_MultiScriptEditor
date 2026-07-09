@@ -1,7 +1,10 @@
 import os, sys, re
+import hou
 main = __import__('__main__')
-hou = main.__dict__['hou']
-import hqt
+# hou = main.__dict__['hou']
+from vendor.Qt.QtWidgets import QMenu, QAction, QWidget
+from vendor.Qt.QtCore import Qt
+
 from managers.completeWidget import contextCompleterClass
 
 path = os.path.join(os.path.dirname(__file__), 'houdini')
@@ -20,15 +23,46 @@ if not path in sys.path:
 from multi_script_editor import scriptEditor
 
 
+_houdini_window = None
+
+def getMainWindow():
+    return hou.qt.mainWindow()
+
 def show(*args, **kwargs):
+    global _houdini_window
     kwargs.pop('clear', None)
     kwargs.pop('ontop', None)
-    hqt.show(scriptEditor.scriptEditorClass, *args, **kwargs)
+    kwargs.pop('replacePyPanel', None)
+    kwargs.pop('hideTitleMenu', None)
+    kwargs.pop('name', None)
+    kwargs.pop('floating', None)
+    kwargs.pop('dialog', None)
+    kwargs.pop('pane', None)
+    kwargs.pop('size', None)
+    kwargs.pop('position', None)
+
+    if _houdini_window is None:
+        parent = hou.ui.mainQtWindow()
+        editor = scriptEditor.create_editor_instance(parent)
+        editor.setWindowFlags(Qt.Window)
+        try:
+            editor.setStyleSheet(hou.ui.qtStyleSheet())
+        except AttributeError:
+            pass
+        _houdini_window = editor
+    else:
+        editor = _houdini_window
+    
+    editor.show()
+    return editor
 
 def get_widget():
-    widget = scriptEditor.create_editor_instance()
-    widget.setStyleSheet('')
-    widget.setStyleSheet( hqt.get_hou_style() )
+    parent = getMainWindow()
+    widget = scriptEditor.create_editor_instance(parent)
+    try:
+        widget.setStyleSheet(hou.ui.qtStyleSheet())
+    except AttributeError:
+        pass
     return widget
 
 
@@ -118,27 +152,27 @@ def contextMenu(parent):
     m = houdiniMenuClass(parent)
     return m
 
-class houdiniMenuClass(hqt.QMenu):
+class houdiniMenuClass(QMenu):
     def __init__(self, parent):
         super(houdiniMenuClass, self).__init__('Houdini', parent)
         self.par = parent
         self.setTearOffEnabled(1)
-        self.setWindowTitle('MSE %s Houdini' % self.par.ver)
-        act_read = hqt.QAction('Read From Node', parent, triggered=self.readFromNode)
+        self.setWindowTitle('MSE %s Houdini' % getattr(self.par, 'ver', ''))
+        act_read = QAction('Read From Node', parent, triggered=self.readFromNode)
         act_read.setStatusTip("Read code from the selected Houdini node")
         self.addAction(act_read)
-        
-        act_save = hqt.QAction('Save To Node', parent, triggered=self.saveToNode)
+
+        act_save = QAction('Save To Node', parent, triggered=self.saveToNode)
         act_save.setStatusTip("Save the current script to the selected Houdini node")
         self.addAction(act_save)
-        
+
         self.addSeparator()
-        
-        act_read_session = hqt.QAction('Read from hou.session Sourse', parent, triggered=self.readFromSession)
+
+        act_read_session = QAction('Read from hou.session Sourse', parent, triggered=self.readFromSession)
         act_read_session.setStatusTip("Read code from hou.session module source")
         self.addAction(act_read_session)
-        
-        act_save_session = hqt.QAction('Save to hou.session', parent, triggered=self.saveToSession)
+
+        act_save_session = QAction('Save to hou.session', parent, triggered=self.saveToSession)
         act_save_session.setStatusTip("Save the current script to hou.session module source")
         self.addAction(act_save_session)
 
@@ -215,7 +249,7 @@ class houdiniMenuClass(hqt.QMenu):
 
 
 def wrapDroppedText(namespace, text, event):
-    if event.keyboardModifiers() == hqt.Qt.AltModifier:
+    if event.keyboardModifiers() == Qt.AltModifier:
         syntax = []
         #node
         for node_parm in text.split(','):

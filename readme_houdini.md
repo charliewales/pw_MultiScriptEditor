@@ -22,9 +22,9 @@ multi_script_editor.showHoudini(ontop=1)
 
 ```python
 import multi_script_editor
-multi_script_editor.showHoudini(name='Multi Script Editor', replacePyPanel=1, hideTitleMenu=0)
+multi_script_editor.showHoudini()
 ```
 
-Also you can use .pypanel file without hqt module
+Also you can use .pypanel file:
 >/managers/houdini/multi_script_editor_16.pypanel (for Houdini 14-16)
 >/managers/houdini/multi_script_editor_17.pypanel (for Houdini 17+)

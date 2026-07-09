@@ -6,11 +6,13 @@
 # python_panel for Houdini 15 and up
 
 def createInterface():
+    import hou
     from multi_script_editor import scriptEditor
     w = scriptEditor.create_editor_instance()
-    w.setStyleSheet('')
-    import hqt
-    w.setStyleSheet( hqt.get_hou_style() )
+    try:
+        w.setStyleSheet(hou.ui.qtStyleSheet())
+    except AttributeError:
+        pass
     return w
 ]]></script>
     <help><![CDATA[]]></help>

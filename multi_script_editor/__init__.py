@@ -7,39 +7,19 @@ if not root in sys.path:
 
 
 # HOUDINI
-def showHoudini(
-    clear=False,
-    ontop=False,
-    name=None,
-    floating=False,
-    dialog=False,
-    position=(),
-    size=(),
-    pane=None,
-    replacePyPanel=False,
-    hideTitleMenu=True,
-):
+def showHoudini(*args, **kwargs):
     """
-    This method use hqt module. Download it before
+    Launch Multi Script Editor in Houdini
     """
     from .managers import _houdini
-
-    _houdini.show(
-        clear=clear,
-        ontop=ontop,
-        dialog=dialog,
-        name=name,
-        floating=floating,
-        position=position,
-        size=size,
-        pane=pane,
-        replacePyPanel=replacePyPanel,
-        hideTitleMenu=hideTitleMenu,
-    )
+    return _houdini.show(*args, **kwargs)
 
 
 # NUKE
 def showNuke(panel=False):
+    """
+    Launch Multi Script Editor in Nuke
+    """
     from .managers import _nuke
 
     _nuke.show(panel)
@@ -47,7 +27,9 @@ def showNuke(panel=False):
 
 # MAYA
 def showMaya(dock=False):
-    print('showMaya')
+    """
+    Launch Multi Script Editor in Maya
+    """
     from .managers import _maya
 
     _maya.show(dock)
@@ -55,6 +37,9 @@ def showMaya(dock=False):
 
 # 3DSMAX PLUS
 def show3DSMax():
+    """
+    Launch Multi Script Editor in 3DSMax
+    """
     sys.argv = []
     from .managers import _3dsmax
 
