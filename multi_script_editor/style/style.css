@@ -210,7 +210,7 @@ QGroupBox::title {
 /***********SCROLLBAR***************/
 
 QScrollBar:horizontal {
-    border: 1px solid #222222;
+    border: 1px solid rgb[highlight_line];
     background: rgb[background];
     height: 15px;
     margin: 0px 16px 0 16px;
@@ -479,14 +479,7 @@ QCheckBox::indicator:hover
 
 QCheckBox::indicator:checked
 {
-    background-color: qradialgradient(
-        cx: 0.5, cy: 0.5,
-        fx: 0.5, fy: 0.5,
-        radius: 1.0,
-        stop: 0.25 #b9b8b8,
-        stop: 0.3 rgb[window]
-    );
-
+    background-color: rgb[background];
 }
 
 QCheckBox:disabled
@@ -499,8 +492,8 @@ QCheckBox::indicator
     color: #b1b1b1;
     background-color: rgb[window];
     border: 1px solid rgb[highlight_line];
-    width: 9px;
-    height: 9px;
+    width: 12px;
+    height: 12px;
 }
 
 QCheckBox::indicator:disabled
