@@ -100,11 +100,8 @@ QMenuBar::item:selected
 
 QMenuBar::item:pressed
 {
-    background: #444;
-    border: 1px solid rgb[highlight_line];
     background-color: rgb[highlight_line];
-    margin-bottom:-1px;
-    padding-bottom:1px;
+    color: #fff;
 }
 
 
@@ -117,17 +114,6 @@ QAbstractItemView
 
 QListView::item:selected{
     background: #6b6a6a;
-}
-
-/***************LINEEDIT************/
-
-QLineEdit
-{
-    background-color: #464646;
-    padding: 1px;
-    border-style: solid;
-    border: 1px solid rgb[highlight_line];
-    border-radius: 0;
 }
 
 /***************PUSHBUTTON***********/
@@ -148,8 +134,8 @@ QPushButton:pressed
 }
 QPushButton:disabled
 {
-    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2d2d2d, stop: 0.1 #2b2b2b, stop: 0.5 #292929, stop: 0.9 #282828, stop: 1 #252525);
-    color: #525252;
+    background-color: rgb[background];
+    color: rgb[highlight_line];
 }
 
 QPushButton:checked
@@ -214,8 +200,6 @@ QGroupBox {
 }
 
 QGroupBox::title {
-    subcontrol-origin: margin;
-    subcontrol-position: top left;
     padding-left: 10px;
     padding-right: 10px;
 }
