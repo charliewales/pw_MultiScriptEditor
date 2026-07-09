@@ -125,8 +125,8 @@ QTreeView::item:selected, QListView::item:selected{
 
 QTreeView:item:hover
 {
-    background-color: rgb[window];
-    color: #red;
+    background-color:rgb[window];
+    color: #fff;
 }
 /******************************************************/
 QTreeView::branch:has-siblings:!adjoins-item {
