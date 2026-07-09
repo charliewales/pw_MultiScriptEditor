@@ -14,23 +14,36 @@ QWidget:disabled
 }
 QWidget:focus
 {
-    border: 1px solid  rgb[highlight_line];
+    border: 1px solid rgb[highlight_line];
 }
 
 QWidget:item:hover
 {
     background-color: #504f4f;
     color: white;
-    outline: none
 }
 
 QWidget:item:selected
 {
-    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1,
-    stop: 0 #78879b, stop: 1 #78879b);
-   outline: none
+    background-color: rgb[highlight_line];
 }
 
+QSplitter::handle {
+    background-color: rgb[window];
+}
+
+QSplitter::handle:horizontal {
+    width: 3px;
+}
+
+QSplitter::handle:vertical {
+    height: 3px;
+}
+
+QSplitter::handle:hover,
+QSplitter::handle:pressed {
+    background-color: rgb[highlight_line];
+}
 /**************TOOLBAR*************/
 
 QToolBar QToolButton
@@ -383,7 +396,25 @@ QComboBox QAbstractItemView {
     outline:none;
 }
 
+QSplitter {
+    background-color: rgb[window];
+}
 
+QSplitter::handle {
+    background-color: rgb[window];
+}
+
+QSplitter::handle:horizontal {
+    width: 3px;
+}
+
+QSplitter::handle:vertical {
+    height: 3px;
+}
+
+QSplitter::handle:hover, QSplitter::handle:pressed {
+    background-color: rgb[highlight_line];
+}
 
 QTabWidget::pane  { /* The tab widget frame */
     border-top: 1px solid rgb[highlight_line];
