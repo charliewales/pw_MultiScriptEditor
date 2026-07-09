@@ -66,13 +66,18 @@ mayaDragTempData = 'maya_temp_drag_empty_Data'
 
 main_parent = None
 context = None
+
 if 'hou' in main.__dict__:
+    from managers import _houdini
     context = 'hou'
-    if main.__dict__['hou'].applicationVersion()[0] >= 15:
-         main_parent = main.__dict__['hou'].ui.mainQtWindow()
+    main_parent = _houdini.getMainWindow()
 elif 'cmds' in main.__dict__:
+    from managers import _maya
     context = 'maya'
+    main_parent = _maya.getMayaWindow()
 elif 'nuke' in main.__dict__:
+    from managers import _nuke
+    main_parent = _nuke.getMainWindow()
     context = 'nuke'
 elif 'MaxPlus' in main.__dict__:
     context = 'max'

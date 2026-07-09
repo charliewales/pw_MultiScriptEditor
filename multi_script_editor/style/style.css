@@ -33,12 +33,6 @@ QWidget:item:selected
 
 /**************TOOLBAR*************/
 
-/* QToolBar */
-/* { */
-/*     border: none; */
-/*     background-color: rgb[window]; */
-/* } */
-
 QToolBar QToolButton
 {
     background: transparent;

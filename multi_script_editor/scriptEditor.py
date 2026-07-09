@@ -1645,17 +1645,21 @@ except:
     except:
         pass
 
+
 def create_editor_instance(parent=None):
     w = scriptEditorClass(parent)
     return w
+
 
 def show():
     app = QApplication.instance()
     if not app:
         app = QApplication()
 
+    # w = create_editor_instance(managers.main_parent)
     w = create_editor_instance()
     w.show()
+
     if hasattr(app, "exec"):
         app.exec()
     else:
