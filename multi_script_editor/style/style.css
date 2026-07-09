@@ -207,20 +207,6 @@ QGroupBox::title {
     background: rgb[background];
 }
 
- /******************TEXTEDIT****************/
-
-QTextEdit
-{
-    background-color: #242424;
-    border: 1px solid rgb[highlight_line];
-}
-
-QTextEdit:focus
-{
-    border: 1px solid rgb[highlight_line];
-}
-
-
 /***********SCROLLBAR***************/
 
 QScrollBar:horizontal {
@@ -245,7 +231,7 @@ QScrollBar::handle:vertical:pressed {
 
 QScrollBar::add-line:horizontal,
 QScrollBar::sub-line:horizontal {
-    border: 1px solid #1b1b19;
+    border: 1px solid rgb[highlight_line];
     border-radius: 1px;
     background: rgb[window];
     width: 14px;
@@ -253,7 +239,7 @@ QScrollBar::sub-line:horizontal {
 
 QScrollBar::add-line:vertical,
 QScrollBar::sub-line:vertical {
-    border: 1px solid #1b1b19;
+    border: 1px solid rgb[highlight_line];
     border-radius: 1px;
     background: rgb[window];
     height: 14px;
@@ -338,13 +324,13 @@ width: 16px;
 }
 QSpinBox::up-button:hover, QSpinBox::down-button:hover
 {
-    background-color: #adadad;
+    background-color: rgb[highlight_line];
 }
 
 
 QSpinBox::up-button:pressed, QSpinBox::down-button:pressed
 {
-    background-color: #828282;
+    background-color: rgb[highlight_line];
 }
 
 QSpinBox::up-arrow  {
@@ -355,8 +341,26 @@ QSpinBox::up-arrow  {
 
 
 /****************************************************/
+ /******************TEXTEDIT****************/
 
-QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QTextEdit, QAbstractItemView
+QTextEdit
+{
+    background-color: rgb[background];
+    border: 1px solid rgb[highlight_line];
+}
+
+QTextEdit:disabled
+{
+    background-color: rgb[background];
+    color: rgb[comment];
+    border: 1px solid rgb[highlight_line];
+}
+
+QTextEdit:focus {
+    border: 1px solid rgb[highlight_line];
+}
+
+QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
 {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
