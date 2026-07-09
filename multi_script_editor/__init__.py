@@ -46,7 +46,18 @@ def show3DSMax():
     _3dsmax.show()
 
 
-def show():
-    import scriptEditor
+def show(*args, **kwargs):
+    from . import managers
+    if managers.context == 'hou':
+        return showHoudini(*args, **kwargs)
+    elif managers.context == 'maya':
+        # Maya's show takes 'dock' kwarg
+        return showMaya(kwargs.get('dock', False))
+    elif managers.context == 'nuke':
+        # Nuke's show takes 'panel' kwarg
+        return showNuke(kwargs.get('panel', False))
+    elif managers.context == 'max':
+        return show3DSMax()
 
+    import scriptEditor
     scriptEditor.show()
