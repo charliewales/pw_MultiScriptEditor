@@ -144,7 +144,7 @@ class inputClass(QTextEdit, BaseTextWidgetMixin):
             if use_theme_font:
                 new_font = QFont(font)
             else:
-                new_font = QFont()
+                new_font = QApplication.font("QListWidget")
             if completer_size > 0:
                 new_font.setPointSize(completer_size)
             self.completer.setFont(new_font)

@@ -109,29 +109,24 @@ QMenuBar::item:pressed
 
 QAbstractItemView
 {
-    background-color: #3b3b3b;
-    alternate-background-color: rgb[window];
-    /*show-decoration-selected: 1;*/
+    background-color: rgb[background];
 }
 
 QTreeView::item:alternate {
      background-color: rgb[window];
  }
  QTreeView::item {
-     background-color: #3b3b3b;
+     background-color: rgb[background];
  }
 
 QTreeView::item:selected, QListView::item:selected{
     background: #6b6a6a;
 }
- QTreeView::item:selected:hover{
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #7b7b7b, stop: 1 #6b6a6a);
-}
 
 QTreeView:item:hover
 {
-    background-color:#515151;
-    color: #fff;
+    background-color: rgb[window];
+    color: #red;
 }
 /******************************************************/
 QTreeView::branch:has-siblings:!adjoins-item {

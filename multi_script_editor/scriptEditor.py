@@ -399,7 +399,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if colors.get('use_theme_font_on_outline', True):
                 outline_font = QFont(base_font)
             else:
-                outline_font = QFont()
+                outline_font = QApplication.font("QListWidget")
             if 'outline_text_size' in colors:
                 outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
             elif colors.get('use_theme_font_on_outline', True):
@@ -414,12 +414,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
             else:
-                menu_font = QFont()
+                menu_font = QApplication.font("QMenu")
 
             if colors.get('use_theme_font_on_status_bar', False):
                 status_bar_font = QFont(base_font)
             else:
-                status_bar_font = QFont()
+                status_bar_font = QApplication.font("QStatusBar")
 
             if 'menu_text_size' in colors:
                 menu_font.setPointSize(max(1, int(colors['menu_text_size'])))
@@ -676,7 +676,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 font = QFont(edit_widget.font())
         else:
-            font = QFont()
+            font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
@@ -1544,7 +1544,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 font = QFont(edit_widget.font())
         else:
-            font = QFont()
+            font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))
@@ -1587,7 +1587,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 font = QFont(edit_widget.font())
         else:
-            font = QFont()
+            font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
             font.setPointSize(int(colors['symbols_text_size']))

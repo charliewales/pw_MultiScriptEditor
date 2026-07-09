@@ -348,9 +348,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.preview_menu_file.setFont(menu_font)
                 self.preview_menu_edit.setFont(menu_font)
             else:
-                self.preview_menubar.setFont(QFont())
-                self.preview_menu_file.setFont(QFont())
-                self.preview_menu_edit.setFont(QFont())
+                self.preview_menubar.setFont(QApplication.font("QMenu"))
+                self.preview_menu_file.setFont(QApplication.font("QMenu"))
+                self.preview_menu_edit.setFont(QApplication.font("QMenu"))
 
             if colors.get('use_theme_font_on_status_bar', False) and font_data:
                 status_font = QFont(font.family(), colors.get('status_bar_text_size', 10), font.weight(), font.italic())
@@ -358,9 +358,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
                     lbl.setFont(status_font)
             else:
-                self.preview_statusbar.setFont(QFont())
+                self.preview_statusbar.setFont(QApplication.font("QStatusBar"))
                 for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
-                    lbl.setFont(QFont())
+                    lbl.setFont(QApplication.font("QStatusBar"))
 
             main_style = design.applyColorToMainStyle(colors)
             if main_style:

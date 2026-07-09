@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
-from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel
+from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel, QApplication
 import os
 from . pythonSyntax import design
 import managers
@@ -116,7 +116,7 @@ class completeMenuClass(QListWidget):
             if use_theme_font:
                 new_font = QFont(self.e.font())
             else:
-                new_font = QFont()
+                new_font = QApplication.font("QListWidget")
                 
             completer_size = self.font().pointSize()
             if completer_size > 0:

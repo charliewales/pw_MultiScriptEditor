@@ -396,7 +396,7 @@ class tabWidgetClass(QTabWidget):
             tab_font = QFont(font)
             family = tab_font.family()
         else:
-            tab_font = QFont()
+            tab_font = QApplication.font("QTabBar")
             family = tab_font.family() or "sans-serif"
 
         pt_size = tab_font.pointSizeF()
