@@ -7,6 +7,7 @@ if not os.path.exists(EditorStyle):
 
 defaultColors = dict(
         background = (40,40,40),
+        window = (50, 50, 50),
         output_background = (40,40,40),
         keywords = (65,255,130),
         digits = (250,255,62),
@@ -429,6 +430,26 @@ def editorStyle(theme=None):
 def applyColorToEditorStyle(colors=None):
     if EditorStyle:
         text = open(EditorStyle).read()
+        proxys = re.findall(r'\[.*\]', text)
+        for p in proxys:
+            name = p[1:-1]
+            if name in colors:
+                c = colors[name]
+                if isinstance(c, (list, tuple)):
+                    val = '#%02x%02x%02x' % (c[0], c[1], c[2])
+                    text = text.replace(f'rgb{p}', val)
+                else:
+                    val = str(c)
+                    text = text.replace(p, val)
+            elif name == 'textsize':
+                text = text.replace(p, '10')
+        return text
+    return ''
+
+def applyColorToMainStyle(colors=None):
+    StyleCss = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'style', 'style.css')
+    if os.path.exists(StyleCss):
+        text = open(StyleCss).read()
         proxys = re.findall(r'\[.*\]', text)
         for p in proxys:
             name = p[1:-1]

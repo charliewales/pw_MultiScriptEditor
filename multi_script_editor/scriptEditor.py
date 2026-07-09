@@ -450,11 +450,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.completer.hideMe()
             w.edit._skip_autocomplete_once = True
 
+        self.setWindowStyle()
+
     def setWindowStyle(self):
         if __name__ == '__main__':
-            qss = os.path.join(os.path.dirname(__file__), 'style', 'style.css')
-            if os.path.exists(qss):
-                self.setStyleSheet(open(qss).read())
+            theme = self._current_settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+            css = design.applyColorToMainStyle(colors)
+            if css:
+                self.setStyleSheet(css)
                 self.setWindowIcon(QIcon(icons['pw']))
 
     def show_syntax_errors(self, errors):

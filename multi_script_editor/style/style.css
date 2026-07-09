@@ -3,14 +3,14 @@
 QWidget
 {
     color: #b1b1b1;
-    border: 1px solid  #323232;
-    background-color:#323232;
+    border: 1px solid rgb[window];
+    background-color: rgb[window];
 }
 
 QWidget:disabled
 {
     color: #555555;
-    background-color: #323232;
+    background-color: rgb[window];
 }
 QWidget:focus
 {
@@ -33,11 +33,11 @@ QWidget:item:selected
 
 /**************TOOLBAR*************/
 
-QToolBar
-{
-    border: none;
-    background-color: #323232;
-}
+/* QToolBar */
+/* { */
+/*     border: none; */
+/*     background-color: rgb[window]; */
+/* } */
 
 /**************MAINWINDOW*************/
 
@@ -110,12 +110,12 @@ QMenuBar::item:pressed
 QAbstractItemView
 {
     background-color: #3b3b3b;
-    alternate-background-color: #323232;
+    alternate-background-color: rgb[window];
     /*show-decoration-selected: 1;*/
 }
 
 QTreeView::item:alternate {
-     background-color: #323232;
+     background-color: rgb[window];
  }
  QTreeView::item {
      background-color: #3b3b3b;
@@ -204,6 +204,7 @@ QPushButton:checked
 QMenu
 {
     border: 1px solid black;
+    background-color: rgb[window];
 }
 
 QMenu::item
@@ -607,7 +608,7 @@ QProgressBar::chunk
 /******************* RADIOBUTTON *****/
 QRadioButton::indicator:checked, QRadioButton::indicator:unchecked{
     color: #b1b1b1;
-    background-color: #323232;
+    background-color: rgb[window];
     border: 1px solid #b1b1b1;
     border-radius: 4px;
 }
@@ -619,7 +620,7 @@ QRadioButton::indicator:checked
         fx: 0.5, fy: 0.5,
         radius: 1.0,
         stop: 0.25 #b9b8b8,
-        stop: 0.3 #323232
+        stop: 0.3 rgb[window]
     );
 }
 
@@ -642,7 +643,7 @@ QCheckBox::indicator:checked
         fx: 0.5, fy: 0.5,
         radius: 1.0,
         stop: 0.25 #b9b8b8,
-        stop: 0.3 #323232
+        stop: 0.3 rgb[window]
     );
 
 }
@@ -655,7 +656,7 @@ color: #414141;
 QCheckBox::indicator
 {
     color: #b1b1b1;
-    background-color: #323232;
+    background-color: rgb[window];
     border: 1px solid #b1b1b1;
     width: 9px;
     height: 9px;
@@ -675,14 +676,14 @@ QCheckBox, QRadioButton
 
 /************** TABLE VIEW **************/
 QTableView  {
-    selection-background-color: #323232;
+    selection-background-color: rgb[window];
 }
 QTableView QTableCornerButton::section  {
-    background: #323232;
+    background: rgb[window];
     border: 0px ;
 }
 QHeaderView{
-    background: #323232;
+    background: rgb[window];
 }
  QHeaderView::section
 {

@@ -361,6 +361,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.preview_statusbar.setFont(QFont())
                 for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
                     lbl.setFont(QFont())
+
+            main_style = design.applyColorToMainStyle(colors)
+            if main_style:
+                self.preview_main_window.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
@@ -806,7 +810,8 @@ if __name__ == '__main__':
     app = QApplication([])
     w = themeEditorClass()
     w.show()
-    qss = os.path.join(os.path.dirname(os.path.dirname(__file__)),'style', 'style.css')
-    if os.path.exists(qss):
-        w.setStyleSheet(open(qss).read())
+    colors = design.getColors(w.get_settings().get('theme', 'Multi Script Editor'))
+    main_style = design.applyColorToMainStyle(colors)
+    if main_style:
+        w.setStyleSheet(main_style)
     app.exec_()
