@@ -267,11 +267,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 QToolBar {
                         border: 1px solid indianred;
                         border-radius: 6px;
+                        margin: 1px;
                     }
-                """
-            )
+                """)
         else:
-            self.toolBar.setStyleSheet('QToolBar {border: 1px solid transparent;}')
+            self.toolBar.setStyleSheet("""
+                QToolBar {
+                        border: 1px solid transparent;
+                        margin: 1px;
+                    }
+                """)
 
     def get_builtin_icon(self, icon=QStyle.SP_DialogOpenButton):
         builtin_icon = icon
