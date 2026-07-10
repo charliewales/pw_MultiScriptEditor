@@ -62,6 +62,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_panel.setObjectName("outlinePanel")
         self.outline_ly = QVBoxLayout(self.outline_panel)
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
+        self.outline_ly.setSpacing(4)
         self.outline_list = QListWidget()
         self.outline_list.setObjectName("outlineList")
         self.outline_list.setSelectionMode(QAbstractItemView.SingleSelection)
