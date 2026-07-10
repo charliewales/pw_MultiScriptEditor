@@ -556,7 +556,7 @@ QToolTip, QLabel#docTooltip {
 
 QListWidget#outlineList
 {
-    background-color: rgb[background];
+    background-color: rgb[outline_background];
     color: rgb[default];
     border: 1px solid rgb[highlight_line];
 }
