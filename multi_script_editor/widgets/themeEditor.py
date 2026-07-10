@@ -365,6 +365,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
                 self.preview_main_window.setStyleSheet(main_style)
+                self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
