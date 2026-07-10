@@ -366,6 +366,19 @@ QTextEdit:focus {
     border: 1px solid rgb[highlight_line];
 }
 
+QTextBrowser
+{
+    background-color: rgb[output_background];
+    border: 1px solid rgb[highlight_line];
+}
+
+QTextBrowser:disabled
+{
+    background-color: rgb[output_background];
+    color: rgb[comment];
+    border: 1px solid rgb[highlight_line];
+}
+
 QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
 {
     background-color: rgb[background];
