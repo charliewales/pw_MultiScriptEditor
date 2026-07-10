@@ -96,28 +96,28 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         self.textSize_spb.valueChanged.connect(self.updateExample)
         self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.textSize_spb.customContextMenuRequested.connect(self.openTextSizeMenu)
+        self.textSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.menuSize_spb.valueChanged.connect(self.updateExample)
         self.menuSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.menuSize_spb.customContextMenuRequested.connect(self.openMenuSizeMenu)
+        self.menuSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.tabRadius_spb.valueChanged.connect(self.updateExample)
         self.tabRadius_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabRadius_spb.customContextMenuRequested.connect(self.openTabRadiusMenu)
         self.tabSize_spb.valueChanged.connect(self.updateExample)
         self.tabSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.tabSize_spb.customContextMenuRequested.connect(self.openTabSizeMenu)
+        self.tabSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.outlineSize_spb.valueChanged.connect(self.updateExample)
         self.outlineSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.outlineSize_spb.customContextMenuRequested.connect(self.openOutlineSizeMenu)
+        self.outlineSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.outputSize_spb.valueChanged.connect(self.updateExample)
         self.outputSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.outputSize_spb.customContextMenuRequested.connect(self.openOutputSizeMenu)
+        self.outputSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.statusBarSize_spb.valueChanged.connect(self.updateExample)
         self.statusBarSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.statusBarSize_spb.customContextMenuRequested.connect(self.openStatusBarSizeMenu)
+        self.statusBarSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.symbolsSize_spb.valueChanged.connect(self.updateExample)
         self.symbolsSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.symbolsSize_spb.customContextMenuRequested.connect(self.openSymbolsSizeMenu)
+        self.symbolsSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.completerFont_cb.stateChanged.connect(self.updateExample)
         self.menuFont_cb.stateChanged.connect(self.updateExample)
         self.outlineFont_cb.stateChanged.connect(self.updateExample)
@@ -509,28 +509,20 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             item.setIcon(QIcon(pix))
             self.updateExample()
 
-    def openTextSizeMenu(self, position):
+    def openSizeMenu(self, position):
+        sender = self.sender()
+        if not sender: return
         menu = QMenu(self)
-        reset_action = QAction("Reset to Default (80% of Font)", self)
-        reset_action.triggered.connect(self.resetTextSizeToDefault)
+        ratio = 1.0 if sender in (self.menuSize_spb, self.symbolsSize_spb) else 0.8
+        ratio_str = "100%" if ratio == 1.0 else "80%"
+        reset_action = QAction(f"Reset to Default ({ratio_str} of Font)", self)
+        reset_action.triggered.connect(lambda checked=False, s=sender, r=ratio: self.resetSizeToDefault(s, r))
         menu.addAction(reset_action)
-        menu.exec_(self.textSize_spb.mapToGlobal(position))
+        menu.exec_(sender.mapToGlobal(position))
 
-    def resetTextSizeToDefault(self):
+    def resetSizeToDefault(self, spb, ratio):
         pts = self._getBaseFontPointSize()
-        self.textSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.updateExample()
-
-    def openMenuSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (100% of Font)", self)
-        reset_action.triggered.connect(self.resetMenuSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.menuSize_spb.mapToGlobal(position))
-
-    def resetMenuSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.menuSize_spb.setValue(max(1, int(pts)))
+        spb.setValue(max(1, int(pts * ratio)))
         self.updateExample()
 
     def openTabRadiusMenu(self, position):
@@ -546,12 +538,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.tabRadius_spb.setValue(defaultColors['tab_radius'])
             self.updateExample()
 
-    def openTabSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (80% of Font)", self)
-        reset_action.triggered.connect(self.resetTabSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.tabSize_spb.mapToGlobal(position))
+
 
     def _getBaseFontPointSize(self):
         colors = self.getCurrentColors()
@@ -587,59 +574,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.statusBarSize_spb.blockSignals(False)
         self.tabSize_spb.blockSignals(False)
         self.symbolsSize_spb.blockSignals(False)
-
-    def resetTabSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.tabSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.updateExample()
-
-    def openOutlineSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (80% of Font)", self)
-        reset_action.triggered.connect(self.resetOutlineSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.outlineSize_spb.mapToGlobal(position))
-
-    def resetOutlineSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.outlineSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.updateExample()
-
-    def openOutputSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (80% of Font)", self)
-        reset_action.triggered.connect(self.resetOutputSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.outputSize_spb.mapToGlobal(position))
-
-    def resetOutputSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.outputSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.updateExample()
-
-    def openStatusBarSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (80% of Font)", self)
-        reset_action.triggered.connect(self.resetStatusBarSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.statusBarSize_spb.mapToGlobal(position))
-
-    def resetStatusBarSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.statusBarSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.updateExample()
-
-    def openSymbolsSizeMenu(self, position):
-        menu = QMenu(self)
-        reset_action = QAction("Reset to Default (100% of Font)", self)
-        reset_action.triggered.connect(self.resetSymbolsSizeToDefault)
-        menu.addAction(reset_action)
-        menu.exec_(self.symbolsSize_spb.mapToGlobal(position))
-
-    def resetSymbolsSizeToDefault(self):
-        pts = self._getBaseFontPointSize()
-        self.symbolsSize_spb.setValue(max(1, int(pts * 1.0)))
-        self.updateExample()
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'
