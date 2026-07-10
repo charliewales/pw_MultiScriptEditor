@@ -513,7 +513,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         sender = self.sender()
         if not sender: return
         menu = QMenu(self)
-        ratio_1 = (self.menuSize_spb, self.symbolsSize_spb)
+        ratio_1 = (self.symbolsSize_spb,)
         ratio = 1.0 if sender in ratio_1 else 0.9
         ratio_str = "100%" if ratio == 1.0 else "90%"
         reset_action = QAction(f"Reset to Default ({ratio_str} of font)", self)

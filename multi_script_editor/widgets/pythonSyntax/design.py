@@ -2,7 +2,6 @@ from core.settings_model import SettingsModel
 import os, re
 
 
-
 defaultColors = dict(
         background=(40, 40, 40),
         outline_background=(40, 40, 40),
