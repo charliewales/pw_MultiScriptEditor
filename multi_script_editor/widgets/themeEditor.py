@@ -46,12 +46,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_main_window.setMenuBar(self.preview_menubar)
 
         self.preview_statusbar = QStatusBar(self.preview_main_window)
-        self.lbl_lang = QLabel("Python |")
-        self.lbl_wrap = QLabel("Wrap: OFF |")
-        self.lbl_lines = QLabel("1 lines |")
-        self.lbl_cursor = QLabel("Ln 1, Col 1 |")
+        self.lbl_msg = QLabel("")
+        self.lbl_lang = QLabel("Python")
+        self.lbl_wrap = QLabel("Wrap: OFF")
+        self.lbl_lines = QLabel("52 lines")
+        self.lbl_cursor = QLabel("Ln 1, Col 1")
 
-        for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+        for lbl in (self.lbl_msg, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
             lbl.setStyleSheet("padding: 0 5px;")
             self.preview_statusbar.addPermanentWidget(lbl)
 
@@ -362,11 +363,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if colors.get('use_theme_font_on_status_bar', False) and font_data:
                 status_font = QFont(font.family(), colors.get('status_bar_text_size', 10), font.weight(), font.italic())
                 self.preview_statusbar.setFont(status_font)
-                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                for lbl in (self.lbl_msg, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
                     lbl.setFont(status_font)
             else:
                 self.preview_statusbar.setFont(QApplication.font("QStatusBar"))
-                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                for lbl in (self.lbl_msg, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
                     lbl.setFont(QApplication.font("QStatusBar"))
 
             main_style = design.applyColorToMainStyle(colors)
