@@ -1089,14 +1089,33 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if focus_widget == self.out or self.out.isAncestorOf(focus_widget):
             target = 'output'
 
+        selected_text = ""
         if target == 'output':
             # Searching in log, center on editor (self.tab)
             center_widget = self.tab
+            cursor = self.out.textCursor()
+            if cursor.hasSelection():
+                selected_text = cursor.selectedText()
         else:
             # Searching in editor, center on log (self.out)
             center_widget = self.out
+            current_widget = self.tab.currentWidget()
+            if current_widget and hasattr(current_widget, 'edit'):
+                cursor = current_widget.edit.textCursor()
+                if cursor.hasSelection():
+                    selected_text = cursor.selectedText()
 
         w = findWidget.findWidgetClass(self.out, center_widget)
+        if selected_text:
+            # Replace paragraph separators with spaces or newlines (Qt quirk)
+            selected_text = selected_text.replace('\u2029', '\n')
+            # Only use first line if multiline
+            if '\n' in selected_text:
+                selected_text = selected_text.split('\n')[0]
+            if '\r' in selected_text:
+                selected_text = selected_text.split('\r')[0]
+            w.find_le.setText(selected_text)
+            w.find_le.selectAll()
 
         # Restore case sensitive state
         is_case_sensitive = self._current_settings.get('search_case_sensitive', False)
