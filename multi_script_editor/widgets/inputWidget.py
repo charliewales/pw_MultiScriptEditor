@@ -86,9 +86,21 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
+        
+        self.selectionChanged.connect(self.auto_select_all_occurrences)
+
+        # Flag to prevent recursion
+        self._is_auto_selecting = False
+        self._is_undo_redo = False
 
     def _on_text_changed(self):
-        self.autocomplete_timer.start(200)
+        if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
+            pass
+        elif getattr(self, '_is_undo_redo', False):
+            pass
+        else:
+            self.autocomplete_timer.start(200)
+        self.syntax_timer.start(1000)
 
     def set_start_font(self, font_d=None):
         if not font_d:
@@ -1084,18 +1096,39 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def select_all_occurrences(self):
         self.multi_cursor_manager.select_all_occurrences()
 
+    def auto_select_all_occurrences(self):
+        if self._is_auto_selecting:
+            return
+            
+        data = SettingsModel().read_settings() or {}
+        if data.get('highlight_all_occurrences', True):
+            cursor = self.textCursor()
+            if cursor.hasSelection():
+                # Avoid selecting just empty spaces
+                text = cursor.selectedText()
+                if text and '\u2029' not in text and text.strip():
+                    self._is_auto_selecting = True
+                    self.select_all_occurrences()
+                    self._is_auto_selecting = False
+            else:
+                if self.multi_cursor_manager.has_cursors():
+                    self.multi_cursor_manager.clear()
+                    self.highlight_current_line()
+
     # Clear multi-cursor selections on standard clipboard and undo/redo operations
     def undo(self):
         if self.multi_cursor_manager.has_cursors():
             self.multi_cursor_manager.clear()
-            self.highlight_current_line()
+        self._is_undo_redo = True
         super(inputClass, self).undo()
+        self._is_undo_redo = False
 
     def redo(self):
         if self.multi_cursor_manager.has_cursors():
             self.multi_cursor_manager.clear()
-            self.highlight_current_line()
+        self._is_undo_redo = True
         super(inputClass, self).redo()
+        self._is_undo_redo = False
 
     def cut(self):
         if self.multi_cursor_manager.has_cursors():

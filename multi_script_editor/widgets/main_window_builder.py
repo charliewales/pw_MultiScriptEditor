@@ -189,7 +189,7 @@ class ScriptEditorUIBuilder:
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
-
+        
         editor.selectNextOccurrence_act.triggered.connect(editor.tab.selectNextOccurrence)
         editor.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         editor.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
@@ -281,6 +281,8 @@ class ScriptEditorUIBuilder:
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
 
+        editor.highlightAllOccurrences_act.triggered.connect(editor.toggleHighlightAllOccurrences)
+
         # Output Bottom toggle setup
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
 
@@ -367,6 +369,7 @@ class ScriptEditorUIBuilder:
             editor.autocomplete_act: "Toggle code autocomplete functionality",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
+            editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.selectAllOccurrences_act: "Select all occurrences of the current word",
             editor.always_ontop_act: "Keep the application window always on top",

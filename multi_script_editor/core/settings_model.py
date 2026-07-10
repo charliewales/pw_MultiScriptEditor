@@ -100,6 +100,7 @@ class SettingsModel:
                     clear_execute=False,
                     always_ontop=False,
                     show_whitespace=True,
+                    highlight_all_occurrences=True,
                     font={"family": "monospace", "pointSize": 12, "weight": 1, "italic": False},
                     recent_files=[]
                     )

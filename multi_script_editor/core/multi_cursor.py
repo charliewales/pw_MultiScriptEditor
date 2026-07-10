@@ -99,7 +99,11 @@ class MultiCursorManager:
             self.deduplicate_and_sort_cursors()
 
             if self.multi_cursors:
+                if hasattr(self.editor, '_is_auto_selecting'):
+                    self.editor._is_auto_selecting = True
                 self.editor.setTextCursor(self.multi_cursors[0])
+                if hasattr(self.editor, '_is_auto_selecting'):
+                    self.editor._is_auto_selecting = False
             self.editor.highlight_current_line()
             return True
 
@@ -107,6 +111,9 @@ class MultiCursorManager:
         text = event.text()
 
         sorted_cursors = sorted(self.multi_cursors, key=lambda c: c.position(), reverse=True)
+
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = True
 
         main_cursor = self.editor.textCursor()
         main_cursor.beginEditBlock()
@@ -137,11 +144,17 @@ class MultiCursorManager:
         if is_edit:
             self.deduplicate_and_sort_cursors()
             if self.multi_cursors:
+                if hasattr(self.editor, '_is_auto_selecting'):
+                    self.editor._is_auto_selecting = True
                 self.editor.setTextCursor(self.multi_cursors[0])
+                if hasattr(self.editor, '_is_auto_selecting'):
+                    self.editor._is_auto_selecting = False
             self.editor.highlight_current_line()
-            # We trigger the autocomplete timer via the editor
-            if hasattr(self.editor, 'autocomplete_timer'):
-                self.editor.autocomplete_timer.start(200)
+                
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = False
+            
+        if is_edit:
             return True
 
         return False
