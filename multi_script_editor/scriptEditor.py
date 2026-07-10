@@ -138,18 +138,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.addArgs()
 
     def setupStatusBarWidgets(self):
+        self.lbl_msg = QLabel("")
         self.lbl_lang = QLabel("Language")
         self.lbl_wrap = QLabel("Wrap: OFF")
         self.lbl_lines = QLabel("0 lines")
         self.lbl_cursor = QLabel("Ln 1, Col 1")
 
-        for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+        for lbl in (self.lbl_msg, self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
             lbl.setStyleSheet("padding: 0 5px;")
             self.statusBar().addPermanentWidget(lbl)
 
         self.status_bar_timer = QTimer(self)
         self.status_bar_timer.setSingleShot(True)
         self.status_bar_timer.timeout.connect(self._updateStatusBarInfo)
+
+    def showStatusMessage(self, msg):
+        self.lbl_msg.setText(msg)
 
     def updateStatusBarInfo(self, *args):
         self.status_bar_timer.start(50)
@@ -175,6 +179,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         line = cursor.blockNumber() + 1
         col = cursor.columnNumber() + 1
         self.lbl_cursor.setText(f"Ln {line}, Col {col}")
+
+        if hasattr(w.edit, 'multi_cursor_manager') and w.edit.multi_cursor_manager.has_cursors():
+            count = len(w.edit.multi_cursor_manager.multi_cursors)
+            self.lbl_msg.setText(f"{count} occurrences selected")
+        else:
+            self.lbl_msg.setText("")
 
         total_lines = w.edit.document().blockCount()
         self.lbl_lines.setText(f"{total_lines} lines")

@@ -11,6 +11,8 @@ class MultiCursorManager:
     def clear(self):
         self.multi_cursors = []
         self.is_auto_populated = False
+        if hasattr(self.editor, 'messageSignal'):
+            self.editor.messageSignal.emit("")
 
     def has_cursors(self):
         return len(self.multi_cursors) > 0
