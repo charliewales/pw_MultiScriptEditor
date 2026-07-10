@@ -149,7 +149,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
-        
+
         # Ensure style is reapplied correctly after dialog is shown
         QTimer.singleShot(0, self.updateExample)
 
@@ -334,7 +334,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if font_data:
             font = QFont(
                 font_data.get('family', ''),
-                font_data.get('pointSize', 10),
+                max(1, font_data.get('pointSize', 10)),
                 font_data.get('weight', -1),
                 font_data.get('italic', False)
             )
@@ -383,14 +383,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         for i in range(self.colors_lwd.count()):
             item = self.colors_lwd.item(i)
             colors[item.text()] = item.data(32)
-        colors['textsize'] = self.textSize_spb.value()
-        colors['menu_text_size'] = self.menuSize_spb.value()
+        colors['textsize'] = max(1, self.textSize_spb.value())
+        colors['menu_text_size'] = max(1, self.menuSize_spb.value())
         colors['tab_radius'] = self.tabRadius_spb.value()
-        colors['tab_text_size'] = self.tabSize_spb.value()
-        colors['outline_text_size'] = self.outlineSize_spb.value()
-        colors['output_text_size'] = self.outputSize_spb.value()
-        colors['status_bar_text_size'] = self.statusBarSize_spb.value()
-        colors['symbols_text_size'] = self.symbolsSize_spb.value()
+        colors['tab_text_size'] = max(1, self.tabSize_spb.value())
+        colors['outline_text_size'] = max(1, self.outlineSize_spb.value())
+        colors['output_text_size'] = max(1, self.outputSize_spb.value())
+        colors['status_bar_text_size'] = max(1, self.statusBarSize_spb.value())
+        colors['symbols_text_size'] = max(1, self.symbolsSize_spb.value())
         colors['use_theme_font_on_completer'] = self.completerFont_cb.isChecked()
         colors['use_theme_font_on_menus'] = self.menuFont_cb.isChecked()
         colors['use_theme_font_on_outline'] = self.outlineFont_cb.isChecked()
@@ -513,9 +513,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         sender = self.sender()
         if not sender: return
         menu = QMenu(self)
-        ratio = 1.0 if sender in (self.menuSize_spb, self.symbolsSize_spb) else 0.8
-        ratio_str = "100%" if ratio == 1.0 else "80%"
-        reset_action = QAction(f"Reset to Default ({ratio_str} of Font)", self)
+        ratio_1 = (self.menuSize_spb, self.symbolsSize_spb)
+        ratio = 1.0 if sender in ratio_1 else 0.9
+        ratio_str = "100%" if ratio == 1.0 else "90%"
+        reset_action = QAction(f"Reset to Default ({ratio_str} of font)", self)
         reset_action.triggered.connect(lambda checked=False, s=sender, r=ratio: self.resetSizeToDefault(s, r))
         menu.addAction(reset_action)
         menu.exec_(sender.mapToGlobal(position))
@@ -546,7 +547,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if not font_data:
             font_data = self.get_settings().get('font', {})
         if font_data:
-            return font_data.get('pointSize', 10)
+            return max(1, font_data.get('pointSize', 10))
         return 10
 
     def _resetAllFontSizes(self):
@@ -559,12 +560,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.tabSize_spb.blockSignals(True)
         self.symbolsSize_spb.blockSignals(True)
 
-        self.textSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.menuSize_spb.setValue(max(1, int(pts)))
-        self.outlineSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.outputSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.statusBarSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.tabSize_spb.setValue(max(1, int(pts * 0.8)))
+        font_mult = 0.9
+        self.textSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.menuSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.outlineSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.outputSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.statusBarSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.tabSize_spb.setValue(max(1, int(pts * font_mult)))
         self.symbolsSize_spb.setValue(max(1, int(pts * 1.0)))
 
         self.textSize_spb.blockSignals(False)
@@ -585,7 +587,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             settings = self.get_settings()
             if 'colors' in settings:
                 if name in settings['colors']:
-                    if not self.yes_no_question('Replace exists?'):
+                    if not self.yes_no_question('Replace existing?'):
                         return False
 
             colors = self.getCurrentColors()
