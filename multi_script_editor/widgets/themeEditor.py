@@ -32,13 +32,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.setupUi(self)
         self.preview_main_window = QMainWindow(self)
         self.preview_main_window.setWindowFlags(Qt.Widget)
-        
+
         self.preview_menubar = QMenuBar(self.preview_main_window)
         self.preview_menu_file = QMenu("File", self.preview_menubar)
         self.preview_menu_file.addAction("Open")
         self.preview_menu_file.addAction("Save")
         self.preview_menubar.addMenu(self.preview_menu_file)
-        
+
         self.preview_menu_edit = QMenu("Edit", self.preview_menubar)
         self.preview_menu_edit.addAction("Undo")
         self.preview_menu_edit.addAction("Redo")
@@ -54,14 +54,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
             lbl.setStyleSheet("padding: 0 5px;")
             self.preview_statusbar.addPermanentWidget(lbl)
-            
+
         self.preview_main_window.setStatusBar(self.preview_statusbar)
 
         self.preview_tab_widget = tabWidgetClass(self.preview_main_window)
         self.preview_tab_widget.addNewTab("Active Tab", defaultText, make_current=False)
         self.preview_tab_widget.addNewTab("Inactive Tab", defaultText, make_current=False)
         self.preview_tab_widget.setCurrentIndex(0)
-        
+
         self.preview_main_window.setCentralWidget(self.preview_tab_widget)
         self.preview_ly.addWidget(self.preview_main_window)
 
@@ -364,7 +364,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
-                self.preview_main_window.setStyleSheet(main_style)
                 self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
@@ -651,7 +650,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         name = self.themeList_cbb.currentText()
         if not name:
             return
-        
+
         path, _ = QFileDialog.getSaveFileName(self, "Export Theme", name + ".json", "JSON Files (*.json)")
         if path:
             colors = self.getCurrentColors()
@@ -667,28 +666,28 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             try:
                 with open(path, 'r') as f:
                     colors = json.load(f)
-                
+
                 # Extract filename without extension to use as theme name
                 base_name = os.path.basename(path)
                 name, _ = os.path.splitext(base_name)
-                
+
                 name_input = QInputDialog.getText(self, 'Theme name', 'Enter Theme name', QLineEdit.Normal, name)
                 if name_input[1]:
                     name = name_input[0]
                     if name in design.predefinedThemes:
                         name = name + ' (Custom)'
-                    
+
                     settings = self.get_settings()
                     if 'colors' in settings:
                         if name in settings['colors']:
                             if not self.yes_no_question('Replace exists?'):
                                 return
-                    
+
                     if 'colors' in settings:
                         settings['colors'][name] = colors
                     else:
                         settings['colors'] = {name: colors}
-                        
+
                     self.save_settings(settings)
                     self.fillUI(name)
                     self.updateUI()
