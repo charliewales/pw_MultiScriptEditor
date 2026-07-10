@@ -1,6 +1,6 @@
 import os
 import json
-from vendor.Qt.QtCore import QSize, Qt
+from vendor.Qt.QtCore import QSize, Qt, QTimer
 from vendor.Qt.QtGui import QColor, QIcon, QPixmap, QFont
 from vendor.Qt.QtWidgets import (
     QApplication,
@@ -148,6 +148,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
+        
+        # Ensure style is reapplied correctly after dialog is shown
+        QTimer.singleShot(0, self.updateExample)
 
     def get_settings(self):
         if self.parent() and hasattr(self.parent(), '_current_settings'):
@@ -161,25 +164,29 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.s.write_settings(settings)
 
     def fillUI(self, restore=None):
-        if restore is None:
-            restore = self.themeList_cbb.currentText()
-        settings = self.get_settings()
-        self.themeList_cbb.clear()
-        for t in sorted(design.predefinedThemes.keys()):
-            self.themeList_cbb.addItem(t)
-        if settings.get('colors'):
-            added_separator = False
-            for x in sorted(settings.get('colors')):
-                if x not in design.predefinedThemes:
-                    if not added_separator:
-                        self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
-                        added_separator = True
-                    self.themeList_cbb.addItem(x)
-        if not restore:
-            restore = settings.get('theme')
-        if restore:
-            index = self.themeList_cbb.findText(restore)
-            self.themeList_cbb.setCurrentIndex(index)
+        self.themeList_cbb.blockSignals(True)
+        try:
+            if restore is None:
+                restore = self.themeList_cbb.currentText()
+            settings = self.get_settings()
+            self.themeList_cbb.clear()
+            for t in sorted(design.predefinedThemes.keys()):
+                self.themeList_cbb.addItem(t)
+            if settings.get('colors'):
+                added_separator = False
+                for x in sorted(settings.get('colors')):
+                    if x not in design.predefinedThemes:
+                        if not added_separator:
+                            self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
+                            added_separator = True
+                        self.themeList_cbb.addItem(x)
+            if not restore:
+                restore = settings.get('theme')
+            if restore:
+                index = self.themeList_cbb.findText(restore)
+                self.themeList_cbb.setCurrentIndex(index)
+        finally:
+            self.themeList_cbb.blockSignals(False)
 
     def updateColors(self):
         curTheme = self.themeList_cbb.currentText()
