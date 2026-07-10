@@ -204,6 +204,8 @@ class tabWidgetClass(QTabWidget):
         cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
+        if hasattr(self.p, 'statusBar'):
+            cont.edit.messageSignal.connect(self.p.statusBar().showMessage)
         self.addTab(cont, name)
 
         if hasattr(self.p, 'updateStatusBarInfo'):

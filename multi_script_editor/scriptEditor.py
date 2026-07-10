@@ -494,7 +494,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 msg = errors[first_err_line]
                 self.statusBar().showMessage("Syntax Error on line {0}: {1}".format(first_err_line, msg))
             else:
-                self.statusBar().clearMessage()
+                current_msg = self.statusBar().currentMessage()
+                if current_msg.startswith("Syntax Error"):
+                    self.statusBar().clearMessage()
 
     def getShortcut(self, action):
         settings = self._presenter.settings_model.load_settings()

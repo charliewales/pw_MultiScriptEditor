@@ -6,9 +6,11 @@ class MultiCursorManager:
     def __init__(self, editor):
         self.editor = editor
         self.multi_cursors = []
+        self.is_auto_populated = False
 
     def clear(self):
         self.multi_cursors = []
+        self.is_auto_populated = False
 
     def has_cursors(self):
         return len(self.multi_cursors) > 0
@@ -21,7 +23,7 @@ class MultiCursorManager:
             # Usually, when Ctrl+Clicking, we add the current cursor to the list first if it's empty
             current = self.editor.textCursor()
             self.multi_cursors.append(QTextCursor(current))
-            
+
         c = QTextCursor(cursor)
         self.multi_cursors.append(c)
         self.deduplicate_and_sort_cursors()
@@ -71,6 +73,11 @@ class MultiCursorManager:
             return True
 
         if key == Qt.Key_A and (modifiers & Qt.ControlModifier):
+            self.clear()
+            self.editor.highlight_current_line()
+            return False
+
+        if getattr(self, 'is_auto_populated', False):
             self.clear()
             self.editor.highlight_current_line()
             return False
@@ -150,10 +157,10 @@ class MultiCursorManager:
                 if hasattr(self.editor, '_is_auto_selecting'):
                     self.editor._is_auto_selecting = False
             self.editor.highlight_current_line()
-                
+
         if hasattr(self.editor, '_is_auto_selecting'):
             self.editor._is_auto_selecting = False
-            
+
         if is_edit:
             return True
 
@@ -171,6 +178,10 @@ class MultiCursorManager:
         target_text = cursor.selectedText()
         if not target_text:
             return
+
+        if getattr(self, 'is_auto_populated', False):
+            self.clear()
+            self.is_auto_populated = False
 
         if not self.multi_cursors:
             self.multi_cursors = [cursor]
@@ -194,6 +205,9 @@ class MultiCursorManager:
                 self.editor.setTextCursor(found_cursor)
 
         self.editor.highlight_current_line()
+        if hasattr(self.editor, 'messageSignal'):
+            count = len(self.multi_cursors) if self.multi_cursors else 1
+            self.editor.messageSignal.emit(f"{count} occurrences selected")
 
     def select_all_occurrences(self):
         cursor = self.editor.textCursor()
@@ -209,6 +223,7 @@ class MultiCursorManager:
             return
 
         self.clear()
+        self.is_auto_populated = getattr(self.editor, '_is_auto_selecting', False)
         start_pos = 0
         while True:
             found_cursor = self.editor.document().find(target_text, start_pos)
@@ -218,3 +233,6 @@ class MultiCursorManager:
             start_pos = found_cursor.position()
 
         self.editor.highlight_current_line()
+        if hasattr(self.editor, 'messageSignal'):
+            count = len(self.multi_cursors) if self.multi_cursors else 1
+            self.editor.messageSignal.emit(f"{count} occurrences selected")

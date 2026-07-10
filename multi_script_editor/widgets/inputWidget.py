@@ -36,6 +36,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()
+    messageSignal = Signal(str)
     def __init__(self, parent, desk=None):
 
         # https://github.com/davidhalter/jedi
@@ -1090,13 +1091,21 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
 
     # --- Multi-Cursor / Multi-Selection Support ---
     def select_next_occurrence(self):
-        self.multi_cursor_manager.select_next_occurrence()
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.select_next_occurrence()
+        finally:
+            self._is_manual_multi_selecting = False
 
     def select_all_occurrences(self):
-        self.multi_cursor_manager.select_all_occurrences()
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.select_all_occurrences()
+        finally:
+            self._is_manual_multi_selecting = False
 
     def auto_select_all_occurrences(self):
-        if self._is_auto_selecting:
+        if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
             
         data = SettingsModel().read_settings() or {}
@@ -1110,7 +1119,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                     self.select_all_occurrences()
                     self._is_auto_selecting = False
             else:
-                if self.multi_cursor_manager.has_cursors():
+                if self.multi_cursor_manager.has_cursors() and getattr(self.multi_cursor_manager, 'is_auto_populated', False):
                     self.multi_cursor_manager.clear()
                     self.highlight_current_line()
 
