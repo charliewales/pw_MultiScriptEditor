@@ -182,7 +182,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if hasattr(w.edit, 'multi_cursor_manager') and w.edit.multi_cursor_manager.has_cursors():
             count = len(w.edit.multi_cursor_manager.multi_cursors)
-            self.lbl_msg.setText(f"{count} occurrences selected")
+            if getattr(w.edit.multi_cursor_manager, 'is_auto_populated', False):
+                self.lbl_msg.setText(f"{count} occurrences")
+            else:
+                self.lbl_msg.setText(f"{count} occurrences selected")
         else:
             self.lbl_msg.setText("")
 

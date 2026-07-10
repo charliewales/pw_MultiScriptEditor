@@ -237,4 +237,7 @@ class MultiCursorManager:
         self.editor.highlight_current_line()
         if hasattr(self.editor, 'messageSignal'):
             count = len(self.multi_cursors) if self.multi_cursors else 1
-            self.editor.messageSignal.emit(f"{count} occurrences selected")
+            if getattr(self, 'is_auto_populated', False):
+                self.editor.messageSignal.emit(f"{count} occurrences")
+            else:
+                self.editor.messageSignal.emit(f"{count} occurrences selected")
