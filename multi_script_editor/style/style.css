@@ -445,8 +445,8 @@ QTabBar::tab {
     border-top-right-radius: [tab_radius];
     padding-left: 10px;
     padding-right: 10px;
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     margin-right: 2px;
     background: rgb[tab_background];
     color: rgb[tab_text];
@@ -463,6 +463,22 @@ QTabBar::tab:selected {
     color: rgb[tab_selected_text];
     border: 1px solid rgb[tab_selected_border];
     border-bottom-color: rgb[tab_selected_background];
+}
+
+QTabBar::close-button {
+    image: url("../icons/close_tab_grey.png");
+    subcontrol-position: right center;
+    background: transparent;
+}
+
+QTabBar::close-button:selected {
+    image: url("../icons/close_tab.png");
+}
+
+QTabBar::close-button:hover {
+    image: url("../icons/close_tab.png");
+    background: rgb[background];
+    border-radius: 4px;
 }
 
 
