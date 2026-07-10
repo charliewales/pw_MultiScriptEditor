@@ -144,7 +144,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.lbl_lines = QLabel("0 lines")
         self.lbl_cursor = QLabel("Ln 1, Col 1")
 
-        for lbl in (self.lbl_msg, self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+        for lbl in (self.lbl_msg, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
             lbl.setStyleSheet("padding: 0 5px;")
             self.statusBar().addPermanentWidget(lbl)
 
