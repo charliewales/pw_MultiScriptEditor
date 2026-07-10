@@ -28,6 +28,14 @@ defaultColors = dict(
         default=(210,210,210),
         whitespace=(70,70,70),
         highlight_line=(85, 85, 85),
+        tab_background=(50, 50, 50),
+        tab_border=(40, 40, 40),
+        tab_selected_background=(40, 40, 40),
+        tab_selected_border=(40, 40, 40),
+        tab_hover_background=(85, 85, 85),
+        tab_hover_border=(85, 85, 85),
+        tab_text=(210, 210, 210),
+        tab_selected_text=(210, 210, 210),
         tab_radius=12,
         use_theme_font_on_completer=True,
         use_theme_font_on_menus=False,
@@ -62,7 +70,15 @@ predefinedThemes = {
         completer_selected_background=(44, 49, 58),
         default=(171, 178, 191),
         whitespace=(59, 64, 72),
-        highlight_line=(44, 49, 58)
+        highlight_line=(44, 49, 58),
+        tab_background=(33, 37, 43),
+        tab_border=(40, 44, 52),
+        tab_selected_background=(40, 44, 52),
+        tab_selected_border=(40, 44, 52),
+        tab_hover_background=(44, 49, 58),
+        tab_hover_border=(44, 49, 58),
+        tab_text=(171, 178, 191),
+        tab_selected_text=(171, 178, 191),
     ),
     'Dracula Official': dict(
         background=(40, 42, 54),
@@ -88,7 +104,15 @@ predefinedThemes = {
         completer_selected_background=(68, 71, 90),
         default=(248, 248, 242),
         whitespace=(68, 71, 90),
-        highlight_line=(68, 71, 90)
+        highlight_line=(68, 71, 90),
+        tab_background=(33, 34, 44),
+        tab_border=(40, 42, 54),
+        tab_selected_background=(40, 42, 54),
+        tab_selected_border=(40, 42, 54),
+        tab_hover_background=(68, 71, 90),
+        tab_hover_border=(68, 71, 90),
+        tab_text=(248, 248, 242),
+        tab_selected_text=(248, 248, 242),
     ),
     'Catppuccin': dict(
         background=(36, 39, 58),
@@ -114,7 +138,15 @@ predefinedThemes = {
         completer_selected_background=(54, 58, 79),
         default=(202, 211, 245),
         whitespace=(54, 58, 79),
-        highlight_line=(54, 58, 79)
+        highlight_line=(54, 58, 79),
+        tab_background=(30, 32, 48),
+        tab_border=(36, 39, 58),
+        tab_selected_background=(36, 39, 58),
+        tab_selected_border=(36, 39, 58),
+        tab_hover_background=(54, 58, 79),
+        tab_hover_border=(54, 58, 79),
+        tab_text=(202, 211, 245),
+        tab_selected_text=(202, 211, 245),
     ),
     'Tokyo Night': dict(
         background=(26, 27, 38),
@@ -140,7 +172,15 @@ predefinedThemes = {
         completer_selected_background=(41, 46, 66),
         default=(192, 202, 245),
         whitespace=(41, 46, 66),
-        highlight_line=(41, 46, 66)
+        highlight_line=(41, 46, 66),
+        tab_background=(22, 22, 30),
+        tab_border=(26, 27, 38),
+        tab_selected_background=(26, 27, 38),
+        tab_selected_border=(26, 27, 38),
+        tab_hover_background=(41, 46, 66),
+        tab_hover_border=(41, 46, 66),
+        tab_text=(192, 202, 245),
+        tab_selected_text=(192, 202, 245),
     ),
     'Nord': dict(
         background=(46, 52, 64),
@@ -166,7 +206,15 @@ predefinedThemes = {
         completer_selected_background=(67, 76, 94),
         default=(216, 222, 233),
         whitespace=(67, 76, 94),
-        highlight_line=(59, 66, 82)
+        highlight_line=(59, 66, 82),
+        tab_background=(59, 66, 82),
+        tab_border=(46, 52, 64),
+        tab_selected_background=(46, 52, 64),
+        tab_selected_border=(46, 52, 64),
+        tab_hover_background=(59, 66, 82),
+        tab_hover_border=(59, 66, 82),
+        tab_text=(216, 222, 233),
+        tab_selected_text=(216, 222, 233),
     ),
     'Monokai Pro': dict(
         background=(45, 42, 46),
@@ -192,7 +240,15 @@ predefinedThemes = {
         completer_selected_background=(64, 62, 65),
         default=(252, 252, 250),
         whitespace=(64, 62, 65),
-        highlight_line=(64, 62, 65)
+        highlight_line=(64, 62, 65),
+        tab_background=(34, 31, 34),
+        tab_border=(45, 42, 46),
+        tab_selected_background=(45, 42, 46),
+        tab_selected_border=(45, 42, 46),
+        tab_hover_background=(64, 62, 65),
+        tab_hover_border=(64, 62, 65),
+        tab_text=(252, 252, 250),
+        tab_selected_text=(252, 252, 250),
     ),
     'Monokai': dict(
         background=(39, 40, 34),
@@ -218,7 +274,15 @@ predefinedThemes = {
         completer_selected_background=(73, 72, 62),
         default=(248, 248, 242),
         whitespace=(73, 72, 62),
-        highlight_line=(62, 61, 50)
+        highlight_line=(62, 61, 50),
+        tab_background=(30, 31, 28),
+        tab_border=(39, 40, 34),
+        tab_selected_background=(39, 40, 34),
+        tab_selected_border=(39, 40, 34),
+        tab_hover_background=(62, 61, 50),
+        tab_hover_border=(62, 61, 50),
+        tab_text=(248, 248, 242),
+        tab_selected_text=(248, 248, 242),
     ),
     'Solarized Dark': dict(
         background=(0, 43, 54),
@@ -244,7 +308,15 @@ predefinedThemes = {
         completer_selected_background=(88, 110, 117),
         default=(131, 148, 150),
         whitespace=(7, 54, 66),
-        highlight_line=(7, 54, 66)
+        highlight_line=(7, 54, 66),
+        tab_background=(7, 54, 66),
+        tab_border=(0, 43, 54),
+        tab_selected_background=(0, 43, 54),
+        tab_selected_border=(0, 43, 54),
+        tab_hover_background=(7, 54, 66),
+        tab_hover_border=(7, 54, 66),
+        tab_text=(131, 148, 150),
+        tab_selected_text=(131, 148, 150),
     ),
     'Kimbie Dark': dict(
         background=(34, 26, 15),
@@ -270,9 +342,16 @@ predefinedThemes = {
         completer_selected_background=(81, 65, 44),
         default=(211, 175, 134),
         whitespace=(81, 65, 44),
-        highlight_line=(81, 65, 44)
+        highlight_line=(81, 65, 44),
+        tab_background=(54, 39, 18),
+        tab_border=(34, 26, 15),
+        tab_selected_background=(34, 26, 15),
+        tab_selected_border=(34, 26, 15),
+        tab_hover_background=(81, 65, 44),
+        tab_hover_border=(81, 65, 44),
+        tab_text=(211, 175, 134),
+        tab_selected_text=(211, 175, 134),
     ),
-
     'Ayu Mirage': dict(
         background=(33, 39, 51),
         window=(25, 30, 42),
@@ -297,7 +376,15 @@ predefinedThemes = {
         completer_selected_background=(52, 63, 76),
         default=(203, 204, 198),
         whitespace=(52, 63, 76),
-        highlight_line=(52, 63, 76)
+        highlight_line=(52, 63, 76),
+        tab_background=(25, 30, 42),
+        tab_border=(33, 39, 51),
+        tab_selected_background=(33, 39, 51),
+        tab_selected_border=(33, 39, 51),
+        tab_hover_background=(52, 63, 76),
+        tab_hover_border=(52, 63, 76),
+        tab_text=(203, 204, 198),
+        tab_selected_text=(203, 204, 198),
     ),
     'Sonokai': dict(
         background=(44, 46, 52),
@@ -323,7 +410,15 @@ predefinedThemes = {
         completer_selected_background=(63, 68, 81),
         default=(226, 226, 227),
         whitespace=(63, 68, 81),
-        highlight_line=(63, 68, 81)
+        highlight_line=(63, 68, 81),
+        tab_background=(34, 36, 41),
+        tab_border=(44, 46, 52),
+        tab_selected_background=(44, 46, 52),
+        tab_selected_border=(44, 46, 52),
+        tab_hover_background=(63, 68, 81),
+        tab_hover_border=(63, 68, 81),
+        tab_text=(226, 226, 227),
+        tab_selected_text=(226, 226, 227),
     ),
     'GitHub Dark': dict(
         background=(13, 17, 23),
@@ -349,8 +444,16 @@ predefinedThemes = {
         completer_selected_background=(33, 38, 45),
         default=(201, 209, 217),
         whitespace=(33, 38, 45),
-        highlight_line=(33, 38, 45)
-    )
+        highlight_line=(33, 38, 45),
+        tab_background=(1, 4, 9),
+        tab_border=(13, 17, 23),
+        tab_selected_background=(13, 17, 23),
+        tab_selected_border=(13, 17, 23),
+        tab_hover_background=(33, 38, 45),
+        tab_hover_border=(33, 38, 45),
+        tab_text=(201, 209, 217),
+        tab_selected_text=(201, 209, 217),
+    ),
 }
 
 def getColors(theme=False):
@@ -373,24 +476,6 @@ def getColors(theme=False):
                 for k, v in colors.items():
                     result[k] = v
 
-    if 'tab_background' not in result:
-        result['tab_background'] = result.get('window', (50, 50, 50))
-    if 'tab_border' not in result:
-        result['tab_border'] = result.get('highlight_line', (85, 85, 85))
-    if 'tab_text' not in result:
-        result['tab_text'] = result.get('default', (210, 210, 210))
-    if 'tab_hover_background' not in result:
-        result['tab_hover_background'] = result.get('highlight_line', (85, 85, 85))
-    if 'tab_hover_border' not in result:
-        result['tab_hover_border'] = result.get('highlight_line', (85, 85, 85))
-    if 'tab_hover_text' not in result:
-        result['tab_hover_text'] = result.get('default', (210, 210, 210))
-    if 'tab_selected_background' not in result:
-        result['tab_selected_background'] = result.get('background', (40, 40, 40))
-    if 'tab_selected_border' not in result:
-        result['tab_selected_border'] = result.get('background', (40, 40, 40))
-    if 'tab_selected_text' not in result:
-        result['tab_selected_text'] = result.get('default', (210, 210, 210))
 
     return result
 
