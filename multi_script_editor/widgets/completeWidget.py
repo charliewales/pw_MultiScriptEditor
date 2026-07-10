@@ -9,9 +9,6 @@ import managers
 
 class completeMenuClass(QListWidget):
     def __init__(self, parent=None, editor=None):
-        # if managers.context == 'hou':
-        #     super(completeMenuClass, self).__init__(managers.main_parent or parent)
-        # else:
         super(completeMenuClass, self).__init__(parent)
         self.setAlternatingRowColors(1)
         self.lineHeight = 18

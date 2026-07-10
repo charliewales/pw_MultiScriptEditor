@@ -1,6 +1,7 @@
-main = __import__('__main__')
 import platform
+import sys, os
 
+main = __import__('__main__')
 
 #######  COMPLETERS  ##############################################
 
@@ -64,22 +65,21 @@ autoImport = dict(
 )
 mayaDragTempData = 'maya_temp_drag_empty_Data'
 
-main_parent = None
 context = None
 
-if 'hou' in main.__dict__:
-    from managers import _houdini
+
+exec_name = os.path.basename(sys.executable).lower()
+
+if 'hou' in main.__dict__ or 'houdini' in exec_name or 'hindie' in exec_name or 'hython' in exec_name:
     context = 'hou'
-    main_parent = _houdini.getMainWindow()
-elif 'cmds' in main.__dict__:
-    from managers import _maya
+    from managers import _houdini
+elif 'cmds' in main.__dict__ or 'maya' in exec_name:
     context = 'maya'
-    main_parent = _maya.getMayaWindow()
-elif 'nuke' in main.__dict__:
-    from managers import _nuke
-    main_parent = _nuke.getMainWindow()
+    from managers import _maya
+elif 'nuke' in main.__dict__ or 'nuke' in exec_name:
     context = 'nuke'
-elif 'MaxPlus' in main.__dict__:
+    from managers import _nuke
+elif 'MaxPlus' in main.__dict__ or '3dsmax' in exec_name:
     context = 'max'
 
 

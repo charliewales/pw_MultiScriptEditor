@@ -1,7 +1,6 @@
 import json
 import os
 import codecs
-from managers import context
 from vendor.Qt.QtGui import QFont
 class SettingsModel:
     settings_filename = 'pw_scriptEditor_pref.json'
@@ -12,18 +11,32 @@ class SettingsModel:
 
     def _get_user_pref_folder(self):
         appData = None
-        if context == 'hou':
-            appData = os.getenv('HOUDINI_USER_PREF_DIR')
-        elif context == 'maya':
+        import managers
+        if managers.context == 'hou':
+            try:
+                import hou
+                appData = hou.homeHoudiniDirectory()
+            except Exception:
+                appData = os.getenv('HOUDINI_USER_PREF_DIR')
+        elif managers.context == 'maya':
             appData = os.getenv('MAYA_APP_DIR')
-        elif context == 'nuke':
+        elif managers.context == 'nuke':
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = os.path.join(home, '.nuke')
-        elif context == 'max':
-            import MaxPlus
-            appData = os.path.dirname(MaxPlus.PathManager.GetTempDir())
+        elif managers.context == 'max':
+            try:
+                import MaxPlus
+                appData = os.path.dirname(MaxPlus.PathManager.GetTempDir())
+            except Exception:
+                pass
+        
         if not appData:
-            appData = os.getenv('HOME') or os.path.expanduser('~')
+            home = os.getenv('HOME') or os.path.expanduser('~')
+            docs = os.path.join(home, 'Documents')
+            if os.path.exists(docs):
+                appData = docs
+            else:
+                appData = home
         return appData
 
     def _get_settings_file_path(self):

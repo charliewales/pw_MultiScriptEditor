@@ -1720,7 +1720,6 @@ def show():
     if not app:
         app = QApplication()
 
-    # w = create_editor_instance(managers.main_parent)
     w = create_editor_instance()
     w.show()
 
