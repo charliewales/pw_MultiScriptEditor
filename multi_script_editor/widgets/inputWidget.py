@@ -100,7 +100,6 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             pass
         else:
             self.autocomplete_timer.start(200)
-        self.syntax_timer.start(1000)
 
     def set_start_font(self, font_d=None):
         if not font_d:
