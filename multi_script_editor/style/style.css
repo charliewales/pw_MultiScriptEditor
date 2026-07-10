@@ -581,7 +581,7 @@ QListWidget#outlineList
 QLineEdit#outlineFilter
 {
     background-color: rgb[outline_background];
-    color: rgb[tab_text];
+    color: rgb[tab_selected_text];
     border: 1px solid rgb[highlight_line];
     padding: 2px;
 }
