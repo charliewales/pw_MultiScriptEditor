@@ -4,49 +4,6 @@ import os, re
 
 
 defaultColors = dict(
-        background = (40,40,40),
-        outline_background = (40,40,40),
-        window = (50, 50, 50),
-        output_background = (40,40,40),
-        keywords = (65,255,130),
-        digits = (250,255,62),
-        definition = (255,160,250),
-        operator = (230, 220, 110),
-        extra = (110,180,230),
-        methods = (120, 190, 205),
-        comment = (110,100,100),
-        string = (245,165,18),
-        docstring = (130,160,75),
-        boolean = (160,220,120),
-        brace = (235,235,195),
-        completer_text=(200,200,200),
-        completer_selected_text= (105,105,105),
-        completer_hover_text= (255,255,255),
-        completer_background=(59,59,59),
-        completer_alt_background= (65,65,65),
-        completer_hover_background= (85,85,85),
-        completer_selected_background= (123,123,123),
-        default=(210,210,210),
-        whitespace=(70,70,70),
-        highlight_line=(85, 85, 85),
-        tab_background=(50, 50, 50),
-        tab_border=(40, 40, 40),
-        tab_selected_background=(40, 40, 40),
-        tab_selected_border=(40, 40, 40),
-        tab_hover_background=(85, 85, 85),
-        tab_hover_border=(85, 85, 85),
-        tab_text=(210, 210, 210),
-        tab_selected_text=(210, 210, 210),
-        tab_radius=12,
-        use_theme_font_on_completer=True,
-        use_theme_font_on_menus=False,
-        use_theme_font_on_outline=True,
-        use_theme_font_on_status_bar=False,
-        use_theme_font_on_tab_label=True,
-)
-
-predefinedThemes = {
-    "Multi Script Editor": dict(
         background=(40, 40, 40),
         outline_background=(40, 40, 40),
         window=(50, 50, 50),
@@ -87,7 +44,10 @@ predefinedThemes = {
         use_theme_font_on_status_bar=False,
         use_theme_font_on_tab_label=True,
         tab_hover_text=(210, 210, 210),
-    ),
+)
+
+predefinedThemes = {
+    "Multi Script Editor": defaultColors,
     "One Dark Pro": dict(
         background=(40, 44, 52),
         outline_background=(40, 44, 52),
