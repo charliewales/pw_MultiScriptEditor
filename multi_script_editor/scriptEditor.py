@@ -254,17 +254,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             current_theme = self._current_settings.get('theme', 'Multi Script Editor')
             colors = design.getColors(current_theme)
             out_font_data = font_data.copy()
+            font_mult = 0.8
             if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
             else:
-                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * 0.8))
+                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * font_mult))
             self.out.set_start_font(out_font_data)
 
             outline_font = QFont(font)
             if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
+                outline_font.setPointSize(max(1, int(outline_font.pointSize() * font_mult)))
             elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
+                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * font_mult)))
             self.outline_list.setFont(outline_font)
             self.current_outline_font = outline_font
             self.outline_filter.setFont(outline_font)
@@ -485,9 +486,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         css = design.applyColorToMainStyle(colors)
         if css:
             self.setStyleSheet(css)
-            
+
             # Sync workaround for PySide2: set palette explicitly so it doesn't default to black
-            fg = colors.get('tab_selected_text')
+            fg = colors.get('tab_text')
             if fg:
                 color = QColor(*fg) if isinstance(fg, (list, tuple)) else QColor(fg)
                 pal = self.outline_filter.palette()
@@ -495,7 +496,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if hasattr(QPalette, 'PlaceholderText'):
                     pal.setColor(QPalette.PlaceholderText, color)
                 self.outline_filter.setPalette(pal)
-                
+
             if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
 
