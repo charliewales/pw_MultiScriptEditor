@@ -464,7 +464,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if self.statusBar():
                 self.statusBar().setFont(status_bar_font)
-                for lbl in (self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                for lbl in (self.lbl_msg, self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
                     lbl.setFont(status_bar_font)
 
         s = self._current_settings
