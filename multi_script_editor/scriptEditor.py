@@ -19,7 +19,7 @@ from icons import *
 from vendor.help import get_help
 
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor
+from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
@@ -485,6 +485,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         css = design.applyColorToMainStyle(colors)
         if css:
             self.setStyleSheet(css)
+            
+            # Sync workaround for PySide2: set palette explicitly so it doesn't default to black
+            fg = colors.get('tab_selected_text')
+            if fg:
+                color = QColor(*fg) if isinstance(fg, (list, tuple)) else QColor(fg)
+                pal = self.outline_filter.palette()
+                pal.setColor(QPalette.Text, color)
+                if hasattr(QPalette, 'PlaceholderText'):
+                    pal.setColor(QPalette.PlaceholderText, color)
+                self.outline_filter.setPalette(pal)
+                
             if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
 
