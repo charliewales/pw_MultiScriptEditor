@@ -91,6 +91,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
             m.setWindowTitle('MSE {0}'.format(self.ver))
+
         # variables
         self._current_settings = {}
         self.namespace = __import__('__main__').__dict__
@@ -358,7 +359,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def applyTheme(self, name):
         qss = design.editorStyle(name)
         colors = design.getColors(name)
-        
+
         main_css = design.applyColorToMainStyle(colors)
         if main_css:
             self.menubar.setStyleSheet(main_css)

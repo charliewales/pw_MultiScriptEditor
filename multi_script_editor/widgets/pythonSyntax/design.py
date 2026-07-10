@@ -40,6 +40,7 @@ predefinedThemes = {
     'Multi Script Editor': defaultColors,
     'One Dark Pro': dict(
         background=(40, 44, 52),
+        window=(33, 37, 43),
         output_background=(40, 44, 52),
         keywords=(198, 120, 221),
         digits=(209, 154, 102),
@@ -65,6 +66,7 @@ predefinedThemes = {
     ),
     'Dracula Official': dict(
         background=(40, 42, 54),
+        window=(33, 34, 44),
         output_background=(40, 42, 54),
         keywords=(255, 121, 198),
         digits=(189, 147, 249),
@@ -90,6 +92,7 @@ predefinedThemes = {
     ),
     'Catppuccin': dict(
         background=(36, 39, 58),
+        window=(30, 32, 48),
         output_background=(36, 39, 58),
         keywords=(198, 160, 246),
         digits=(245, 169, 127),
@@ -115,6 +118,7 @@ predefinedThemes = {
     ),
     'Tokyo Night': dict(
         background=(26, 27, 38),
+        window=(22, 22, 30),
         output_background=(26, 27, 38),
         keywords=(187, 154, 247),
         digits=(255, 158, 100),
@@ -140,6 +144,7 @@ predefinedThemes = {
     ),
     'Nord': dict(
         background=(46, 52, 64),
+        window=(59, 66, 82),
         output_background=(46, 52, 64),
         keywords=(129, 161, 193),
         digits=(180, 142, 173),
@@ -165,6 +170,7 @@ predefinedThemes = {
     ),
     'Monokai Pro': dict(
         background=(45, 42, 46),
+        window=(34, 31, 34),
         output_background=(45, 42, 46),
         keywords=(255, 97, 136),
         digits=(171, 157, 242),
@@ -190,6 +196,7 @@ predefinedThemes = {
     ),
     'Monokai': dict(
         background=(39, 40, 34),
+        window=(30, 31, 28),
         output_background=(39, 40, 34),
         keywords=(249, 38, 114),
         digits=(174, 129, 255),
@@ -215,6 +222,7 @@ predefinedThemes = {
     ),
     'Solarized Dark': dict(
         background=(0, 43, 54),
+        window=(7, 54, 66),
         output_background=(0, 43, 54),
         keywords=(133, 153, 0),
         digits=(42, 161, 152),
@@ -240,6 +248,7 @@ predefinedThemes = {
     ),
     'Kimbie Dark': dict(
         background=(34, 26, 15),
+        window=(54, 39, 18),
         output_background=(34, 26, 15),
         keywords=(220, 57, 88),
         digits=(247, 154, 50),
@@ -266,6 +275,7 @@ predefinedThemes = {
 
     'Ayu Mirage': dict(
         background=(33, 39, 51),
+        window=(25, 30, 42),
         output_background=(33, 39, 51),
         keywords=(255, 167, 89),
         digits=(255, 204, 102),
@@ -291,6 +301,7 @@ predefinedThemes = {
     ),
     'Sonokai': dict(
         background=(44, 46, 52),
+        window=(34, 36, 41),
         output_background=(44, 46, 52),
         keywords=(255, 109, 126),
         digits=(245, 151, 98),
@@ -316,6 +327,7 @@ predefinedThemes = {
     ),
     'GitHub Dark': dict(
         background=(13, 17, 23),
+        window=(1, 4, 9),
         output_background=(13, 17, 23),
         keywords=(255, 123, 114),
         digits=(121, 192, 255),
