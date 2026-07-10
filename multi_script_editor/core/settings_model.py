@@ -29,14 +29,10 @@ class SettingsModel:
                 appData = os.path.dirname(MaxPlus.PathManager.GetTempDir())
             except Exception:
                 pass
-        
-        if not appData:
+        else:
             home = os.getenv('HOME') or os.path.expanduser('~')
-            docs = os.path.join(home, 'Documents')
-            if os.path.exists(docs):
-                appData = docs
-            else:
-                appData = home
+            appData = home
+
         return appData
 
     def _get_settings_file_path(self):
