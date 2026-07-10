@@ -452,21 +452,6 @@ QTabBar::tab:selected {
     border-bottom-color: rgb[tab_selected_background];
 }
 
-QTabBar::close-button {
-    image: url("../icons/close_tab_grey.png");
-    width: 14px;
-    height: 14px;
-    margin-right: 4px;
-}
-
-QTabBar::close-button:hover {
-    image: url("../icons/close_tab.png");
-    border-radius: 6px;
-}
-
-QTabBar::close-button:selected {
-    image: url("../icons/close_tab.png");
-}
 
 QTabBar QToolButton::right-arrow {
     image: url("../icons/right_arrow.png");
