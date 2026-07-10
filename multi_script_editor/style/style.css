@@ -88,20 +88,21 @@ QMainWindow::separator:hover
 QMenuBar::item
 {
     background: transparent;
+    color: rgb[tab_selected_text];
 }
 
 QMenuBar::item:selected
 {
     /*background: transparent;*/
     background-color: rgb[highlight_line];
-    color: white;
+    color: rgb[tab_selected_text];
 
 }
 
 QMenuBar::item:pressed
 {
     background-color: rgb[highlight_line];
-    color: white;
+    color: rgb[tab_selected_text];
 }
 
 
