@@ -1264,6 +1264,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if w and hasattr(w, 'file_path') and w.file_path:
              ext = os.path.splitext(w.file_path)[1].lower()
 
+        if hasattr(edit, 'syntax_errors') and edit.syntax_errors:
+            self.outline_list.clear()
+            return
+
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
