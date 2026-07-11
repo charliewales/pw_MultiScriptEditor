@@ -97,6 +97,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.textSize_spb.valueChanged.connect(self.updateExample)
         self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.textSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
+        self.lineNumbersSize_spb.valueChanged.connect(self.updateExample)
+        self.lineNumbersSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.lineNumbersSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.menuSize_spb.valueChanged.connect(self.updateExample)
         self.menuSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.menuSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
@@ -208,6 +211,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             font_size = default_font.get('pointSize', 12)
             self.textSize_spb.setValue(int(font_size * 0.9))
         self.textSize_spb.blockSignals(False)
+
+        self.lineNumbersSize_spb.blockSignals(True)
+        if 'line_numbers_text_size' in colors:
+            self.lineNumbersSize_spb.setValue(int(colors['line_numbers_text_size']))
+        else:
+            default_font = self.get_settings().get('font', {})
+            font_size = default_font.get('pointSize', 12)
+            self.lineNumbersSize_spb.setValue(max(1, int(font_size * 0.8)))
+        self.lineNumbersSize_spb.blockSignals(False)
 
         self.menuSize_spb.blockSignals(True)
         if 'menu_text_size' in colors:
@@ -384,6 +396,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             item = self.colors_lwd.item(i)
             colors[item.text()] = item.data(32)
         colors['textsize'] = max(1, self.textSize_spb.value())
+        colors['line_numbers_text_size'] = max(1, self.lineNumbersSize_spb.value())
         colors['menu_text_size'] = max(1, self.menuSize_spb.value())
         colors['tab_radius'] = self.tabRadius_spb.value()
         colors['tab_text_size'] = max(1, self.tabSize_spb.value())
@@ -514,8 +527,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if not sender: return
         menu = QMenu(self)
         ratio_1 = (None,)
-        ratio = 1.0 if sender in ratio_1 else 0.9
-        ratio_str = "100%" if ratio == 1.0 else "90%"
+        ratio_08 = (self.lineNumbersSize_spb,)
+        ratio = 1.0 if sender in ratio_1 else (0.8 if sender in ratio_08 else 0.9)
+        ratio_str = "100%" if ratio == 1.0 else ("80%" if ratio == 0.8 else "90%")
         reset_action = QAction(f"Reset to Default ({ratio_str} of font)", self)
         reset_action.triggered.connect(lambda checked=False, s=sender, r=ratio: self.resetSizeToDefault(s, r))
         menu.addAction(reset_action)
@@ -553,6 +567,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def _resetAllFontSizes(self):
         pts = self._getBaseFontPointSize()
         self.textSize_spb.blockSignals(True)
+        self.lineNumbersSize_spb.blockSignals(True)
         self.menuSize_spb.blockSignals(True)
         self.outlineSize_spb.blockSignals(True)
         self.outputSize_spb.blockSignals(True)
@@ -562,6 +577,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         font_mult = 0.9
         self.textSize_spb.setValue(max(1, int(pts * font_mult)))
+        self.lineNumbersSize_spb.setValue(max(1, int(pts * 0.8)))
         self.menuSize_spb.setValue(max(1, int(pts * font_mult)))
         self.outlineSize_spb.setValue(max(1, int(pts * font_mult)))
         self.outputSize_spb.setValue(max(1, int(pts * font_mult)))
@@ -570,6 +586,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.symbolsSize_spb.setValue(max(1, int(pts * font_mult)))
 
         self.textSize_spb.blockSignals(False)
+        self.lineNumbersSize_spb.blockSignals(False)
         self.menuSize_spb.blockSignals(False)
         self.outlineSize_spb.blockSignals(False)
         self.outputSize_spb.blockSignals(False)

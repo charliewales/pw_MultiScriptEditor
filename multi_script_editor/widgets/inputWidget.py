@@ -209,6 +209,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                 self.completer.updateStyle(colors)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
+        self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
         highlighter_class = syntaxHighLighter.PythonHighlighterClass
 
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
@@ -241,6 +242,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.blockSignals(True)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
+        self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
         self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
         qss = design.applyColorToMainStyle(colors)
         self.setStyleSheet(qss)

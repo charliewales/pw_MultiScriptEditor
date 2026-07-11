@@ -32,11 +32,17 @@ class lineNumberBarClass(QWidget):
         
         pt_size = font.pointSizeF()
         if pt_size > 0:
-            font.setPointSizeF(max(1.0, pt_size * 0.8))
+            if hasattr(self.edit, '_line_num_size_cache') and self.edit._line_num_size_cache is not None:
+                font.setPointSizeF(float(self.edit._line_num_size_cache))
+            else:
+                font.setPointSizeF(max(1.0, pt_size * 0.8))
         else:
             px_size = font.pixelSize()
             if px_size > 0:
-                font.setPixelSize(max(1, int(px_size * 0.8)))
+                if hasattr(self.edit, '_line_num_size_cache') and self.edit._line_num_size_cache is not None:
+                    font.setPixelSize(self.edit._line_num_size_cache)
+                else:
+                    font.setPixelSize(max(1, int(px_size * 0.8)))
         
         fm = QFontMetrics(font)
         text_width = fm.horizontalAdvance(str(self.highest_line) + "0") if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line) + "0")
@@ -79,11 +85,17 @@ class lineNumberBarClass(QWidget):
         
         pt_size = font.pointSizeF()
         if pt_size > 0:
-            font.setPointSizeF(max(1.0, pt_size * 0.8))
+            if hasattr(self.edit, '_line_num_size_cache') and self.edit._line_num_size_cache is not None:
+                font.setPointSizeF(float(self.edit._line_num_size_cache))
+            else:
+                font.setPointSizeF(max(1.0, pt_size * 0.8))
         else:
             px_size = font.pixelSize()
             if px_size > 0:
-                font.setPixelSize(max(1, int(px_size * 0.8)))
+                if hasattr(self.edit, '_line_num_size_cache') and self.edit._line_num_size_cache is not None:
+                    font.setPixelSize(self.edit._line_num_size_cache)
+                else:
+                    font.setPixelSize(max(1, int(px_size * 0.8)))
         
         # update fm for paint
         font_metrics = QFontMetrics(font)
