@@ -36,6 +36,7 @@ defaultColors = dict(
         tab_hover_border=(85, 85, 85),
         tab_text=(128, 128, 128),
         tab_selected_text=(200, 200, 200),
+        status_bar_text=(200, 200, 200),
         line_num_text=(200, 200, 200),
         tab_radius=12,
         use_theme_font_on_completer=True,
@@ -541,7 +542,10 @@ def getColors(theme=False):
         result = {k:v for k,v in predefinedThemes[theme].items()}
         for k, v in defaultColors.items():
             if k not in result:
-                result[k] = v
+                if k == 'status_bar_text' and 'tab_selected_text' in result:
+                    result[k] = result['tab_selected_text']
+                else:
+                    result[k] = v
     else:
         result = {k:v for k,v in defaultColors.items()}
 
@@ -550,7 +554,8 @@ def getColors(theme=False):
             if colors:
                 for k, v in colors.items():
                     result[k] = v
-
+                if 'status_bar_text' not in colors and 'tab_selected_text' in colors:
+                    result['status_bar_text'] = colors['tab_selected_text']
 
     return result
 
