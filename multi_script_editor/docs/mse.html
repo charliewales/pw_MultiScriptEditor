@@ -88,32 +88,40 @@
             <span class="desc">Removes the currently selected text from the document and places it into the system clipboard.</span></li>
         <li><strong>Paste</strong><span class="shortcut">CTRL + V</span>
             <span class="desc">Inserts the current content of the system clipboard at the cursor's location.</span></li>
-        <li><strong>Delete line(s)</strong><span class="shortcut">CTRL + D</span>
-            <span class="desc">Immediately deletes the entire line where the text cursor is currently located, without the need to select the whole line first.</span></li>
-        <li><strong>Duplicate line(s)</strong><span class="shortcut">CTRL + SHIFT + D</span>
-            <span class="desc">Duplicates the current line (if no text is selected) or the currently selected text block, inserting it immediately below the original.</span></li>
-        <li><strong>Move line(s) up</strong><span class="shortcut">ALT + UP</span>
-            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position upwards in the document.</span></li>
-        <li><strong>Move line(s) down</strong><span class="shortcut">ALT + DOWN</span>
-            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
         <li><strong>Add quotes</strong><span class="shortcut">ALT + Q</span>
             <span class="desc">Wraps the currently selected text with quotation marks. Very useful for quickly converting variables or text into string literals.</span></li>
         <li><strong>Comment</strong><span class="shortcut">ALT + C</span>
             <span class="desc">Toggles the Python comment state (using <code>#</code>) for the current line or selected block of lines, allowing you to quickly comment out or uncomment code blocks.</span></li>
+        <li><strong>Delete line(s)</strong><span class="shortcut">CTRL + D</span>
+            <span class="desc">Immediately deletes the current line or all lines spanned by the current selection.</span></li>
+        <li><strong>Duplicate line(s)</strong><span class="shortcut">CTRL + SHIFT + D</span>
+            <span class="desc">Duplicates the current line or the selected text block, inserting it immediately below the original.</span></li>
+        <li><strong>Move line(s) up</strong><span class="shortcut">ALT + UP</span>
+            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position upwards in the document.</span></li>
+        <li><strong>Move line(s) down</strong><span class="shortcut">ALT + DOWN</span>
+            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
+        <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
+            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
         <li><strong>Select next occurrence</strong><span class="shortcut">CTRL + ALT + D</span>
             <span class="desc">Finds and selects the next instance of the currently selected word (or the word under the cursor), enabling multi-cursor editing for rapid refactoring.</span></li>
         <li><strong>Select all occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>
             <span class="desc">Selects every instance of the current word throughout the entire document, placing a cursor at each instance for simultaneous editing.</span></li>
-        <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
-            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
         <li><strong>Go to line</strong><span class="shortcut">CTRL + G</span>
             <span class="desc">Prompts for a line number and moves the cursor to that specific line in the editor, centering the cursor vertically in the viewport.</span></li>
         <li><strong>Go to symbol</strong><span class="shortcut">CTRL + R</span>
-            <span class="desc">Opens a quick navigation palette to fuzzy-search and jump to symbols (functions, classes) in the current editor file.</span></li>
+            <span class="desc">Opens a quick navigation palette to fuzzy-search and jump to symbols (functions, classes) in the current editor file. Automatically clears the outline view if syntax errors are detected.</span></li>
         <li><strong>Tab to spaces</strong>
             <span class="desc">Converts all tab characters in the current document to standard space characters (typically 4 spaces) to ensure PEP 8 compliance and avoid indentation errors.</span></li>
         <li><strong>Spaces to tab</strong>
             <span class="desc">Converts groups of 4 spaces into standard tab characters in the current document to meet format requirements.</span></li>
+        <li><strong>Trim trailing whitespace</strong><span class="shortcut">ALT + SHIFT + W</span>
+            <span class="desc">Trims trailing spaces and tab characters from the ends of all lines in the active document immediately.</span></li>
+        <li><strong>Show autocompletion</strong><span class="shortcut">CTRL + SPACE</span>
+            <span class="desc">Manually triggers the autocomplete suggestions popup list at the current cursor position.</span></li>
+        <li><strong>Highlight all occurrences</strong>
+            <span class="desc">Toggles automatic visual highlighting of all matching occurrences of the selected word throughout the active document.</span></li>
+        <li><strong>Trim auto whitespace</strong>
+            <span class="desc">Toggles automatic trimming of trailing whitespace whenever you save a script.</span></li>
         <li><strong>Render whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
             <span class="desc">Toggles the visibility of whitespace characters (spaces as dots, tabs as arrows) in the editor to aid in formatting and detecting trailing spaces.</span></li>
         <li><strong>Word wrap</strong><span class="shortcut">ALT + W</span>
@@ -156,6 +164,8 @@
             <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
         <li><strong>Show outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
             <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
+        <li><strong>Output at the bottom</strong>
+            <span class="desc">Toggles the layout position of the output console, placing it at the bottom of the window when checked.</span></li>
         <li><strong>Syntax check</strong>
             <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
         <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
@@ -206,7 +216,7 @@
     <h3>Key Capabilities & Features:</h3>
     <ul>
         <li><strong>Interactive Color Customization:</strong>
-            <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly.</span>
+            <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly. Newly added customizable colors include <code>line_num_text</code> (for the line number bar text) and <code>status_bar_text</code> (for the status bar text).</span>
         </li>
         <li><strong>Typography & Font Customization per Theme:</strong>
             <span class="desc">You can define a custom font specifically for your theme. Clicking <strong>Choose Font...</strong> opens a dialog to select the font family, style, weight, and size. You can reset a custom font back to the application's global default by right-clicking the button and choosing <em>"Reset to default"</em>.</span>
@@ -215,6 +225,7 @@
             <span class="desc">Customize text sizes independently for different parts of the user interface:
                 <ul class="feature-list">
                     <li><strong>Text size:</strong> Adjusts the text size inside the code editor.</li>
+                    <li><strong>Line numbers:</strong> Adjusts the text size of the line number bar.</li>
                     <li><strong>Menu text size:</strong> Adjusts the text size of all menus.</li>
                     <li><strong>Tab labels:</strong> Adjusts the text size of the tab labels.</li>
                     <li><strong>Symbols:</strong> Adjusts the text size of symbols in the symbol search/navigation helper.</li>

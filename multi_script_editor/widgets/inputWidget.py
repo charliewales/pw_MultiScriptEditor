@@ -397,6 +397,19 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
 
             # auto indent
             add = self.getCurrentIndent()
+            
+            if hasattr(self.p, 'trimAutoWhitespace_act') and self.p.trimAutoWhitespace_act.isChecked():
+                cursor = self.textCursor()
+                block = cursor.block()
+                text = block.text()
+                stripped = text.rstrip(' \t')
+                diff = len(text) - len(stripped)
+                if diff > 0:
+                    c = QTextCursor(block)
+                    c.movePosition(QTextCursor.EndOfBlock)
+                    c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
+                    c.removeSelectedText()
+                    
             if add:
                 QTextEdit.keyPressEvent(self, event)
                 cursor = self.textCursor()
