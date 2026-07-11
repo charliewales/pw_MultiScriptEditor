@@ -50,4 +50,5 @@ icons = dict(
     goto_symbol=os.path.join(root, "goto_symbol.png"),
     spaces_to_tabs=os.path.join(root, "spaces_to_tabs.png"),
     snippets=os.path.join(root, "snippets.png"),
+    trim_whitespace=os.path.join(root, "trim_whitespace.png"),
 )

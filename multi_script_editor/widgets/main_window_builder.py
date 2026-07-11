@@ -36,6 +36,8 @@ class ScriptEditorUIBuilder:
         editor.exit_act.triggered.connect(editor.close)
         editor.tabToSpaces_act.triggered.connect(editor.tabsToSpaces)
         editor.showAutocomplete_act.triggered.connect(editor.show_autocompletion)
+        editor.trimWhitespace_act.triggered.connect(editor.trimTrailingWhitespace)
+        editor.trimWhitespace_act.setIcon(QIcon(icons['trim_whitespace']))
         editor.quit_act.triggered.connect(editor.close)
         editor.quit_act.setShortcut("Ctrl+Q")
         editor.quit_act.setIcon(QIcon(icons['quit']))

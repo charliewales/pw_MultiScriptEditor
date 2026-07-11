@@ -748,6 +748,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index < 0:
             return
         cont = self.tab.widget(index)
+        if self.trimAutoWhitespace_act.isChecked():
+            self.trimTrailingWhitespace()
+            
         text = self.tab.getCurrentText()
 
         d = os.getenv('HOME')
@@ -773,6 +776,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index < 0:
             return
         cont = self.tab.widget(index)
+        if self.trimAutoWhitespace_act.isChecked():
+            self.trimTrailingWhitespace()
+            
         text = self.tab.getCurrentText()
 
         # Check if the tab already has an associated file path
@@ -872,6 +878,33 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         text = text.replace('    ', '\t')
         self.tab.setCurrentText(text)
 
+    def trimTrailingWhitespace(self):
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+        cont = self.tab.widget(index)
+        if not hasattr(cont, 'edit'):
+            return
+            
+        edit = cont.edit
+        cursor = edit.textCursor()
+        cursor.beginEditBlock()
+        
+        document = edit.document()
+        for i in range(document.blockCount()):
+            block = document.findBlockByNumber(i)
+            text = block.text()
+            if text.endswith(' ') or text.endswith('\t'):
+                stripped = text.rstrip(' \t')
+                diff = len(text) - len(stripped)
+                if diff > 0:
+                    c = QTextCursor(block)
+                    c.movePosition(QTextCursor.EndOfBlock)
+                    c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
+                    c.removeSelectedText()
+                    
+        cursor.endEditBlock()
+
     def insertText(self, text):
         self.tab.addToCurrent(text)
 
@@ -908,6 +941,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         autocomplete = data.get('autocomplete', True)
         fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
         show_docstrings = data.get('show_docstrings', True)
+        trim_auto_whitespace = data.get('trim_auto_whitespace', False)
 
         if geo:
             self.move(geo[0], geo[1])
@@ -960,6 +994,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.autocomplete_act.setChecked(autocomplete)
         self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
         self.show_docstrings_act.setChecked(show_docstrings)
+        self.trimAutoWhitespace_act.setChecked(trim_auto_whitespace)
 
         f = self.out.font()
         f.setPointSize(outFontSize)
@@ -1017,6 +1052,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
+        trim_auto_whitespace = self.trimAutoWhitespace_act.isChecked()
 
         current_theme_name = settings.get('theme', 'Multi Script Editor')
         theme_colors = design.getColors(current_theme_name)
