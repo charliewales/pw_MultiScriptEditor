@@ -433,6 +433,13 @@ class tabWidgetClass(QTabWidget):
     def selectAllOccurrences(self):
         self.current().select_all_occurrences()
 
+    def nextSelection(self):
+        self.current().next_selection()
+
+    def previousSelection(self):
+        self.current().previous_selection()
+
+
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)

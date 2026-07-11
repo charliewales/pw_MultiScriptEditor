@@ -1121,6 +1121,20 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         finally:
             self._is_manual_multi_selecting = False
 
+    def next_selection(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.next_selection()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def previous_selection(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.previous_selection()
+        finally:
+            self._is_manual_multi_selecting = False
+
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return

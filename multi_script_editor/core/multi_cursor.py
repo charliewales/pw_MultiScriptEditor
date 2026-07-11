@@ -69,6 +69,9 @@ class MultiCursorManager:
         key = event.key()
         modifiers = event.modifiers()
 
+        if key in (Qt.Key_Control, Qt.Key_Shift, Qt.Key_Alt, Qt.Key_Meta):
+            return False
+
         if key == Qt.Key_Escape:
             self.clear()
             self.editor.highlight_current_line()
@@ -259,3 +262,63 @@ class MultiCursorManager:
                 self.editor.messageSignal.emit(f"{count} occurrences")
             else:
                 self.editor.messageSignal.emit(f"{count} occurrences selected")
+
+    def next_selection(self):
+        if not self.multi_cursors:
+            return
+        
+        main_cursor = self.editor.textCursor()
+        current_idx = -1
+        for i, mc in enumerate(self.multi_cursors):
+            if mc.position() == main_cursor.position() and mc.anchor() == main_cursor.anchor():
+                current_idx = i
+                break
+        
+        if current_idx == -1:
+            # If main cursor is not in the list, just go to the first one
+            next_idx = 0
+        else:
+            next_idx = (current_idx + 1) % len(self.multi_cursors)
+            
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = True
+        self.editor.setTextCursor(self.multi_cursors[next_idx])
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = False
+        self.editor.highlight_current_line()
+        self._center_cursor_in_editor()
+
+    def previous_selection(self):
+        if not self.multi_cursors:
+            return
+            
+        main_cursor = self.editor.textCursor()
+        current_idx = -1
+        for i, mc in enumerate(self.multi_cursors):
+            if mc.position() == main_cursor.position() and mc.anchor() == main_cursor.anchor():
+                current_idx = i
+                break
+        
+        if current_idx == -1:
+            prev_idx = len(self.multi_cursors) - 1
+        else:
+            prev_idx = (current_idx - 1) % len(self.multi_cursors)
+            
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = True
+        self.editor.setTextCursor(self.multi_cursors[prev_idx])
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = False
+        self.editor.highlight_current_line()
+        self._center_cursor_in_editor()
+
+    def _center_cursor_in_editor(self):
+        cursor = self.editor.textCursor()
+        block = cursor.block()
+        if block.isValid():
+            block_rect = self.editor.document().documentLayout().blockBoundingRect(block)
+            cursor_y = block_rect.center().y()
+            viewport_height = self.editor.viewport().height()
+            self.editor.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
+
+

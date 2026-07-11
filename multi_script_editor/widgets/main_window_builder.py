@@ -197,6 +197,17 @@ class ScriptEditorUIBuilder:
         editor.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
         editor.selectNextOccurrence_act.setIcon(QIcon(icons["replace"]))
 
+        editor.nextSelection_act.triggered.connect(editor.tab.nextSelection)
+        editor.nextSelection_act.setShortcut('Ctrl+J')
+        editor.nextSelection_act.setShortcutContext(Qt.WindowShortcut)
+        editor.nextSelection_act.setIcon(QIcon(icons["down"]))
+
+        editor.previousSelection_act.triggered.connect(editor.tab.previousSelection)
+        editor.previousSelection_act.setShortcut('Ctrl+Shift+J')
+        editor.previousSelection_act.setShortcutContext(Qt.WindowShortcut)
+        editor.previousSelection_act.setIcon(QIcon(icons["up"]))
+
+
         editor.selectAllOccurrences_act.triggered.connect(editor.tab.selectAllOccurrences)
         editor.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
         editor.selectAllOccurrences_act.setShortcutContext(Qt.WindowShortcut)
@@ -375,6 +386,8 @@ class ScriptEditorUIBuilder:
             editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
             editor.occurrencesCaseSensitive_act: "If enabled, case sensitive will be used when selecting occurrences",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
+            editor.nextSelection_act: "Move to the next selection",
+            editor.previousSelection_act: "Move to the previous selection",
             editor.selectAllOccurrences_act: "Select all occurrences of the current word",
             editor.always_ontop_act: "Keep the application window always on top",
             editor.dir_act: "Execute dir() on the selected text",
