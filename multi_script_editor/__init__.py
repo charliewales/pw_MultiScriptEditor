@@ -5,6 +5,10 @@ root = os.path.dirname(__file__)
 if not root in sys.path:
     sys.path.append(root)
 
+vendor_path = os.path.join(root, 'vendor')
+if not vendor_path in sys.path:
+    sys.path.insert(0, vendor_path)
+
 
 # HOUDINI
 def showHoudini(*args, **kwargs):

@@ -11,6 +11,11 @@ os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
 mse_version = "6.2.0"
 
+root_path = os.path.dirname(__file__)
+vendor_path = os.path.join(root_path, 'vendor')
+if vendor_path not in sys.path:
+    sys.path.insert(0, vendor_path)
+
 import managers
 from core.execution_manager import ExecutionManager
 from presenters.main_presenter import MainPresenter
