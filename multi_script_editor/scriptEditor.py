@@ -1016,6 +1016,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         highlight_all = data.get('highlight_all_occurrences', True)
         self.highlightAllOccurrences_act.setChecked(highlight_all)
 
+        occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
+        self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
+
         output_bottom = data.get('output_bottom', False)
         self.outputBottom_act.setChecked(output_bottom)
         self.toggleOutputBottom(output_bottom)
@@ -1053,6 +1056,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_outline = self.showOutline_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
+        occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
@@ -1098,6 +1102,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_outline=show_outline,
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
+            occurrences_case_sensitive=occurrences_case_sensitive,
             output_bottom=output_bottom,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
@@ -1283,6 +1288,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if w.edit.multi_cursor_manager.has_cursors():
                         w.edit.multi_cursor_manager.clear()
                         w.edit.highlight_current_line()
+
+    def toggleOccurrencesCaseSensitive(self, state=None):
+        if state is None:
+            state = self.occurrencesCaseSensitive_act.isChecked()
+        self._current_settings['occurrences_case_sensitive'] = state
+        self.saveSettings()
+        for i in range(self.tab.count()):
+            w = self.tab.widget(i)
+            if hasattr(w, 'edit'):
+                if self.highlightAllOccurrences_act.isChecked():
+                    w.edit.auto_select_all_occurrences()
 
     def updateOutline(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():

@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QTextCursor, QColor
+from vendor.Qt.QtGui import QTextCursor, QColor, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
 
 class MultiCursorManager:
@@ -190,10 +190,19 @@ class MultiCursorManager:
 
         last_cursor = self.multi_cursors[-1]
         start_pos = last_cursor.position()
-        found_cursor = self.editor.document().find(target_text, start_pos)
+        try:
+            from core.settings_model import SettingsModel
+            data = SettingsModel().read_settings() or {}
+            case_sensitive = data.get('occurrences_case_sensitive', False)
+        except ImportError:
+            case_sensitive = False
+
+        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+
+        found_cursor = self.editor.document().find(target_text, start_pos, options)
 
         if found_cursor.isNull() or found_cursor.position() <= start_pos:
-            found_cursor = self.editor.document().find(target_text, 0)
+            found_cursor = self.editor.document().find(target_text, 0, options)
 
         if not found_cursor.isNull():
             already_selected = False
@@ -226,9 +235,18 @@ class MultiCursorManager:
 
         self.clear()
         self.is_auto_populated = getattr(self.editor, '_is_auto_selecting', False)
+        try:
+            from core.settings_model import SettingsModel
+            data = SettingsModel().read_settings() or {}
+            case_sensitive = data.get('occurrences_case_sensitive', False)
+        except ImportError:
+            case_sensitive = False
+
+        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+
         start_pos = 0
         while True:
-            found_cursor = self.editor.document().find(target_text, start_pos)
+            found_cursor = self.editor.document().find(target_text, start_pos, options)
             if found_cursor.isNull() or found_cursor.position() <= start_pos:
                 break
             self.multi_cursors.append(found_cursor)

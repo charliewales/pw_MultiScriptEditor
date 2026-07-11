@@ -284,6 +284,7 @@ class ScriptEditorUIBuilder:
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
 
         editor.highlightAllOccurrences_act.triggered.connect(editor.toggleHighlightAllOccurrences)
+        editor.occurrencesCaseSensitive_act.triggered.connect(editor.toggleOccurrencesCaseSensitive)
 
         # Output Bottom toggle setup
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
@@ -372,6 +373,7 @@ class ScriptEditorUIBuilder:
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
             editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
+            editor.occurrencesCaseSensitive_act: "If enabled, case sensitive will be used when selecting occurrences",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.selectAllOccurrences_act: "Select all occurrences of the current word",
             editor.always_ontop_act: "Keep the application window always on top",
