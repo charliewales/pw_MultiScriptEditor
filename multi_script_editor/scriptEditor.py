@@ -1097,6 +1097,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
+            trim_auto_whitespace=trim_auto_whitespace,
         )
         settings.update(data)
         self.save_settings_requested.emit(settings)
