@@ -36,6 +36,7 @@ defaultColors = dict(
         tab_hover_border=(85, 85, 85),
         tab_text=(128, 128, 128),
         tab_selected_text=(200, 200, 200),
+        line_num_text=(200, 200, 200),
         tab_radius=12,
         use_theme_font_on_completer=True,
         use_theme_font_on_menus=False,
@@ -81,6 +82,7 @@ predefinedThemes = {
         tab_hover_border=(64, 69, 78),
         tab_text=(101, 108, 121),
         tab_selected_text=(191, 198, 211),
+        line_num_text=(191, 198, 211),
         tab_hover_text=(171, 178, 191),
     ),
     "Dracula Official": dict(
@@ -117,6 +119,7 @@ predefinedThemes = {
         tab_hover_border=(68, 71, 90),
         tab_text=(128, 128, 122),
         tab_selected_text=(248, 248, 242),
+        line_num_text=(248, 248, 242),
         tab_hover_text=(248, 248, 242),
     ),
     "Catppuccin": dict(
@@ -153,6 +156,7 @@ predefinedThemes = {
         tab_hover_border=(54, 58, 79),
         tab_text=(102, 111, 145),
         tab_selected_text=(202, 211, 245),
+        line_num_text=(202, 211, 245),
         tab_hover_text=(202, 211, 245),
     ),
     "Tokyo Night": dict(
@@ -189,6 +193,7 @@ predefinedThemes = {
         tab_hover_border=(41, 46, 66),
         tab_text=(92, 102, 145),
         tab_selected_text=(192, 202, 245),
+        line_num_text=(192, 202, 245),
         tab_hover_text=(192, 202, 245),
     ),
     "Nord": dict(
@@ -225,6 +230,7 @@ predefinedThemes = {
         tab_hover_border=(59, 66, 82),
         tab_text=(116, 122, 133),
         tab_selected_text=(216, 222, 233),
+        line_num_text=(216, 222, 233),
         tab_hover_text=(216, 222, 233),
     ),
     "Monokai Pro": dict(
@@ -261,6 +267,7 @@ predefinedThemes = {
         tab_hover_border=(64, 62, 65),
         tab_text=(152, 152, 150),
         tab_selected_text=(252, 252, 250),
+        line_num_text=(252, 252, 250),
         tab_hover_text=(252, 252, 250),
     ),
     "Monokai": dict(
@@ -297,6 +304,7 @@ predefinedThemes = {
         tab_hover_border=(62, 61, 50),
         tab_text=(148, 148, 142),
         tab_selected_text=(248, 248, 242),
+        line_num_text=(248, 248, 242),
         tab_hover_text=(248, 248, 242),
     ),
     "Solarized Dark": dict(
@@ -333,6 +341,7 @@ predefinedThemes = {
         tab_hover_border=(0, 43, 54),
         tab_text=(101, 118, 120),
         tab_selected_text=(131, 148, 150),
+        line_num_text=(131, 148, 150),
         tab_hover_text=(131, 148, 150),
     ),
     "Kimbie Dark": dict(
@@ -369,6 +378,7 @@ predefinedThemes = {
         tab_hover_border=(81, 65, 44),
         tab_text=(131, 95, 54),
         tab_selected_text=(211, 175, 134),
+        line_num_text=(211, 175, 134),
         tab_hover_text=(211, 175, 134),
     ),
     "Ayu Mirage": dict(
@@ -405,6 +415,7 @@ predefinedThemes = {
         tab_hover_border=(52, 63, 76),
         tab_text=(123, 124, 118),
         tab_selected_text=(203, 204, 198),
+        line_num_text=(203, 204, 198),
         tab_hover_text=(203, 204, 198),
     ),
     "Sonokai": dict(
@@ -441,6 +452,7 @@ predefinedThemes = {
         tab_hover_border=(63, 68, 81),
         tab_text=(126, 126, 127),
         tab_selected_text=(226, 226, 227),
+        line_num_text=(226, 226, 227),
         tab_hover_text=(226, 226, 227),
     ),
     "GitHub Dark": dict(
@@ -477,6 +489,7 @@ predefinedThemes = {
         tab_hover_border=(33, 38, 45),
         tab_text=(101, 109, 117),
         tab_selected_text=(201, 209, 217),
+        line_num_text=(201, 209, 217),
         tab_hover_text=(201, 209, 217),
     ),
     "Fluorescent": dict(
@@ -513,6 +526,7 @@ predefinedThemes = {
         tab_hover_border=(0, 127, 255),
         tab_text=(120, 120, 120),
         tab_selected_text=(220, 220, 220),
+        line_num_text=(220, 220, 220),
         tab_hover_text=(120, 120, 120),
     ),
 }

@@ -90,7 +90,10 @@ class lineNumberBarClass(QWidget):
         
         offset = font_metrics.ascent() + font_metrics.descent()*0.7
         color = painter.pen().color()
+        if hasattr(self.edit, '_line_num_text_cache') and self.edit._line_num_text_cache:
+            color = QColor.fromRgb(*self.edit._line_num_text_cache)
         painter.setFont(font)
+        painter.setPen(color)
         align = Qt.AlignRight | Qt.AlignVCenter
         while block.isValid():
             line_count += 1

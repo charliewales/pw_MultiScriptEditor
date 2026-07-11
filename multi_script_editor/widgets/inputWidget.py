@@ -87,7 +87,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
-        
+
         self.selectionChanged.connect(self.auto_select_all_occurrences)
 
         # Flag to prevent recursion
@@ -200,7 +200,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         except:
             pass
 
-    def applyHightLighter(self, theme=None, qss=None, ext=None):
+    def applyHightLighter(self, theme=None, ext=None):
         self.blockSignals(True)
         colors = None
         if theme or not theme =='Multi Script Editor':
@@ -208,6 +208,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             if self.completer:
                 self.completer.updateStyle(colors)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
+        self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         highlighter_class = syntaxHighLighter.PythonHighlighterClass
 
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
@@ -239,6 +240,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def applyPreviewStyle(self, colors):
         self.blockSignals(True)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
+        self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
         qss = design.applyColorToMainStyle(colors)
         self.setStyleSheet(qss)
@@ -908,11 +910,11 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def deleteLine(self):
         cursor = self.textCursor()
         cursor.beginEditBlock()
-        
+
         if cursor.hasSelection():
             start = cursor.selectionStart()
             end = cursor.selectionEnd()
-            
+
             if end > start:
                 cursor.setPosition(end)
                 if cursor.atBlockStart():
@@ -922,7 +924,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
             cursor.setPosition(end, QTextCursor.KeepAnchor)
             cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.KeepAnchor)
-            
+
             cursor.removeSelectedText()
             if cursor.atEnd() and cursor.position() > 0:
                 cursor.deletePreviousChar()
@@ -932,13 +934,13 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             current_cursor_pos = cursor.position()
             cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
             cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.KeepAnchor)
-            
+
             cursor.removeSelectedText()
             if cursor.atEnd() and cursor.position() > 0:
                 cursor.deletePreviousChar()
             else:
                 cursor.deleteChar()
-            
+
             max_pos = self.document().characterCount() - 1
             if current_cursor_pos > max_pos:
                 current_cursor_pos = max_pos
@@ -1107,7 +1109,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
-            
+
         data = SettingsModel().read_settings() or {}
         if data.get('highlight_all_occurrences', True):
             cursor = self.textCursor()
