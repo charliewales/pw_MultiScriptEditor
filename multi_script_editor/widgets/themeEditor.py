@@ -206,7 +206,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.textSize_spb.setValue(int(font_size * 0.8))
+            self.textSize_spb.setValue(int(font_size * 0.9))
         self.textSize_spb.blockSignals(False)
 
         self.menuSize_spb.blockSignals(True)
@@ -215,7 +215,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.menuSize_spb.setValue(int(font_size))
+            self.menuSize_spb.setValue(int(font_size * 0.9))
         self.menuSize_spb.blockSignals(False)
 
         # Update tab radius (or default to 12 if not present)
@@ -233,7 +233,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.tabSize_spb.setValue(int(font_size * 0.8))
+            self.tabSize_spb.setValue(int(font_size * 0.9))
         self.tabSize_spb.blockSignals(False)
 
         # Update outline text size (or default to 80% if not present)
@@ -243,7 +243,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.outlineSize_spb.setValue(int(font_size * 0.8))
+            self.outlineSize_spb.setValue(int(font_size * 0.9))
         self.outlineSize_spb.blockSignals(False)
 
         self.outputSize_spb.blockSignals(True)
@@ -252,7 +252,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.outputSize_spb.setValue(int(font_size * 0.8))
+            self.outputSize_spb.setValue(int(font_size * 0.9))
         self.outputSize_spb.blockSignals(False)
 
         self.symbolsSize_spb.blockSignals(True)
@@ -261,7 +261,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.symbolsSize_spb.setValue(int(font_size * 1.0))
+            self.symbolsSize_spb.setValue(int(font_size * 0.9))
         self.symbolsSize_spb.blockSignals(False)
 
         self.statusBarSize_spb.blockSignals(True)
@@ -270,7 +270,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             default_font = self.get_settings().get('font', {})
             font_size = default_font.get('pointSize', 12)
-            self.statusBarSize_spb.setValue(int(font_size * 0.8))
+            self.statusBarSize_spb.setValue(int(font_size * 0.9))
         self.statusBarSize_spb.blockSignals(False)
 
         self.completerFont_cb.blockSignals(True)
