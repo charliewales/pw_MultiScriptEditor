@@ -9,7 +9,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.2.0"
+mse_version = "6.3.0"
 
 root_path = os.path.dirname(__file__)
 vendor_path = os.path.join(root_path, 'vendor')
@@ -755,7 +755,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         cont = self.tab.widget(index)
         if self.trimAutoWhitespace_act.isChecked():
             self.trimTrailingWhitespace()
-            
+
         text = self.tab.getCurrentText()
 
         d = os.getenv('HOME')
@@ -783,7 +783,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         cont = self.tab.widget(index)
         if self.trimAutoWhitespace_act.isChecked():
             self.trimTrailingWhitespace()
-            
+
         text = self.tab.getCurrentText()
 
         # Check if the tab already has an associated file path
@@ -890,11 +890,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         cont = self.tab.widget(index)
         if not hasattr(cont, 'edit'):
             return
-            
+
         edit = cont.edit
         cursor = edit.textCursor()
         cursor.beginEditBlock()
-        
+
         document = edit.document()
         for i in range(document.blockCount()):
             block = document.findBlockByNumber(i)
@@ -907,7 +907,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     c.movePosition(QTextCursor.EndOfBlock)
                     c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
                     c.removeSelectedText()
-                    
+
         cursor.endEditBlock()
 
     def insertText(self, text):
