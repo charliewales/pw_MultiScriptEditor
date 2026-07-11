@@ -1872,7 +1872,7 @@ def _setup(module, extras):
 
     def _warn_import_error(exc, module):
         msg = str(exc)
-        if "No module named" in msg:
+        if "No module named" in msg or "DLL load failed" in msg:
             return
         _warn("ImportError(%s): %s" % (module, msg))
 
