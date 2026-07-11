@@ -680,10 +680,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     self.save_settings(settings)
                     self.fillUI(name)
                     self.updateUI()
-                    if self.parent() and hasattr(self.parent(), 'applyTheme'):
-                        self.parent().applyTheme(name)
-                        if hasattr(self.parent(), 'fillThemeMenu'):
-                            self.parent().fillThemeMenu()
+                    self.updateColors()
+                    if self.parent() and hasattr(self.parent(), 'fillThemeMenu'):
+                        self.parent().fillThemeMenu()
             except Exception as e:
                 QMessageBox.critical(self, "Error", "Could not import theme:\n" + str(e))
 
