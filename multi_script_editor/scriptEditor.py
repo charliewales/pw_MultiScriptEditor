@@ -647,6 +647,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
         tabs = []
         index = self.tab.currentIndex()
+        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         for item in range(self.tab.count()):
             widget = self.tab.widget(item)
             if not widget:
@@ -657,6 +658,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 size = widget.edit.fs
             else:
                 size = widget.edit.font().pointSize()
+                
+            size = max(1, size - zoom_delta)
+                
             tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
             tabs.append(tab)
         path = self._presenter.save_session(tabs)
