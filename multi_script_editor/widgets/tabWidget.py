@@ -25,6 +25,7 @@ class tabWidgetClass(QTabWidget):
         self.p = parent
         self.lastSearch = [0, None]
         self._ctrl_pressed = False
+        self._mru_tabs = []
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
@@ -84,6 +85,10 @@ class tabWidgetClass(QTabWidget):
             if event.key() == Qt.Key_Control and not self._ctrl_pressed:
                 self._ctrl_pressed = True
                 self.show_tab_numbers(True)
+            elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
+                if hasattr(self.p, 'showOpenTabs'):
+                    self.p.showOpenTabs()
+                return True
         elif event.type() == QEvent.KeyRelease:
             if event.key() == Qt.Key_Control and self._ctrl_pressed:
                 self._ctrl_pressed = False
@@ -171,6 +176,11 @@ class tabWidgetClass(QTabWidget):
         self.hideAllCompleters()
         if index >= 0:
             container = self.widget(index)
+            if hasattr(self, '_mru_tabs'):
+                if container in self._mru_tabs:
+                    self._mru_tabs.remove(container)
+                self._mru_tabs.insert(0, container)
+                
             if hasattr(container, 'edit'):
                 edit = container.edit
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
@@ -208,6 +218,7 @@ class tabWidgetClass(QTabWidget):
 
     def closeTab(self, i):
         removed = False
+        widget_to_remove = self.widget(i)
         if self.getCurrentText(i).strip():
             if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
                 self.removeTab(i)
@@ -216,8 +227,11 @@ class tabWidgetClass(QTabWidget):
             self.removeTab(i)
             removed = True
 
-        if removed and self.count() == 0:
-            self.addNewTab()
+        if removed:
+            if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
+                self._mru_tabs.remove(widget_to_remove)
+            if self.count() == 0:
+                self.addNewTab()
 
     def openMenu(self, pos=None):
         if pos is not None and not isinstance(pos, bool):

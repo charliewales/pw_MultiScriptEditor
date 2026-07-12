@@ -80,7 +80,7 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
             html_name = f'<span style="color:{c_kw}">{parts[0]}</span> <span style="color:{c_meth}">{parts[1]}</span>'
     elif ext in ['.css', '.scss', '.less']:
         html_name = f'<span style="color:{c_kw}">{name}</span>'
-    elif ext in ['.md', '.markdown']:
+    elif ext in ['.md', '.markdown', '.generic']:
         html_name = f'<span style="color:{c_kw}">{name}</span>'
     else:
         # Programming languages (Python, JS, C++, etc)

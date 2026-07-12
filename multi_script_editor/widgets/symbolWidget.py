@@ -4,9 +4,9 @@ from vendor.Qt.QtGui import QFontMetrics
 from widgets.outline_utils import HtmlDelegate
 
 class SymbolWidget(QDialog):
-    symbolSelected = Signal(int)  # emits the line number
+    symbolSelected = Signal(object)  # emits the line number or any other data
 
-    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py'):
+    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False):
         super(SymbolWidget, self).__init__(parent)
         self.setWindowFlags(Qt.Popup | Qt.FramelessWindowHint)
 
@@ -14,6 +14,7 @@ class SymbolWidget(QDialog):
         self.colors = colors
         self._font = font
         self.ext = ext
+        self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
 
         # Calculate dynamic size
         if font:
@@ -55,7 +56,7 @@ class SymbolWidget(QDialog):
 
         # Search field
         self.search_le = QLineEdit(self)
-        self.search_le.setPlaceholderText("Search symbol...")
+        self.search_le.setPlaceholderText(placeholder_text)
         self.search_le.textChanged.connect(self.filter_symbols)
         if font:
             self.search_le.setFont(font)
@@ -130,8 +131,43 @@ class SymbolWidget(QDialog):
             row = self.list_widget.currentRow()
             if row < self.list_widget.count() - 1:
                 self.list_widget.setCurrentRow(row + 1)
+        elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
+            row = self.list_widget.currentRow()
+            if row < self.list_widget.count() - 1:
+                self.list_widget.setCurrentRow(row + 1)
+            else:
+                self.list_widget.setCurrentRow(0)
+            return
+        elif event.key() == Qt.Key_Backtab and (event.modifiers() & Qt.ControlModifier):
+            row = self.list_widget.currentRow()
+            if row > 0:
+                self.list_widget.setCurrentRow(row - 1)
+            else:
+                self.list_widget.setCurrentRow(self.list_widget.count() - 1)
+            return
         elif event.key() in (Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End):
             self.list_widget.keyPressEvent(event)
         else:
             # Pass other keys to the search line edit
             self.search_le.keyPressEvent(event)
+
+    def navigate_next(self):
+        row = self.list_widget.currentRow()
+        if row < self.list_widget.count() - 1:
+            self.list_widget.setCurrentRow(row + 1)
+        else:
+            self.list_widget.setCurrentRow(0)
+
+    def navigate_prev(self):
+        row = self.list_widget.currentRow()
+        if row > 0:
+            self.list_widget.setCurrentRow(row - 1)
+        else:
+            self.list_widget.setCurrentRow(self.list_widget.count() - 1)
+
+    def keyReleaseEvent(self, event):
+        if self.auto_accept_on_ctrl_release and event.key() == Qt.Key_Control:
+            item = self.list_widget.currentItem()
+            if item:
+                self.on_item_clicked(item)
+        super(SymbolWidget, self).keyReleaseEvent(event)

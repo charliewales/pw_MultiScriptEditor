@@ -141,6 +141,16 @@ class ScriptEditorUIBuilder:
         editor.goToSymbol_act.setShortcutContext(Qt.WindowShortcut)
         editor.goToSymbol_act.setIcon(QIcon(icons['goto_symbol']))
 
+        recent_files_sc = QShortcut(QKeySequence('Ctrl+P'), editor)
+        recent_files_sc.setContext(Qt.ApplicationShortcut)
+        recent_files_sc.activated.connect(editor.showRecentFiles)
+        editor._recent_files_sc = recent_files_sc
+
+        open_tabs_sc = QShortcut(QKeySequence('Ctrl+Tab'), editor)
+        open_tabs_sc.setContext(Qt.ApplicationShortcut)
+        open_tabs_sc.activated.connect(editor.showOpenTabs)
+        editor._open_tabs_sc = open_tabs_sc
+
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
         editor.spacesToTabs_act.triggered.connect(editor.spacesToTabs)

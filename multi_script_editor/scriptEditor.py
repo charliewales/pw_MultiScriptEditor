@@ -50,8 +50,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.ver = f"{mse_version} · Python-{py_ver} · {vendor.Qt.__binding__}-{vendor.Qt.__binding_version__}"
         self.setupUi(self)
         self.icon_path = os.path.dirname(__file__)
-        window_icon = QIcon(icons["pw"])
-        self.setWindowIcon(QIcon(window_icon))
+
         self.setWindowTitle('Multi Script Editor v%s' % self.ver)
         self.setObjectName('pw_scriptEditor')
         # widgets
@@ -310,11 +309,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         for i in range(self.tab.count()):
             widget = self.tab.widget(i)
             file_path = getattr(widget, 'file_path', None)
-            
+
             edit = getattr(widget, 'edit', None)
             if edit and hasattr(edit, 'needs_loading_file'):
                 continue
-                
+
             if file_path and os.path.exists(file_path):
                 text = self.tab.getTabText(i)
                 file_text = None
@@ -325,17 +324,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         file_text = open(file_path, "r").read()
                     except Exception:
                         pass
-                
+
                 if file_text is not None:
                     if text.replace('\r\n', '\n') != file_text.replace('\r\n', '\n'):
                         unsaved_tabs.append((i, file_path))
-                        
+
         if unsaved_tabs:
             msg = "The following files have unsaved changes:\n\n"
             for _, fp in unsaved_tabs:
                 msg += "- %s\n" % os.path.basename(fp)
             msg += "\nDo you want to save them before exiting?"
-            
+
             res = QMessageBox.question(
                 self,
                 "Unsaved Changes",
@@ -343,7 +342,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
                 QMessageBox.Save
             )
-            
+
             if res == QMessageBox.Save:
                 for i, file_path in unsaved_tabs:
                     text = self.tab.getTabText(i)
@@ -401,7 +400,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             act.setChecked(t == current_theme)
             act.setStatusTip(f"Apply theme: {t}")
             self.theme_menu.addAction(act)
-            
+
         from core.settings_model import ThemesModel
         theme_settings = ThemesModel().read_settings()
         if theme_settings.get('colors'):
@@ -426,31 +425,31 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def restore_global_font_size(self):
         theme_name = self._current_settings.get('theme', 'Multi Script Editor')
-        
+
         # Load from disk
         disk_settings = self._presenter.settings_model.read_settings_from_disk()
-        
+
         self._temporary_zoom_delta = 0
         disk_font = disk_settings.get('font', {})
         self._current_settings['font'] = disk_font.copy()
-        
+
         from core.settings_model import ThemesModel
         theme_settings = ThemesModel().read_settings()
-        
+
         if theme_name not in design.predefinedThemes:
             disk_colors = None
             if 'colors' in theme_settings:
                 disk_colors = theme_settings['colors'].get(theme_name)
-                
+
             if 'colors' not in self._current_settings:
                 self._current_settings['colors'] = {}
-                
+
             if disk_colors:
                 self._current_settings['colors'][theme_name] = disk_colors
             else:
                 if theme_name in self._current_settings['colors']:
                     del self._current_settings['colors'][theme_name]
-        
+
         self.applyTheme(theme_name)
 
     def applyTheme(self, name):
@@ -460,8 +459,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         if zoom_delta:
             size_keys = [
-                'textsize', 'output_text_size', 'outline_text_size', 
-                'menu_text_size', 'status_bar_text_size', 'tab_text_size', 
+                'textsize', 'output_text_size', 'outline_text_size',
+                'menu_text_size', 'status_bar_text_size', 'tab_text_size',
                 'symbols_text_size', 'line_numbers_text_size', 'completer_text_size'
             ]
             for k in size_keys:
@@ -496,16 +495,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font_data = self._current_settings.get('font', {}).copy()
         else:
             font_data = font_data.copy()
-            
+
         if not font_data:
             font_data = {'pointSize': 10}
-            
+
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         if zoom_delta:
             font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
-            
+
         secondary_default = max(1, int(font_data.get('pointSize', 10) * 0.9))
-        
+
         if 'tab_text_size' not in colors and 'textsize' not in colors:
             colors_for_tab = colors.copy()
             colors_for_tab['tab_text_size'] = secondary_default
@@ -527,10 +526,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font_data = self._current_settings.get('font', {}).copy()
         else:
             font_data = font_data.copy()
-            
+
         if not font_data:
             font_data = {'pointSize': 10}
-            
+
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         if zoom_delta:
             font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
@@ -540,7 +539,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             out_font_data = font_data.copy()
             secondary_default = max(1, int(font_data.get('pointSize', 10) * 0.9))
-            
+
             if 'textsize' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['textsize']))
             elif 'output_text_size' in colors:
@@ -721,9 +720,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 size = widget.edit.fs
             else:
                 size = widget.edit.font().pointSize()
-                
+
             size = max(1, size - zoom_delta)
-                
+
             file_path = getattr(widget, 'file_path', None)
             tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path}
             tabs.append(tab)
@@ -886,6 +885,100 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.symbol_widget.symbolSelected.connect(_jump_to_line)
         self.symbol_widget.show()
         self.symbol_widget.search_le.setFocus()
+
+    def _show_generic_symbol_widget(self, symbols, callback, hide_search=False, placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False):
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                current_edit = self.tab.current()
+                if current_edit:
+                    font = QFont(current_edit.font())
+                else:
+                    font = QApplication.font("QListWidget")
+        else:
+            font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        self.generic_symbol_widget = symbolWidget.SymbolWidget(
+            symbols, self, self.out, qss=qss, font=font, colors=colors, ext='.generic',
+            placeholder_text=placeholder_text, auto_accept_on_ctrl_release=auto_accept_on_ctrl_release
+        )
+
+        if hide_search:
+            self.generic_symbol_widget.search_le.hide()
+
+        self.generic_symbol_widget.symbolSelected.connect(callback)
+        self.generic_symbol_widget.show()
+        if not hide_search:
+            self.generic_symbol_widget.search_le.setFocus()
+        else:
+            self.generic_symbol_widget.list_widget.setFocus()
+
+    def showRecentFiles(self):
+        if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
+            self.generic_symbol_widget.navigate_next()
+            return
+
+        recent = self._current_settings.get('recent_files', [])
+        if not recent:
+            return
+
+        symbols = []
+        for path in recent:
+            name = os.path.basename(path) + ' - ' + os.path.dirname(path)
+            symbols.append({'name': name, 'line': path, 'indent': 0})
+
+        self._show_generic_symbol_widget(
+            symbols, self.openRecentFile,
+            placeholder_text="Search files by name...",
+            auto_accept_on_ctrl_release=False
+        )
+
+    def showOpenTabs(self):
+        if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
+            self.generic_symbol_widget.navigate_next()
+            return
+
+        symbols = []
+        mru_widgets = getattr(self.tab, '_mru_tabs', [])
+        ordered_indices = []
+
+        for w in mru_widgets:
+            idx = self.tab.indexOf(w)
+            if idx >= 0 and idx not in ordered_indices:
+                ordered_indices.append(idx)
+
+        for i in range(self.tab.count()):
+            if i not in ordered_indices:
+                ordered_indices.append(i)
+
+        for i in ordered_indices:
+            text = self.tab.tabText(i)
+            widget = self.tab.widget(i)
+            path = widget.file_path if hasattr(widget, 'file_path') else ''
+            name = text
+            if path:
+                name += ' - ' + os.path.dirname(path)
+            symbols.append({'name': name, 'line': i, 'indent': 0})
+
+        self._show_generic_symbol_widget(
+            symbols, self.tab.switch_to_tab_index,
+            hide_search=True,
+            auto_accept_on_ctrl_release=True
+        )
+
+        if self.tab.count() > 1:
+            self.generic_symbol_widget.navigate_next()
 
     def saveScriptAs(self):
         index = self.tab.currentIndex()
@@ -1215,7 +1308,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     pt_size = self.tab.widget(0).edit.fs
                 else:
                     pt_size = editor_font.pixelSize()
-                    
+
             zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
             if zoom_delta:
                 pt_size = max(1, pt_size - zoom_delta)
@@ -1526,9 +1619,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 size = widget.edit.fs
             else:
                 size = widget.edit.font().pointSize()
-                
+
             size = max(1, size - zoom_delta)
-                
+
             tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
             tabs.append(tab)
         self._presenter.save_backup(tabs)
