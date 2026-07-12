@@ -253,32 +253,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 "weight": font.weight(),
                 "italic": font.italic()
             }
-            self.tab.set_start_font(font_data)
-
+            self._temporary_zoom_delta = 0
+            self._current_settings['font'] = font_data
             current_theme = self._current_settings.get('theme', 'Multi Script Editor')
-            colors = design.getColors(current_theme)
-            out_font_data = font_data.copy()
-            font_mult = 0.8
-            if 'output_text_size' in colors:
-                out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
-            elif 'textsize' in colors:
-                out_font_data['pointSize'] = max(1, int(colors['textsize']))
-            else:
-                out_font_data['pointSize'] = 10
-            self.out.set_start_font(out_font_data)
-
-            outline_font = QFont(font)
-            if 'outline_text_size' in colors:
-                outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
-            elif 'textsize' in colors:
-                outline_font.setPointSize(max(1, int(colors['textsize'])))
-            else:
-                outline_font.setPointSize(10)
-            self.outline_list.setFont(outline_font)
-            self.current_outline_font = outline_font
-            self.outline_filter.setFont(outline_font)
-            for i in range(self.outline_list.count()):
-                self.outline_list.item(i).setFont(outline_font)
+            self.applyTheme(current_theme)
             self.saveSettings()
 
     def clear_exec(self, exec_func):
@@ -379,9 +357,55 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     act.setStatusTip(f"Apply theme: {t}")
                     self.theme_menu.addAction(act)
 
+    def change_global_font_size(self, increase):
+        theme_name = self._current_settings.get('theme', 'Multi Script Editor')
+        delta = 1 if increase else -1
+
+        self._temporary_zoom_delta = getattr(self, '_temporary_zoom_delta', 0) + delta
+        self.applyTheme(theme_name)
+
+    def restore_global_font_size(self):
+        theme_name = self._current_settings.get('theme', 'Multi Script Editor')
+        
+        # Load from disk
+        disk_settings = self._presenter.settings_model.read_settings_from_disk()
+        
+        self._temporary_zoom_delta = 0
+        disk_font = disk_settings.get('font', {})
+        self._current_settings['font'] = disk_font.copy()
+        
+        if theme_name not in design.predefinedThemes:
+            disk_colors = None
+            if 'colors' in disk_settings:
+                disk_colors = disk_settings['colors'].get(theme_name)
+                
+            if 'colors' not in self._current_settings:
+                self._current_settings['colors'] = {}
+                
+            if disk_colors:
+                self._current_settings['colors'][theme_name] = disk_colors
+            else:
+                if theme_name in self._current_settings['colors']:
+                    del self._current_settings['colors'][theme_name]
+        
+        self.applyTheme(theme_name)
+
     def applyTheme(self, name):
         qss = design.editorStyle(name)
-        colors = design.getColors(name)
+        colors = design.getColors(name).copy()
+
+        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
+        if zoom_delta:
+            size_keys = [
+                'textsize', 'output_text_size', 'outline_text_size', 
+                'menu_text_size', 'status_bar_text_size', 'tab_text_size', 
+                'symbols_text_size', 'line_numbers_text_size', 'completer_text_size'
+            ]
+            for k in size_keys:
+                if k in colors:
+                    colors[k] = max(1, int(colors[k]) + zoom_delta)
+
+        self._current_colors_cache = colors
 
         main_css = design.applyColorToMainStyle(colors)
         if main_css:
@@ -404,8 +428,29 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.completer.setStyleSheet(qss)
             w.edit.setStyleSheet(qss)
 
-        self.tab._tab_text_size = colors.get('tab_text_size', None)
-        self.tab.apply_tab_style(colors)
+        font_data = colors.get('font')
+        if not font_data:
+            font_data = self._current_settings.get('font', {}).copy()
+        else:
+            font_data = font_data.copy()
+            
+        if not font_data:
+            font_data = {'pointSize': 10}
+            
+        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
+        if zoom_delta:
+            font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
+            
+        secondary_default = max(1, int(font_data.get('pointSize', 10) * 0.9))
+        
+        if 'tab_text_size' not in colors and 'textsize' not in colors:
+            colors_for_tab = colors.copy()
+            colors_for_tab['tab_text_size'] = secondary_default
+            self.tab._tab_text_size = secondary_default
+            self.tab.apply_tab_style(colors_for_tab)
+        else:
+            self.tab._tab_text_size = colors.get('tab_text_size', None)
+            self.tab.apply_tab_style(colors)
 
         if name not in design.predefinedThemes:
             self.set_font_act.setEnabled(False)
@@ -416,16 +461,29 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         font_data = colors.get('font')
         if not font_data:
-            font_data = self._current_settings.get('font', {})
+            font_data = self._current_settings.get('font', {}).copy()
+        else:
+            font_data = font_data.copy()
+            
+        if not font_data:
+            font_data = {'pointSize': 10}
+            
+        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
+        if zoom_delta:
+            font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
 
         if font_data:
             self.tab.set_start_font(font_data)
 
             out_font_data = font_data.copy()
+            secondary_default = max(1, int(font_data.get('pointSize', 10) * 0.9))
+            
             if 'textsize' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['textsize']))
+            elif 'output_text_size' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
             else:
-                out_font_data['pointSize'] = 10
+                out_font_data['pointSize'] = secondary_default
             self.out.set_start_font(out_font_data)
 
             base_font = QFont(font_data.get('family', ''))
@@ -441,7 +499,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             elif 'textsize' in colors:
                 outline_font.setPointSize(max(1, int(colors['textsize'])))
             else:
-                outline_font.setPointSize(10)
+                outline_font.setPointSize(secondary_default)
 
             self.outline_list.setFont(outline_font)
             self.current_outline_font = outline_font
@@ -465,7 +523,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if 'textsize' in colors:
                     menu_font.setPointSize(max(1, int(colors['textsize'])))
                 else:
-                    menu_font.setPointSize(10)
+                    menu_font.setPointSize(secondary_default)
 
             self.menubar.setFont(menu_font)
             for menu in self.findChildren(QMenu):
@@ -473,11 +531,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if 'status_bar_text_size' in colors:
                 status_bar_font.setPointSize(max(1, int(colors['status_bar_text_size'])))
-            elif colors.get('use_theme_font_on_status_bar', False):
-                if 'textsize' in colors:
+            else:
+                if 'textsize' in colors and colors.get('use_theme_font_on_status_bar', False):
                     status_bar_font.setPointSize(max(1, int(colors['textsize'])))
                 else:
-                    status_bar_font.setPointSize(10)
+                    status_bar_font.setPointSize(secondary_default)
 
             if self.statusBar():
                 self.statusBar().setFont(status_bar_font)
@@ -736,7 +794,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
-            font.setPointSize(int(colors['symbols_text_size']))
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
 
         self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors, ext=ext)
 
@@ -1087,6 +1147,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     pt_size = self.tab.widget(0).edit.fs
                 else:
                     pt_size = editor_font.pixelSize()
+                    
+            zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
+            if zoom_delta:
+                pt_size = max(1, pt_size - zoom_delta)
 
             font_data.update({
                 "family": editor_font.family(),
@@ -1701,7 +1765,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
-            font.setPointSize(int(colors['symbols_text_size']))
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors, mode="save")
 
@@ -1744,7 +1810,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
-            font.setPointSize(int(colors['symbols_text_size']))
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
 
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)

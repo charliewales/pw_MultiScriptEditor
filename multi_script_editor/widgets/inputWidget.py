@@ -149,16 +149,21 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def setFont(self, font):
         super(inputClass, self).setFont(font)
         if hasattr(self, 'completer') and self.completer:
-            completer_size = self.completer.font().pointSize()
             use_theme_font = True
+            colors = {}
             if hasattr(self, 'p') and self.p and hasattr(self.p, '_current_colors_cache'):
-                use_theme_font = self.p._current_colors_cache.get('use_theme_font_on_completer', True)
+                colors = self.p._current_colors_cache
+                use_theme_font = colors.get('use_theme_font_on_completer', True)
             if use_theme_font:
                 new_font = QFont(font)
             else:
                 new_font = QApplication.font("QListWidget")
-            if completer_size > 0:
-                new_font.setPointSize(completer_size)
+                
+            if 'completer_text_size' in colors:
+                new_font.setPointSize(max(1, int(colors['completer_text_size'])))
+            else:
+                new_font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+                
             self.completer.setFont(new_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
                 self.completer.doc_tooltip.setFont(new_font)
