@@ -549,13 +549,13 @@ def getColors(theme=False):
     else:
         result = {k:v for k,v in defaultColors.items()}
 
-        if 'colors' in settings:
-            colors = settings['colors'].get(theme)
-            if colors:
-                for k, v in colors.items():
-                    result[k] = v
-                if 'status_bar_text' not in colors and 'tab_selected_text' in colors:
-                    result['status_bar_text'] = colors['tab_selected_text']
+    if 'colors' in settings:
+        colors = settings['colors'].get(theme)
+        if colors:
+            for k, v in colors.items():
+                result[k] = v
+            if 'status_bar_text' not in colors and 'tab_selected_text' in colors:
+                result['status_bar_text'] = colors['tab_selected_text']
 
     return result
 

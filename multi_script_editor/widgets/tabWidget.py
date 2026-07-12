@@ -71,6 +71,10 @@ class tabWidgetClass(QTabWidget):
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
         sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
+
+        for i in range(1, 10):
+            QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
+
         self.currentChanged.connect(self.onTabChanged)
 
     def toggle_outline(self, state):
@@ -325,6 +329,10 @@ class tabWidgetClass(QTabWidget):
 
     def copy(self):
         self.current().copy()
+
+    def switch_to_tab_index(self, index):
+        if 0 <= index < self.count():
+            self.setCurrentIndex(index)
 
     def _apply_tab_font(self, font):
         use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)

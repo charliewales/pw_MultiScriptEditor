@@ -281,6 +281,11 @@ class ScriptEditorUIBuilder:
         editor.clearHistory_act.triggered.connect(editor.clearHistory)
         editor.clearHistory_act.setShortcut('Ctrl+Shift+C')
 
+        QShortcut(QKeySequence('Ctrl++'), editor, partial(editor.change_global_font_size, True))
+        QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
+        QShortcut(QKeySequence('Ctrl+-'), editor, partial(editor.change_global_font_size, False))
+        QShortcut(QKeySequence('Ctrl+0'), editor, editor.restore_global_font_size)
+
         # hide
         editor.donate_act.setVisible(False)
 

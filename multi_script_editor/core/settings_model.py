@@ -81,18 +81,22 @@ class SettingsModel:
 
         traverse(data)
 
-    def read_settings(self):
-        if SettingsModel._cached_settings is not None:
-            return SettingsModel._cached_settings
+    def read_settings_from_disk(self):
         if os.path.exists(self.path) and os.path.isfile(self.path):
             with codecs.open(self.path, "r", "utf-16") as stream:
                 try:
-                    SettingsModel._cached_settings = json.load(stream)
-                    self._sanitize_font_weights(SettingsModel._cached_settings)
-                    return SettingsModel._cached_settings
+                    data = json.load(stream)
+                    self._sanitize_font_weights(data)
+                    return data
                 except Exception:
-                    return self.get_defaults()
+                    pass
         return self.get_defaults()
+
+    def read_settings(self):
+        if SettingsModel._cached_settings is not None:
+            return SettingsModel._cached_settings
+        SettingsModel._cached_settings = self.read_settings_from_disk()
+        return SettingsModel._cached_settings
 
     def write_settings(self, data):
         SettingsModel._cached_settings = data
