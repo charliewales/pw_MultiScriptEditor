@@ -33,7 +33,51 @@ class SettingsModel:
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = home
 
-        return appData
+        if not appData:
+            appData = os.path.expanduser('~')
+
+        mse_settings_dir = os.path.join(appData, 'mse_settings')
+
+        if not getattr(SettingsModel, '_migrated', False):
+            SettingsModel._migrated = True
+            
+            if not os.path.exists(mse_settings_dir):
+                try:
+                    os.makedirs(mse_settings_dir)
+                except Exception:
+                    pass
+            
+            import shutil
+            files_to_move = [
+                'pw_scriptEditor_pref.json',
+                'pw_scriptEditor_snippets.json',
+                'pw_scriptEditor_themes.json',
+                'pw_scriptEditor_session.json',
+                'pw_scriptEditor_session_backup.json'
+            ]
+            folders_to_move = [
+                'mse_sessions'
+            ]
+            
+            for f in files_to_move:
+                old_path = os.path.join(appData, f)
+                new_path = os.path.join(mse_settings_dir, f)
+                if os.path.exists(old_path) and not os.path.exists(new_path):
+                    try:
+                        shutil.move(old_path, new_path)
+                    except Exception:
+                        pass
+            
+            for folder in folders_to_move:
+                old_path = os.path.join(appData, folder)
+                new_path = os.path.join(mse_settings_dir, folder)
+                if os.path.exists(old_path) and not os.path.exists(new_path):
+                    try:
+                        shutil.move(old_path, new_path)
+                    except Exception:
+                        pass
+
+        return mse_settings_dir
 
     def _get_settings_file_path(self):
         path = os.path.normpath(os.path.join(self._get_user_pref_folder(), self.settings_filename)).replace('\\','/')
