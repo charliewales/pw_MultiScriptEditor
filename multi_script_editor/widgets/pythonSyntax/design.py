@@ -1,4 +1,4 @@
-from core.settings_model import SettingsModel
+from core.settings_model import SettingsModel, ThemesModel
 import os, re
 
 
@@ -549,8 +549,10 @@ def getColors(theme=False):
     else:
         result = {k:v for k,v in defaultColors.items()}
 
-    if 'colors' in settings:
-        colors = settings['colors'].get(theme)
+    t_model = ThemesModel()
+    theme_settings = t_model.read_settings()
+    if 'colors' in theme_settings:
+        colors = theme_settings['colors'].get(theme)
         if colors:
             for k, v in colors.items():
                 result[k] = v

@@ -401,10 +401,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             act.setChecked(t == current_theme)
             act.setStatusTip(f"Apply theme: {t}")
             self.theme_menu.addAction(act)
-        data = self._current_settings
-        if data.get('colors'):
+            
+        from core.settings_model import ThemesModel
+        theme_settings = ThemesModel().read_settings()
+        if theme_settings.get('colors'):
             added_separator = False
-            for t in sorted(data.get('colors').keys()):
+            for t in sorted(theme_settings.get('colors').keys()):
                 if t not in design.predefinedThemes:
                     if not added_separator:
                         self.theme_menu.addSeparator()
@@ -432,10 +434,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         disk_font = disk_settings.get('font', {})
         self._current_settings['font'] = disk_font.copy()
         
+        from core.settings_model import ThemesModel
+        theme_settings = ThemesModel().read_settings()
+        
         if theme_name not in design.predefinedThemes:
             disk_colors = None
-            if 'colors' in disk_settings:
-                disk_colors = disk_settings['colors'].get(theme_name)
+            if 'colors' in theme_settings:
+                disk_colors = theme_settings['colors'].get(theme_name)
                 
             if 'colors' not in self._current_settings:
                 self._current_settings['colors'] = {}
@@ -1248,6 +1253,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             trim_auto_whitespace=trim_auto_whitespace,
         )
         settings.update(data)
+        if 'colors' in settings:
+            del settings['colors']
         self.save_settings_requested.emit(settings)
 
     def openSettingsFile(self):

@@ -155,3 +155,46 @@ class SnippetsModel(SettingsModel):
                 "Qt: Basic Window": 'from vendor.Qt.QtWidgets import QMainWindow\n\n\nclass MyWindow(QMainWindow):\n    def __init__(self, parent=None):\n        super(MyWindow, self).__init__(parent)\n        self.setWindowTitle("My UI")\n        self.resize(400, 300)\n\n\nif __name__ == "__main__":\n    win = MyWindow(self_main)\n    win.show()',
             }
         )
+
+class ThemesModel(SettingsModel):
+    settings_filename = 'pw_scriptEditor_themes.json'
+    _cached_settings = None
+
+    def _get_settings_file_path(self):
+        return os.path.normpath(os.path.join(self._get_user_pref_folder(), self.settings_filename)).replace('\\','/')
+
+    def read_settings(self):
+        if ThemesModel._cached_settings is not None:
+            return ThemesModel._cached_settings
+        if os.path.exists(self.path) and os.path.isfile(self.path):
+            with codecs.open(self.path, "r", "utf-16") as stream:
+                try:
+                    data = json.load(stream)
+                    self._sanitize_font_weights(data)
+                    ThemesModel._cached_settings = data
+                    return ThemesModel._cached_settings
+                except Exception:
+                    pass
+        
+        # Migration from pw_scriptEditor_pref.json
+        pref_model = SettingsModel()
+        pref_settings = pref_model.read_settings()
+        if 'colors' in pref_settings:
+            data = {'colors': pref_settings['colors']}
+            self.write_settings(data)
+            ThemesModel._cached_settings = data
+            return data
+            
+        return self.get_defaults()
+
+    def write_settings(self, data):
+        ThemesModel._cached_settings = data
+        folder = os.path.dirname(self.path)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+        with codecs.open(self.path, "w", "utf-16") as stream:
+            json.dump(data, stream, indent=4)
+
+    @staticmethod
+    def get_defaults():
+        return dict(colors={})

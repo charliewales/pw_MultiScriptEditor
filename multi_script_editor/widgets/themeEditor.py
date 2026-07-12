@@ -21,7 +21,7 @@ from vendor.Qt.QtWidgets import (
     QFileDialog,
 )
 from widgets import themeEditor_UIs as ui
-from core.settings_model import SettingsModel
+from core.settings_model import SettingsModel, ThemesModel
 from .pythonSyntax import design
 from widgets.tabWidget import tabWidgetClass
 
@@ -75,6 +75,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd2.wordWrap(False)
         self.splitter.setSizes([280, 800])
         self.s = SettingsModel()
+        self.t_model = ThemesModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
         self.colors_lwd.setContextMenuPolicy(Qt.CustomContextMenu)
         self.colors_lwd.customContextMenuRequested.connect(self.openColorMenu)
@@ -161,11 +162,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             return self.parent()._current_settings
         return self.s.read_settings()
 
+    def get_theme_settings(self):
+        return self.t_model.read_settings()
+
     def save_settings(self, settings):
         if self.parent() and hasattr(self.parent(), 'save_settings_requested'):
             self.parent().save_settings_requested.emit(settings)
         else:
             self.s.write_settings(settings)
+
+    def save_theme_settings(self, theme_settings):
+        self.t_model.write_settings(theme_settings)
 
     def fillUI(self, restore=None):
         self.themeList_cbb.blockSignals(True)
@@ -173,12 +180,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if restore is None:
                 restore = self.themeList_cbb.currentText()
             settings = self.get_settings()
+            theme_settings = self.get_theme_settings()
             self.themeList_cbb.clear()
             for t in sorted(design.predefinedThemes.keys()):
                 self.themeList_cbb.addItem(t)
-            if settings.get('colors'):
+            if theme_settings.get('colors'):
                 added_separator = False
-                for x in sorted(settings.get('colors')):
+                for x in sorted(theme_settings.get('colors')):
                     if x not in design.predefinedThemes:
                         if not added_separator:
                             self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
@@ -601,18 +609,24 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             name = name[0]
             if name in design.predefinedThemes:
                 name = name + ' (Custom)'
-            settings = self.get_settings()
-            if 'colors' in settings:
-                if name in settings['colors']:
+            theme_settings = self.get_theme_settings()
+            if 'colors' in theme_settings:
+                if name in theme_settings['colors']:
                     if not self.yes_no_question('Replace existing?'):
                         return False
 
             colors = self.getCurrentColors()
+            if 'colors' in theme_settings:
+                theme_settings['colors'][name] = colors
+            else:
+                theme_settings['colors'] = {name: colors}
+            self.save_theme_settings(theme_settings)
+            
+            # If the main window caches colors we need to apply them there too
+            settings = self.get_settings()
             if 'colors' in settings:
                 settings['colors'][name] = colors
-            else:
-                settings['colors'] = {name: colors}
-            self.save_settings(settings)
+            
             self.fillUI(name)
             self.updateUI()
             if self.parent() and hasattr(self.parent(), 'applyTheme'):
@@ -627,11 +641,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if text:
             if self.yes_no_question('Remove current theme?'):
                 name = self.themeList_cbb.currentText()
-                settings = self.get_settings()
-                if 'colors' in settings:
-                    if name in settings['colors']:
-                        del settings['colors'][name]
-                        self.save_settings(settings)
+                theme_settings = self.get_theme_settings()
+                if 'colors' in theme_settings:
+                    if name in theme_settings['colors']:
+                        del theme_settings['colors'][name]
+                        self.save_theme_settings(theme_settings)
+                        
+                        settings = self.get_settings()
+                        if 'colors' in settings and name in settings['colors']:
+                            del settings['colors'][name]
+                            self.save_settings(settings)
+                            
                         self.fillUI(False)
                         self.updateUI()
 
@@ -666,18 +686,23 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     if name in design.predefinedThemes:
                         name = name + ' (Custom)'
 
-                    settings = self.get_settings()
-                    if 'colors' in settings:
-                        if name in settings['colors']:
+                    theme_settings = self.get_theme_settings()
+                    if 'colors' in theme_settings:
+                        if name in theme_settings['colors']:
                             if not self.yes_no_question('Replace exists?'):
                                 return
 
+                    if 'colors' in theme_settings:
+                        theme_settings['colors'][name] = colors
+                    else:
+                        theme_settings['colors'] = {name: colors}
+
+                    self.save_theme_settings(theme_settings)
+                    
+                    settings = self.get_settings()
                     if 'colors' in settings:
                         settings['colors'][name] = colors
-                    else:
-                        settings['colors'] = {name: colors}
-
-                    self.save_settings(settings)
+                        
                     self.fillUI(name)
                     self.updateUI()
                     self.updateColors()
