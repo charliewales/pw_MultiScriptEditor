@@ -198,6 +198,15 @@ class ScriptEditorUIBuilder:
         editor.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
         editor.add_quotes_act.setIcon(QIcon(icons['add_quotes']))
 
+        editor.zoom_in_act.triggered.connect(partial(editor.change_global_font_size, True))
+        editor.zoom_in_act.setShortcutContext(Qt.WindowShortcut)
+
+        editor.zoom_out_act.triggered.connect(partial(editor.change_global_font_size, False))
+        editor.zoom_out_act.setShortcutContext(Qt.WindowShortcut)
+
+        editor.reset_zoom_act.triggered.connect(editor.restore_global_font_size)
+        editor.reset_zoom_act.setShortcutContext(Qt.WindowShortcut)
+
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
@@ -291,10 +300,7 @@ class ScriptEditorUIBuilder:
         editor.clearHistory_act.triggered.connect(editor.clearHistory)
         editor.clearHistory_act.setShortcut('Ctrl+Shift+C')
 
-        QShortcut(QKeySequence('Ctrl++'), editor, partial(editor.change_global_font_size, True))
         QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
-        QShortcut(QKeySequence('Ctrl+-'), editor, partial(editor.change_global_font_size, False))
-        QShortcut(QKeySequence('Ctrl+0'), editor, editor.restore_global_font_size)
 
         # hide
         editor.donate_act.setVisible(False)
