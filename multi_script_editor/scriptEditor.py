@@ -661,7 +661,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 
             size = max(1, size - zoom_delta)
                 
-            tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
+            file_path = getattr(widget, 'file_path', None)
+            tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path}
             tabs.append(tab)
         path = self._presenter.save_session(tabs)
         if verbos:
