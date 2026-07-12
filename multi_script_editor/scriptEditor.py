@@ -384,7 +384,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         self.out.showMessage(os.path.splitext(f)[-1])
                         self.out.showMessage('Open File: ' + f)
                         text = open(f).read()
-                        self.tab.addNewTab(os.path.basename(f), text)
+                        self.tab.addNewTab(os.path.basename(f), text, file_path=f)
 
     def fillThemeMenu(self):
         self.theme_menu.clear()

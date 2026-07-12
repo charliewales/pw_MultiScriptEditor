@@ -305,6 +305,17 @@ class tabWidgetClass(QTabWidget):
             name = 'New Tab'
         else:
             name = str(name)
+            
+        if file_path:
+            norm_file_path = os.path.normcase(os.path.abspath(file_path))
+            for i in range(self.count()):
+                w = self.widget(i)
+                w_file_path = getattr(w, 'file_path', None)
+                if w_file_path and os.path.normcase(os.path.abspath(w_file_path)) == norm_file_path:
+                    if make_current:
+                        self.setCurrentIndex(i)
+                    return w.edit
+
         cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
