@@ -53,12 +53,12 @@ QToolBar QToolButton
 }
 QToolBar QToolButton:hover
 {
-    background: rgba(255, 255, 255, 20);
+    background: rgb[highlight_line];
     border-radius: 6px;
 }
 QToolBar QToolButton:pressed
 {
-    background: rgba(255, 255, 255, 40);
+    background: rgb[highlight_line];
 }
 
 /**************MAINWINDOW*************/
