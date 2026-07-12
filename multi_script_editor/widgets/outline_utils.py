@@ -8,21 +8,21 @@ class HtmlDelegate(QStyledItemDelegate):
         self.initStyleOption(options, index)
 
         painter.save()
-        
+
         doc = QTextDocument()
         doc.setHtml(options.text)
         doc.setDefaultFont(options.font)
-        
+
         # Clear text to prevent default painting
         options.text = ""
-        
+
         style = options.widget.style() if options.widget else QApplication.style()
         style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)
-        
+
         painter.translate(options.rect.left(), options.rect.top())
         clip = QRectF(0, 0, options.rect.width(), options.rect.height())
         doc.drawContents(painter, clip)
-        
+
         painter.restore()
 
     def sizeHint(self, option, index):
@@ -41,30 +41,31 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     """
     name = sym.get('name', '')
     indent = sym.get('indent', 0)
-    
+
     item = QListWidgetItem()
     item.setData(Qt.UserRole, sym.get('line', 1))
-    
+
     if font:
         item.setFont(font)
 
     if not theme_colors:
         theme_colors = {}
-        
+
     sym_type = sym.get('type')
-    
+
     def rgb2hex(rgb):
         if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
             return "#ffffff"
         return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
-    
+
     c_def = rgb2hex(theme_colors.get('definition', (255, 160, 250)))
     c_meth = rgb2hex(theme_colors.get('methods', (120, 190, 205)))
     c_kw = rgb2hex(theme_colors.get('keywords', (65, 255, 130)))
     c_str = rgb2hex(theme_colors.get('string', (128, 255, 128)))
-    
+    c_text = rgb2hex(theme_colors.get("tab_selected_text", (128, 255, 128)))
+
     html_name = name
-    
+
     if ext in ['.usd', '.usda']:
         parts = name.split(' ', 2)
         if len(parts) >= 2:
@@ -81,29 +82,29 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     elif ext in ['.css', '.scss', '.less']:
         html_name = f'<span style="color:{c_kw}">{name}</span>'
     elif ext in ['.md', '.markdown', '.generic']:
-        html_name = f'<span style="color:{c_kw}">{name}</span>'
+        html_name = f'<span style="color:{c_text}">{name}</span>'
     else:
         # Programming languages (Python, JS, C++, etc)
         first_space = name.find(' ')
         if first_space != -1:
             kw = name[:first_space]
             rest = name[first_space+1:]
-            
+
             # Python 'class' and 'def' use definition color in editor
             if ext == '.py' and kw in ['def', 'class']:
                 kw_html = f'<span style="color:{c_def}">{kw}</span>'
             else:
                 kw_html = f'<span style="color:{c_kw}">{kw}</span>'
-                
+
             # Class and function names are colored using methods color
             rest_html = f'<span style="color:{c_meth}">{rest}</span>'
-                
+
             html_name = f'{kw_html} {rest_html}'
         else:
-            html_name = f'<span style="color:{c_meth}">{name}</span>'
+            html_name = f'<span style="color:{c_text}">{name}</span>'
 
     # Add HTML non-breaking spaces for indentation
     display_name = ("&nbsp;&nbsp;" * indent) + html_name
     item.setText(display_name)
-    
+
     return item
