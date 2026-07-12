@@ -1,7 +1,7 @@
 from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
 from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget
 from vendor.Qt.QtGui import QFontMetrics
-from widgets.outline_utils import HtmlDelegate
+from widgets.outline_utils import create_symbol_item, HtmlDelegate
 
 class SymbolWidget(QDialog):
     symbolSelected = Signal(object)  # emits the line number or any other data
@@ -89,8 +89,6 @@ class SymbolWidget(QDialog):
     def populate_list(self, filter_text):
         self.list_widget.clear()
         filter_text = filter_text.lower()
-
-        from widgets.outline_utils import create_symbol_item
 
         for sym in self.symbols:
             name = sym.get('name', '')

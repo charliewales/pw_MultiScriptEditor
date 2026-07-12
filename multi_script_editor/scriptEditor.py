@@ -266,15 +266,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.clear_exec_act.isChecked():
             self.toolBar.setStyleSheet("""
                 QToolBar {
-                        border: 1px solid indianred;
-                        border-radius: 6px;
+                        border: 1px solid rgba(255, 255, 255, 64);
+                        border-radius: 4px;
                         margin: 1px;
                     }
                 """)
         else:
             self.toolBar.setStyleSheet("""
                 QToolBar {
-                        border: 1px solid transparent;
+                        border: 1px solid rgba(255, 255, 255, 0);
                         margin: 1px;
                     }
                 """)
