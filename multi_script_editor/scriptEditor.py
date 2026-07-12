@@ -519,8 +519,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if 'menu_text_size' in colors:
                 menu_font.setPointSize(max(1, int(colors['menu_text_size'])))
-            elif colors.get('use_theme_font_on_menus', False):
-                if 'textsize' in colors:
+            else:
+                if 'textsize' in colors and colors.get('use_theme_font_on_menus', False):
                     menu_font.setPointSize(max(1, int(colors['textsize'])))
                 else:
                     menu_font.setPointSize(secondary_default)
