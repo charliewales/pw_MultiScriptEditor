@@ -407,8 +407,8 @@ QComboBox QAbstractItemView {
     outline: none;
 }
 
-QComboBox QAbstractItemView::item:selected,
-QComboBox QAbstractItemView::item:hover {
+QAbstractItemView::item:selected,
+QAbstractItemView::item:hover {
     background-color: rgb[highlight_line];
     border: 1px solid rgb[highlight_line];
     color: rgb[tab_selected_text];
@@ -550,20 +550,21 @@ QHeaderView{
 /*********** COMPLETER & SYMBOL WIDGET **************/
 completeMenuClass, SymbolWidget QListWidget
 {
-    color: rgb[completer_text];
-    background-color: rgb[completer_background];
+    color: rgb[tab_selected_text];
+    background-color: rgb[background];
     alternate-background-color: rgb[completer_alt_background];
     font-size: [textsize]pt;
     height: 25px;
 }
 completeMenuClass::item:selected, SymbolWidget QListWidget::item:selected {
-    background: rgb[completer_selected_background];
+    color: rgb[tab_selected_text];
+    background-color: rgb[background];
 }
 
 completeMenuClass::item:hover, SymbolWidget QListWidget::item:hover
 {
-    background-color: rgb[completer_hover_background];
-    color: rgb[completer_text];
+    background-color: rgb[tab_selected_text];
+    color: rgb[background];
 }
 
 QToolTip, QLabel#docTooltip {
