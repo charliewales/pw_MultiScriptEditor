@@ -46,7 +46,7 @@ class ScriptEditorUIBuilder:
         editor.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.duplicateLine_act.setIcon(QIcon(icons['duplicate_line']))
         editor.duplicateLine_act.triggered.connect(editor.duplicateLine)
-        
+
         editor.deleteLine_act.setShortcut('Ctrl+D')
         editor.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.deleteLine_act.setIcon(QIcon(icons['delete_line']))
@@ -96,7 +96,7 @@ class ScriptEditorUIBuilder:
         editor.shortcuts_act.setIcon(QIcon(icons['shortcut']))
 
         editor.documentation_act.triggered.connect(editor.openDocumentation)
-        editor.documentation_act.setIcon(QIcon(icons['pw']))
+        editor.documentation_act.setIcon(QIcon(icons['docs']))
         editor.printHelp_act.triggered.connect(editor.mse_help)
         editor.printHelp_act.setIcon(QIcon(icons['print_help']))
 
@@ -201,7 +201,7 @@ class ScriptEditorUIBuilder:
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
-        
+
         editor.selectNextOccurrence_act.triggered.connect(editor.tab.selectNextOccurrence)
         editor.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         editor.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
