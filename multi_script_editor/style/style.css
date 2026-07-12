@@ -589,5 +589,6 @@ QLineEdit#outlineFilter
 
 QStatusBar, QStatusBar QLabel
 {
+    background-color: rgb[window];
     color: rgb[status_bar_text];
 }

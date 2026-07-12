@@ -1,10 +1,10 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal, QSize
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
 from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont
 from widgets.pythonSyntax.design import defaultColors
 import re
-from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
+from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel
 from widgets import numBarWidget, inputWidget
 from widgets.pythonSyntax import design
 from icons import *
@@ -24,6 +24,7 @@ class tabWidgetClass(QTabWidget):
         # variables
         self.p = parent
         self.lastSearch = [0, None]
+        self._ctrl_pressed = False
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
@@ -76,6 +77,91 @@ class tabWidgetClass(QTabWidget):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
 
         self.currentChanged.connect(self.onTabChanged)
+        QApplication.instance().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Control and not self._ctrl_pressed:
+                self._ctrl_pressed = True
+                self.show_tab_numbers(True)
+        elif event.type() == QEvent.KeyRelease:
+            if event.key() == Qt.Key_Control and self._ctrl_pressed:
+                self._ctrl_pressed = False
+                self.show_tab_numbers(False)
+        elif event.type() == QEvent.WindowDeactivate or event.type() == QEvent.ApplicationDeactivate:
+            if self._ctrl_pressed:
+                self._ctrl_pressed = False
+                self.show_tab_numbers(False)
+        return False
+
+    def get_line_num_font_and_color(self, edit):
+        from vendor.Qt.QtGui import QColor
+        font = edit.font()
+        pt_size = font.pointSizeF()
+        if pt_size > 0:
+            if hasattr(edit, '_line_num_size_cache') and edit._line_num_size_cache is not None:
+                font.setPointSizeF(float(edit._line_num_size_cache))
+            else:
+                font.setPointSizeF(max(1.0, pt_size * 0.8))
+        else:
+            px_size = font.pixelSize()
+            if px_size > 0:
+                if hasattr(edit, '_line_num_size_cache') and edit._line_num_size_cache is not None:
+                    font.setPixelSize(edit._line_num_size_cache)
+                else:
+                    font.setPixelSize(max(1, int(px_size * 0.8)))
+
+        color = None
+        if hasattr(edit, '_line_num_text_cache') and edit._line_num_text_cache:
+            color = QColor.fromRgb(*edit._line_num_text_cache)
+
+        return font, color
+
+    def show_tab_numbers(self, show):
+        for i in range(min(self.count(), 9)):
+            tab_widget = self.widget(i)
+            if not tab_widget:
+                continue
+            if show:
+                btn = self.tabBar().tabButton(i, QTabBar.RightSide)
+                style = "border-radius: 8px;"
+                if btn and type(btn).__name__ != 'QLabel':
+                    tab_widget._original_close_button = btn
+
+                    if not hasattr(tab_widget, '_tab_number_label'):
+                        lbl = QLabel(str(i + 1))
+                        lbl.setAlignment(Qt.AlignCenter)
+
+                        # Apply font and color from line numbers
+                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
+                        lbl.setFont(font)
+
+                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
+                        if color:
+                            style += f" color: {color.name()};"
+                        lbl.setStyleSheet(style)
+
+                        # Apply original button size
+                        if btn.size().width() > 0 and btn.size().height() > 0:
+                            lbl.setFixedSize(btn.size())
+
+                        tab_widget._tab_number_label = lbl
+                    else:
+                        tab_widget._tab_number_label.setText(str(i + 1))
+                        # Update size/style in case it changed
+                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
+                        tab_widget._tab_number_label.setFont(font)
+                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
+                        if color:
+                            style += f" color: {color.name()};"
+                        tab_widget._tab_number_label.setStyleSheet(style)
+                        if btn.size().width() > 0 and btn.size().height() > 0:
+                            tab_widget._tab_number_label.setFixedSize(btn.size())
+
+                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._tab_number_label)
+            else:
+                if hasattr(tab_widget, '_original_close_button'):
+                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
 
     def toggle_outline(self, state):
         if hasattr(self.p, 'toggleOutline'):
