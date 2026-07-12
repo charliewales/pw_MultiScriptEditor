@@ -1447,14 +1447,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def autoSave(self):
         tabs = []
         index = self.tab.currentIndex()
+        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         for item in range(self.tab.count()):
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
+            widget = self.tab.widget(item)
             if managers.context == 'hou':
-                size = self.tab.widget(item).edit.fs
+                size = widget.edit.fs
             else:
-                size = self.tab.widget(item).edit.font().pointSize()
-            tab = {'name': name, 'text': text, 'active': item == index, 'size': size}
+                size = widget.edit.font().pointSize()
+                
+            size = max(1, size - zoom_delta)
+                
+            tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
             tabs.append(tab)
         self._presenter.save_backup(tabs)
 
@@ -1562,8 +1567,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.tab.clear()
                 active = 0
                 for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s['name'], s['text'])
-                    if s['active']:
+                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text', ''), file_path=s.get('file_path'))
+                    if s.get('active'):
                         active = i
                     w.setFontSize(s.get('size', None))
                 self.tab.setCurrentIndex(active)
