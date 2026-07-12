@@ -302,8 +302,10 @@ class tabWidgetClass(QTabWidget):
         tab_text_size = colors.get('tab_text_size', None)
         if tab_text_size is not None:
             self._tab_text_size = float(tab_text_size)
+        elif 'textsize' in colors:
+            self._tab_text_size = float(colors['textsize'])
         else:
-            self._tab_text_size = None
+            self._tab_text_size = 10.0
 
         ss = self.styleSheet()
         font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)

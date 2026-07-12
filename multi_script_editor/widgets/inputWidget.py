@@ -25,7 +25,7 @@ import re
 addEndBracket = True
 
 indentLen = 4
-minimumFontSize = 10
+minimumFontSize = 8
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
 # font_name = 'monospace'
 font_name = 'Consolas'
@@ -397,7 +397,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
 
             # auto indent
             add = self.getCurrentIndent()
-            
+
             if hasattr(self.p, 'trimAutoWhitespace_act') and self.p.trimAutoWhitespace_act.isChecked():
                 cursor = self.textCursor()
                 block = cursor.block()
@@ -409,7 +409,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                     c.movePosition(QTextCursor.EndOfBlock)
                     c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
                     c.removeSelectedText()
-                    
+
             if add:
                 QTextEdit.keyPressEvent(self, event)
                 cursor = self.textCursor()
@@ -1061,7 +1061,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         return s
 
     def setFontSize(self,size):
-        if size > minimumFontSize:
+        if size >= minimumFontSize:
             if managers.context == 'hou':
                 self.fs = size
                 self.setTextEditFontSize(self.fs)

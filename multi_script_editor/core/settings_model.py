@@ -148,6 +148,6 @@ class SnippetsModel(SettingsModel):
             snippets={
                 # "Python: Main block": 'if __name__ == "__main__":\n    # Main code here\n    pass',
                 # "Python: Class Template": "class MyClass(object):\n    def __init__(self):\n        super(MyClass, self).__init__()\n        pass",
-                "Qt: Basic Window": 'from vendor.Qt.QtWidgets import QMainWindow\n\n\nclass MyWindow(QMainWindow):\n    def __init__(self, parent=None):\n        super(MyWindow, self).__init__(parent)\n        self.setWindowTitle("My UI")\n        self.resize(400, 300)\n\n\nif __name__ == "__main__":\n    win = MyWindow()\n    win.show()',
+                "Qt: Basic Window": 'from vendor.Qt.QtWidgets import QMainWindow\n\n\nclass MyWindow(QMainWindow):\n    def __init__(self, parent=None):\n        super(MyWindow, self).__init__(parent)\n        self.setWindowTitle("My UI")\n        self.resize(400, 300)\n\n\nif __name__ == "__main__":\n    win = MyWindow(self_main)\n    win.show()',
             }
         )

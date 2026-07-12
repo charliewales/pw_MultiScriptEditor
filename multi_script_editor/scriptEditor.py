@@ -136,7 +136,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.loadSession()
         if self.tab.count() > 0:
             QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
-        self.loadSettings()
         self.fillThemeMenu()
         self.setWindowStyle()
         self.appContextMenu()
@@ -262,15 +261,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             font_mult = 0.8
             if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
+            elif 'textsize' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['textsize']))
             else:
-                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * font_mult))
+                out_font_data['pointSize'] = 10
             self.out.set_start_font(out_font_data)
 
             outline_font = QFont(font)
-            if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, int(outline_font.pointSize() * font_mult)))
-            elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * font_mult)))
+            if 'outline_text_size' in colors:
+                outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
+            elif 'textsize' in colors:
+                outline_font.setPointSize(max(1, int(colors['textsize'])))
+            else:
+                outline_font.setPointSize(10)
             self.outline_list.setFont(outline_font)
             self.current_outline_font = outline_font
             self.outline_filter.setFont(outline_font)
@@ -419,10 +422,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.set_start_font(font_data)
 
             out_font_data = font_data.copy()
-            if 'output_text_size' in colors:
-                out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
+            if 'textsize' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['textsize']))
             else:
-                out_font_data['pointSize'] = max(1, int(font_data.get('pointSize', 10) * 0.8))
+                out_font_data['pointSize'] = 10
             self.out.set_start_font(out_font_data)
 
             base_font = QFont(font_data.get('family', ''))
@@ -435,8 +438,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 outline_font = QApplication.font("QListWidget")
             if 'outline_text_size' in colors:
                 outline_font.setPointSize(max(1, int(colors['outline_text_size'])))
-            elif colors.get('use_theme_font_on_outline', True):
-                outline_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
+            elif 'textsize' in colors:
+                outline_font.setPointSize(max(1, int(colors['textsize'])))
+            else:
+                outline_font.setPointSize(10)
 
             self.outline_list.setFont(outline_font)
             self.current_outline_font = outline_font
@@ -457,7 +462,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if 'menu_text_size' in colors:
                 menu_font.setPointSize(max(1, int(colors['menu_text_size'])))
             elif colors.get('use_theme_font_on_menus', False):
-                menu_font.setPointSize(max(1, int(base_font.pointSize())))
+                if 'textsize' in colors:
+                    menu_font.setPointSize(max(1, int(colors['textsize'])))
+                else:
+                    menu_font.setPointSize(10)
 
             self.menubar.setFont(menu_font)
             for menu in self.findChildren(QMenu):
@@ -466,7 +474,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if 'status_bar_text_size' in colors:
                 status_bar_font.setPointSize(max(1, int(colors['status_bar_text_size'])))
             elif colors.get('use_theme_font_on_status_bar', False):
-                status_bar_font.setPointSize(max(1, int(base_font.pointSize() * 0.8)))
+                if 'textsize' in colors:
+                    status_bar_font.setPointSize(max(1, int(colors['textsize'])))
+                else:
+                    status_bar_font.setPointSize(10)
 
             if self.statusBar():
                 self.statusBar().setFont(status_bar_font)
