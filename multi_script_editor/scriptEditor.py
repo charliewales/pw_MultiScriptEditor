@@ -305,7 +305,65 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not data:
             self.saveSettings()
 
+    def checkUnsavedChanges(self):
+        unsaved_tabs = []
+        for i in range(self.tab.count()):
+            widget = self.tab.widget(i)
+            file_path = getattr(widget, 'file_path', None)
+            
+            edit = getattr(widget, 'edit', None)
+            if edit and hasattr(edit, 'needs_loading_file'):
+                continue
+                
+            if file_path and os.path.exists(file_path):
+                text = self.tab.getTabText(i)
+                file_text = None
+                try:
+                    file_text = open(file_path, "r", encoding="utf-8").read()
+                except Exception:
+                    try:
+                        file_text = open(file_path, "r").read()
+                    except Exception:
+                        pass
+                
+                if file_text is not None:
+                    if text.replace('\r\n', '\n') != file_text.replace('\r\n', '\n'):
+                        unsaved_tabs.append((i, file_path))
+                        
+        if unsaved_tabs:
+            msg = "The following files have unsaved changes:\n\n"
+            for _, fp in unsaved_tabs:
+                msg += "- %s\n" % os.path.basename(fp)
+            msg += "\nDo you want to save them before exiting?"
+            
+            res = QMessageBox.question(
+                self,
+                "Unsaved Changes",
+                msg,
+                QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Save
+            )
+            
+            if res == QMessageBox.Save:
+                for i, file_path in unsaved_tabs:
+                    text = self.tab.getTabText(i)
+                    try:
+                        with open(file_path, 'w') as f:
+                            f.write(text)
+                    except Exception as e:
+                        self.out.showMessage('Error saving file: %s (%s)' % (file_path, str(e)))
+                return True
+            elif res == QMessageBox.Discard:
+                return True
+            else:
+                return False
+        return True
+
     def closeEvent(self, event):
+        if not self.checkUnsavedChanges():
+            event.ignore()
+            return
+
         self.saveSession()
         self.saveSettings()
         if hasattr(self, '_presenter'):

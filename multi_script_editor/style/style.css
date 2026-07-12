@@ -107,13 +107,9 @@ QMenuBar::item:pressed
 
 /***************ITEM**************/
 
-QAbstractItemView
-{
-    background-color: rgb[background];
-}
-
 QListView::item:selected{
     background: rgb[highlight_line];
+    color: rgb[background];
 }
 
 /***************PUSHBUTTON***********/
