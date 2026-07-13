@@ -335,8 +335,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 msg += "- %s\n" % os.path.basename(fp)
             msg += "\nDo you want to save them before exiting?"
 
-            res = QMessageBox.question(
-                self,
+            res = self.show_question_msg(
                 "Unsaved Changes",
                 msg,
                 QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
@@ -551,6 +550,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             base_font = QFont(font_data.get('family', ''))
             base_font.setStyleHint(QFont.Monospace)
             base_font.setPointSize(font_data.get('pointSize', 10))
+            self.theme_font = QFont(base_font)
 
             if colors.get('use_theme_font_on_outline', True):
                 outline_font = QFont(base_font)
@@ -635,6 +635,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
+
+    def show_question_msg(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, defaultButton=QMessageBox.No):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(text)
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setStandardButtons(buttons)
+        msg_box.setDefaultButton(defaultButton)
+        if hasattr(self, 'theme_font'):
+            msg_box.setFont(self.theme_font)
+        return msg_box.exec_()
 
     def show_syntax_errors(self, errors):
         # Pass the errors to the active tab's input widget (for highlighting line numbers if needed)
@@ -731,8 +742,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
 
     def closeAllTabsWithConfirm(self):
-        res = QMessageBox.question(
-            self,
+        res = self.show_question_msg(
             "Close All Tabs",
             "Are you sure you want to close all tabs?",
             QMessageBox.Yes | QMessageBox.No
@@ -1092,7 +1102,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.recent_files_menu.addAction(clear_act)
 
     def clearRecentFiles(self):
-        reply = QMessageBox.question(self, 'Clear Recent Files', 'Are you sure you want to clear the recent files list?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = self.show_question_msg('Clear Recent Files', 'Are you sure you want to clear the recent files list?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             data = self._current_settings
             data['recent_files'] = []
@@ -1206,10 +1216,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if echo_exec:
             self.print_command_act.setChecked(echo_exec)
         self.always_ontop_act.setChecked(always_ontop)
+        current_flags = self.windowFlags()
         if always_ontop:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            new_flags = current_flags | Qt.WindowStaysOnTopHint
         else:
-            self.setWindowFlags(self.windowFlags() ^ Qt.WindowStaysOnTopHint)
+            new_flags = current_flags & ~Qt.WindowStaysOnTopHint
+            
+        if current_flags != new_flags:
+            self.setWindowFlags(new_flags)
+            if self.isVisible():
+                self.show()
         if show_whitespace is not None:
             self.tab.render_whitespace(show_whitespace)
             self.out.render_whitespace(show_whitespace)
@@ -1692,8 +1708,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.fillSessionsMenu()
 
     def loadNamedSession(self, name):
-        res = QMessageBox.question(
-            self,
+        res = self.show_question_msg(
             "Load Session",
             "Loading session '{0}' will replace all current tabs. Do you want to proceed?".format(name),
             QMessageBox.Yes | QMessageBox.No
@@ -1712,8 +1727,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> Loaded named session '{0}'.".format(name))
 
     def deleteNamedSession(self, name):
-        res = QMessageBox.question(
-            self,
+        res = self.show_question_msg(
             "Delete Session",
             "Are you sure you want to delete session '{0}'?".format(name),
             QMessageBox.Yes | QMessageBox.No
@@ -1820,8 +1834,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         overwrite = False
         if conflicts:
-            reply = QMessageBox.question(
-                self,
+            reply = self.show_question_msg(
                 "Import Snippets",
                 f"{len(conflicts)} snippets already exist. Do you want to overwrite them?",
                 QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
@@ -2000,8 +2013,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget.setFocus()
 
     def deleteSnippet(self, name):
-        res = QMessageBox.question(
-            self,
+        res = self.show_question_msg(
             "Delete Snippet",
             "Are you sure you want to delete snippet '{0}'?".format(name),
             QMessageBox.Yes | QMessageBox.No

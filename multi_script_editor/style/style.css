@@ -487,8 +487,21 @@ QTabBar::close-button:hover {
 QTabBar QToolButton::right-arrow {
     image: url("../icons/right_arrow.png");
 }
+
+QTabBar QToolButton::right-arrow:hover {
+    image: url("../icons/right_arrow.png");
+    background: rgb[highlight_line];
+    border-radius: 4px;
+}
+
 QTabBar QToolButton::left-arrow {
     image: url("../icons/left_arrow.png");
+}
+
+QTabBar QToolButton::left-arrow:hover {
+    image: url("../icons/left_arrow.png");
+    background: rgb[highlight_line];
+    border-radius: 4px;
 }
 
 QCheckBox::indicator:hover

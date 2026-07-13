@@ -566,6 +566,8 @@ class tabWidgetClass(QTabWidget):
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Multi Script Editor")
         msg_box.setText(question)
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()

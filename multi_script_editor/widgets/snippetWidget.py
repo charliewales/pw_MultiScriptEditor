@@ -125,7 +125,17 @@ class SnippetWidget(QDialog):
                 if name:
                     if name in self.snippets:
                         from vendor.Qt.QtWidgets import QMessageBox
-                        reply = QMessageBox.question(self, 'Overwrite Snippet', f"A snippet named '{name}' already exists. Overwrite?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                        msg_box = QMessageBox(self)
+                        msg_box.setWindowTitle('Overwrite Snippet')
+                        msg_box.setText(f"A snippet named '{name}' already exists. Overwrite?")
+                        msg_box.setIcon(QMessageBox.Question)
+                        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                        msg_box.setDefaultButton(QMessageBox.No)
+                        if hasattr(self.parent(), 'theme_font'):
+                            msg_box.setFont(self.parent().theme_font)
+                        elif self._font:
+                            msg_box.setFont(self._font)
+                        reply = msg_box.exec_()
                         if reply == QMessageBox.No:
                             return
                     self.snippetNameSelected.emit(name)

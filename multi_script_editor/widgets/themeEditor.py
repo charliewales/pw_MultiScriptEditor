@@ -764,6 +764,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
+            if hasattr(self.parent(), 'theme_font'):
+                msg_box.setFont(self.parent().theme_font)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
             cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
@@ -794,6 +796,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
+        if hasattr(self.parent(), 'theme_font'):
+            msg_box.setFont(self.parent().theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
         msg_box.exec_()
