@@ -234,6 +234,8 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                 highlighter_class = extraSyntaxes.CssHighlighterClass
             elif ext == '.txt':
                 highlighter_class = extraSyntaxes.TextHighlighterClass
+            elif ext == '.log':
+                highlighter_class = extraSyntaxes.LogHighlighterClass
             elif ext in ['.usd', '.usda']:
                 highlighter_class = extraSyntaxes.UsdHighlighterClass
 
