@@ -294,8 +294,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             txt = open(src).read() % self.ver
         else:
             txt = '<h3>File not found: helpText.txt</h3><br>'
-        old = self.out.toPlainText().replace('\n', '<br>')
-        self.out.setHtml(old + txt)
+        self.out.appendHtml(txt)
         self.out.moveCursor(QTextCursor.End)
         self.out.ensureCursorVisible()
 
@@ -816,7 +815,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.showMessage(text)
 
     def clearHistory(self):
-        self.out.setText('')
+        self.out.clear()
 
     def show_autocompletion(self):
         idx = self.tab.currentIndex()
