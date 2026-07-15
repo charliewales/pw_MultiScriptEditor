@@ -130,7 +130,7 @@ class tabWidgetClass(QTabWidget):
                 continue
             if show:
                 btn = self.tabBar().tabButton(i, QTabBar.RightSide)
-                style = "border-radius: 8px;"
+                style = "border-radius: 4px; margin-right: 4px;"
                 if btn and type(btn).__name__ != 'QLabel':
                     tab_widget._original_close_button = btn
 
@@ -436,7 +436,7 @@ class tabWidgetClass(QTabWidget):
     def mark_tab_dirty(self, container, state):
         if not hasattr(container, '_custom_close_btn'):
             return
-            
+
         if not hasattr(container, 'file_path') or not container.file_path:
             return
 

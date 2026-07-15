@@ -150,7 +150,7 @@ QPushButton#CustomCloseBtn {
     image: url("../icons/close_tab_grey.png");
     background: transparent;
     border: none;
-    margin: 0px;
+    margin: 0px 4px 0px 0px;
     padding: 0px;
 }
 
