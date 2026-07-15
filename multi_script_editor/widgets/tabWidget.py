@@ -322,6 +322,8 @@ class tabWidgetClass(QTabWidget):
         if hasattr(self.p, 'showStatusMessage'):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
         self.addTab(cont, name)
+        if file_path:
+            self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
 
         if hasattr(self.p, 'updateStatusBarInfo'):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)

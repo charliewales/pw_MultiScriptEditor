@@ -25,7 +25,7 @@ from vendor.help import get_help
 
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
@@ -551,6 +551,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             base_font.setStyleHint(QFont.Monospace)
             base_font.setPointSize(font_data.get('pointSize', 10))
             self.theme_font = QFont(base_font)
+            
+            tooltip_font = QFont(base_font)
+            tab_text_size = colors.get('tab_text_size', None)
+            if tab_text_size is not None:
+                tooltip_font.setPointSize(max(1, int(tab_text_size)))
+            elif 'textsize' in colors:
+                tooltip_font.setPointSize(max(1, int(colors['textsize'])))
+            else:
+                tooltip_font.setPointSize(secondary_default)
+            QToolTip.setFont(tooltip_font)
 
             if colors.get('use_theme_font_on_outline', True):
                 outline_font = QFont(base_font)
@@ -1051,6 +1061,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if hasattr(cont, 'file_path'):
                     cont.file_path = path[0]
                 self.tab.setTabText(index, os.path.basename(path[0]))
+                self.tab.setTabToolTip(index, os.path.normpath(path[0]))
                 self.out.showMessage('Saved to: %s' % path[0])
                 if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
                     cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
