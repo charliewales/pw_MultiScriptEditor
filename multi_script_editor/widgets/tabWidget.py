@@ -436,6 +436,9 @@ class tabWidgetClass(QTabWidget):
     def mark_tab_dirty(self, container, state):
         if not hasattr(container, '_custom_close_btn'):
             return
+            
+        if not hasattr(container, 'file_path') or not container.file_path:
+            return
 
         btn = container._custom_close_btn
         btn.setProperty('isDirty', state)
