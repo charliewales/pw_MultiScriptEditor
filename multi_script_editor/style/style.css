@@ -146,6 +146,40 @@ QPushButton:checked
     background-color: rgb[highlight_line];
 }
 
+QPushButton#CustomCloseBtn {
+    image: url("../icons/close_tab_grey.png");
+    background: transparent;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+QPushButton#CustomCloseBtn:hover {
+    image: url("../icons/close_tab.png");
+    background: rgb[background];
+    border-radius: 4px;
+}
+
+QPushButton#CustomCloseBtn[isSelected="true"] {
+    image: url("../icons/close_tab.png");
+}
+
+QPushButton#CustomCloseBtn[isSelected="true"]:hover {
+    image: url("../icons/close_tab.png");
+    background: rgb[background];
+    border-radius: 4px;
+}
+
+QPushButton#CustomCloseBtn[isDirty="true"] {
+    image: none;
+}
+
+QPushButton#CustomCloseBtn[isDirty="true"]:hover {
+    image: none;
+    background: rgb[background];
+    border-radius: 4px;
+}
+
 /*********************MENU************/
 
 QMenu

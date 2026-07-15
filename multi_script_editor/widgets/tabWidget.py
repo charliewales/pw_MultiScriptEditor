@@ -30,6 +30,7 @@ class tabWidgetClass(QTabWidget):
         self.setTabsClosable(True)
         self.setMovable(True)
         self.tabCloseRequested.connect(self.closeTab)
+        self.currentChanged.connect(self.update_custom_close_buttons)
         self.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabBar().customContextMenuRequested.connect(self.openMenu)
         # Corner Widget Layout
@@ -180,7 +181,7 @@ class tabWidgetClass(QTabWidget):
                 if container in self._mru_tabs:
                     self._mru_tabs.remove(container)
                 self._mru_tabs.insert(0, container)
-                
+
             if hasattr(container, 'edit'):
                 edit = container.edit
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
@@ -305,7 +306,7 @@ class tabWidgetClass(QTabWidget):
             name = 'New Tab'
         else:
             name = str(name)
-            
+
         if file_path:
             norm_file_path = os.path.normcase(os.path.abspath(file_path))
             for i in range(self.count()):
@@ -322,6 +323,17 @@ class tabWidgetClass(QTabWidget):
         if hasattr(self.p, 'showStatusMessage'):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
         self.addTab(cont, name)
+
+        btn = QPushButton()
+        btn.setObjectName("CustomCloseBtn")
+        btn.setFixedSize(20, 20)
+        # btn.setCursor(Qt.ArrowCursor)
+        btn.setProperty('isDirty', False)
+        btn.setProperty('isSelected', self.count() - 1 == self.currentIndex())
+        btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
+        self.tabBar().setTabButton(self.count() - 1, QTabBar.RightSide, btn)
+        cont._custom_close_btn = btn
+
         if file_path:
             self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
 
@@ -329,6 +341,7 @@ class tabWidgetClass(QTabWidget):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
             cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
 
+        cont.edit.document().modificationChanged.connect(lambda state, c=cont: self.mark_tab_dirty(c, state))
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:
@@ -410,6 +423,55 @@ class tabWidgetClass(QTabWidget):
             self.closeTab(current_index)
 
 ############################## editor commands
+    def update_custom_close_buttons(self, index=None):
+        for i in range(self.count()):
+            cont = self.widget(i)
+            if hasattr(cont, '_custom_close_btn'):
+                btn = cont._custom_close_btn
+                is_sel = (i == self.currentIndex())
+                btn.setProperty('isSelected', is_sel)
+                btn.style().unpolish(btn)
+                btn.style().polish(btn)
+
+    def mark_tab_dirty(self, container, state):
+        if not hasattr(container, '_custom_close_btn'):
+            return
+
+        btn = container._custom_close_btn
+        btn.setProperty('isDirty', state)
+
+        if state:
+            from vendor.Qt.QtGui import QIcon, QPixmap, QPainter, QColor
+            from vendor.Qt.QtCore import Qt, QRectF
+
+            theme_name = 'Multi Script Editor'
+            if hasattr(self.p, '_presenter'):
+                theme_name = self.p._presenter.settings_model.read_settings().get('theme', theme_name)
+            colors = design.getColors(theme_name)
+            window_color = colors.get('window', [160, 160, 160])
+
+            pixmap = QPixmap(btn.size())
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(QColor(*window_color))
+            painter.setPen(Qt.NoPen)
+
+            r = min(pixmap.width(), pixmap.height()) / 4.0
+            cx = pixmap.width() / 2.0
+            cy = pixmap.height() / 2.0
+            painter.drawEllipse(QRectF(cx - r, cy - r, r * 2.0, r * 2.0))
+            painter.end()
+
+            btn.setIcon(QIcon(pixmap))
+            btn.setIconSize(btn.size())
+        else:
+            from vendor.Qt.QtGui import QIcon
+            btn.setIcon(QIcon())
+
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
     def apply_tab_style(self, colors=None):
         if not colors:
             colors = defaultColors

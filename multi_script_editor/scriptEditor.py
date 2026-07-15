@@ -1045,6 +1045,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 with open(cont.file_path, 'w') as f:
                     f.write(text)
                 self.out.showMessage('Saved to: %s' % cont.file_path)
+                cont.edit.document().setModified(False)
             except Exception as e:
                 self.out.showMessage('Error saving file: %s (%s)' % (cont.file_path, str(e)))
             return
@@ -1064,6 +1065,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.tab.setTabText(index, os.path.basename(path[0]))
                 self.tab.setTabToolTip(index, os.path.normpath(path[0]))
                 self.out.showMessage('Saved to: %s' % path[0])
+                cont.edit.document().setModified(False)
                 if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
                     cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
             except:
