@@ -1172,10 +1172,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def always_ontop(self):
         """Set the window to always be on top or turn off the feature."""
         state = self.always_ontop_act.isChecked()
+        flags = self.windowFlags()
         if state:
-            self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+            flags |= Qt.WindowStaysOnTopHint
         else:
-            self.setWindowFlags(self.windowFlags() & ~Qt.WindowStaysOnTopHint)
+            flags &= ~Qt.WindowStaysOnTopHint
+            
+        # Workaround for PySide6: ensure window buttons remain enabled
+        flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
+        
+        self.setWindowFlags(flags)
         self.show()
 
     def apply_settings(self, settings):
@@ -1231,10 +1237,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.print_command_act.setChecked(echo_exec)
         self.always_ontop_act.setChecked(always_ontop)
         current_flags = self.windowFlags()
+        new_flags = current_flags
+        
         if always_ontop:
-            new_flags = current_flags | Qt.WindowStaysOnTopHint
+            new_flags |= Qt.WindowStaysOnTopHint
         else:
-            new_flags = current_flags & ~Qt.WindowStaysOnTopHint
+            new_flags &= ~Qt.WindowStaysOnTopHint
+            
+        # PySide6 workaround to keep window controls enabled
+        new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
             
         if current_flags != new_flags:
             self.setWindowFlags(new_flags)
