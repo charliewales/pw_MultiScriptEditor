@@ -1,5 +1,5 @@
 from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase
-from vendor.Qt.QtWidgets import QTextEdit
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit
 
 class BaseTextWidgetMixin:
     """
@@ -23,10 +23,16 @@ class BaseTextWidgetMixin:
         self.setFont(f)
 
     def wordWrap(self, state):
-        if state:
-            self.setLineWrapMode(QTextEdit.WidgetWidth)
+        if isinstance(self, QPlainTextEdit):
+            if state:
+                self.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+            else:
+                self.setLineWrapMode(QPlainTextEdit.NoWrap)
         else:
-            self.setLineWrapMode(QTextEdit.NoWrap)
+            if state:
+                self.setLineWrapMode(QTextEdit.WidgetWidth)
+            else:
+                self.setLineWrapMode(QTextEdit.NoWrap)
 
     def set_font(self, font):
         self.setFont(font)

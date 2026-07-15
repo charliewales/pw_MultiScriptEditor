@@ -107,22 +107,34 @@ class lineNumberBarClass(QWidget):
         painter.setFont(font)
         painter.setPen(color)
         align = Qt.AlignRight | Qt.AlignVCenter
+        is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
         while block.isValid():
             line_count += 1
-            # The top left position of the block in the document
-            block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-            position = block_rect.topLeft()
-            block_height = block_rect.height()
             
-            # Check if the position of the block is outside of the visible area.
-            if position.y() > page_bottom:
-                break
-            if position.y() + block_height < contents_y:
-                block = block.next()
-                continue
+            if is_plaintextedit:
+                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
+                pos_y = block_rect.top()
+                block_height = block_rect.height()
+                if pos_y > self.edit.viewport().height():
+                    break
+                if pos_y + block_height < 0:
+                    block = block.next()
+                    continue
+            else:
+                # The top left position of the block in the document
+                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
+                pos_y = block_rect.top() - contents_y
+                block_height = block_rect.height()
+                
+                # Check if the position of the block is outside of the visible area.
+                if block_rect.top() > page_bottom:
+                    break
+                if block_rect.top() + block_height < contents_y:
+                    block = block.next()
+                    continue
 
             rec = QRect(0,
-                        round(position.y()) - contents_y,
+                        round(pos_y),
                         self.width() - 5,
                         round(block_height))
 
@@ -133,7 +145,7 @@ class lineNumberBarClass(QWidget):
                 if self.bg is not None:
                     painter.setBrush(QBrush(self.bg))
                     painter.drawRect(QRect(0,
-                            round(position.y()) - contents_y,
+                            round(pos_y),
                             self.width(),
                             round(block_height) ))
                 # restore color
@@ -143,7 +155,7 @@ class lineNumberBarClass(QWidget):
             if hasattr(self.edit, 'syntax_errors') and line_count in self.edit.syntax_errors:
                 painter.setBrush(QBrush(QColor("red")))
                 painter.setPen(Qt.NoPen)
-                painter.drawEllipse(3, round(position.y()) - contents_y + int(block_height / 2) - 3, 6, 6)
+                painter.drawEllipse(3, round(pos_y) + int(block_height / 2) - 3, 6, 6)
                 painter.setPen(QPen(color))
 
             # draw text

@@ -346,30 +346,30 @@ QSpinBox::up-arrow  {
 /****************************************************/
  /******************TEXTEDIT****************/
 
-QTextEdit
+QTextEdit, QPlainTextEdit
 {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextEdit:disabled
+QTextEdit:disabled, QPlainTextEdit:disabled
 {
     background-color: rgb[background];
     color: rgb[comment];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextEdit:focus {
+QTextEdit:focus, QPlainTextEdit:focus {
     border: 1px solid rgb[highlight_line];
 }
 
-QTextBrowser
+QTextBrowser, QPlainTextEdit[readOnly="true"]
 {
     background-color: rgb[output_background];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextBrowser:disabled
+QTextBrowser:disabled, QPlainTextEdit[readOnly="true"]:disabled
 {
     background-color: rgb[output_background];
     color: rgb[comment];
@@ -383,7 +383,7 @@ QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
     color: rgb[tab_selected_text];
 }
 
-QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QAbstractItemView:hover
+QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractItemView:hover
 {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];

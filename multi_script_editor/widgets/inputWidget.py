@@ -8,7 +8,7 @@ from vendor.Qt.QtGui import (
     QTextFormat,
     QGuiApplication,
 )
-from vendor.Qt.QtWidgets import QTextEdit, QApplication
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
 import re
 import os
 
@@ -32,7 +32,7 @@ font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 
-class inputClass(BaseTextWidgetMixin, QTextEdit):
+class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()
@@ -49,7 +49,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.desk = desk
         self.search_service = SearchService(self)
         self.multi_cursor_manager = MultiCursorManager(self)
-        self.setLineWrapMode(QTextEdit.NoWrap)
+        self.setLineWrapMode(QPlainTextEdit.NoWrap)
         if managers.context == 'hou':
             self.setCursorWidth(2)
         font = QFont(font_name)
@@ -170,7 +170,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()
-        QTextEdit.focusOutEvent(self,event)
+        QPlainTextEdit.focusOutEvent(self,event)
         QTimer.singleShot(10, self._check_focus_loss)
 
     def _check_focus_loss(self):
@@ -201,7 +201,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def hideEvent(self, event):
         self.completer.updateCompleteList()
         try:
-            QTextEdit.hideEvent(self,event)
+            QPlainTextEdit.hideEvent(self,event)
         except:
             pass
 
@@ -239,7 +239,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             elif ext in ['.usd', '.usda']:
                 highlighter_class = extraSyntaxes.UsdHighlighterClass
 
-        self.hgl = highlighter_class(self, colors)
+        self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
@@ -250,7 +250,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
-        self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
+        self.hgl = syntaxHighLighter.PythonHighlighterClass(self.document(), colors)
         qss = design.applyColorToMainStyle(colors)
         self.setStyleSheet(qss)
         self.completer.setStyleSheet(qss)
@@ -418,7 +418,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                     c.removeSelectedText()
 
             if add:
-                QTextEdit.keyPressEvent(self, event)
+                QPlainTextEdit.keyPressEvent(self, event)
                 cursor = self.textCursor()
                 cursor.insertText(add)
                 self.setTextCursor(cursor)
@@ -539,7 +539,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         else:
             parse = 1
 
-        QTextEdit.keyPressEvent(self, event)
+        QPlainTextEdit.keyPressEvent(self, event)
 
         # start parse text (Debounced to prevent lag on keypress)
         # Note: We now rely on textChanged signal for more reliable updates,
@@ -1015,15 +1015,15 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     ########################### DROP
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
-        QTextEdit.dragEnterEvent(self,event)
+        QPlainTextEdit.dragEnterEvent(self,event)
 
     def dragMoveEvent(self, event):
         event.acceptProposedAction()
-        QTextEdit.dragMoveEvent(self,event)
+        QPlainTextEdit.dragMoveEvent(self,event)
 
     def dragLeaveEvent(self, event):
         event.accept()
-        QTextEdit.dragLeaveEvent(self,event)
+        QPlainTextEdit.dragLeaveEvent(self,event)
 
     def dropEvent(self, event):
         if event.mimeData().hasUrls():
@@ -1043,9 +1043,9 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             namespace = self.p.namespace
             text = managers.dropEvents[managers.context](namespace, text, event)
             mim.setText(text)
-            QTextEdit.dropEvent(self,event)
+            QPlainTextEdit.dropEvent(self,event)
         else:
-            QTextEdit.dropEvent(self,event)
+            QPlainTextEdit.dropEvent(self,event)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
@@ -1056,7 +1056,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             else:
                 self.changeFontSize(False)
         else:
-            QTextEdit.wheelEvent(self, event)
+            QPlainTextEdit.wheelEvent(self, event)
 
 
     def insertFromMimeData (self, source ):
