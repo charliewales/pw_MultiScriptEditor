@@ -561,7 +561,7 @@ QHeaderView{
 }
 
 /*********** COMPLETER & SYMBOL WIDGET **************/
-completeMenuClass, SymbolWidget QListWidget
+completeMenuClass
 {
     color: rgb[tab_selected_text];
     background-color: rgb[background];
@@ -569,12 +569,12 @@ completeMenuClass, SymbolWidget QListWidget
     font-size: [textsize]pt;
     height: 25px;
 }
-completeMenuClass::item:selected, SymbolWidget QListWidget::item:selected {
+completeMenuClass::item:selected {
     color: rgb[tab_selected_text];
     background-color: rgb[background];
 }
 
-completeMenuClass::item:hover, SymbolWidget QListWidget::item:hover
+completeMenuClass::item:hover
 {
     background-color: rgb[tab_selected_text];
     color: rgb[background];
