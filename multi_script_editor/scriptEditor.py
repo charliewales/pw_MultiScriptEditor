@@ -1969,7 +1969,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> Snippet '{0}' saved successfully.".format(name))
             self.fillSnippetsMenu()
 
+        def do_delete(name):
+            if hasattr(self, 'snippet_widget') and self.snippet_widget:
+                self.snippet_widget.reject()
+            self.deleteSnippet(name)
+
         self.snippet_widget.snippetNameSelected.connect(do_save)
+        self.snippet_widget.snippetDeleted.connect(do_delete)
         if hasattr(self.snippet_widget, 'exec'):
             self.snippet_widget.exec()
         else:
@@ -2008,7 +2014,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
+        
+        def do_delete(name):
+            if hasattr(self, 'snippet_widget') and self.snippet_widget:
+                self.snippet_widget.reject()
+            self.deleteSnippet(name)
+
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
+        self.snippet_widget.snippetDeleted.connect(do_delete)
         if hasattr(self.snippet_widget, 'exec'):
             self.snippet_widget.exec()
         else:
@@ -2027,7 +2040,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         res = self.show_question_msg(
             "Delete Snippet",
             "Are you sure you want to delete snippet '{0}'?".format(name),
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes
         )
         if res == QMessageBox.Yes:
             snippets = self._get_snippets()

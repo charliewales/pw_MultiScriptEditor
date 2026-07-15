@@ -5,6 +5,7 @@ from vendor.Qt.QtGui import QFontMetrics
 class SnippetWidget(QDialog):
     snippetSelected = Signal(str)  # emits the snippet content
     snippetNameSelected = Signal(str)  # emits the snippet name for save mode
+    snippetDeleted = Signal(str)  # emits the snippet name to delete
 
     def __init__(self, snippets, parent=None, center_widget=None, qss=None, font=None, colors=None, mode="insert"):
         super(SnippetWidget, self).__init__(parent)
@@ -154,6 +155,10 @@ class SnippetWidget(QDialog):
                 self.list_widget.setCurrentRow(row + 1)
         elif event.key() in (Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End):
             self.list_widget.keyPressEvent(event)
+        elif event.key() == Qt.Key_Delete:
+            item = self.list_widget.currentItem()
+            if item:
+                self.snippetDeleted.emit(item.text())
         else:
             # Pass other keys to the search line edit
             self.search_le.keyPressEvent(event)
