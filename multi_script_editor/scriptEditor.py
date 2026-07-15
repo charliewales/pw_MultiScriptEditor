@@ -139,6 +139,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.setWindowStyle()
         self.appContextMenu()
         self.addArgs()
+        self.updateStatusBarInfo()
 
     def setupStatusBarWidgets(self):
         self.lbl_msg = QLabel("")
@@ -216,6 +217,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.lbl_lang.setText(lang)
         if lang == 'Python' and hasattr(w.edit, 'runLinter'):
             w.edit.runLinter()
+            
+        # Toggle execution UI based on language
+        is_python = (lang == 'Python')
+        for act in (self.execAll_act, self.execLine_act, self.execSel_act, self.clearHistory_act, self.clear_exec_act):
+            if hasattr(self, act.objectName()):
+                act.setEnabled(is_python)
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
@@ -761,6 +768,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.addNewTab()
 
     def executeAll(self):
+        if hasattr(self, 'execAll_act') and not self.execAll_act.isEnabled():
+            return
         allText = self.tab.getCurrentText()
         if self.print_command_act.isChecked():
             allText += '\n# Execute All'
@@ -768,6 +777,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.execute_command_requested.emit(allText.strip(), self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def executeLine(self):
+        if hasattr(self, 'execLine_act') and not self.execLine_act.isEnabled():
+            return
         text = self.tab.getCurrentLine()
         if self.print_command_act.isChecked():
             text += '\n# Execute Line'
@@ -775,6 +786,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def executeSelected(self):
+        if hasattr(self, 'execSel_act') and not self.execSel_act.isEnabled():
+            return
         text = self.tab.getCurrentSelectedText()
         if self.print_command_act.isChecked():
             text += '\n# Execute Selected'
