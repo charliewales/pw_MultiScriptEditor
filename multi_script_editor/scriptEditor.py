@@ -929,8 +929,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             font.setPointSize(max(1, int(font.pointSize() * 0.9)))
 
+        center_widget = self.tab.current() or self.out
         self.generic_symbol_widget = symbolWidget.SymbolWidget(
-            symbols, self, self.out, qss=qss, font=font, colors=colors, ext='.generic',
+            symbols, self, center_widget, qss=qss, font=font, colors=colors, ext='.generic',
             placeholder_text=placeholder_text, auto_accept_on_ctrl_release=auto_accept_on_ctrl_release
         )
 
@@ -946,7 +947,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def showRecentFiles(self):
         if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
-            self.generic_symbol_widget.navigate_next()
+            self.generic_symbol_widget.navigate_next(wrap=True)
             return
 
         recent = self._current_settings.get('recent_files', [])
@@ -966,7 +967,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def showOpenTabs(self):
         if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
-            self.generic_symbol_widget.navigate_next()
+            self.generic_symbol_widget.navigate_next(wrap=True)
             return
 
         symbols = []
