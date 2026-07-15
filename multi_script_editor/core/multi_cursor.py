@@ -217,6 +217,7 @@ class MultiCursorManager:
             if not already_selected:
                 self.multi_cursors.append(found_cursor)
                 self.editor.setTextCursor(found_cursor)
+                self.editor.centerCursor()
 
         self.editor.highlight_current_line()
         if hasattr(self.editor, 'messageSignal'):
@@ -313,12 +314,6 @@ class MultiCursorManager:
         self._center_cursor_in_editor()
 
     def _center_cursor_in_editor(self):
-        cursor = self.editor.textCursor()
-        block = cursor.block()
-        if block.isValid():
-            block_rect = self.editor.document().documentLayout().blockBoundingRect(block)
-            cursor_y = block_rect.center().y()
-            viewport_height = self.editor.viewport().height()
-            self.editor.verticalScrollBar().setValue(int(cursor_y - viewport_height / 2))
+        self.editor.centerCursor()
 
 
