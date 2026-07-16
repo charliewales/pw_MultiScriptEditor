@@ -439,23 +439,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         disk_font = disk_settings.get('font', {})
         self._current_settings['font'] = disk_font.copy()
 
-        from core.settings_model import ThemesModel
-        theme_settings = ThemesModel().read_settings()
-
-        if theme_name not in design.predefinedThemes:
-            disk_colors = None
-            if 'colors' in theme_settings:
-                disk_colors = theme_settings['colors'].get(theme_name)
-
-            if 'colors' not in self._current_settings:
-                self._current_settings['colors'] = {}
-
-            if disk_colors:
-                self._current_settings['colors'][theme_name] = disk_colors
-            else:
-                if theme_name in self._current_settings['colors']:
-                    del self._current_settings['colors'][theme_name]
-
         self.applyTheme(theme_name)
 
     def applyTheme(self, name):

@@ -144,6 +144,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         editor_font.setStyleHint(QFont.Monospace)
         self.blockSignals(True)
         self.setFont(editor_font)
+        if hasattr(self, 'fs'):
+            self.fs = pointSize
         self.blockSignals(False)
 
     def setFont(self, font):

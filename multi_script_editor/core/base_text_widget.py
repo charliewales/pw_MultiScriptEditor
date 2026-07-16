@@ -10,12 +10,18 @@ class BaseTextWidgetMixin:
     def changeFontSize(self, up):
         f = self.font()
         size = f.pointSize()
+        if size <= 0 and hasattr(self, 'fs'):
+            size = self.fs
+            
         if up:
             size = min(30, size + 1)
         else:
             size = max(8, size - 1)
-        f.setPointSize(size)
-        self.setFont(f)
+            
+        if hasattr(self, 'fs'):
+            self.fs = size
+            
+        self.setTextEditFontSize(size)
 
     def setTextEditFontSize(self, size):
         f = self.font()
@@ -81,6 +87,8 @@ class BaseTextWidgetMixin:
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
+        if hasattr(self, 'fs'):
+            self.fs = pointSize
         
         if hasattr(self, 'completer') and self.completer:
             self.completer.setFont(editor_font)
