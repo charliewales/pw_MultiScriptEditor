@@ -66,7 +66,12 @@ class tabWidgetClass(QTabWidget):
         self.setCornerWidget(self.corner_widget, Qt.TopLeftCorner)
 
         if hasattr(self.p, 'toolBar'):
-            self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
+            self.right_corner_widget = QWidget(self)
+            self.right_corner_layout = QHBoxLayout(self.right_corner_widget)
+            self.right_corner_layout.setContentsMargins(15, 0, 0, 0)
+            self.right_corner_layout.setSpacing(0)
+            self.right_corner_layout.addWidget(self.p.toolBar)
+            self.setCornerWidget(self.right_corner_widget, Qt.TopRightCorner)
 
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
 
@@ -566,7 +571,7 @@ class tabWidgetClass(QTabWidget):
 
         self.tabBar().setFont(tab_font)
 
-        css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\n/*TAB_FONT_END*/\n" % (family, size_css)
+        css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\nQTabBar::scroller { width: 0px; }\n/*TAB_FONT_END*/\n" % (family, size_css)
         ss = self.styleSheet()
         ss = re.sub(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', '', ss, flags=re.DOTALL)
         self.setStyleSheet(ss + css)
