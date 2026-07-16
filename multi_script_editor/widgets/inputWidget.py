@@ -222,18 +222,28 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
             ext = os.path.splitext(self.parent().file_path)[1]
 
+        self.comment_prefix = '#'
+        self.comment_suffix = ''
+
         if ext:
             ext = ext.lower()
             if ext == '.js':
                 highlighter_class = extraSyntaxes.JavascriptHighlighterClass
+                self.comment_prefix = '//'
             elif ext in ['.html', '.htm']:
                 highlighter_class = extraSyntaxes.HtmlHighlighterClass
+                self.comment_prefix = '<!--'
+                self.comment_suffix = '-->'
             elif ext in ['.yaml', '.yml']:
                 highlighter_class = extraSyntaxes.YamlHighlighterClass
             elif ext == '.md':
                 highlighter_class = extraSyntaxes.MarkdownHighlighterClass
+                self.comment_prefix = '<!--'
+                self.comment_suffix = '-->'
             elif ext == '.css':
                 highlighter_class = extraSyntaxes.CssHighlighterClass
+                self.comment_prefix = '/*'
+                self.comment_suffix = '*/'
             elif ext == '.txt':
                 highlighter_class = extraSyntaxes.TextHighlighterClass
             elif ext == '.log':
@@ -242,6 +252,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 highlighter_class = extraSyntaxes.UsdHighlighterClass
             elif ext == '.json':
                 highlighter_class = extraSyntaxes.JsonHighlighterClass
+                self.comment_prefix = '//'
 
         self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)
@@ -778,10 +789,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         def map_pos(p):
             rel_p = p - block_start
             lines = text.split('\n')
+            new_lines = new_text.split('\n')
             current_old_len = 0
             current_new_len = 0
             for i, line in enumerate(lines):
                 line_len = len(line) + 1 # +1 for \n
+                new_line_len = len(new_lines[i]) + 1 if i < len(new_lines) else line_len
                 if rel_p < current_old_len + line_len:
                     offset_in_line = rel_p - current_old_len
                     idx, shift = shifts[i]
@@ -789,8 +802,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         offset_in_line = max(idx, offset_in_line + shift)
                     return block_start + current_new_len + offset_in_line
                 current_old_len += line_len
-                idx, shift = shifts[i] if i < len(shifts) else (-1, 0)
-                current_new_len += line_len + shift
+                current_new_len += new_line_len
             return block_start + current_new_len
 
         new_start = map_pos(start)
@@ -822,6 +834,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.update()
 
     def addRemoveComments(self, text):
+        prefix = getattr(self, 'comment_prefix', '#')
+        suffix = getattr(self, 'comment_suffix', '')
+        
         result = text
         ofs = 0
         shifts = []
@@ -830,28 +845,53 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             ind = 0
             while ind < len(lines) and not lines[ind].strip():
                 ind += 1
-            if ind < len(lines) and lines[ind].strip()[0] == '#': # remove comment
+                
+            is_commented = False
+            if ind < len(lines):
+                stripped = lines[ind].strip()
+                if stripped.startswith(prefix):
+                    is_commented = True
+                    # Check if suffix is needed and present
+                    if suffix and not stripped.endswith(suffix):
+                        is_commented = False
+                        
+            if is_commented: # remove comment
                 new_lines = []
                 for i, x in enumerate(lines):
-                    idx = x.find('#')
+                    idx = x.find(prefix)
                     shift = 0
                     if idx != -1:
-                        if len(x) > idx + 1 and x[idx+1] == ' ':
-                            new_lines.append(x[:idx] + x[idx+2:])
-                            shift = -2
-                            if i == ind: ofs = -2
+                        # remove suffix if exists
+                        if suffix:
+                            sidx = x.rfind(suffix)
+                            if sidx != -1:
+                                if sidx > 0 and x[sidx-1] == ' ':
+                                    x = x[:sidx-1] + x[sidx+len(suffix):]
+                                else:
+                                    x = x[:sidx] + x[sidx+len(suffix):]
+                                    
+                        if len(x) > idx + len(prefix) and x[idx+len(prefix)] == ' ':
+                            new_lines.append(x[:idx] + x[idx+len(prefix)+1:])
+                            shift = -(len(prefix) + 1)
+                            if i == ind: ofs = shift
                         else:
-                            new_lines.append(x[:idx] + x[idx+1:])
-                            shift = -1
-                            if i == ind: ofs = -1
+                            new_lines.append(x[:idx] + x[idx+len(prefix):])
+                            shift = -len(prefix)
+                            if i == ind: ofs = shift
                     else:
                         new_lines.append(x)
                     shifts.append((idx, shift))
                 result = '\n'.join(new_lines)
             else:   # add comment
-                result = '\n'.join(['# ' + x for x in lines ])
-                shifts = [(0, 2)] * len(lines)
-                ofs = 2
+                new_lines = []
+                for x in lines:
+                    new_line = prefix + ' ' + x
+                    if suffix:
+                        new_line += ' ' + suffix
+                    new_lines.append(new_line)
+                result = '\n'.join(new_lines)
+                shifts = [(0, len(prefix) + 1)] * len(lines)
+                ofs = len(prefix) + 1
         else:
             shifts = [(0, 0)] * (text.count('\n') + 1)
         return result, ofs, shifts

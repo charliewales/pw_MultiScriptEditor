@@ -252,6 +252,8 @@ class JsonHighlighterClass(BaseHighlighterClass):
         rules.append((r'\b(true|false|null)\b', 0, self.getStyle(self.colors.get('extra', (0,128,255)))))
         # Numbers
         rules.append((r"\b-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        # Comments (put last so they override any string/key/number formatting)
+        rules.append((r'//.*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
         
         self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
 
