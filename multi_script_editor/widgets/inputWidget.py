@@ -799,6 +799,34 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.setTextCursor(cursor)
             self.update()
 
+    def fStringSelected(self):
+        cursor = self.textCursor()
+        text_to_format = ""
+        has_selection = cursor.hasSelection()
+        
+        if has_selection:
+            text_to_format = cursor.selection().toPlainText()
+        else:
+            from vendor.Qt.QtWidgets import QApplication
+            clipboard = QApplication.clipboard()
+            text_to_format = clipboard.text()
+            
+        new_text = 'f"{' + text_to_format + '}"'
+        
+        self.document().documentLayout().blockSignals(True)
+        cursor.beginEditBlock()
+        if has_selection:
+            cursor.removeSelectedText()
+        cursor.insertText(new_text)
+        
+        if not text_to_format:
+            cursor.movePosition(QTextCursor.Left, QTextCursor.MoveAnchor, 2)
+            
+        cursor.endEditBlock()
+        self.document().documentLayout().blockSignals(False)
+        self.setTextCursor(cursor)
+        self.update()
+
     def commentSelected(self):
         cursor = self.textCursor()
         self.document().documentLayout().blockSignals(True)

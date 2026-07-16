@@ -198,6 +198,11 @@ class ScriptEditorUIBuilder:
         editor.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
         editor.add_quotes_act.setIcon(QIcon(icons['add_quotes']))
 
+        editor.f_string_act.triggered.connect(editor.tab.fString)
+        editor.f_string_act.setShortcut('Alt+F')
+        editor.f_string_act.setShortcutContext(Qt.WidgetShortcut)
+        editor.f_string_act.setIcon(QIcon(icons['add_quotes']))
+
         editor.zoom_in_act.triggered.connect(partial(editor.change_global_font_size, True))
         editor.zoom_in_act.setShortcutContext(Qt.WindowShortcut)
         editor.zoom_in_act.setIcon(QIcon(icons['zoom_in']))
@@ -213,6 +218,7 @@ class ScriptEditorUIBuilder:
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
+        QShortcut(QKeySequence("Alt+f"), editor, editor.tab.fString)
 
         editor.selectNextOccurrence_act.triggered.connect(editor.tab.selectNextOccurrence)
         editor.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
@@ -421,6 +427,7 @@ class ScriptEditorUIBuilder:
             editor.moveLineDown_act: "Move the current line or selection down",
             editor.comment_cat: "Toggle comment on the current line or selection",
             editor.add_quotes_act: "Add quotes around selected text or select text inside quotes",
+            editor.f_string_act: "Create an f-string from the current selection or clipboard",
             editor.autocomplete_act: "Toggle code autocomplete functionality",
             editor.showAutocomplete_act: "Show code autocompletion",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",

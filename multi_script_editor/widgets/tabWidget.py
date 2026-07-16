@@ -644,6 +644,9 @@ class tabWidgetClass(QTabWidget):
     def addQuotes(self):
         self.current().addQuotesSelected()
 
+    def fString(self):
+        self.current().fStringSelected()
+
     def selectNextOccurrence(self):
         self.current().select_next_occurrence()
 
