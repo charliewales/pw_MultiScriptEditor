@@ -595,29 +595,25 @@ QHeaderView{
 }
 
 /*********** COMPLETER & SYMBOL WIDGET **************/
-completeMenuClass
-{
-    color: rgb[tab_selected_text];
-    background-color: rgb[background];
+completeMenuClass,
+SymbolWidget QListWidget {
+    color: rgb[completer_text];
+    background-color: rgb[completer_background];
     alternate-background-color: rgb[completer_alt_background];
     font-size: [textsize]pt;
     height: 25px;
-}
-completeMenuClass::item:selected {
-    color: rgb[tab_selected_text];
-    background-color: rgb[background];
+    outline: none;
 }
 
-completeMenuClass::item:hover
-{
-    background-color: rgb[tab_selected_text];
-    color: rgb[background];
+completeMenuClass::item:selected,
+SymbolWidget QListWidget::item:selected {
+    background: rgb[completer_selected_background];
 }
 
-QToolTip, QLabel#docTooltip {
+completeMenuClass::item:hover,
+SymbolWidget QListWidget::item:hover {
+    background-color: rgb[completer_hover_background];
     color: rgb[completer_text];
-    background-color: rgb[completer_background];
-    border: 1px solid rgb[highlight_line];
 }
 
 QListWidget#outlineList
