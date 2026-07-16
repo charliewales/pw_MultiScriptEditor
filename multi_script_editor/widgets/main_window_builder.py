@@ -321,6 +321,7 @@ class ScriptEditorUIBuilder:
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
+        editor.showOutlineButton_act.triggered.connect(editor.toggleOutlineButton)
         # QShortcut(QKeySequence("Ctrl+Shift+O"), editor, editor.showOutline_act.trigger)
 
         # Syntax Check toggle setup

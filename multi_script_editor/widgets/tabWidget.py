@@ -58,7 +58,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.setIconSize(QSize(24, 24))
         newTabButton.clicked.connect(lambda checked=False: self.addNewTab())
-        newTabButton.setToolTip("Add Tab (Ctrl+T)")
+        newTabButton.setToolTip("New Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
 
         self.corner_layout.addWidget(self.toggleOutline_btn)

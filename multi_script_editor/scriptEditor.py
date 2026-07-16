@@ -1264,6 +1264,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.showOutline_act.setChecked(show_outline)
         self.toggleOutline(show_outline)
 
+        show_outline_button = data.get('show_outline_button', True)
+        self.showOutlineButton_act.setChecked(show_outline_button)
+        self.toggleOutlineButton(show_outline_button)
+
         show_output = data.get('show_output', True)
         self.showOutput_act.setChecked(show_output)
         self.toggleOutput(show_output)
@@ -1317,6 +1321,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
         show_outline = self.showOutline_act.isChecked()
+        show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
@@ -1366,6 +1371,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_whitespace=show_whitespace,
             font=font_data,
             show_outline=show_outline,
+            show_outline_button=show_outline_button,
             show_output=show_output,
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
@@ -1519,6 +1525,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.toggleOutline_btn.blockSignals(True)
             self.tab.toggleOutline_btn.setChecked(state)
             self.tab.toggleOutline_btn.blockSignals(False)
+
+    def toggleOutlineButton(self, state):
+        self.showOutlineButton_act.setChecked(state)
+        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
+            self.tab.toggleOutline_btn.setVisible(state)
 
     def toggleOutput(self, state=None):
         if state is None:
