@@ -642,10 +642,12 @@ class tabWidgetClass(QTabWidget):
         self.current().commentSelected()
 
     def addQuotes(self):
-        self.current().addQuotesSelected()
+        prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+        self.current().addQuotesSelected(prefer_single_quotes)
 
     def fString(self):
-        self.current().fStringSelected()
+        prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+        self.current().fStringSelected(prefer_single_quotes)
 
     def selectNextOccurrence(self):
         self.current().select_next_occurrence()

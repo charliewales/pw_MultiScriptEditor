@@ -328,6 +328,7 @@ class ScriptEditorUIBuilder:
 
         editor.highlightAllOccurrences_act.triggered.connect(editor.toggleHighlightAllOccurrences)
         editor.occurrencesCaseSensitive_act.triggered.connect(editor.toggleOccurrencesCaseSensitive)
+        editor.preferSingleQuotes_act.triggered.connect(editor.togglePreferSingleQuotes)
 
         # Output Bottom toggle setup
         editor.outputBottom_act.setShortcut("Ctrl+U")
@@ -432,8 +433,9 @@ class ScriptEditorUIBuilder:
             editor.showAutocomplete_act: "Show code autocompletion",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
-            editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
+            editor.highlightAllOccurrences_act: "Highlight all occurrences of the selected text",
             editor.occurrencesCaseSensitive_act: "If enabled, case sensitive will be used when selecting occurrences",
+            editor.preferSingleQuotes_act: "If enabled, single quotes will be used when adding quotes and f-strings",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.nextSelection_act: "Move to the next selection",
             editor.previousSelection_act: "Move to the previous selection",

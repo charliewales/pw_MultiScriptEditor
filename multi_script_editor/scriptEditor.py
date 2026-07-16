@@ -1278,6 +1278,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
         self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
 
+        prefer_single_quotes = data.get('prefer_single_quotes', False)
+        self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
+
         output_bottom = data.get('output_bottom', False)
         self.outputBottom_act.setChecked(output_bottom)
         self.toggleOutputBottom(output_bottom)
@@ -1318,6 +1321,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
+        prefer_single_quotes = self.preferSingleQuotes_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
         quick_tab_switching = self.quickTabSwitching_act.isChecked()
         auto_close_delimiters = self.autoCloseDelimiters_act.isChecked()
@@ -1366,6 +1370,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
             occurrences_case_sensitive=occurrences_case_sensitive,
+            prefer_single_quotes=prefer_single_quotes,
             output_bottom=output_bottom,
             quick_tab_switching=quick_tab_switching,
             auto_close_delimiters=auto_close_delimiters,
@@ -1587,6 +1592,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if hasattr(w, 'edit'):
                 if self.highlightAllOccurrences_act.isChecked():
                     w.edit.auto_select_all_occurrences()
+
+    def togglePreferSingleQuotes(self, state=None):
+        if state is None:
+            state = self.preferSingleQuotes_act.isChecked()
+        self._current_settings['prefer_single_quotes'] = state
+        self.saveSettings()
 
     def updateOutline(self):
         if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():

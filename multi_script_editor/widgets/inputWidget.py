@@ -714,7 +714,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.setTextCursor(cursor)
             self.update()
 
-    def addQuotesSelected(self):
+    def addQuotesSelected(self, prefer_single_quotes=False):
         cursor = self.textCursor()
 
         if cursor.hasSelection():
@@ -762,8 +762,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         is_quoted = True
 
             if not is_quoted:
+                quote_char = "'" if prefer_single_quotes else '"'
                 self.document().documentLayout().blockSignals(True)
-                cursor.insertText('"' + text + '"')
+                cursor.insertText(quote_char + text + quote_char)
                 self.document().documentLayout().blockSignals(False)
                 self.setTextCursor(cursor)
                 self.update()
@@ -794,12 +795,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             cursor.select(QTextCursor.WordUnderCursor)
             sel_text = cursor.selection().toPlainText()
             if sel_text:
-                cursor.insertText('"' + sel_text + '"')
+                quote_char = "'" if prefer_single_quotes else '"'
+                cursor.insertText(quote_char + sel_text + quote_char)
             self.document().documentLayout().blockSignals(False)
             self.setTextCursor(cursor)
             self.update()
 
-    def fStringSelected(self):
+    def fStringSelected(self, prefer_single_quotes=False):
         cursor = self.textCursor()
         text_to_format = ""
         has_selection = cursor.hasSelection()
@@ -811,7 +813,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             clipboard = QApplication.clipboard()
             text_to_format = clipboard.text()
             
-        new_text = 'f"{' + text_to_format + '}"'
+        quote_char = "'" if prefer_single_quotes else '"'
+        new_text = f'f{quote_char}{{{text_to_format}}}{quote_char}'
         
         self.document().documentLayout().blockSignals(True)
         cursor.beginEditBlock()
