@@ -441,7 +441,7 @@ class Ui_scriptEditor(object):
         self.comment_cat.setText(QApplication.translate("scriptEditor", "Comment", None))
         self.add_quotes_act.setText(QApplication.translate("scriptEditor", "Add quotes", None))
         self.f_string_act.setText(QApplication.translate("scriptEditor", "f-string", None))
-        self.showOutline_act.setText(QApplication.translate("scriptEditor", "Code otline", None))
+        self.showOutline_act.setText(QApplication.translate("scriptEditor", "Code outline", None))
         self.showOutlineButton_act.setText(QApplication.translate("scriptEditor", "Code outline button", None))
         self.showOutput_act.setText(QApplication.translate("scriptEditor", "Output", None))
         self.syntaxCheck_act.setText(QApplication.translate("scriptEditor", "Syntax check", None))
