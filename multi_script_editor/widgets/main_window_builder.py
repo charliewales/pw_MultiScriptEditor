@@ -200,12 +200,15 @@ class ScriptEditorUIBuilder:
 
         editor.zoom_in_act.triggered.connect(partial(editor.change_global_font_size, True))
         editor.zoom_in_act.setShortcutContext(Qt.WindowShortcut)
+        editor.zoom_in_act.setIcon(QIcon(icons['zoom_in']))
 
         editor.zoom_out_act.triggered.connect(partial(editor.change_global_font_size, False))
         editor.zoom_out_act.setShortcutContext(Qt.WindowShortcut)
+        editor.zoom_out_act.setIcon(QIcon(icons['zoom_out']))
 
         editor.reset_zoom_act.triggered.connect(editor.restore_global_font_size)
         editor.reset_zoom_act.setShortcutContext(Qt.WindowShortcut)
+        editor.reset_zoom_act.setIcon(QIcon(icons['zoom_reset']))
 
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
@@ -310,7 +313,9 @@ class ScriptEditorUIBuilder:
 
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
+        editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
+        # QShortcut(QKeySequence("Ctrl+Shift+O"), editor, editor.showOutline_act.trigger)
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
@@ -319,7 +324,16 @@ class ScriptEditorUIBuilder:
         editor.occurrencesCaseSensitive_act.triggered.connect(editor.toggleOccurrencesCaseSensitive)
 
         # Output Bottom toggle setup
+        editor.outputBottom_act.setShortcut("Ctrl+U")
+        editor.outputBottom_act.setShortcutContext(Qt.WindowShortcut)
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
+        # QShortcut(QKeySequence("Ctrl+U"), editor, editor.outputBottom_act.trigger)
+
+        # Output toggle setup
+        editor.showOutput_act.setShortcut("Ctrl+K")
+        editor.showOutput_act.setShortcutContext(Qt.WindowShortcut)
+        editor.showOutput_act.triggered.connect(editor.toggleOutput)
+        # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
 
         # Quick Tab Switching toggle setup
         editor.quickTabSwitching_act.triggered.connect(editor.toggleQuickTabSwitching)
@@ -423,9 +437,13 @@ class ScriptEditorUIBuilder:
             editor.execLine_act: "Execute the current line",
             editor.clearHistory_act: "Clear the output panel history",
             editor.showOutline_act: "Show or hide the code outline panel",
+            editor.showOutput_act: "Show or hide the output panel",
             editor.syntaxCheck_act: "Toggle live Python syntax checking",
             editor.outputBottom_act: "Move the output panel to the bottom of the window",
             editor.quickTabSwitching_act: "Enable switching tabs using Ctrl+1, Ctrl+2, etc., and display tab numbers when holding Ctrl",
+            editor.zoom_in_act: "Zoom in the editor font size",
+            editor.zoom_out_act: "Zoom out the editor font size",
+            editor.reset_zoom_act: "Reset the editor font size to theme default",
         }
         for act, tip in status_tips.items():
             if hasattr(act, 'setStatusTip'):

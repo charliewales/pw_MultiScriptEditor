@@ -54,4 +54,7 @@ icons = dict(
     up=os.path.join(root, "up.png"),
     down=os.path.join(root, "down.png"),
     docs=os.path.join(root, "docs.png"),
+    zoom_in=os.path.join(root, "zoom_in.png"),
+    zoom_out=os.path.join(root, "zoom_out.png"),
+    zoom_reset=os.path.join(root, "zoom_reset.png"),
 )
