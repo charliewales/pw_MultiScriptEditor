@@ -82,10 +82,15 @@ class tabWidgetClass(QTabWidget):
         QApplication.instance().installEventFilter(self)
 
     def eventFilter(self, obj, event):
+        quick_tab_switching = True
+        if hasattr(self.p, 'quickTabSwitching_act'):
+            quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Control and not self._ctrl_pressed:
-                self._ctrl_pressed = True
-                self.show_tab_numbers(True)
+                if quick_tab_switching:
+                    self._ctrl_pressed = True
+                    self.show_tab_numbers(True)
             elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
                 if hasattr(self.p, 'showOpenTabs'):
                     self.p.showOpenTabs()
@@ -165,9 +170,13 @@ class tabWidgetClass(QTabWidget):
                             tab_widget._tab_number_label.setFixedSize(btn.size())
 
                     self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._tab_number_label)
+                    tab_widget._tab_number_label.show()
             else:
-                if hasattr(tab_widget, '_original_close_button'):
-                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
+                current_btn = self.tabBar().tabButton(i, QTabBar.RightSide)
+                if current_btn and type(current_btn).__name__ == 'QLabel':
+                    if hasattr(tab_widget, '_original_close_button') and tab_widget._original_close_button:
+                        self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
+                        tab_widget._original_close_button.show()
 
     def toggle_outline(self, state):
         if hasattr(self.p, 'toggleOutline'):
@@ -518,6 +527,8 @@ class tabWidgetClass(QTabWidget):
         self.current().copy()
 
     def switch_to_tab_index(self, index):
+        if hasattr(self.p, 'quickTabSwitching_act') and not self.p.quickTabSwitching_act.isChecked():
+            return
         if 0 <= index < self.count():
             self.setCurrentIndex(index)
 

@@ -1278,6 +1278,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outputBottom_act.setChecked(output_bottom)
         self.toggleOutputBottom(output_bottom)
 
+        quick_tab_switching = data.get('quick_tab_switching', True)
+        self.quickTabSwitching_act.setChecked(quick_tab_switching)
+
         self.updateRecentFilesMenu()
 
         theme = data.get('theme', 'Multi Script Editor')
@@ -1308,6 +1311,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
+        quick_tab_switching = self.quickTabSwitching_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
@@ -1353,6 +1357,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             highlight_all_occurrences=highlight_all,
             occurrences_case_sensitive=occurrences_case_sensitive,
             output_bottom=output_bottom,
+            quick_tab_switching=quick_tab_switching,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
@@ -1512,6 +1517,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if sum(sizes) > 0:
             self.splitter.setSizes(sizes[::-1])
+
+    def toggleQuickTabSwitching(self, state=None):
+        if state is None:
+            state = self.quickTabSwitching_act.isChecked()
+        self._current_settings['quick_tab_switching'] = state
+        self.saveSettings()
+        if not state:
+            self.tab._ctrl_pressed = False
+            self.tab.show_tab_numbers(False)
 
     def toggleSyntaxCheck(self, state=None):
         if state is None:

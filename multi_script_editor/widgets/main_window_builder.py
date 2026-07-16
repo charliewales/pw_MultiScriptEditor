@@ -321,6 +321,9 @@ class ScriptEditorUIBuilder:
         # Output Bottom toggle setup
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
 
+        # Quick Tab Switching toggle setup
+        editor.quickTabSwitching_act.triggered.connect(editor.toggleQuickTabSwitching)
+
         editor.outline_timer = QTimer(editor)
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
@@ -422,6 +425,7 @@ class ScriptEditorUIBuilder:
             editor.showOutline_act: "Show or hide the code outline panel",
             editor.syntaxCheck_act: "Toggle live Python syntax checking",
             editor.outputBottom_act: "Move the output panel to the bottom of the window",
+            editor.quickTabSwitching_act: "Enable switching tabs using Ctrl+1, Ctrl+2, etc., and display tab numbers when holding Ctrl",
         }
         for act, tip in status_tips.items():
             if hasattr(act, 'setStatusTip'):
