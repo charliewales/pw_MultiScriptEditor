@@ -23,12 +23,6 @@ class SettingsModel:
         elif managers.context == 'nuke':
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = os.path.join(home, '.nuke')
-        elif managers.context == 'max':
-            try:
-                import MaxPlus
-                appData = os.path.dirname(MaxPlus.PathManager.GetTempDir())
-            except Exception:
-                pass
         else:
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = home

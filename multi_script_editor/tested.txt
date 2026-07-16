@@ -1,7 +1,6 @@
 Supported applications:
     Standalone
 
-    3ds Max
     Houdini
     Maya
     Nuke

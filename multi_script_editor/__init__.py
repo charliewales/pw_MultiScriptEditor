@@ -39,17 +39,6 @@ def showMaya(dock=False):
     _maya.show(dock)
 
 
-# 3DSMAX PLUS
-def show3DSMax():
-    """
-    Launch Multi Script Editor in 3DSMax
-    """
-    sys.argv = []
-    from .managers import _3dsmax
-
-    _3dsmax.show()
-
-
 def show(*args, **kwargs):
     from . import managers
     if managers.context == 'hou':
@@ -60,8 +49,6 @@ def show(*args, **kwargs):
     elif managers.context == 'nuke':
         # Nuke's show takes 'panel' kwarg
         return showNuke(kwargs.get('panel', False))
-    elif managers.context == 'max':
-        return show3DSMax()
 
     import scriptEditor
     scriptEditor.show()
