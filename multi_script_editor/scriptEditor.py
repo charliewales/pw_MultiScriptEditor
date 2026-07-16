@@ -830,7 +830,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         line_num, ok = QInputDialog.getInt(self, "Go to line", "Enter line number:", 1, 1, max_lines)
         if ok:
-            block = edit_widget.document().findBlockByLineNumber(line_num - 1)
+            block = edit_widget.document().findBlockByNumber(line_num - 1)
             if block.isValid():
                 cursor = edit_widget.textCursor()
                 cursor.setPosition(block.position())
@@ -876,7 +876,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors, ext=ext)
 
         def _jump_to_line(line_num):
-            block = edit_widget.document().findBlockByLineNumber(line_num - 1)
+            block = edit_widget.document().findBlockByNumber(line_num - 1)
             if block.isValid():
                 cursor = edit_widget.textCursor()
                 cursor.setPosition(block.position())
