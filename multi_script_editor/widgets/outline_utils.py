@@ -75,6 +75,8 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
             html_name = f'<span style="color:{c_kw}">{kw}</span> <span style="color:{c_meth}">{node_type}</span> <span style="color:{c_str}">{rest}</span>'
     elif ext in ['.yaml', '.yml']:
         html_name = f'<span style="color:{c_kw}">{name}</span>'
+    elif ext == '.json':
+        html_name = f'<span style="color:{c_kw}">{name}</span>'
     elif ext in ['.html', '.htm']:
         parts = name.split(' ', 1)
         if len(parts) == 2:

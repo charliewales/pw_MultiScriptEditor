@@ -127,4 +127,13 @@ class OutlineParser:
                     symbols.append({'name': "{0} {1}".format(keyword, decl), 'line': line_num, 'indent': indent, 'type': 'usd'})
                     continue
 
+            elif ext == '.json':
+                json_match = re.match(r'^(\s*)"([^"\\]*(?:\\.[^"\\]*)*)"\s*:', line)
+                if json_match:
+                    indent_str = json_match.group(1)
+                    indent = len(indent_str) // 2
+                    name = json_match.group(2)
+                    symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'json'})
+                    continue
+
         return symbols
