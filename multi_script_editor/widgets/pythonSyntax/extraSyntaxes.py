@@ -238,3 +238,20 @@ class LogHighlighterClass(BaseHighlighterClass):
         
         self.rules = [(re.compile(pat, re.IGNORECASE), index, fmt) for (pat, index, fmt) in rules]
 
+
+class JsonHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(JsonHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        # Strings (put first so they get overwritten by Keys if they match)
+        rules.append((r'"[^"\\]*(?:\\.[^"\\]*)*"', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        # Keys (strings before colon)
+        rules.append((r'("[^"\\]*(?:\\.[^"\\]*)*")\s*:', 1, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        # Booleans and Nulls
+        rules.append((r'\b(true|false|null)\b', 0, self.getStyle(self.colors.get('extra', (0,128,255)))))
+        # Numbers
+        rules.append((r"\b-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
+

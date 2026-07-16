@@ -238,6 +238,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 highlighter_class = extraSyntaxes.LogHighlighterClass
             elif ext in ['.usd', '.usda']:
                 highlighter_class = extraSyntaxes.UsdHighlighterClass
+            elif ext == '.json':
+                highlighter_class = extraSyntaxes.JsonHighlighterClass
 
         self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)
