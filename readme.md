@@ -19,14 +19,14 @@ or embedded in another application. The main purpose for integration - the abili
 
 ### Existing integration modules
 
-  - Houdini 19
-  - Nuke 13
-  - Maya 2022-2023
+  - Houdini 19-22
+  - Nuke 15-17
+  - Maya 2024-2027
     
 RV Integration in [nebukadhezer branch](https://github.com/nebukadhezer/multi_script_editor)
 
 If necessary, you can extend this to make your own integration module.
-The main pre condition - Should be used Python2.7.
+The main pre condition - Should be used Python 3+.
  
 
 ### Houdini features

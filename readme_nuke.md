@@ -12,8 +12,8 @@ import multi_script_editor
 # add to menu
 menubar = nuke.menu("Nuke")
 toolMenu = menubar.addMenu('&Tools')
-toolMenu.addCommand("Multi Script Editor", multi_script_editor.showNuke)
+toolMenu.addCommand("Multi Script Editor", multi_script_editor.show)
 
 # create new pane
-multi_script_editor.showNuke(panel=True)
+multi_script_editor.show()
 ```

@@ -8,5 +8,5 @@
 
 ```python
 import multi_script_editor
-multi_script_editor.showMaya(dock=True)
+multi_script_editor.show()
 ```
