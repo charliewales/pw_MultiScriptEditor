@@ -697,6 +697,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                                 pass
                     if text:
                         w.addText(text)
+                        w.document().clearUndoRedoStacks()
+                        w.document().setModified(False)
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text

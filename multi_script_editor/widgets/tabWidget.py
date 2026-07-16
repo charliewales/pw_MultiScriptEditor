@@ -203,6 +203,7 @@ class tabWidgetClass(QTabWidget):
                         edit.moveCursor(QTextCursor.Start)
                         edit.highlight_current_line()
                         edit.document().clearUndoRedoStacks()
+                        edit.document().setModified(False)
 
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
@@ -217,10 +218,18 @@ class tabWidgetClass(QTabWidget):
         if current_widget:
             current_widget.edit.setFocus()
 
+    def tabNeedsSaving(self, i):
+        widget = self.widget(i)
+        if not widget or not hasattr(widget, 'edit'):
+            return False
+        if hasattr(widget, 'file_path') and widget.file_path:
+            return widget.edit.document().isModified()
+        return bool(self.getCurrentText(i).strip())
+
     def closeTab(self, i):
         removed = False
         widget_to_remove = self.widget(i)
-        if self.getCurrentText(i).strip():
+        if self.tabNeedsSaving(i):
             if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
                 self.removeTab(i)
                 removed = True
@@ -654,6 +663,7 @@ class EditorTabContainer(QWidget):
         if text:
             self.edit.addText(text)
             self.edit.document().clearUndoRedoStacks()
+            self.edit.document().setModified(False)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
