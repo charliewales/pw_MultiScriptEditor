@@ -727,10 +727,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 continue
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
-            if managers.context == 'hou':
-                size = widget.edit.fs
-            else:
-                size = widget.edit.font().pointSize()
+            size = widget.edit.getFontSize()
 
             size = max(1, size - zoom_delta)
 
@@ -1293,12 +1290,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         geo = self.geometry()
         sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
         center = [geo.center().x(), geo.center().y()]
-        out_pt = self.out.font().pointSize()
-        if out_pt == -1:
-            if hasattr(self.out, 'fs'):
-                out_pt = self.out.fs
-            else:
-                out_pt = self.out.font().pixelSize()
+        out_pt = self.out.getFontSize()
         size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
         horizontal_split_sizes = self.horizontal_splitter.sizes()
@@ -1327,12 +1319,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         font_data = dict()
         if not theme_has_custom_font and self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
             editor_font = self.tab.widget(0).edit.font()
-            pt_size = editor_font.pointSize()
-            if pt_size == -1:
-                if hasattr(self.tab.widget(0).edit, 'fs'):
-                    pt_size = self.tab.widget(0).edit.fs
-                else:
-                    pt_size = editor_font.pixelSize()
+            pt_size = self.tab.widget(0).edit.getFontSize()
 
             zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
             if zoom_delta:
@@ -1636,10 +1623,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
             widget = self.tab.widget(item)
-            if managers.context == 'hou':
-                size = widget.edit.fs
-            else:
-                size = widget.edit.font().pointSize()
+            size = widget.edit.getFontSize()
 
             size = max(1, size - zoom_delta)
 
@@ -1702,10 +1686,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 name_tab = self.tab.tabText(item)
                 text = self.tab.getTabText(item)
                 widget = self.tab.widget(item)
-                if managers.context == 'hou':
-                    size = widget.edit.fs
-                else:
-                    size = widget.edit.font().pointSize()
+                size = widget.edit.getFontSize()
                 tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
                 tabs.append(tab)
             self._presenter.save_named_session(name, tabs)

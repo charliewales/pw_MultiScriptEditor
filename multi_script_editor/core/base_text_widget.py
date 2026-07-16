@@ -7,21 +7,30 @@ class BaseTextWidgetMixin:
     such as font size manipulation, word wrap, and whitespace rendering.
     Expects to be mixed into a QTextEdit or QTextBrowser.
     """
+    def getFontSize(self):
+        if hasattr(self, 'fs') and self.fs > 0:
+            return self.fs
+        
+        size = self.font().pointSize()
+        if size > 0:
+            return size
+            
+        return 10 # Safe fallback
+
+    def setFontSize(self, size):
+        if size >= 8: # Assuming minimumFontSize is around 8-10.
+            self.fs = size
+            self.setTextEditFontSize(self.fs)
+
     def changeFontSize(self, up):
-        f = self.font()
-        size = f.pointSize()
-        if size <= 0 and hasattr(self, 'fs'):
-            size = self.fs
+        size = self.getFontSize()
             
         if up:
             size = min(30, size + 1)
         else:
             size = max(8, size - 1)
             
-        if hasattr(self, 'fs'):
-            self.fs = size
-            
-        self.setTextEditFontSize(size)
+        self.setFontSize(size)
 
     def setTextEditFontSize(self, size):
         f = self.font()

@@ -1067,20 +1067,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         text = source.text()
         self.insertPlainText(text)
 
-    def getFontSize(self):
-        s = self.font().pointSize()
-        return s
-
-    def setFontSize(self,size):
-        if size >= minimumFontSize:
-            if managers.context == 'hou':
-                self.fs = size
-                self.setTextEditFontSize(self.fs)
-            else:
-                f = self.font()
-                f.setPointSize(size)
-                self.setFont(f)
-
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
 
