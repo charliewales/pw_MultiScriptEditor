@@ -419,6 +419,7 @@ class ScriptEditorUIBuilder:
             editor.comment_cat: "Toggle comment on the current line or selection",
             editor.add_quotes_act: "Add quotes around selected text or select text inside quotes",
             editor.autocomplete_act: "Toggle code autocomplete functionality",
+            editor.showAutocomplete_act: "Show code autocompletion",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
             editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
