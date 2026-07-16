@@ -29,6 +29,10 @@ class tabWidgetClass(QTabWidget):
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
+        # Ensure scroll buttons are shown instead of squeezing tabs when they exceed the width
+        self.setUsesScrollButtons(True)
+        self.tabBar().setExpanding(False)
+        self.tabBar().setElideMode(Qt.ElideNone)
         self.tabCloseRequested.connect(self.closeTab)
         self.currentChanged.connect(self.update_custom_close_buttons)
         self.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
