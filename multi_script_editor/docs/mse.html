@@ -22,18 +22,19 @@
     <h1>Multi Script Editor Documentation</h1>
 
     <h2>General Overview</h2>
-    <p>Multi Script Editor is an open-source, cross-platform, and cross-application Python editor. It can be run as a standalone application or embedded within other software applications (such as Houdini, Nuke, Maya, 3DsMax), offering the ability to script in Python efficiently and centrally while automatically adapting to the host application's environment.</p>
+    <p>Multi Script Editor is an open-source, cross-platform, and cross-application code editor. It can be run as a standalone application or embedded within other software applications (such as Houdini, Nuke, Maya, 3DsMax), offering the ability to edit and execute code efficiently and centrally while automatically adapting to the host application's environment. While optimized for Python, it supports syntax highlighting, file parsing, and outline navigation for a wide range of web and CGI-centric file formats.</p>
 
     <h3>Key Features:</h3>
     <ul>
         <li>Preserves and loads tabs and the code within them automatically across sessions.</li>
-        <li>Interactive execution of selected code blocks or single lines.</li>
+        <li>Interactive execution of selected code blocks, single lines, or entire scripts (for Python files).</li>
         <li>Fully adjustable and customizable color themes for the code editor and UI.</li>
-        <li>Advanced code completion (powered by the <code>jedi</code> module) and docstring visualizers.</li>
+        <li>Advanced code completion (powered by the <code>jedi</code> module) and docstring visualizers for Python.</li>
+        <li>Multi-format syntax highlighting and editing support for Python, JavaScript, HTML, YAML, Markdown, CSS, Text, Log, USD, and JSON.</li>
+        <li>Smart document structure outline and symbol parsing (supports Python classes/functions, JSON/YAML keys, and USD def/class/over declarations).</li>
         <li>Context-aware completion for different functions, such as existing nodes and scene paths depending on the integrated host software.</li>
         <li>Built-in syntax checking and multi-cursor editing support.</li>
         <li>Code snippets functionality for quickly inserting predefined blocks of code.</li>
-        <li>Confirmation prompts for critical actions to prevent accidental data loss.</li>
     </ul>
 
     <hr>
@@ -131,6 +132,7 @@
     </ul>
 
     <h3>Run Menu</h3>
+    <p><em>Note: Execution features (including code execution and Python helper queries like type, help, dir, and print) are exclusively supported for Python documents. They are automatically disabled and inactive when editing non-Python files (e.g. JSON, HTML, YAML, CSS).</em></p>
     <ul>
         <li><strong>Clear output before execution</strong><span class="shortcut">CTRL + ALT + C</span>
             <span class="desc">When enabled, the application automatically clears the console output panel every time you run a script, keeping the output focused exclusively on the latest execution results.</span></li>
