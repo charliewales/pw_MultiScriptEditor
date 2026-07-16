@@ -635,3 +635,10 @@ QStatusBar, QStatusBar QLabel
     background-color: rgb[window];
     color: rgb[status_bar_text];
 }
+
+QToolTip
+{
+    background-color: rgb[background];
+    color: rgb[tab_selected_text];
+    border: 1px solid rgb[highlight_line];
+}

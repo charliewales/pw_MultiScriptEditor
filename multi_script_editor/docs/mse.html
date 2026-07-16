@@ -93,6 +93,8 @@
             <span class="desc">Wraps the currently selected text with quotation marks. Very useful for quickly converting variables or text into string literals.</span></li>
         <li><strong>Comment</strong><span class="shortcut">ALT + C</span>
             <span class="desc">Toggles the Python comment state (using <code>#</code>) for the current line or selected block of lines, allowing you to quickly comment out or uncomment code blocks.</span></li>
+        <li><strong>f-string</strong><span class="shortcut">ALT + F</span>
+            <span class="desc">Converts the selected text or the word under the cursor into a Python f-string literal.</span></li>
         <li><strong>Delete line(s)</strong><span class="shortcut">CTRL + D</span>
             <span class="desc">Immediately deletes the current line or all lines spanned by the current selection.</span></li>
         <li><strong>Duplicate line(s)</strong><span class="shortcut">CTRL + SHIFT + D</span>
@@ -103,6 +105,10 @@
             <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
         <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
             <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
+        <li><strong>Next highlight/selection</strong><span class="shortcut">CTRL + J</span>
+            <span class="desc">Moves the focus to the next highlighted occurrence or selection.</span></li>
+        <li><strong>Previous highlight/selection</strong><span class="shortcut">CTRL + SHIFT + J</span>
+            <span class="desc">Moves the focus to the previous highlighted occurrence or selection.</span></li>
         <li><strong>Select next occurrence</strong><span class="shortcut">CTRL + ALT + D</span>
             <span class="desc">Finds and selects the next instance of the currently selected word (or the word under the cursor), enabling multi-cursor editing for rapid refactoring.</span></li>
         <li><strong>Select all occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>
@@ -121,6 +127,10 @@
             <span class="desc">Manually triggers the autocomplete suggestions popup list at the current cursor position.</span></li>
         <li><strong>Highlight all occurrences</strong>
             <span class="desc">Toggles automatic visual highlighting of all matching occurrences of the selected word throughout the active document.</span></li>
+        <li><strong>Occurrences are case sensitive</strong>
+            <span class="desc">Toggles case sensitivity for matching word occurrences highlighted in the document.</span></li>
+        <li><strong>Prefer single quotes</strong>
+            <span class="desc">Toggles quote preference to single quotes instead of double quotes when using 'Add quotes' and f-string utilities.</span></li>
         <li><strong>Trim auto whitespace</strong>
             <span class="desc">Toggles automatic trimming of trailing whitespace whenever you save a script.</span></li>
         <li><strong>Render whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
@@ -135,6 +145,8 @@
     <ul>
         <li><strong>Code Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
             <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
+        <li><strong>Code outline button</strong>
+            <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
         <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
             <span class="desc">Toggles the visibility of the output console panel.</span></li>
         <li><strong>Output at the bottom</strong>
@@ -184,6 +196,8 @@
             <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
         <li><strong>Syntax check</strong>
             <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
+        <li><strong>Auto-close delimiters</strong>
+            <span class="desc">Toggles automatic closing of brackets, braces, parentheses, and quotes as you type in the editor.</span></li>
         <li><strong>Quick tab switching</strong>
             <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
         <li><strong>Choose font...</strong>
