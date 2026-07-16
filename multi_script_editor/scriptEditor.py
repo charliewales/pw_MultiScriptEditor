@@ -528,10 +528,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             out_font_data = font_data.copy()
             secondary_default = max(1, int(font_data.get('pointSize', 10) * 0.9))
 
-            if 'textsize' in colors:
-                out_font_data['pointSize'] = max(1, int(colors['textsize']))
-            elif 'output_text_size' in colors:
+            if 'output_text_size' in colors:
                 out_font_data['pointSize'] = max(1, int(colors['output_text_size']))
+            elif 'textsize' in colors:
+                out_font_data['pointSize'] = max(1, int(colors['textsize']))
             else:
                 out_font_data['pointSize'] = secondary_default
             self.out.set_start_font(out_font_data)
