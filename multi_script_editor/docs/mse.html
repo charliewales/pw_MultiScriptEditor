@@ -131,6 +131,22 @@
             <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
     </ul>
 
+    <h3>View Menu</h3>
+    <ul>
+        <li><strong>Code Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
+            <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
+        <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
+            <span class="desc">Toggles the visibility of the output console panel.</span></li>
+        <li><strong>Output at the bottom</strong>
+            <span class="desc">Toggles the layout position of the output console, placing it at the bottom of the window when checked.</span></li>
+        <li><strong>Zoom in</strong><span class="shortcut">CTRL + +</span>
+            <span class="desc">Increases the editor font size globally.</span></li>
+        <li><strong>Zoom out</strong><span class="shortcut">CTRL + -</span>
+            <span class="desc">Decreases the editor font size globally.</span></li>
+        <li><strong>Reset zoom</strong><span class="shortcut">CTRL + 0</span>
+            <span class="desc">Resets the editor font size to the theme's default size.</span></li>
+    </ul>
+
     <h3>Run Menu</h3>
     <p><em>Note: Execution features (including code execution and Python helper queries like type, help, dir, and print) are exclusively supported for Python documents. They are automatically disabled and inactive when editing non-Python files (e.g. JSON, HTML, YAML, CSS).</em></p>
     <ul>
@@ -158,20 +174,18 @@
 
     <h3>Options Menu</h3>
     <ul>
+        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
+            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
         <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
             <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
         <li><strong>Fuzzy autocomplete</strong>
             <span class="desc">Enables a more flexible, fuzzy-matching algorithm for autocompletion, allowing you to find suggestions even if you skip characters or make minor typos.</span></li>
         <li><strong>Show docstrings</strong>
             <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
-        <li><strong>Show outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
-            <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
-        <li><strong>Output at the bottom</strong>
-            <span class="desc">Toggles the layout position of the output console, placing it at the bottom of the window when checked.</span></li>
         <li><strong>Syntax check</strong>
             <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
-        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
-            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
+        <li><strong>Quick tab switching</strong>
+            <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
         <li><strong>Choose font...</strong>
             <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor globally.</span></li>
         <li><strong>Open settings folder</strong>
@@ -182,6 +196,8 @@
 
     <h3>Help Menu</h3>
     <ul>
+        <li><strong>Donate</strong>
+            <span class="desc">Opens the donation link in your default web browser to support the development of Multi Script Editor.</span></li>
         <li><strong>Quick help</strong><span class="shortcut">F1</span>
             <span class="desc">Shows a quick reference guide overlay detailing the most common features and available host-specific environment variables.</span></li>
         <li><strong>GitHub</strong>

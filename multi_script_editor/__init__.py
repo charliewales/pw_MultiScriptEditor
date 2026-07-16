@@ -1,6 +1,15 @@
 import os
 import sys
 
+# Set preferred binding
+if not os.environ.get("QT_PREFERRED_BINDING"):
+    os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(
+        ["PySide2", "PySide6", "PyQt5", "PySide", "PyQt4"]
+    )
+
+# Disable High Dpi Scaling in PySide6
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
+
 root = os.path.dirname(__file__)
 if not root in sys.path:
     sys.path.append(root)

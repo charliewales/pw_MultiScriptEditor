@@ -11,10 +11,10 @@ os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
 mse_version = "6.3.0"
 
-root_path = os.path.dirname(__file__)
-vendor_path = os.path.join(root_path, 'vendor')
-if vendor_path not in sys.path:
-    sys.path.insert(0, vendor_path)
+# root_path = os.path.dirname(__file__)
+# vendor_path = os.path.join(root_path, 'vendor')
+# if vendor_path not in sys.path:
+#     sys.path.insert(0, vendor_path)
 
 import managers
 from core.execution_manager import ExecutionManager
@@ -217,7 +217,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.lbl_lang.setText(lang)
         if lang == 'Python' and hasattr(w.edit, 'runLinter'):
             w.edit.runLinter()
-            
+
         # Toggle execution UI based on language
         is_python = (lang == 'Python')
         for act in (self.execAll_act, self.execLine_act, self.execSel_act, self.clearHistory_act, self.clear_exec_act):
@@ -540,7 +540,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             base_font.setStyleHint(QFont.Monospace)
             base_font.setPointSize(font_data.get('pointSize', 10))
             self.theme_font = QFont(base_font)
-            
+
             tooltip_font = QFont(base_font)
             tab_text_size = colors.get('tab_text_size', None)
             if tab_text_size is not None:
@@ -1159,10 +1159,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             flags |= Qt.WindowStaysOnTopHint
         else:
             flags &= ~Qt.WindowStaysOnTopHint
-            
+
         # Workaround for PySide6: ensure window buttons remain enabled
         flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
-        
+
         self.setWindowFlags(flags)
         self.show()
 
@@ -1220,15 +1220,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.always_ontop_act.setChecked(always_ontop)
         current_flags = self.windowFlags()
         new_flags = current_flags
-        
+
         if always_ontop:
             new_flags |= Qt.WindowStaysOnTopHint
         else:
             new_flags &= ~Qt.WindowStaysOnTopHint
-            
+
         # PySide6 workaround to keep window controls enabled
         new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
-            
+
         if current_flags != new_flags:
             self.setWindowFlags(new_flags)
             if self.isVisible():
@@ -2016,7 +2016,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
-        
+
         def do_delete(name):
             if hasattr(self, 'snippet_widget') and self.snippet_widget:
                 self.snippet_widget.reject()
