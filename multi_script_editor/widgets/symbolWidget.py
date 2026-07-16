@@ -5,13 +5,15 @@ from widgets.searchPopupWidget import SearchPopupWidget
 
 class SymbolWidget(SearchPopupWidget):
     symbolSelected = Signal(object)  # emits the line number or any other data
+    symbolDeleted = Signal(object)
 
-    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False):
+    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False):
         super(SymbolWidget, self).__init__(parent, center_widget, qss, font, colors, placeholder_text=placeholder_text)
 
         self.symbols = symbols
         self.ext = ext
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
+        self.allow_delete = allow_delete
         
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
@@ -55,3 +57,23 @@ class SymbolWidget(SearchPopupWidget):
             if item:
                 self.on_item_clicked(item)
         super(SymbolWidget, self).keyReleaseEvent(event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Delete and self.allow_delete:
+            item = self.list_widget.currentItem()
+            if item:
+                line = item.data(Qt.UserRole)
+                self.symbolDeleted.emit(line)
+            return
+        super(SymbolWidget, self).keyPressEvent(event)
+
+    def remove_item_by_data(self, data_val):
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            if item.data(Qt.UserRole) == data_val:
+                self.list_widget.takeItem(i)
+                break
+        for i, sym in enumerate(self.symbols):
+            if sym.get('line') == data_val:
+                self.symbols.pop(i)
+                break

@@ -888,7 +888,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.symbol_widget.show()
         self.symbol_widget.search_le.setFocus()
 
-    def _show_generic_symbol_widget(self, symbols, callback, hide_search=False, placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False):
+    def _show_generic_symbol_widget(self, symbols, callback, hide_search=False, placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False, delete_callback=None):
         theme_name = self._current_settings.get('theme', 'Dark')
         qss = design.editorStyle(theme_name)
         colors = design.getColors(theme_name)
@@ -914,13 +914,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         center_widget = self.tab.current() or self.out
         self.generic_symbol_widget = symbolWidget.SymbolWidget(
             symbols, self, center_widget, qss=qss, font=font, colors=colors, ext='.generic',
-            placeholder_text=placeholder_text, auto_accept_on_ctrl_release=auto_accept_on_ctrl_release
+            placeholder_text=placeholder_text, auto_accept_on_ctrl_release=auto_accept_on_ctrl_release,
+            allow_delete=allow_delete
         )
 
         if hide_search:
             self.generic_symbol_widget.search_le.hide()
 
         self.generic_symbol_widget.symbolSelected.connect(callback)
+        if delete_callback:
+            self.generic_symbol_widget.symbolDeleted.connect(delete_callback)
         self.generic_symbol_widget.show()
         if not hide_search:
             self.generic_symbol_widget.search_le.setFocus()
@@ -939,13 +942,36 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         symbols = []
         for path in recent:
             name = os.path.basename(path) + ' - ' + os.path.dirname(path)
+            if not os.path.exists(path):
+                name += ' *'
             symbols.append({'name': name, 'line': path, 'indent': 0})
 
         self._show_generic_symbol_widget(
             symbols, self.openRecentFile,
             placeholder_text="Search files by name...",
-            auto_accept_on_ctrl_release=False
+            auto_accept_on_ctrl_release=False,
+            allow_delete=True,
+            delete_callback=self.removeRecentFile
         )
+
+    def removeRecentFile(self, path):
+        from vendor.Qt.QtWidgets import QMessageBox
+        reply = self.show_question_msg(
+            'Remove Recent File', 
+            f'Are you sure you want to remove this file from the recent list?\n{path}', 
+            QMessageBox.Yes | QMessageBox.No, 
+            QMessageBox.Yes
+        )
+        if reply == QMessageBox.Yes:
+            recent = self._current_settings.get('recent_files', [])
+            if path in recent:
+                recent.remove(path)
+                self._current_settings['recent_files'] = recent
+                self.saveSettings()
+                self.updateRecentFilesMenu()
+            
+            if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
+                self.generic_symbol_widget.remove_item_by_data(path)
 
     def showOpenTabs(self):
         if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():

@@ -77,6 +77,9 @@ class SearchPopupWidget(QDialog):
             if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End, Qt.Key_Tab, Qt.Key_Backtab):
                 self.keyPressEvent(event)
                 return True
+            elif event.key() == Qt.Key_Delete and getattr(self, 'allow_delete', False):
+                self.keyPressEvent(event)
+                return True
         return super(SearchPopupWidget, self).eventFilter(obj, event)
 
     def keyPressEvent(self, event):
