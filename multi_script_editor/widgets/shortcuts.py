@@ -7,6 +7,8 @@ class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
     def __init__(self, parent):
         super(shortcutsClass, self).__init__(parent)
         self.setupUi(self)
+        if hasattr(parent, 'theme_font'):
+            self.setStyleSheet(parent.styleSheet() + "\n* { font-family: '%s'; }" % parent.theme_font.family())
         if sys.version_info.major >= 3:
             self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         else:

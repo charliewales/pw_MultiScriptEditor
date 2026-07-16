@@ -9,6 +9,8 @@ class aboutClass(QDialog, about_UIs.Ui_Dialog):
     def __init__(self, parent):
         super(aboutClass, self).__init__(parent)
         self.setupUi(self)
+        if hasattr(parent, 'theme_font'):
+            self.setStyleSheet(parent.styleSheet() + "\n* { font-family: '%s'; }" % parent.theme_font.family())
         self.title_lb.setText(self.title_lb.text()+str(("\n".join([d.strip() for d in parent.ver.split("·")]))))
         self.text_link_lb.setText(text)
         self.icon_lb.setPixmap(QPixmap(icons.icons['pw']).scaled(60,60, Qt.KeepAspectRatio, Qt.SmoothTransformation))

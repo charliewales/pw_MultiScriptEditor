@@ -1,20 +1,28 @@
 Supported applications:
-    Standalone
+    Standalone - Python 3
 
-    Houdini
-    Maya
-    Nuke
+    Autodesk Maya
+    SideFx Houdini
+    The Foundry Nuke
 
 Tested on:
-    Rocky Linux 8.6
-    Windows 10
 
-    Houdini 19.5.368 - Windows 10 - Rocky Linux 8.6
-    Maya 2023.3 - Windows 10 - Rocky Linux 8.6
-    Maya 2022.4 - Windows 10
-    Nuke 13.1v2 - Windows 10 - Rocky Linux 8.6
+    Houdini 20.0.1122 · Linux · Python-3.10.10 · PySide2-5.15.2
+    Houdini 20.0.751 · Windows · Python-3.10.10 · PySide2-5.15.2
+    Houdini 21.0.729 · Windows · Python-3.11.7 · PySide6-6.5.3
+    Houdini 22.0.368 · Windows · Python-3.13.10 · PySide-6.8.3
+
+    Maya 2024.2   · Linux   · Python-3.10.8 · PySide-5.15.2.1
+    Maya 2024.2.4 · Windows · Python-3.10.8 · PySide-5.15.2.1
+    Maya 2025.3.2 · Windows · Python-3.11.4 · PySide6-6.5.3
+    Maya 2026.3.4 · Windows · Python-3.11.9 · PySide6-6.5.3
+    Maya 2027      · Windows · Python-3.13.9 · PySide6-6.8.3
+
+    Nuke 15.2v9 · Windows · Python-3.10.10 · PySide2-5.15.2.1
+    Nuke 17.1v2 · Windows · Python-3.11.11 · PySide6-6.5.3
+
     Standalone
-    	Python 3.6.8  - Rocky Linux 8.6
-    	Python 3.10.10 - Windows 10
-    	
-    	Support for Python 2 was removed.
+        Linux   · Python-3.11.12 · PySide6-6.9.2
+        Linux   · Python-3.10.13 · PySide2-5.15.2.1
+        Windows · Python-3.13.14 · PySide6-6.11.1
+        Windows · Python-3.10.11 · PySide2-5.15.2.1
