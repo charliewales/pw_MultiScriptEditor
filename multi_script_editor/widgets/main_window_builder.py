@@ -362,7 +362,7 @@ class ScriptEditorUIBuilder:
         editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Recent files Submenu
-        editor.recent_files_menu = QMenu("Recent files - Ctrl+P", editor)
+        editor.recent_files_menu = QMenu("Recent files    Ctrl+P", editor)
         editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.recent_files_menu)
         editor.file_menu.insertSeparator(editor.closeAllTabs_act)
