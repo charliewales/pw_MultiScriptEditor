@@ -33,6 +33,7 @@ class ScriptEditorUIBuilder:
         editor.saveSeccion_act.setShortcut("Ctrl+Alt+S")
         editor.closeAllTabs_act.triggered.connect(editor.closeAllTabsWithConfirm)
         editor.closeAllTabs_act.setIcon(QIcon(icons['close_all_tabs']))
+        editor.closeAllTabs_act.setShortcut("Ctrl+Shift+Alt+W")
         editor.exit_act.triggered.connect(editor.close)
         editor.tabToSpaces_act.triggered.connect(editor.tabsToSpaces)
         editor.showAutocomplete_act.triggered.connect(editor.show_autocompletion)
