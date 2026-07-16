@@ -335,6 +335,9 @@ class ScriptEditorUIBuilder:
         editor.showOutput_act.triggered.connect(editor.toggleOutput)
         # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
 
+        # Auto Close Delimiters toggle setup
+        editor.autoCloseDelimiters_act.triggered.connect(editor.toggleAutoCloseDelimiters)
+
         # Quick Tab Switching toggle setup
         editor.quickTabSwitching_act.triggered.connect(editor.toggleQuickTabSwitching)
 
@@ -441,6 +444,7 @@ class ScriptEditorUIBuilder:
             editor.showOutput_act: "Show or hide the output panel",
             editor.syntaxCheck_act: "Toggle live Python syntax checking",
             editor.outputBottom_act: "Move the output panel to the bottom of the window",
+            editor.autoCloseDelimiters_act: "Automatically close brackets, braces, and quotes",
             editor.quickTabSwitching_act: "Enable switching tabs using Ctrl+1, Ctrl+2, etc., and display tab numbers when holding Ctrl",
             editor.zoom_in_act: "Zoom in the editor font size",
             editor.zoom_out_act: "Zoom out the editor font size",

@@ -554,6 +554,38 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         else:
             parse = 1
 
+        auto_close = True
+        if hasattr(self.p, 'autoCloseDelimiters_act'):
+            auto_close = self.p.autoCloseDelimiters_act.isChecked()
+
+        if auto_close:
+            delimiters = {'(': ')', '[': ']', '{': '}', '"': '"', "'": "'"}
+            if event.text() in delimiters:
+                cursor = self.textCursor()
+                if cursor.hasSelection():
+                    start = cursor.selectionStart()
+                    end = cursor.selectionEnd()
+                    
+                    cursor.beginEditBlock()
+                    cursor.setPosition(end)
+                    cursor.insertText(delimiters[event.text()])
+                    cursor.setPosition(start)
+                    cursor.insertText(event.text())
+                    cursor.endEditBlock()
+                    
+                    cursor.setPosition(start + 1)
+                    cursor.setPosition(end + 1, QTextCursor.KeepAnchor)
+                    self.setTextCursor(cursor)
+                    return
+                else:
+                    QPlainTextEdit.keyPressEvent(self, event)
+                    cursor = self.textCursor()
+                    cursor.insertText(delimiters[event.text()])
+                    cursor.movePosition(QTextCursor.Left)
+                    self.setTextCursor(cursor)
+                    self.highlight_current_line()
+                    return
+
         QPlainTextEdit.keyPressEvent(self, event)
 
         # start parse text (Debounced to prevent lag on keypress)

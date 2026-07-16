@@ -1285,6 +1285,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         quick_tab_switching = data.get('quick_tab_switching', True)
         self.quickTabSwitching_act.setChecked(quick_tab_switching)
 
+        auto_close_delimiters = data.get('auto_close_delimiters', True)
+        self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
+
         self.updateRecentFilesMenu()
 
         theme = data.get('theme', 'Multi Script Editor')
@@ -1317,6 +1320,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
         quick_tab_switching = self.quickTabSwitching_act.isChecked()
+        auto_close_delimiters = self.autoCloseDelimiters_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
@@ -1364,6 +1368,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             occurrences_case_sensitive=occurrences_case_sensitive,
             output_bottom=output_bottom,
             quick_tab_switching=quick_tab_switching,
+            auto_close_delimiters=auto_close_delimiters,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
@@ -1538,6 +1543,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not state:
             self.tab._ctrl_pressed = False
             self.tab.show_tab_numbers(False)
+
+    def toggleAutoCloseDelimiters(self, state=None):
+        if state is None:
+            state = self.autoCloseDelimiters_act.isChecked()
+        self._current_settings['auto_close_delimiters'] = state
+        self.saveSettings()
 
     def toggleSyntaxCheck(self, state=None):
         if state is None:
