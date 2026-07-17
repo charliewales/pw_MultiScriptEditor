@@ -727,7 +727,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         cursor = self.textCursor()
         cursor.setPosition(block.position())
         self.setTextCursor(cursor)
-        self.ensureCursorVisible()
+        self.centerCursor()
 
     def show_bookmarks_popup(self):
         """
