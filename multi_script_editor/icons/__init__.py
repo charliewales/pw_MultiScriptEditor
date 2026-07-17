@@ -58,4 +58,5 @@ icons = dict(
     zoom_out=os.path.join(root, "zoom_out.png"),
     zoom_reset=os.path.join(root, "zoom_reset.png"),
     missing=os.path.join(root, "missing.png"),
+    open_in_browser=os.path.join(root, "open_in_browser.png"),
 )
