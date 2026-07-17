@@ -753,6 +753,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         from widgets.bookmarkWidget import BookmarkWidget
         qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
         colors = {}
+        highlighter_class = None
+        if hasattr(self, 'hgl'):
+            highlighter_class = self.hgl.__class__
         if hasattr(self, '_highlight_color_cache'):
             # Fetch styling info
             from core.settings_model import SettingsModel
@@ -767,7 +770,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             center_widget=self,
             qss=qss,
             font=self.font(),
-            colors=colors
+            colors=colors,
+            highlighter_class=highlighter_class
         )
 
         def on_selected(line_num):
