@@ -642,9 +642,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setStandardButtons(buttons)
         msg_box.setDefaultButton(defaultButton)
+
         if hasattr(self, 'theme_font'):
             msg_box.setFont(self.theme_font)
-        return msg_box.exec_()
+
+        if hasattr(msg_box, "exec"):
+            return msg_box.exec()
+        else:
+            return msg_box.exec_()
 
     def show_syntax_errors(self, errors):
         # Pass the errors to the active tab's input widget (for highlighting line numbers if needed)
