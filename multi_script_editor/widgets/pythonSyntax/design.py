@@ -17,6 +17,7 @@ defaultColors = dict(
         string=(245, 165, 18),
         docstring=(130, 160, 75),
         boolean=(160, 220, 120),
+        bookmark=(160, 220, 120),
         brace=(235, 235, 195),
         completer_text=(200, 200, 200),
         completer_selected_text=(105, 105, 105),
@@ -538,8 +539,12 @@ def getColors(theme=False):
     if not theme:
         theme = settings.get('theme')
 
+    has_custom_bookmark = False
+
     if theme in predefinedThemes:
         result = {k:v for k,v in predefinedThemes[theme].items()}
+        if 'bookmark' in result:
+            has_custom_bookmark = True
         for k, v in defaultColors.items():
             if k not in result:
                 if k == 'status_bar_text' and 'tab_selected_text' in result:
@@ -556,8 +561,14 @@ def getColors(theme=False):
         if colors:
             for k, v in colors.items():
                 result[k] = v
+            if 'bookmark' in colors:
+                has_custom_bookmark = True
             if 'status_bar_text' not in colors and 'tab_selected_text' in colors:
                 result['status_bar_text'] = colors['tab_selected_text']
+
+    # Default bookmark to boolean color if not explicitly customized
+    if not has_custom_bookmark and 'boolean' in result:
+        result['bookmark'] = result['boolean']
 
     return result
 

@@ -73,6 +73,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd2.setEnabled(False)
         self.preview_twd.wordWrap(False)
         self.preview_twd2.wordWrap(False)
+
+        self.preview_twd.set_bookmarks([8])
+        self.preview_twd2.set_bookmarks([8])
         self.splitter.setSizes([280, 800])
         self.s = SettingsModel()
         self.t_model = ThemesModel()
@@ -369,6 +372,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             for i in range(self.preview_tab_widget.count()):
                 w = self.preview_tab_widget.widget(i)
                 w.edit.applyPreviewStyle(colors)
+                if hasattr(w, 'lineNum'):
+                    w.lineNum.update()
 
             if colors.get('use_theme_font_on_menus', False) and font_data:
                 menu_font = QFont(font.family(), colors.get('menu_text_size', 10), font.weight(), font.italic())

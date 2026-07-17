@@ -171,7 +171,7 @@ class lineNumberBarClass(QWidget):
 
             if is_bookmarked or is_hovered:
                 if hasattr(self.edit, 'hgl') and hasattr(self.edit.hgl, 'colors') and self.edit.hgl.colors:
-                    bg_tuple = self.edit.hgl.colors.get('boolean', (160, 220, 120))
+                    bg_tuple = self.edit.hgl.colors.get('bookmark', self.edit.hgl.colors.get('boolean', (160, 220, 120)))
                 else:
                     bg_tuple = (160, 220, 120)
 
