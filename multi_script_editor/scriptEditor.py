@@ -1371,8 +1371,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             geo = self.geometry()
             geo.moveCenter(QPoint(x, y))
             self.setGeometry(geo)
+
+        output_bottom = data.get('output_bottom', False)
+        self.outputBottom_act.setChecked(output_bottom)
+        self.toggleOutputBottom(output_bottom)
+
         if splitter:
-            self.splitter.setSizes(splitter)
+            if all(s > 0 for s in splitter):
+                self._last_splitter_sizes = splitter
+                self.splitter.setSizes(splitter)
+            else:
+                default_sizes = self.getDefaultSplitterSizes()
+                self._last_splitter_sizes = default_sizes
+                self.splitter.setSizes(default_sizes)
+        else:
+            default_sizes = self.getDefaultSplitterSizes()
+            self._last_splitter_sizes = default_sizes
+            self.splitter.setSizes(default_sizes)
+
         if horizontal_splitter_sizes:
             self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
         if out_wrap is not None:
@@ -1454,10 +1470,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         prefer_single_quotes = data.get('prefer_single_quotes', False)
         self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
 
-        output_bottom = data.get('output_bottom', False)
-        self.outputBottom_act.setChecked(output_bottom)
-        self.toggleOutputBottom(output_bottom)
-
         quick_tab_switching = data.get('quick_tab_switching', True)
         self.quickTabSwitching_act.setChecked(quick_tab_switching)
 
@@ -1490,6 +1502,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         out_pt = self.out.getFontSize()
         size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
+        if not self.showOutput_act.isChecked() or any(s == 0 for s in split_sizes):
+            split_sizes = getattr(self, '_last_splitter_sizes', self.getDefaultSplitterSizes())
         horizontal_split_sizes = self.horizontal_splitter.sizes()
         if horizontal_split_sizes[0] == 0:
             horizontal_split_sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
@@ -1712,11 +1726,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
             self.tab.toggleOutline_btn.setVisible(state)
 
+    def getDefaultSplitterSizes(self):
+        bottom = self.outputBottom_act.isChecked()
+        return [400, 600] if bottom else [600, 400]
+
     def toggleOutput(self, state=None):
         if state is None:
             state = self.showOutput_act.isChecked()
         self.showOutput_act.setChecked(state)
+        if not state:
+            sizes = self.splitter.sizes()
+            if all(s > 0 for s in sizes):
+                self._last_splitter_sizes = sizes
         self.verticalLayoutWidget.setVisible(state)
+        if state:
+            sizes = getattr(self, '_last_splitter_sizes', self.getDefaultSplitterSizes())
+            if any(s == 0 for s in sizes):
+                sizes = self.getDefaultSplitterSizes()
+            self.splitter.setSizes(sizes)
 
     def toggleOutputBottom(self, state=None):
         if state is None:
@@ -1731,6 +1758,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if sum(sizes) > 0:
             self.splitter.setSizes(sizes[::-1])
+        if hasattr(self, '_last_splitter_sizes') and self._last_splitter_sizes:
+            self._last_splitter_sizes = self._last_splitter_sizes[::-1]
 
     def toggleQuickTabSwitching(self, state=None):
         if state is None:
