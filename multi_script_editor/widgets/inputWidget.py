@@ -37,6 +37,7 @@ class BlockUserData(QTextBlockUserData):
     def __init__(self):
         super(BlockUserData, self).__init__()
         self.folded = False
+        self.bookmarked = False
 
 
 class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
@@ -605,6 +606,185 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 result += '    '
         return result
 
+    def toggle_bookmark(self, block_num=None):
+        """
+        Toggle bookmark on a specific block number or current cursor block if None.
+        """
+        doc = self.document()
+        if block_num is None:
+            block_num = self.textCursor().blockNumber()
+
+        block = doc.findBlockByNumber(block_num)
+        if block.isValid():
+            data = block.userData()
+            if not data:
+                data = BlockUserData()
+                block.setUserData(data)
+
+            data.bookmarked = not data.bookmarked
+
+            # Trigger repaint on line number bar
+            if hasattr(self.parent(), 'lineNum'):
+                self.parent().lineNum.update()
+            elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+                self.parentWidget().lineNum.update()
+
+    def get_bookmarks(self):
+        """
+        Returns a sorted list of 1-based line numbers of all bookmarks.
+        """
+        bookmarks = []
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                bookmarks.append(block.blockNumber() + 1)
+            block = block.next()
+        return sorted(bookmarks)
+
+    def set_bookmarks(self, lines):
+        """
+        Restore bookmarks on the specified 1-based line numbers.
+        """
+        doc = self.document()
+        for line in lines:
+            block = doc.findBlockByNumber(line - 1)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.bookmarked = True
+
+    def clear_bookmarks(self):
+        """
+        Clear all bookmarks in the current document.
+        """
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data:
+                data.bookmarked = False
+            block = block.next()
+        # Trigger repaint on line number bar
+        if hasattr(self.parent(), 'lineNum'):
+            self.parent().lineNum.update()
+        elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+            self.parentWidget().lineNum.update()
+
+    def next_bookmark(self):
+        """
+        Jump to the next bookmark below the current cursor position.
+        """
+        curr_line = self.textCursor().blockNumber()
+        doc = self.document()
+        block = doc.findBlockByNumber(curr_line).next()
+
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.next()
+
+        # Wrap around to the beginning
+        block = doc.begin()
+        while block.isValid() and block.blockNumber() <= curr_line:
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.next()
+
+    def prev_bookmark(self):
+        """
+        Jump to the previous bookmark above the current cursor position.
+        """
+        curr_line = self.textCursor().blockNumber()
+        doc = self.document()
+        block = doc.findBlockByNumber(curr_line).previous()
+
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.previous()
+
+        # Wrap around to the end
+        block = doc.lastBlock()
+        while block.isValid() and block.blockNumber() >= curr_line:
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.previous()
+
+    def jump_to_block(self, block):
+        """
+        Move the cursor to a specific block and center the view.
+        """
+        cursor = self.textCursor()
+        cursor.setPosition(block.position())
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
+
+    def show_bookmarks_popup(self):
+        """
+        Show the BookmarkWidget popup to search and navigate bookmarks.
+        """
+        doc = self.document()
+        bookmarks = []
+        block = doc.begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                bookmarks.append({
+                    'line': block.blockNumber() + 1,
+                    'text': block.text()
+                })
+            block = block.next()
+
+        if not bookmarks:
+            if hasattr(self, 'messageSignal'):
+                self.messageSignal.emit("No bookmarks in this document.")
+            return
+
+        from widgets.bookmarkWidget import BookmarkWidget
+        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
+        colors = {}
+        if hasattr(self, '_highlight_color_cache'):
+            # Fetch styling info
+            from core.settings_model import SettingsModel
+            settings = SettingsModel().read_settings()
+            from widgets.pythonSyntax import design
+            theme = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+
+        popup = BookmarkWidget(
+            bookmarks,
+            parent=self.window(),
+            center_widget=self,
+            qss=qss,
+            font=self.font(),
+            colors=colors
+        )
+
+        def on_selected(line_num):
+            b = doc.findBlockByNumber(line_num - 1)
+            if b.isValid():
+                self.jump_to_block(b)
+
+        def on_deleted(line_num):
+            self.toggle_bookmark(line_num - 1)
+            popup.remove_item_by_data(line_num)
+            if not popup.bookmarks:
+                popup.close()
+
+        popup.bookmarkSelected.connect(on_selected)
+        popup.bookmarkDeleted.connect(on_deleted)
+        popup.exec_()
+
     def keyPressEvent(self, event):
         # unsuppress autocomplete if alphanumeric or dot/underscore
         text = event.text()
@@ -627,8 +807,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.parseText(force=True)
             return
 
-        # Open in browser shortcut, Ctrl+B
+        # Bookmarks Finder shortcut, Ctrl+B
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
+            self.show_bookmarks_popup()
+            return
+
+        # Open in browser shortcut, Ctrl+Alt+B
+        elif event.modifiers() == (Qt.ControlModifier | Qt.AltModifier) and event.key() == Qt.Key_B:
             file_path = getattr(self, 'file_path', None)
             if not file_path and hasattr(self, 'parent') and self.parent():
                 file_path = getattr(self.parent(), 'file_path', None)
@@ -638,6 +823,26 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     import webbrowser
                     webbrowser.open(file_path)
                     return
+
+        # Toggle bookmark, Ctrl+F2
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_F2:
+            self.toggle_bookmark()
+            return
+
+        # Next bookmark, F2
+        elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_F2:
+            self.next_bookmark()
+            return
+
+        # Previous bookmark, Shift+F2
+        elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_F2:
+            self.prev_bookmark()
+            return
+
+        # Clear bookmarks, Ctrl+Shift+F2
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_F2:
+            self.clear_bookmarks()
+            return
 
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:

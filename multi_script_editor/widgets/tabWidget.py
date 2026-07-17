@@ -219,6 +219,12 @@ class tabWidgetClass(QTabWidget):
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
 
+                    # Restore bookmarks once text is loaded
+                    if hasattr(edit, 'set_bookmarks') and hasattr(edit, 'needs_loading_bookmarks'):
+                        if edit.needs_loading_bookmarks:
+                            edit.set_bookmarks(edit.needs_loading_bookmarks)
+                        delattr(edit, 'needs_loading_bookmarks')
+
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
                     if hasattr(edit, 'needs_loading_text'):

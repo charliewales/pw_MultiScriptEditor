@@ -53,3 +53,9 @@ Code Outline                                >   CTRL + SHIFT + O
 Toggle Show Whitespace                      >   CTRL + SHIFT + W
 Output                                      >   CTRL + J
 Output at the bottom                        >   CTRL + U
+Toggle Bookmark                             >   CTRL + F2
+Next Bookmark                               >   F2
+Previous Bookmark                           >   SHIFT + F2
+Clear Bookmarks                             >   CTRL + SHIFT + F2
+Bookmarks Finder                            >   CTRL + B
+Open in browser                             >   CTRL + ALT + B

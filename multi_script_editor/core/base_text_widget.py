@@ -134,7 +134,7 @@ class BaseTextWidgetMixin:
             if ext.lower() in ['.html', '.htm']:
                 from vendor.Qt.QtGui import QIcon
                 from icons import icons
-                open_action = QAction('Open in browser    \tCtrl+B', self)
+                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
                 open_action.setIcon(QIcon(icons['open_in_browser']))
                 open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():

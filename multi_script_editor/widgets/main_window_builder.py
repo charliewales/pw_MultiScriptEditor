@@ -484,6 +484,56 @@ class ScriptEditorUIBuilder:
             editor.zoom_out_act: "Zoom out the editor font size",
             editor.reset_zoom_act: "Reset the editor font size to theme default",
         }
+
+        # Create Bookmarks actions
+        editor.toggleBookmark_act = QAction("Toggle Bookmark", editor)
+        editor.toggleBookmark_act.setShortcut("Ctrl+F2")
+        editor.toggleBookmark_act.setIcon(QIcon(icons.get('bookmark_toggle', '')))
+        editor.toggleBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.toggle_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        
+        editor.nextBookmark_act = QAction("Next Bookmark", editor)
+        editor.nextBookmark_act.setShortcut("F2")
+        editor.nextBookmark_act.setIcon(QIcon(icons.get('bookmark_next', '')))
+        editor.nextBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.next_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        
+        editor.prevBookmark_act = QAction("Previous Bookmark", editor)
+        editor.prevBookmark_act.setShortcut("Shift+F2")
+        editor.prevBookmark_act.setIcon(QIcon(icons.get('bookmark_prev', '')))
+        editor.prevBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.prev_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        
+        editor.clearBookmarks_act = QAction("Clear Bookmarks", editor)
+        editor.clearBookmarks_act.setShortcut("Ctrl+Shift+F2")
+        editor.clearBookmarks_act.setIcon(QIcon(icons.get('clear', '')))
+        editor.clearBookmarks_act.triggered.connect(lambda: editor.tab.currentWidget().edit.clear_bookmarks() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        
+        editor.bookmarksFinder_act = QAction("Bookmarks Finder...", editor)
+        editor.bookmarksFinder_act.setShortcut("Ctrl+B")
+        editor.bookmarksFinder_act.setIcon(QIcon(icons.get('goto_line', '')))
+        editor.bookmarksFinder_act.triggered.connect(lambda: editor.tab.currentWidget().edit.show_bookmarks_popup() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+
+        status_tips[editor.toggleBookmark_act] = "Toggle bookmark on the current line (Ctrl+F2)"
+        status_tips[editor.nextBookmark_act] = "Navigate to the next bookmark (F2)"
+        status_tips[editor.prevBookmark_act] = "Navigate to the previous bookmark (Shift+F2)"
+        status_tips[editor.clearBookmarks_act] = "Clear all bookmarks in the current document (Ctrl+Shift+F2)"
+        status_tips[editor.bookmarksFinder_act] = "Search and navigate bookmarked lines (Ctrl+B)"
+
+        # Create Bookmarks menu
+        editor.bookmarks_menu = QMenu("&Bookmarks", editor)
+        editor.bookmarks_menu.setTearOffEnabled(True)
+        editor.bookmarks_menu.addAction(editor.toggleBookmark_act)
+        editor.bookmarks_menu.addAction(editor.nextBookmark_act)
+        editor.bookmarks_menu.addAction(editor.prevBookmark_act)
+        editor.bookmarks_menu.addAction(editor.clearBookmarks_act)
+        editor.bookmarks_menu.addSeparator()
+        editor.bookmarks_menu.addAction(editor.bookmarksFinder_act)
+
+        # Insert Bookmarks menu after File menu
+        actions = editor.menubar.actions()
+        if len(actions) > 1:
+            editor.menubar.insertMenu(actions[1], editor.bookmarks_menu)
+        else:
+            editor.menubar.addMenu(editor.bookmarks_menu)
+
         for act, tip in status_tips.items():
             if hasattr(act, 'setStatusTip'):
                 act.setStatusTip(tip)

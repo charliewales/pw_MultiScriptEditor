@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import QRect, Qt, QPoint
-from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen, QGuiApplication, QFontMetrics
+from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen, QGuiApplication, QFontMetrics, QPolygon
 from vendor.Qt.QtWidgets import QApplication, QWidget
 
 class lineNumberBarClass(QWidget):
@@ -56,7 +56,7 @@ class lineNumberBarClass(QWidget):
         fm = QFontMetrics(font)
         text_width = fm.horizontalAdvance(str(self.highest_line) + "0") if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line) + "0")
         
-        width = max(45, text_width + 20)
+        width = max(55, text_width + 30)
         
         if self.width() != width:
             self.setFixedWidth(width)
@@ -164,10 +164,24 @@ class lineNumberBarClass(QWidget):
                 painter.drawEllipse(3, round(pos_y) + int(block_height / 2) - 3, 6, 6)
                 painter.setPen(QPen(color))
 
+            # Draw bookmark indicator
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                painter.setBrush(QBrush(QColor("#00aaff")))
+                painter.setPen(Qt.NoPen)
+                cy = round(pos_y) + int(block_height / 2)
+                p1 = QPoint(5, cy - 6)
+                p2 = QPoint(13, cy - 6)
+                p3 = QPoint(13, cy + 6)
+                p4 = QPoint(9, cy + 3)
+                p5 = QPoint(5, cy + 6)
+                painter.drawPolygon(QPolygon([p1, p2, p3, p4, p5]))
+                painter.setPen(QPen(color))
+
             # Draw line number text
-            rec = QRect(0,
+            rec = QRect(18,
                         round(pos_y),
-                        self.width() - 18,
+                        self.width() - 36,
                         round(block_height))
             painter.drawText(rec, align, str(actual_line_number))
 
@@ -239,6 +253,13 @@ class lineNumberBarClass(QWidget):
                         if hasattr(self.edit, 'folding_regions') and block_num in self.edit.folding_regions:
                             recursive = bool(event.modifiers() & Qt.ShiftModifier)
                             self.edit.toggle_fold(block_num, recursive=recursive)
+                            self.update()
+                            return
+                    elif event.x() < 20:
+                        # Toggle bookmark on left margin click
+                        block_num = block.blockNumber()
+                        if hasattr(self.edit, 'toggle_bookmark'):
+                            self.edit.toggle_bookmark(block_num)
                             self.update()
                             return
                     break

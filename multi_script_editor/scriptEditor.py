@@ -705,6 +705,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 is_active = s.get('active', False)
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
 
+                # Store bookmarks to be loaded when text is populated
+                w.needs_loading_bookmarks = s.get('bookmarks', [])
+
                 if is_active:
                     active_index = i
                     if file_path and os.path.exists(file_path):
@@ -713,6 +716,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         w.addText(text)
                         w.document().clearUndoRedoStacks()
                         w.document().setModified(False)
+                        if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
+                            w.set_bookmarks(w.needs_loading_bookmarks)
+                            delattr(w, 'needs_loading_bookmarks')
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
@@ -747,7 +753,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             size = max(1, size - zoom_delta)
 
             file_path = getattr(widget, 'file_path', None)
-            tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path}
+            bookmarks = []
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_bookmarks'):
+                bookmarks = widget.edit.get_bookmarks()
+            tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path, 'bookmarks': bookmarks}
             tabs.append(tab)
         path = self._presenter.save_session(tabs)
         if verbos:

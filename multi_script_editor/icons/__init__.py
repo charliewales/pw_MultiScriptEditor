@@ -59,4 +59,7 @@ icons = dict(
     zoom_reset=os.path.join(root, "zoom_reset.png"),
     missing=os.path.join(root, "missing.png"),
     open_in_browser=os.path.join(root, "open_in_browser.png"),
+    bookmark_toggle=os.path.join(root, "bookmark_toggle.png"),
+    bookmark_next=os.path.join(root, "bookmark_next.png"),
+    bookmark_prev=os.path.join(root, "bookmark_prev.png"),
 )
