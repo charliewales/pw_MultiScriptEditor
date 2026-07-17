@@ -48,31 +48,68 @@ def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_cla
         # Force synchronous rehighlighting
         highlighter.rehighlight()
 
-        # Traverse formatting and build HTML using pythonic iterator
+        # Traverse formatting and build HTML using block layout formats
         html_text = ""
         block = temp_doc.begin()
         while block.isValid():
-            for frag_item in block:
-                fragment = frag_item.fragment() if hasattr(frag_item, 'fragment') else frag_item
-                if fragment.isValid():
-                    frag_text = fragment.text()
-                    fmt = fragment.charFormat()
-                    color = fmt.foreground().color()
+            block_text = block.text()
+            layout = block.layout()
+            formats = layout.formats()
 
-                    if not color.isValid() or color.name() == "#000000":
-                        hex_color = c_text
-                    else:
-                        hex_color = color.name()
+            char_styles = [None] * len(block_text)
 
-                    escaped = html.escape(frag_text).replace(' ', '&nbsp;')
+            for fmt_range in formats:
+                start = fmt_range.start
+                length = fmt_range.length
+                fmt = fmt_range.format
 
-                    style_str = f"color:{hex_color};"
-                    if fmt.fontWeight() == 75 or fmt.font().bold():
-                        style_str += "font-weight:bold;"
-                    if fmt.fontItalic():
-                        style_str += "font-style:italic;"
+                color = fmt.foreground().color()
+                hex_color = color.name() if (color.isValid() and color.name() != "#000000") else c_text
 
-                    html_text += f'<span style="{style_str}">{escaped}</span>'
+                bold = fmt.fontWeight() == 75 or fmt.font().bold()
+                italic = fmt.fontItalic()
+
+                style_info = {
+                    'color': hex_color,
+                    'bold': bold,
+                    'italic': italic
+                }
+
+                for idx in range(start, min(start + length, len(block_text))):
+                    char_styles[idx] = style_info
+
+            # Now build HTML by grouping characters with the same style
+            last_style = None
+            current_span_text = ""
+
+            for idx, char in enumerate(block_text):
+                style = char_styles[idx]
+                if style is None:
+                    style = {'color': c_text, 'bold': False, 'italic': False}
+
+                if style != last_style:
+                    if current_span_text:
+                        escaped = html.escape(current_span_text).replace(' ', '&nbsp;').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+                        style_str = f"color:{last_style['color']};"
+                        if last_style['bold']:
+                            style_str += "font-weight:bold;"
+                        if last_style['italic']:
+                            style_str += "font-style:italic;"
+                        html_text += f'<span style="{style_str}">{escaped}</span>'
+                        current_span_text = ""
+                    last_style = style
+
+                current_span_text += char
+
+            if current_span_text:
+                escaped = html.escape(current_span_text).replace(' ', '&nbsp;').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+                style_str = f"color:{last_style['color']};"
+                if last_style['bold']:
+                    style_str += "font-weight:bold;"
+                if last_style['italic']:
+                    style_str += "font-style:italic;"
+                html_text += f'<span style="{style_str}">{escaped}</span>'
+
             block = block.next()
             if block.isValid():
                 html_text += "<br/>"
