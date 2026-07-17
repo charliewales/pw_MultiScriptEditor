@@ -1003,9 +1003,20 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             if addEndBracket and before and comp.end_char:
                 brackets = {'"':'"', "'":"'"}#, '(':')', '[':']'}
                 if before[-1] in brackets:
+                    # Respect preferred quote style from settings
+                    prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+                    preferred_quote = "'" if prefer_single_quotes else '"'
+                    
+                    # Convert the opening quote if it does not match preference
+                    if before[-1] != preferred_quote:
+                        before = before[:-1] + preferred_quote
+                        
                     ofs = 1
-                    br = brackets[before[-1]]
-                    if end and end[0] == brackets[before[-1]]:
+                    br = preferred_quote
+                    
+                    # Convert or match the closing quote in end if it exists
+                    if end and end[0] in brackets:
+                        end = preferred_quote + end[1:]
                         br = ''
 
         # Auto-add parenthesis for functions/methods/classes

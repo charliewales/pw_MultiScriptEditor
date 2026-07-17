@@ -103,13 +103,17 @@ class MainPresenter:
         if ext != '.py':
             return []
             
+        # Check if the user prefers single quotes
+        prefer_single_quotes = self.view.preferSingleQuotes_act.isChecked() if hasattr(self.view, 'preferSingleQuotes_act') else False
+
         return self.autocomplete_provider.get_completions(
             text=text,
             line=line,
             column=column,
             namespace=namespace,
             fuzzy=fuzzy,
-            context=context
+            context=context,
+            prefer_single_quotes=prefer_single_quotes
         )
 
     def request_lint(self, code):

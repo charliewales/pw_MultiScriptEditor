@@ -26,12 +26,30 @@ class AutocompleteProvider:
             self._jedi = jedi
         return self._jedi
 
-    def get_completions(self, text, line, column, namespace=None, fuzzy=True, context=None):
+    def get_completions(self, text, line, column, namespace=None, fuzzy=True, context=None, prefer_single_quotes=False):
         """
         Returns a list of CompletionItem objects.
         """
         comp_items = []
         context_completer = False
+
+        preferred_quote = "'" if prefer_single_quotes else '"'
+        other_quote = '"' if prefer_single_quotes else "'"
+
+        def format_quotes(name, complete, comp_type):
+            if comp_type == 'string' or (len(name) >= 2 and name[0] in ('"', "'") and name[-1] in ('"', "'")):
+                # Convert quotes in name
+                if len(name) >= 2 and name[0] == other_quote and name[-1] == other_quote:
+                    name = preferred_quote + name[1:-1] + preferred_quote
+                # Convert quotes in complete
+                if complete:
+                    if len(complete) >= 2 and complete[0] == other_quote and complete[-1] == other_quote:
+                        complete = preferred_quote + complete[1:-1] + preferred_quote
+                    elif complete[0] == other_quote:
+                        complete = preferred_quote + complete[1:]
+                    elif complete[-1] == other_quote:
+                        complete = complete[:-1] + preferred_quote
+            return name, complete
 
         # 1. Try Context-Specific Completers (e.g., Maya, Nuke specific cmds)
         if context and context in managers.contextCompleters:
@@ -44,10 +62,12 @@ class AutocompleteProvider:
                 # Format them as CompletionItem
                 if comp:
                     for c in comp:
-                        comp_items.append(CompletionItem(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
+                        name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
+                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
                 if extra:
                     for c in extra:
-                        comp_items.append(CompletionItem(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
+                        name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
+                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
                 
                 if comp_items:
                     return comp_items
@@ -89,9 +109,11 @@ class AutocompleteProvider:
                     if hasattr(c, 'get_completion_prefix_length'):
                         prefix_len = c.get_completion_prefix_length()
 
+                    name, complete = format_quotes(c.name, c.complete, c.type)
+
                     comp_items.append(CompletionItem(
-                        name=c.name,
-                        complete=c.complete,
+                        name=name,
+                        complete=complete,
                         comp_type=c.type,
                         docstring_val=doc,
                         prefix_length=prefix_len
