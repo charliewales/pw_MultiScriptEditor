@@ -61,6 +61,8 @@
                 </ul>
             </span>
         </li>
+        <li><strong>Recent files</strong><span class="shortcut">CTRL + P</span>
+            <span class="desc">A sub-menu containing recently opened files. Pressing the shortcut opens a search popup palette to quickly filter and open recent files, or remove them from the list.</span></li>
         <li><strong>Close all tabs</strong>
             <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
         <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
@@ -75,6 +77,20 @@
             <span class="desc">Renames the label of the current tab. Tab labels now display the full file name.</span></li>
         <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
             <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
+    </ul>
+
+    <h3>Bookmarks Menu</h3>
+    <ul>
+        <li><strong>Toggle Bookmark</strong><span class="shortcut">CTRL + F2</span>
+            <span class="desc">Toggles a bookmark on the current cursor line. A colored ribbon tag is displayed in the gutter. A semi-transparent hover preview is also shown when hovering over the gutter.</span></li>
+        <li><strong>Next Bookmark</strong><span class="shortcut">F2</span>
+            <span class="desc">Navigates the cursor to the next bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
+            <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
+            <span class="desc">Removes all bookmarks from the current active document.</span></li>
+        <li><strong>Bookmarks Finder...</strong><span class="shortcut">CTRL + B</span>
+            <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
     </ul>
 
     <h3>Edit Menu</h3>
@@ -151,8 +167,16 @@
             <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
         <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
             <span class="desc">Toggles the visibility of the output console panel.</span></li>
-        <li><strong>Output at the bottom</strong>
+        <li><strong>Output at the bottom</strong><span class="shortcut">CTRL + U</span>
             <span class="desc">Toggles the layout position of the output console, placing it at the bottom of the window when checked.</span></li>
+        <li><strong>Fold</strong><span class="shortcut">ALT + -</span>
+            <span class="desc">Folds the current code block at the cursor's location.</span></li>
+        <li><strong>Unfold</strong><span class="shortcut">ALT + +</span>
+            <span class="desc">Unfolds the current code block at the cursor's location.</span></li>
+        <li><strong>Fold all</strong><span class="shortcut">CTRL + ALT + -</span>
+            <span class="desc">Folds all collapsible code blocks in the current document.</span></li>
+        <li><strong>Unfold all</strong><span class="shortcut">CTRL + ALT + +</span>
+            <span class="desc">Unfolds all collapsed code blocks in the current document.</span></li>
         <li><strong>Zoom in</strong><span class="shortcut">CTRL + +</span>
             <span class="desc">Increases the editor font size globally.</span></li>
         <li><strong>Zoom out</strong><span class="shortcut">CTRL + -</span>
@@ -172,17 +196,17 @@
             <span class="desc">Wraps the word under the cursor with the Python <code>dir()</code> function and executes it. This prints all valid attributes and methods of the selected object in the output console.</span></li>
         <li><strong>help()</strong><span class="shortcut">ALT + H</span>
             <span class="desc">Wraps the word under the cursor with the Python <code>help()</code> function and executes it, displaying Python's built-in documentation for that specific object or function.</span></li>
-        <li><strong>print()</strong>
+        <li><strong>print()</strong><span class="shortcut">ALT + E</span>
             <span class="desc">Wraps the word under the cursor in a <code>print()</code> statement, making it easy to quickly output a variable's value during debugging.</span></li>
         <li><strong>type()</strong><span class="shortcut">ALT + T</span>
             <span class="desc">Wraps the word under the cursor in a Python <code>type()</code> function and executes it to reveal the object's class or data type in the output.</span></li>
-        <li><strong>Echo executed command</strong><span class="shortcut">ALT + E</span>
+        <li><strong>Echo executed command</strong>
             <span class="desc">If enabled, prints the exact code snippet being executed into the output console before displaying its result, which is extremely helpful for providing context to output logs.</span></li>
-        <li><strong>Execute all</strong><span class="shortcut">ALT + ENTER</span>
+        <li><strong>Execute all</strong><span class="shortcut">ALT + RETURN</span>
             <span class="desc">Runs the entire script present in the current active tab from top to bottom.</span></li>
-        <li><strong>Execute line</strong><span class="shortcut">CTRL + ALT + ENTER</span>
+        <li><strong>Execute line</strong><span class="shortcut">CTRL + SHIFT + RETURN</span>
             <span class="desc">Runs only the specific single line of code where the text cursor is currently positioned.</span></li>
-        <li><strong>Execute selected</strong><span class="shortcut">CTRL + ENTER</span>
+        <li><strong>Execute selected</strong><span class="shortcut">CTRL + RETURN</span>
             <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
     </ul>
 
@@ -248,7 +272,7 @@
     <h3>Key Capabilities & Features:</h3>
     <ul>
         <li><strong>Interactive Color Customization:</strong>
-            <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly. Newly added customizable colors include <code>line_num_text</code> (for the line number bar text) and <code>status_bar_text</code> (for the status bar text).</span>
+            <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly. Newly added customizable colors include <code>line_num_text</code> (for the line number bar text), <code>status_bar_text</code> (for the status bar text), and <code>bookmark</code> (for the gutter bookmark ribbon/tag color).</span>
         </li>
         <li><strong>Typography & Font Customization per Theme:</strong>
             <span class="desc">You can define a custom font specifically for your theme. Clicking <strong>Choose Font...</strong> opens a dialog to select the font family, style, weight, and size. You can reset a custom font back to the application's global default by right-clicking the button and choosing <em>"Reset to default"</em>.</span>
