@@ -218,11 +218,11 @@ class ScriptEditorUIBuilder:
         editor.reset_zoom_act.setIcon(QIcon(icons['zoom_reset']))
 
         editor.fold_all_act.triggered.connect(editor.fold_all)
-        editor.fold_all_act.setShortcut("Ctrl+Alt+0")
+        editor.fold_all_act.setShortcut('Ctrl+Alt+9')
         editor.fold_all_act.setShortcutContext(Qt.WindowShortcut)
 
         editor.unfold_all_act.triggered.connect(editor.unfold_all)
-        editor.unfold_all_act.setShortcut('Ctrl+Alt+9')
+        editor.unfold_all_act.setShortcut('Ctrl+Alt+0')
         editor.unfold_all_act.setShortcutContext(Qt.WindowShortcut)
 
         editor.autocomplete_act.setShortcut('Alt+A')

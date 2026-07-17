@@ -147,6 +147,17 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         if indents[j] <= indent_current:
                             end_idx = j - 1
                             break
+                            
+                    # Leave up to 2 trailing empty lines unfolded
+                    empty_count = 0
+                    while end_idx > i + 1 and empty_count < 2:
+                        block_at_end = doc.findBlockByNumber(end_idx)
+                        if block_at_end.isValid() and not block_at_end.text().strip():
+                            end_idx -= 1
+                            empty_count += 1
+                        else:
+                            break
+                            
                     folding_regions[i] = (i + 1, end_idx)
                     
         self.folding_regions = folding_regions
