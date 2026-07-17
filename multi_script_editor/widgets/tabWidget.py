@@ -653,6 +653,10 @@ class tabWidgetClass(QTabWidget):
     def previousSelection(self):
         self.current().previous_selection()
 
+    def addCursorsToLineEnds(self):
+        self.current().add_cursors_to_line_ends()
+
+
 
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)

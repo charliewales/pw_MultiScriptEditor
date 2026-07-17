@@ -127,6 +127,11 @@ class ScriptEditorUIBuilder:
         editor.paste_act.setShortcutContext(Qt.WidgetShortcut)
         editor.paste_act.setIcon(QIcon(icons['paste']))
 
+        editor.addCursorsToLineEnds_act.triggered.connect(editor.tab.addCursorsToLineEnds)
+        editor.addCursorsToLineEnds_act.setShortcut('Alt+Shift+I')
+        editor.addCursorsToLineEnds_act.setShortcutContext(Qt.WindowShortcut)
+        editor.addCursorsToLineEnds_act.setIcon(QIcon(icons['replace']))
+
         editor.find_act.triggered.connect(editor.findWidget)
         editor.find_act.setShortcut('Ctrl+F')
         editor.find_act.setShortcutContext(Qt.WindowShortcut)
@@ -435,6 +440,7 @@ class ScriptEditorUIBuilder:
             editor.copy_act: "Copy the selected text to clipboard",
             editor.cut_act: "Cut the selected text to clipboard",
             editor.paste_act: "Paste text from the clipboard",
+            editor.addCursorsToLineEnds_act: "Add cursors to the end of each selected line",
             editor.find_act: "Find and replace text in the editor",
             editor.gotoLine_act: "Go to a specific line in the editor",
             editor.goToSymbol_act: "Go to a symbol in the editor",

@@ -1478,6 +1478,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         finally:
             self._is_manual_multi_selecting = False
 
+    def add_cursors_to_line_ends(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursors_to_line_ends()
+        finally:
+            self._is_manual_multi_selecting = False
+
+
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return

@@ -34,6 +34,7 @@ Select Next Occurrence                      >   CTRL + ALT + D
 Select All Occurrences                      >   CTRL + SHIFT + ALT + D
 Copy                                        >   CTRL + C
 Delete line(s)                              >   CTRL + D
+Add Cursors to line ends                    >   ALT + SHIFT + I
 Find and Replace                            >   CTRL + F
 Go to Line                                  >   CTRL + G
 Paste                                       >   CTRL + V
