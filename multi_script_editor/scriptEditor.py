@@ -445,6 +445,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if editor:
             editor.unfold_all()
 
+    def fold_current(self):
+        editor = self.tab.current()
+        if editor:
+            editor.fold_current()
+
+    def unfold_current(self):
+        editor = self.tab.current()
+        if editor:
+            editor.unfold_current()
+
     def applyTheme(self, name):
         qss = design.editorStyle(name)
         colors = design.getColors(name).copy()

@@ -217,6 +217,14 @@ class ScriptEditorUIBuilder:
         editor.reset_zoom_act.setShortcutContext(Qt.WindowShortcut)
         editor.reset_zoom_act.setIcon(QIcon(icons['zoom_reset']))
 
+        editor.fold_act.triggered.connect(editor.fold_current)
+        editor.fold_act.setShortcut('Ctrl+Alt+7')
+        editor.fold_act.setShortcutContext(Qt.WindowShortcut)
+
+        editor.unfold_act.triggered.connect(editor.unfold_current)
+        editor.unfold_act.setShortcut('Ctrl+Alt+8')
+        editor.unfold_act.setShortcutContext(Qt.WindowShortcut)
+
         editor.fold_all_act.triggered.connect(editor.fold_all)
         editor.fold_all_act.setShortcut('Ctrl+Alt+9')
         editor.fold_all_act.setShortcutContext(Qt.WindowShortcut)

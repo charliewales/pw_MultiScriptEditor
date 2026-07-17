@@ -94,6 +94,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
+        self.cursorPositionChanged.connect(self.ensure_current_line_visible)
 
         self.selectionChanged.connect(self.auto_select_all_occurrences)
 
@@ -190,6 +191,82 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.setUpdatesEnabled(True)
             self.viewport().update()
 
+        # Ensure the cursor is visible (never stranded on a hidden line)
+        cursor = self.textCursor()
+        if not cursor.block().isVisible():
+            curr_block = cursor.block()
+            while curr_block.isValid() and not curr_block.isVisible():
+                curr_block = curr_block.previous()
+            if curr_block.isValid():
+                new_cursor = self.textCursor()
+                new_cursor.setPosition(curr_block.position())
+                self.setTextCursor(new_cursor)
+
+    def ensure_current_line_visible(self):
+        cursor = self.textCursor()
+        block = cursor.block()
+        if not block.isValid():
+            return
+            
+        block_num = block.blockNumber()
+        if not block.isVisible():
+            doc = self.document()
+            changed = False
+            for parent_idx, (start_idx, end_idx) in self.folding_regions.items():
+                if start_idx <= block_num <= end_idx:
+                    parent_block = doc.findBlockByNumber(parent_idx)
+                    if parent_block.isValid():
+                        data = parent_block.userData()
+                        if data and getattr(data, 'folded', False):
+                            data.folded = False
+                            changed = True
+            if changed:
+                self.apply_folding_visibility()
+
+    def fold_current(self):
+        cursor = self.textCursor()
+        curr_block_num = cursor.blockNumber()
+        
+        target_block_num = -1
+        for i in range(curr_block_num, -1, -1):
+            if i in self.folding_regions:
+                start_idx, end_idx = self.folding_regions[i]
+                if i <= curr_block_num <= end_idx:
+                    target_block_num = i
+                    break
+        
+        if target_block_num != -1:
+            doc = self.document()
+            block = doc.findBlockByNumber(target_block_num)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+                self.apply_folding_visibility()
+
+    def unfold_current(self):
+        cursor = self.textCursor()
+        curr_block_num = cursor.blockNumber()
+        
+        target_block_num = -1
+        for i in range(curr_block_num, -1, -1):
+            if i in self.folding_regions:
+                start_idx, end_idx = self.folding_regions[i]
+                if i <= curr_block_num <= end_idx:
+                    target_block_num = i
+                    break
+                    
+        if target_block_num != -1:
+            doc = self.document()
+            block = doc.findBlockByNumber(target_block_num)
+            if block.isValid():
+                data = block.userData()
+                if data:
+                    data.folded = False
+                    self.apply_folding_visibility()
+
     def toggle_fold(self, block_num, recursive=False):
         doc = self.document()
         block = doc.findBlockByNumber(block_num)
@@ -217,17 +294,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         child_data.folded = new_state
                         
         self.apply_folding_visibility()
-        
-        # If cursor is in a hidden block, move it to the folding start block
-        cursor = self.textCursor()
-        if not cursor.block().isVisible():
-            # find the nearest preceding visible block
-            curr_block = cursor.block()
-            while curr_block.isValid() and not curr_block.isVisible():
-                curr_block = curr_block.previous()
-            if curr_block.isValid():
-                cursor.setPosition(curr_block.position() + curr_block.length() - 1)
-                self.setTextCursor(cursor)
 
     def fold_all(self):
         doc = self.document()
