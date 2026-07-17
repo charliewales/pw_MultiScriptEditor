@@ -167,16 +167,17 @@ class lineNumberBarClass(QWidget):
             # Draw bookmark indicator
             data = block.userData()
             is_bookmarked = data and getattr(data, 'bookmarked', False)
-            is_hovered = (block.blockNumber() == getattr(self, 'hover_block_number', -1))
+            is_block_hovered = (block.blockNumber() == getattr(self, 'hover_block_number', -1))
+            is_bookmark_hovered = is_block_hovered and getattr(self, 'hover_in_bookmark_area', False)
 
-            if is_bookmarked or is_hovered:
+            if is_bookmarked or is_bookmark_hovered:
                 if hasattr(self.edit, 'hgl') and hasattr(self.edit.hgl, 'colors') and self.edit.hgl.colors:
                     bg_tuple = self.edit.hgl.colors.get('bookmark', self.edit.hgl.colors.get('string', (245, 165, 18)))
                 else:
                     bg_tuple = (245, 165, 18)
 
                 brush_color = QColor(*bg_tuple)
-                if not is_bookmarked and is_hovered:
+                if not is_bookmarked and is_bookmark_hovered:
                     brush_color.setAlpha(100)
 
                 painter.setBrush(QBrush(brush_color))
@@ -205,7 +206,7 @@ class lineNumberBarClass(QWidget):
                 data = block.userData()
                 is_folded = data and getattr(data, 'folded', False)
                 
-            if is_fold_start and (is_hovered or is_folded):
+            if is_fold_start and (is_folded or is_block_hovered):
                 cx = self.width() - 8
                 cy = round(pos_y) + int(block_height / 2)
                 
@@ -235,34 +236,35 @@ class lineNumberBarClass(QWidget):
         QWidget.paintEvent(self, event)
 
     def mouseMoveEvent(self, event):
+        click_y = event.y()
+        contents_y = self.edit.verticalScrollBar().value()
+        cursor = self.edit.cursorForPosition(QPoint(0, 0))
+        block = cursor.block()
+        if block.previous().isValid():
+            block = block.previous()
+            
         hover_block = -1
-        if event.x() < 20:
-            click_y = event.y()
-            contents_y = self.edit.verticalScrollBar().value()
-            cursor = self.edit.cursorForPosition(QPoint(0, 0))
-            block = cursor.block()
-            if block.previous().isValid():
-                block = block.previous()
-                
-            is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
-            while block.isValid():
-                if not block.isVisible():
-                    block = block.next()
-                    continue
-                    
-                if is_plaintextedit:
-                    block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                    pos_y = block_rect.top()
-                    block_height = block_rect.height()
-                else:
-                    block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                    pos_y = block_rect.top() - contents_y
-                    block_height = block_rect.height()
-                    
-                if pos_y <= click_y <= pos_y + block_height:
-                    hover_block = block.blockNumber()
-                    break
+        is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+        while block.isValid():
+            if not block.isVisible():
                 block = block.next()
+                continue
+                
+            if is_plaintextedit:
+                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
+                pos_y = block_rect.top()
+                block_height = block_rect.height()
+            else:
+                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
+                pos_y = block_rect.top() - contents_y
+                block_height = block_rect.height()
+                
+            if pos_y <= click_y <= pos_y + block_height:
+                hover_block = block.blockNumber()
+                break
+            block = block.next()
+
+        self.hover_in_bookmark_area = (event.x() < 20)
 
         if getattr(self, 'hover_block_number', -1) != hover_block:
             self.hover_block_number = hover_block
@@ -270,9 +272,9 @@ class lineNumberBarClass(QWidget):
         QWidget.mouseMoveEvent(self, event)
 
     def leaveEvent(self, event):
-        if getattr(self, 'hover_block_number', -1) != -1:
-            self.hover_block_number = -1
-            self.update()
+        self.hover_block_number = -1
+        self.hover_in_bookmark_area = False
+        self.update()
         QWidget.leaveEvent(self, event)
 
     def mousePressEvent(self, event):
