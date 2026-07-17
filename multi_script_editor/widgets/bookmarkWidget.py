@@ -114,10 +114,10 @@ def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_cla
             if block.isValid():
                 html_text += "<br/>"
 
-        display_name = f'<span style="color:{c_line}">Line {line}:</span> &nbsp;{html_text}'
+        display_name = f'<span style="color:{c_line}">{line}:</span> &nbsp;{html_text}'
     else:
         escaped_text = html.escape(text.strip())
-        display_name = f'<span style="color:{c_line}">Line {line}:</span> &nbsp;<span style="color:{c_text}">{escaped_text}</span>'
+        display_name = f'<span style="color:{c_line}">{line}:</span> &nbsp;<span style="color:{c_text}">{escaped_text}</span>'
 
     item.setText(display_name)
     item.setIcon(QIcon(icons.get('goto_line', '')))
@@ -147,7 +147,7 @@ class BookmarkWidget(SearchPopupWidget):
 
         max_text_width = 0
         for b in self.bookmarks:
-            label = f"Line {b['line']}: {b['text'].strip()}"
+            label = f"{b['line']}: {b['text'].strip()}"
             w = fm.horizontalAdvance(label) if hasattr(fm, 'horizontalAdvance') else fm.width(label)
             w += 40  # Icon + margin padding
             if w > max_text_width:
@@ -161,7 +161,7 @@ class BookmarkWidget(SearchPopupWidget):
         filter_text = filter_text.lower()
 
         for b in self.bookmarks:
-            label = f"Line {b['line']}: {b['text']}"
+            label = f"{b['line']}: {b['text']}"
             if filter_text in label.lower():
                 item = create_bookmark_item(b, self.colors, self._font, self.highlighter_class)
                 self.list_widget.addItem(item)
