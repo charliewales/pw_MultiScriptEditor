@@ -10,6 +10,7 @@ from vendor.Qt.QtGui import (
     QTextCursor,
     QTextFormat,
     QGuiApplication,
+    QTextBlockUserData,
 )
 from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
 
@@ -30,6 +31,12 @@ escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_
 # font_name = 'monospace'
 font_name = 'Consolas'
 # font_name = 'Lucida Console'
+
+
+class BlockUserData(QTextBlockUserData):
+    def __init__(self):
+        super(BlockUserData, self).__init__()
+        self.folded = False
 
 
 class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
@@ -94,6 +101,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._is_auto_selecting = False
         self._is_undo_redo = False
 
+        self.folding_regions = {}
+        self.folding_timer = QTimer(self)
+        self.folding_timer.setSingleShot(True)
+        self.folding_timer.timeout.connect(self.on_folding_timer_timeout)
+        self.recompute_folding_regions()
+
     def _on_text_changed(self):
         if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
             pass
@@ -101,6 +114,135 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             pass
         else:
             self.autocomplete_timer.start(200)
+        self.folding_timer.start(200)
+
+    def recompute_folding_regions(self):
+        doc = self.document()
+        block_count = doc.blockCount()
+        
+        # 1. Determine indentation of each block
+        indents = {}
+        last_indent = 0
+        for i in range(block_count):
+            block = doc.findBlockByNumber(i)
+            text = block.text()
+            if not text.strip():
+                indents[i] = last_indent
+            else:
+                leading = len(text) - len(text.lstrip())
+                indents[i] = leading
+                last_indent = leading
+                
+        # 2. Find folding regions
+        folding_regions = {}
+        for i in range(block_count - 1):
+            indent_current = indents[i]
+            next_idx = i + 1
+            if next_idx < block_count:
+                indent_next = indents[next_idx]
+                if indent_next > indent_current:
+                    # Line i is a folding start
+                    end_idx = block_count - 1
+                    for j in range(i + 2, block_count):
+                        if indents[j] <= indent_current:
+                            end_idx = j - 1
+                            break
+                    folding_regions[i] = (i + 1, end_idx)
+                    
+        self.folding_regions = folding_regions
+
+    def apply_folding_visibility(self):
+        self.setUpdatesEnabled(False)
+        try:
+            doc = self.document()
+            block_count = doc.blockCount()
+            hide_until = -1
+            
+            for i in range(block_count):
+                block = doc.findBlockByNumber(i)
+                if not block.isValid():
+                    continue
+                
+                should_be_visible = (i > hide_until)
+                if block.isVisible() != should_be_visible:
+                    block.setVisible(should_be_visible)
+                
+                if should_be_visible and i in self.folding_regions:
+                    data = block.userData()
+                    if data and getattr(data, 'folded', False):
+                        start_idx, end_idx = self.folding_regions[i]
+                        if end_idx > hide_until:
+                            hide_until = end_idx
+            
+            self.document().markContentsDirty(0, self.document().characterCount())
+        finally:
+            self.setUpdatesEnabled(True)
+            self.viewport().update()
+
+    def toggle_fold(self, block_num, recursive=False):
+        doc = self.document()
+        block = doc.findBlockByNumber(block_num)
+        if not block.isValid():
+            return
+        
+        data = block.userData()
+        if not data:
+            data = BlockUserData()
+            block.setUserData(data)
+            
+        new_state = not data.folded
+        data.folded = new_state
+        
+        if recursive and block_num in self.folding_regions:
+            start_idx, end_idx = self.folding_regions[block_num]
+            for i in range(start_idx, end_idx + 1):
+                if i in self.folding_regions:
+                    child_block = doc.findBlockByNumber(i)
+                    if child_block.isValid():
+                        child_data = child_block.userData()
+                        if not child_data:
+                            child_data = BlockUserData()
+                            child_block.setUserData(child_data)
+                        child_data.folded = new_state
+                        
+        self.apply_folding_visibility()
+        
+        # If cursor is in a hidden block, move it to the folding start block
+        cursor = self.textCursor()
+        if not cursor.block().isVisible():
+            # find the nearest preceding visible block
+            curr_block = cursor.block()
+            while curr_block.isValid() and not curr_block.isVisible():
+                curr_block = curr_block.previous()
+            if curr_block.isValid():
+                cursor.setPosition(curr_block.position() + curr_block.length() - 1)
+                self.setTextCursor(cursor)
+
+    def fold_all(self):
+        doc = self.document()
+        for i in self.folding_regions.keys():
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+        self.apply_folding_visibility()
+
+    def unfold_all(self):
+        doc = self.document()
+        for i in self.folding_regions.keys():
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if data:
+                    data.folded = False
+        self.apply_folding_visibility()
+
+    def on_folding_timer_timeout(self):
+        self.recompute_folding_regions()
+        self.apply_folding_visibility()
 
     def set_start_font(self, font_d=None):
         if not font_d:
@@ -1140,6 +1282,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.setPlainText(text)
         self.document().clearUndoRedoStacks()
         self.blockSignals(False)
+        self.recompute_folding_regions()
+        self.apply_folding_visibility()
 
     ########################### DROP
     def dragEnterEvent(self, event):

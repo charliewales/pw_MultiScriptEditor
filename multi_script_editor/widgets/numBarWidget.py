@@ -19,8 +19,17 @@ class lineNumberBarClass(QWidget):
 
         self.edit = edit
         self.highest_line = 0
-        self.setMinimumWidth(30)
+        self.setMinimumWidth(45)
         self.bg = None
+        self.setMouseTracking(True)
+
+    def enterEvent(self, event):
+        self.update()
+        QWidget.enterEvent(self, event)
+
+    def leaveEvent(self, event):
+        self.update()
+        QWidget.leaveEvent(self, event)
 
     def update(self, *args):
         '''
@@ -47,7 +56,7 @@ class lineNumberBarClass(QWidget):
         fm = QFontMetrics(font)
         text_width = fm.horizontalAdvance(str(self.highest_line) + "0") if hasattr(fm, 'horizontalAdvance') else fm.width(str(self.highest_line) + "0")
         
-        width = max(30, text_width + 10)
+        width = max(45, text_width + 20)
         
         if self.width() != width:
             self.setFixedWidth(width)
@@ -55,19 +64,18 @@ class lineNumberBarClass(QWidget):
         if hasattr(self.edit, '_highlight_color_cache') and self.edit._highlight_color_cache:
             self.bg = QColor.fromRgb(*self.edit._highlight_color_cache)
         else:
-            bg = self.palette().brush(QPalette.Normal,QPalette.Window).color().toHsv()
+            bg = self.palette().brush(QPalette.Normal, QPalette.Window).color().toHsv()
             v = bg.value()
             if v > 20:
-                v = int(bg.value()*0.8)
+                v = int(bg.value() * 0.8)
             else:
-                v = int(bg.value()*1.1)
+                v = int(bg.value() * 1.1)
             self.bg = QColor.fromHsv(bg.hue(), bg.saturation(), v)
         QWidget.update(self, *args)
 
     def paintEvent(self, event):
         contents_y = self.edit.verticalScrollBar().value()
         page_bottom = contents_y + self.edit.viewport().height()
-        font_metrics = self.fontMetrics()
         current_block = self.edit.document().findBlock(self.edit.textCursor().position())
         painter = QPainter(self)
         
@@ -79,8 +87,6 @@ class lineNumberBarClass(QWidget):
         if block.previous().isValid():
             block = block.previous()
             
-        line_count = block.blockNumber()
-        
         font = self.edit.font()
         
         pt_size = font.pointSizeF()
@@ -100,7 +106,7 @@ class lineNumberBarClass(QWidget):
         # update fm for paint
         font_metrics = QFontMetrics(font)
         
-        offset = font_metrics.ascent() + font_metrics.descent()*0.7
+        offset = font_metrics.ascent() + font_metrics.descent() * 0.7
         color = painter.pen().color()
         if hasattr(self.edit, '_line_num_text_cache') and self.edit._line_num_text_cache:
             color = QColor.fromRgb(*self.edit._line_num_text_cache)
@@ -108,8 +114,15 @@ class lineNumberBarClass(QWidget):
         painter.setPen(color)
         align = Qt.AlignRight | Qt.AlignVCenter
         is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+        
+        is_hovered = self.underMouse()
+        
         while block.isValid():
-            line_count += 1
+            if not block.isVisible():
+                block = block.next()
+                continue
+                
+            actual_line_number = block.blockNumber() + 1
             
             if is_plaintextedit:
                 block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
@@ -133,42 +146,108 @@ class lineNumberBarClass(QWidget):
                     block = block.next()
                     continue
 
-            rec = QRect(0,
-                        round(pos_y),
-                        self.width() - 5,
-                        round(block_height))
-
-            # draw line rect
+            # Draw highlight for the current block
             if block == current_block:
                 painter.setPen(Qt.NoPen)
-                # Only draw background if self.bg has been initialized
                 if self.bg is not None:
                     painter.setBrush(QBrush(self.bg))
                     painter.drawRect(QRect(0,
                             round(pos_y),
                             self.width(),
-                            round(block_height) ))
-                # restore color
+                            round(block_height)))
                 painter.setPen(QPen(color))
 
-            # draw error indicator if this line has a syntax error
-            if hasattr(self.edit, 'syntax_errors') and line_count in self.edit.syntax_errors:
+            # Draw error indicator if this line has a syntax error
+            if hasattr(self.edit, 'syntax_errors') and actual_line_number in self.edit.syntax_errors:
                 painter.setBrush(QBrush(QColor("red")))
                 painter.setPen(Qt.NoPen)
                 painter.drawEllipse(3, round(pos_y) + int(block_height / 2) - 3, 6, 6)
                 painter.setPen(QPen(color))
 
-            # draw text
-            painter.drawText(rec, align, str(line_count))
-            # control points
+            # Draw line number text
+            rec = QRect(0,
+                        round(pos_y),
+                        self.width() - 18,
+                        round(block_height))
+            painter.drawText(rec, align, str(actual_line_number))
+
+            # Draw folding chevron
+            is_fold_start = False
+            is_folded = False
+            if hasattr(self.edit, 'folding_regions'):
+                is_fold_start = block.blockNumber() in self.edit.folding_regions
+                data = block.userData()
+                is_folded = data and getattr(data, 'folded', False)
+                
+            if is_fold_start and (is_hovered or is_folded):
+                cx = self.width() - 8
+                cy = round(pos_y) + int(block_height / 2)
+                
+                chevron_pen = QPen(color, 1.5)
+                chevron_pen.setCapStyle(Qt.RoundCap)
+                chevron_pen.setJoinStyle(Qt.RoundJoin)
+                painter.setPen(chevron_pen)
+                
+                if is_folded:
+                    # Right-pointing chevron (collapsed)
+                    p1 = QPoint(cx - 2, cy - 3)
+                    p2 = QPoint(cx + 2, cy)
+                    p3 = QPoint(cx - 2, cy + 3)
+                    painter.drawPolyline([p1, p2, p3])
+                else:
+                    # Down-pointing chevron (expanded)
+                    p1 = QPoint(cx - 3, cy - 2)
+                    p2 = QPoint(cx, cy + 2)
+                    p3 = QPoint(cx + 3, cy - 2)
+                    painter.drawPolyline([p1, p2, p3])
+                
+                painter.setPen(QPen(color))
 
             block = block.next()
+            
         painter.end()
         QWidget.paintEvent(self, event)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            click_y = event.y()
+            contents_y = self.edit.verticalScrollBar().value()
+            cursor = self.edit.cursorForPosition(QPoint(0, 0))
+            block = cursor.block()
+            if block.previous().isValid():
+                block = block.previous()
+                
+            is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+            while block.isValid():
+                if not block.isVisible():
+                    block = block.next()
+                    continue
+                    
+                if is_plaintextedit:
+                    block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
+                    pos_y = block_rect.top()
+                    block_height = block_rect.height()
+                else:
+                    block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
+                    pos_y = block_rect.top() - contents_y
+                    block_height = block_rect.height()
+                    
+                if pos_y <= click_y <= pos_y + block_height:
+                    # Check if click is on the right side (chevron / folding region)
+                    if event.x() > self.width() - 20:
+                        block_num = block.blockNumber()
+                        if hasattr(self.edit, 'folding_regions') and block_num in self.edit.folding_regions:
+                            recursive = bool(event.modifiers() & Qt.ShiftModifier)
+                            self.edit.toggle_fold(block_num, recursive=recursive)
+                            self.update()
+                            return
+                    break
+                block = block.next()
+        QWidget.mousePressEvent(self, event)
+
     def eventFilter(self, object, event):
         # Update the line numbers for all events on the text edit and the viewport.
-        # This is easier than connecting all necessary singals.
+        # This is easier than connecting all necessary signals.
         if object in (self.edit, self.edit.viewport()):
             self.update()
             return False
