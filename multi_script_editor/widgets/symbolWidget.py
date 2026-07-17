@@ -27,6 +27,8 @@ class SymbolWidget(SearchPopupWidget):
             # Indentation in HtmlDelegate is usually around 15-20 pixels per level
             w = fm.horizontalAdvance(name) if hasattr(fm, 'horizontalAdvance') else fm.width(name)
             w += indent * 20
+            if 'icon' in sym:
+                w += 24 # Typical icon size + margin
             if w > max_text_width:
                 max_text_width = w
 

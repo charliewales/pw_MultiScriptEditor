@@ -940,11 +940,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
 
         symbols = []
+        from icons import icons
+        from vendor.Qt.QtGui import QIcon
+        open_icon = QIcon(icons['open'])
+        missing_icon = QIcon(icons['missing'])
+
         for path in recent:
             name = os.path.basename(path) + ' - ' + os.path.dirname(path)
             if not os.path.exists(path):
-                name += ' *'
-            symbols.append({'name': name, 'line': path, 'indent': 0})
+                icon = missing_icon
+            else:
+                icon = open_icon
+            symbols.append({'name': name, 'line': path, 'indent': 0, 'icon': icon})
 
         self._show_generic_symbol_widget(
             symbols, self.openRecentFile,
@@ -954,24 +961,27 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             delete_callback=self.removeRecentFile
         )
 
-    def removeRecentFile(self, path):
-        from vendor.Qt.QtWidgets import QMessageBox
-        reply = self.show_question_msg(
-            'Remove Recent File', 
-            f'Are you sure you want to remove this file from the recent list?\n{path}', 
-            QMessageBox.Yes | QMessageBox.No, 
-            QMessageBox.Yes
-        )
-        if reply == QMessageBox.Yes:
-            recent = self._current_settings.get('recent_files', [])
-            if path in recent:
-                recent.remove(path)
-                self._current_settings['recent_files'] = recent
-                self.saveSettings()
-                self.updateRecentFilesMenu()
-            
-            if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
-                self.generic_symbol_widget.remove_item_by_data(path)
+    def removeRecentFile(self, path, prompt=True):
+        if prompt:
+            from vendor.Qt.QtWidgets import QMessageBox
+            reply = self.show_question_msg(
+                'Remove Recent File',
+                f'Are you sure you want to remove this file from the recent list?\n{path}',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+            if reply != QMessageBox.Yes:
+                return
+
+        recent = self._current_settings.get('recent_files', [])
+        if path in recent:
+            recent.remove(path)
+            self._current_settings['recent_files'] = recent
+            self.saveSettings()
+            self.updateRecentFilesMenu()
+
+        if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
+            self.generic_symbol_widget.remove_item_by_data(path)
 
     def showOpenTabs(self):
         if hasattr(self, 'generic_symbol_widget') and self.generic_symbol_widget.isVisible():
@@ -1110,13 +1120,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             a = self.recent_files_menu.addAction("No recent files")
             a.setEnabled(False)
             return
+
+        from icons import icons
+        from vendor.Qt.QtGui import QIcon
+        open_icon = QIcon(icons['open'])
+        missing_icon = QIcon(icons['missing'])
+
         for path in recent:
+            act = QAction(os.path.basename(path), self)
+            act.setToolTip(path)
             if os.path.exists(path):
-                act = QAction(os.path.basename(path), self)
-                act.setToolTip(path)
+                act.setIcon(open_icon)
                 act.setStatusTip(f"Open recent file: {path}")
-                act.triggered.connect(partial(self.openRecentFile, path))
-                self.recent_files_menu.addAction(act)
+            else:
+                act.setIcon(missing_icon)
+                act.setStatusTip(f"Missing recent file: {path}")
+            act.triggered.connect(partial(self.openRecentFile, path))
+            self.recent_files_menu.addAction(act)
+
         self.recent_files_menu.addSeparator()
         clear_act = QAction("Clear recent", self)
         clear_act.setStatusTip("Clear the list of recent files")
@@ -1136,6 +1157,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             text = open(path).read()
             self.tab.addNewTab(os.path.basename(path), text, file_path=path)
             self.addRecentFile(path)
+        else:
+            from vendor.Qt.QtWidgets import QMessageBox
+            reply = self.show_question_msg(
+                'File not found',
+                f'The file {path} does not exist.\nDo you want to remove it from the recent list?',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+            if reply == QMessageBox.Yes:
+                self.removeRecentFile(path, prompt=False)
 
     def tabsToSpaces(self):
         text = self.tab.getCurrentText()

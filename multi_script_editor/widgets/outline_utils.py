@@ -19,8 +19,10 @@ class HtmlDelegate(QStyledItemDelegate):
         style = options.widget.style() if options.widget else QApplication.style()
         style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)
 
-        painter.translate(options.rect.left(), options.rect.top())
-        clip = QRectF(0, 0, options.rect.width(), options.rect.height())
+        textRect = style.subElementRect(QStyle.SE_ItemViewItemText, options, options.widget)
+        # Translate to the correct text rectangle so it respects the icon offset
+        painter.translate(textRect.left(), textRect.top())
+        clip = QRectF(0, 0, textRect.width(), textRect.height())
         doc.drawContents(painter, clip)
 
         painter.restore()
@@ -31,7 +33,17 @@ class HtmlDelegate(QStyledItemDelegate):
         doc = QTextDocument()
         doc.setHtml(options.text)
         doc.setDefaultFont(options.font)
-        return QSize(int(doc.idealWidth()), int(doc.size().height()))
+        
+        base_size = super(HtmlDelegate, self).sizeHint(option, index)
+        width = int(doc.idealWidth()) + 4 # base margin
+        height = int(doc.size().height())
+        
+        if not options.icon.isNull():
+            icon_size = options.icon.actualSize(options.decorationSize)
+            width += icon_size.width() + 8 # margin
+            height = max(height, icon_size.height() + 4)
+            
+        return QSize(width, max(base_size.height(), height))
 
 def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     """
@@ -108,5 +120,13 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     # Add HTML non-breaking spaces for indentation
     display_name = ("&nbsp;&nbsp;" * indent) + html_name
     item.setText(display_name)
+
+    if 'icon' in sym:
+        from vendor.Qt.QtGui import QIcon
+        icon = sym['icon']
+        if isinstance(icon, QIcon):
+            item.setIcon(icon)
+        else:
+            item.setIcon(QIcon(icon))
 
     return item
