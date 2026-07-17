@@ -20,6 +20,7 @@ mse_version = "6.3.0"
 
 import managers
 from core.execution_manager import ExecutionManager
+from core.file_utils import read_file_text
 from presenters.main_presenter import MainPresenter
 import vendor.Qt
 from icons import *
@@ -324,14 +325,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if file_path and os.path.exists(file_path):
                 text = self.tab.getTabText(i)
-                file_text = None
-                try:
-                    file_text = open(file_path, "r", encoding="utf-8").read()
-                except Exception:
-                    try:
-                        file_text = open(file_path, "r").read()
-                    except Exception:
-                        pass
+                file_text = read_file_text(file_path)
 
                 if file_text is not None:
                     if text.replace('\r\n', '\n') != file_text.replace('\r\n', '\n'):
@@ -390,7 +384,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if os.path.splitext(f)[-1] in ['.txt', '.py']:
                         self.out.showMessage(os.path.splitext(f)[-1])
                         self.out.showMessage('Open File: ' + f)
-                        text = open(f).read()
+                        text = read_file_text(f)
                         self.tab.addNewTab(os.path.basename(f), text, file_path=f)
 
     def fillThemeMenu(self):
@@ -694,13 +688,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if is_active:
                     active_index = i
                     if file_path and os.path.exists(file_path):
-                        try:
-                            text = open(file_path, "r", encoding="utf-8").read()
-                        except Exception:
-                            try:
-                                text = open(file_path, "r").read()
-                            except Exception:
-                                pass
+                        text = read_file_text(file_path)
                     if text:
                         w.addText(text)
                         w.document().clearUndoRedoStacks()
@@ -1099,7 +1087,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.css *.html *.htm *.js *.json *.log *.md *.py *.txt *.usd *.usda *.yaml *.yml);;CSS Files (*.css);;HTML Files (*.html *.htm);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;YAML Files (*.yaml *.yml);;All Files (*.*)")
         if path[0]:
             if os.path.exists(path[0]):
-                text = open(path[0]).read()
+                text = read_file_text(path[0])
                 self.tab.addNewTab(os.path.basename(path[0]), text, file_path=path[0])
                 self.addRecentFile(path[0])
 
@@ -1154,7 +1142,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def openRecentFile(self, path):
         if os.path.exists(path):
-            text = open(path).read()
+            text = read_file_text(path)
             self.tab.addNewTab(os.path.basename(path), text, file_path=path)
             self.addRecentFile(path)
         else:

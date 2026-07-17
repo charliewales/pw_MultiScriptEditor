@@ -205,13 +205,10 @@ class tabWidgetClass(QTabWidget):
                     text = ""
                     file_path = getattr(edit, 'needs_loading_file', None)
                     if file_path and os.path.exists(file_path):
-                        try:
-                            text = open(file_path, "r", encoding="utf-8").read()
-                        except Exception:
-                            try:
-                                text = open(file_path, "r").read()
-                            except Exception:
-                                text = getattr(edit, 'needs_loading_text', "") or ""
+                        from core.file_utils import read_file_text
+                        text = read_file_text(file_path)
+                        if not text:
+                            text = getattr(edit, 'needs_loading_text', "") or ""
                     else:
                         text = getattr(edit, 'needs_loading_text', "") or ""
 
