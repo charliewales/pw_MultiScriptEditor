@@ -1,7 +1,7 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
-from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF
+from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
 from widgets.pythonSyntax.design import defaultColors
 import re
 from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel
@@ -115,7 +115,6 @@ class tabWidgetClass(QTabWidget):
         return False
 
     def get_line_num_font_and_color(self, edit):
-        from vendor.Qt.QtGui import QColor
         font = edit.font()
         pt_size = font.pointSizeF()
         if pt_size > 0:
@@ -471,9 +470,6 @@ class tabWidgetClass(QTabWidget):
         btn.setProperty('isDirty', state)
 
         if state:
-            from vendor.Qt.QtGui import QIcon, QPixmap, QPainter, QColor
-            from vendor.Qt.QtCore import Qt, QRectF
-
             theme_name = 'Multi Script Editor'
             if hasattr(self.p, '_presenter'):
                 theme_name = self.p._presenter.settings_model.read_settings().get('theme', theme_name)
@@ -496,7 +492,6 @@ class tabWidgetClass(QTabWidget):
             btn.setIcon(QIcon(pixmap))
             btn.setIconSize(btn.size())
         else:
-            from vendor.Qt.QtGui import QIcon
             btn.setIcon(QIcon())
 
         btn.style().unpolish(btn)

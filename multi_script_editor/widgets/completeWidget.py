@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtCore import Qt, QTimer
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
 from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel, QApplication
 import os
@@ -35,8 +35,7 @@ class completeMenuClass(QListWidget):
 
         def doc_tooltip_focusOutEvent(event):
             QLabel.focusOutEvent(self.doc_tooltip, event)
-            from vendor.Qt.QtWidgets import QApplication
-            from vendor.Qt.QtCore import QTimer
+
 
             def _check_focus():
                 fw = QApplication.focusWidget()
@@ -252,8 +251,7 @@ class completeMenuClass(QListWidget):
 
     def focusOutEvent(self, event):
         super(completeMenuClass, self).focusOutEvent(event)
-        from vendor.Qt.QtWidgets import QApplication
-        from vendor.Qt.QtCore import QTimer
+
 
         def _check_focus():
             fw = QApplication.focusWidget()

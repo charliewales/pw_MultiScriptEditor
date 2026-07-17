@@ -423,7 +423,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         return colors
 
     def showFontContextMenu(self, pos):
-        from vendor.Qt.QtWidgets import QMenu
         menu = QMenu(self)
         reset_action = menu.addAction("Reset to default")
         action = menu.exec_(self.choose_font_btn.mapToGlobal(pos))
@@ -521,9 +520,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def resetColorToDefault(self, item):
         color_name = item.text()
-        from widgets.pythonSyntax.design import defaultColors
-        if color_name in defaultColors:
-            default_color = defaultColors[color_name]
+        if color_name in design.defaultColors:
+            default_color = design.defaultColors[color_name]
             item.setData(32, default_color)
             pix = QPixmap(QSize(16,16))
             pix.fill(QColor(*default_color))
@@ -556,9 +554,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         menu.exec_(self.tabRadius_spb.mapToGlobal(position))
 
     def resetTabRadiusToDefault(self):
-        from widgets.pythonSyntax.design import defaultColors
-        if 'tab_radius' in defaultColors:
-            self.tabRadius_spb.setValue(defaultColors['tab_radius'])
+        if 'tab_radius' in design.defaultColors:
+            self.tabRadius_spb.setValue(design.defaultColors['tab_radius'])
             self.updateExample()
 
 

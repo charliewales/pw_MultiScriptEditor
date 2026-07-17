@@ -1,3 +1,6 @@
+import os
+import re
+
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
 from vendor.Qt.QtGui import (
     QColor,
@@ -9,8 +12,6 @@ from vendor.Qt.QtGui import (
     QGuiApplication,
 )
 from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
-import re
-import os
 
 from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
 from widgets import completeWidget
@@ -21,7 +22,6 @@ from core.search_service import SearchService
 import managers
 from widgets.pythonSyntax import design
 
-import re
 addEndBracket = True
 
 indentLen = 4
@@ -160,12 +160,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 new_font = QFont(font)
             else:
                 new_font = QApplication.font("QListWidget")
-                
+
             if 'completer_text_size' in colors:
                 new_font.setPointSize(max(1, int(colors['completer_text_size'])))
             else:
                 new_font.setPointSize(max(1, int(font.pointSize() * 0.9)))
-                
+
             self.completer.setFont(new_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
                 self.completer.doc_tooltip.setFont(new_font)
@@ -577,14 +577,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 if cursor.hasSelection():
                     start = cursor.selectionStart()
                     end = cursor.selectionEnd()
-                    
+
                     cursor.beginEditBlock()
                     cursor.setPosition(end)
                     cursor.insertText(delimiters[event.text()])
                     cursor.setPosition(start)
                     cursor.insertText(event.text())
                     cursor.endEditBlock()
-                    
+
                     cursor.setPosition(start + 1)
                     cursor.setPosition(end + 1, QTextCursor.KeepAnchor)
                     self.setTextCursor(cursor)
@@ -817,26 +817,25 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         cursor = self.textCursor()
         text_to_format = ""
         has_selection = cursor.hasSelection()
-        
+
         if has_selection:
             text_to_format = cursor.selection().toPlainText()
         else:
-            from vendor.Qt.QtWidgets import QApplication
             clipboard = QApplication.clipboard()
             text_to_format = clipboard.text()
-            
+
         quote_char = "'" if prefer_single_quotes else '"'
         new_text = f'f{quote_char}{{{text_to_format}}}{quote_char}'
-        
+
         self.document().documentLayout().blockSignals(True)
         cursor.beginEditBlock()
         if has_selection:
             cursor.removeSelectedText()
         cursor.insertText(new_text)
-        
+
         if not text_to_format:
             cursor.movePosition(QTextCursor.Left, QTextCursor.MoveAnchor, 2)
-            
+
         cursor.endEditBlock()
         self.document().documentLayout().blockSignals(False)
         self.setTextCursor(cursor)
@@ -911,7 +910,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def addRemoveComments(self, text):
         prefix = getattr(self, 'comment_prefix', '#')
         suffix = getattr(self, 'comment_suffix', '')
-        
+
         result = text
         ofs = 0
         shifts = []
@@ -920,7 +919,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             ind = 0
             while ind < len(lines) and not lines[ind].strip():
                 ind += 1
-                
+
             is_commented = False
             if ind < len(lines):
                 stripped = lines[ind].strip()
@@ -929,7 +928,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     # Check if suffix is needed and present
                     if suffix and not stripped.endswith(suffix):
                         is_commented = False
-                        
+
             if is_commented: # remove comment
                 new_lines = []
                 for i, x in enumerate(lines):
@@ -944,7 +943,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                                     x = x[:sidx-1] + x[sidx+len(suffix):]
                                 else:
                                     x = x[:sidx] + x[sidx+len(suffix):]
-                                    
+
                         if len(x) > idx + len(prefix) and x[idx+len(prefix)] == ' ':
                             new_lines.append(x[:idx] + x[idx+len(prefix)+1:])
                             shift = -(len(prefix) + 1)

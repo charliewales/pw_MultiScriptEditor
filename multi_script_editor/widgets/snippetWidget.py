@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
-from vendor.Qt.QtWidgets import QListWidgetItem
+from vendor.Qt.QtWidgets import QListWidgetItem, QMessageBox
 from vendor.Qt.QtGui import QFontMetrics
 from widgets.searchPopupWidget import SearchPopupWidget
 
@@ -54,7 +54,6 @@ class SnippetWidget(SearchPopupWidget):
             name = self.search_le.text().strip()
             if name:
                 if name in self.snippets:
-                    from vendor.Qt.QtWidgets import QMessageBox
                     msg_box = QMessageBox(self)
                     msg_box.setWindowTitle('Overwrite Snippet')
                     msg_box.setText(f"A snippet named '{name}' already exists. Overwrite?")

@@ -2,6 +2,8 @@ import os
 import sys
 import webbrowser
 from functools import partial
+import json
+import codecs
 
 # Set preferred binding
 if not os.environ.get("QT_PREFERRED_BINDING"):
@@ -30,10 +32,10 @@ from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, theme
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
-from widgets.outline_utils import HtmlDelegate
+from widgets.outline_utils import HtmlDelegate, create_symbol_item
 
 from widgets.main_window_builder import ScriptEditorUIBuilder
-from core.settings_model import SettingsModel, SnippetsModel
+from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from style.links import links
 
 
@@ -406,7 +408,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             act.setStatusTip(f"Apply theme: {t}")
             self.theme_menu.addAction(act)
 
-        from core.settings_model import ThemesModel
         theme_settings = ThemesModel().read_settings()
         if theme_settings.get('colors'):
             added_separator = False
@@ -1705,7 +1706,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             theme_name = self._current_settings.get('theme', 'Dark')
             theme_colors = design.getColors(theme_name)
 
-        from widgets.outline_utils import create_symbol_item
         font = getattr(self, 'current_outline_font', self.outline_list.font())
 
         for sym in symbols:
@@ -1910,7 +1910,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not path:
             return
 
-        import json, codecs
         try:
             with codecs.open(path, "r", "utf-16") as stream:
                 data = json.load(stream)

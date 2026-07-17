@@ -1,5 +1,5 @@
 from vendor.Qt.QtWidgets import QListWidgetItem, QStyledItemDelegate, QApplication, QStyle
-from vendor.Qt.QtGui import QTextDocument
+from vendor.Qt.QtGui import QTextDocument, QIcon
 from vendor.Qt.QtCore import Qt, QSize, QRectF
 
 class HtmlDelegate(QStyledItemDelegate):
@@ -120,9 +120,7 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     # Add HTML non-breaking spaces for indentation
     display_name = ("&nbsp;&nbsp;" * indent) + html_name
     item.setText(display_name)
-
     if 'icon' in sym:
-        from vendor.Qt.QtGui import QIcon
         icon = sym['icon']
         if isinstance(icon, QIcon):
             item.setIcon(icon)
