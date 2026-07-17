@@ -166,13 +166,20 @@ class lineNumberBarClass(QWidget):
 
             # Draw bookmark indicator
             data = block.userData()
-            if data and getattr(data, 'bookmarked', False):
+            is_bookmarked = data and getattr(data, 'bookmarked', False)
+            is_hovered = (block.blockNumber() == getattr(self, 'hover_block_number', -1))
+
+            if is_bookmarked or is_hovered:
                 if hasattr(self.edit, 'hgl') and hasattr(self.edit.hgl, 'colors') and self.edit.hgl.colors:
                     bg_tuple = self.edit.hgl.colors.get('boolean', (160, 220, 120))
                 else:
                     bg_tuple = (160, 220, 120)
 
-                painter.setBrush(QBrush(QColor(*bg_tuple)))
+                brush_color = QColor(*bg_tuple)
+                if not is_bookmarked and is_hovered:
+                    brush_color.setAlpha(100)
+
+                painter.setBrush(QBrush(brush_color))
                 painter.setPen(Qt.NoPen)
                 cy = round(pos_y) + int(block_height / 2)
                 p1 = QPoint(5, cy - 6)
@@ -226,6 +233,47 @@ class lineNumberBarClass(QWidget):
             
         painter.end()
         QWidget.paintEvent(self, event)
+
+    def mouseMoveEvent(self, event):
+        hover_block = -1
+        if event.x() < 20:
+            click_y = event.y()
+            contents_y = self.edit.verticalScrollBar().value()
+            cursor = self.edit.cursorForPosition(QPoint(0, 0))
+            block = cursor.block()
+            if block.previous().isValid():
+                block = block.previous()
+                
+            is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+            while block.isValid():
+                if not block.isVisible():
+                    block = block.next()
+                    continue
+                    
+                if is_plaintextedit:
+                    block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
+                    pos_y = block_rect.top()
+                    block_height = block_rect.height()
+                else:
+                    block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
+                    pos_y = block_rect.top() - contents_y
+                    block_height = block_rect.height()
+                    
+                if pos_y <= click_y <= pos_y + block_height:
+                    hover_block = block.blockNumber()
+                    break
+                block = block.next()
+
+        if getattr(self, 'hover_block_number', -1) != hover_block:
+            self.hover_block_number = hover_block
+            self.update()
+        QWidget.mouseMoveEvent(self, event)
+
+    def leaveEvent(self, event):
+        if getattr(self, 'hover_block_number', -1) != -1:
+            self.hover_block_number = -1
+            self.update()
+        QWidget.leaveEvent(self, event)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
