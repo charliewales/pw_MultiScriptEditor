@@ -1,3 +1,4 @@
+import re
 import managers
 
 class CompletionItem:
@@ -120,5 +121,13 @@ class AutocompleteProvider:
                     ))
             except Exception:
                 pass
+
+        # Filter completions for dictionary keys if inside brackets
+        current_line_text = text.split('\n')[line - 1] if text else ''
+        prefix = current_line_text[:column]
+        if re.search(r'\w+\s*\[\s*[\'"]?\s*\w*$', prefix):
+            string_comps = [c for c in comp_items if c.type == 'string' or (len(c.name) >= 2 and c.name[0] in ('"', "'") and c.name[-1] in ('"', "'"))]
+            if string_comps:
+                comp_items = string_comps
 
         return comp_items

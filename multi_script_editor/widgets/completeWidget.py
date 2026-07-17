@@ -137,9 +137,17 @@ class completeMenuClass(QListWidget):
                             'class': QColor(150, 220, 100),
                             'module': QColor(255, 150, 100),
                             'statement': QColor(200, 200, 200),
-                            'keyword': QColor(255, 100, 150)
+                            'keyword': QColor(255, 100, 150),
+                            'string': QColor(220, 180, 50)
                         }
-                        text_map = {'function': 'f', 'class': 'C', 'module': 'M', 'statement': 'V', 'keyword': 'K'}
+                        text_map = {
+                            'function': 'f',
+                            'class': 'C',
+                            'module': 'M',
+                            'statement': 'V',
+                            'keyword': 'K',
+                            'string': 'k'
+                        }
                         
                         pix = QPixmap(16, 16)
                         pix.fill(Qt.transparent)
