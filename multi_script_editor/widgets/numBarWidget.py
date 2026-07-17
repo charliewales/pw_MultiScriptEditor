@@ -167,7 +167,12 @@ class lineNumberBarClass(QWidget):
             # Draw bookmark indicator
             data = block.userData()
             if data and getattr(data, 'bookmarked', False):
-                painter.setBrush(QBrush(QColor("#00aaff")))
+                if hasattr(self.edit, 'hgl') and hasattr(self.edit.hgl, 'colors') and self.edit.hgl.colors:
+                    bg_tuple = self.edit.hgl.colors.get('boolean', (160, 220, 120))
+                else:
+                    bg_tuple = (160, 220, 120)
+
+                painter.setBrush(QBrush(QColor(*bg_tuple)))
                 painter.setPen(Qt.NoPen)
                 cy = round(pos_y) + int(block_height / 2)
                 p1 = QPoint(5, cy - 6)
