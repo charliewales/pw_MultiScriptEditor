@@ -393,6 +393,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_action.setShortcut('Ctrl+Shift+T')
         edit_action.setStatusTip("Edit the current color theme")
         self.theme_menu.addAction(edit_action)
+
+        # Randomize custom theme at startup action
+        randomize_act = QAction('Randomize custom at startup', self, triggered=self.toggleRandomizeCustomAtStartup)
+        randomize_act.setCheckable(True)
+        randomize_act.setChecked(self._current_settings.get('randomize_custom_at_startup', False))
+        randomize_act.setStatusTip("If active, a random theme is chosen from the custom themes at startup")
+        self.theme_menu.addAction(randomize_act)
+        self.randomize_custom_act = randomize_act
+
         self.theme_menu.addSeparator()
         current_theme = self._current_settings.get('theme', 'Multi Script Editor')
         for t in sorted(design.predefinedThemes.keys()):
@@ -415,6 +424,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     act.setChecked(t == current_theme)
                     act.setStatusTip(f"Apply theme: {t}")
                     self.theme_menu.addAction(act)
+
+    def getCustomThemes(self):
+        # Retrieve all custom themes created by the user
+        theme_settings = ThemesModel().read_settings()
+        custom_themes = []
+        if theme_settings.get('colors'):
+            for t in theme_settings.get('colors').keys():
+                if t not in design.predefinedThemes:
+                    custom_themes.append(t)
+        return sorted(custom_themes)
+
+    def toggleRandomizeCustomAtStartup(self, checked):
+        # Update settings and save when the randomize custom option is toggled
+        self._current_settings['randomize_custom_at_startup'] = checked
+        self.saveSettings()
 
     def change_global_font_size(self, increase):
         theme_name = self._current_settings.get('theme', 'Multi Script Editor')
@@ -485,6 +509,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         for act in self.theme_menu.actions():
             if act.isCheckable():
+                if hasattr(self, 'randomize_custom_act') and act == self.randomize_custom_act:
+                    continue
                 act.setChecked(act.text() == name)
 
         for i in range(self.tab.count()):
@@ -1438,9 +1464,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         auto_close_delimiters = data.get('auto_close_delimiters', True)
         self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
+        if hasattr(self, 'randomize_custom_act'):
+            self.randomize_custom_act.setChecked(data.get('randomize_custom_at_startup', False))
+
         self.updateRecentFilesMenu()
 
         theme = data.get('theme', 'Multi Script Editor')
+        if data.get('randomize_custom_at_startup', False) and not getattr(self, '_theme_randomized', False):
+            self._theme_randomized = True
+            custom_themes = self.getCustomThemes()
+            if custom_themes:
+                import random
+                theme = random.choice(custom_themes)
+                data['theme'] = theme
         if theme == 'default':
             theme = 'Multi Script Editor'
             self._current_settings['theme'] = theme
@@ -1477,6 +1513,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
         trim_auto_whitespace = self.trimAutoWhitespace_act.isChecked()
+        randomize_custom = self.randomize_custom_act.isChecked() if hasattr(self, 'randomize_custom_act') else False
 
         current_theme_name = settings.get('theme', 'Multi Script Editor')
         theme_colors = design.getColors(current_theme_name)
@@ -1527,6 +1564,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
             trim_auto_whitespace=trim_auto_whitespace,
+            randomize_custom_at_startup=randomize_custom,
         )
         settings.update(data)
         if 'colors' in settings:

@@ -153,7 +153,8 @@ class SettingsModel:
                     show_whitespace=True,
                     highlight_all_occurrences=True,
                     font={"family": "monospace", "pointSize": 12, "weight": 1, "italic": False},
-                    recent_files=[]
+                    recent_files=[],
+                    randomize_custom_at_startup=False
                     )
 
 
