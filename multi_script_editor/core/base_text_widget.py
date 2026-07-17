@@ -1,5 +1,8 @@
-from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase
-from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit
+import os
+import webbrowser
+from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase, QIcon
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QAction
+from icons import icons
 
 class BaseTextWidgetMixin:
     """
@@ -112,10 +115,6 @@ class BaseTextWidgetMixin:
             menu.setStyleSheet(main_win.menubar.styleSheet())
 
         # Check if we are editing an HTML file to add "Open in browser"
-        import os
-        import webbrowser
-        from vendor.Qt.QtWidgets import QAction
-
         file_path = None
         curr = self
         while curr:
@@ -132,8 +131,6 @@ class BaseTextWidgetMixin:
         if file_path and os.path.exists(file_path):
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
-                from vendor.Qt.QtGui import QIcon
-                from icons import icons
                 open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
                 open_action.setIcon(QIcon(icons['open_in_browser']))
                 open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
@@ -143,6 +140,17 @@ class BaseTextWidgetMixin:
                     menu.insertSeparator(first_action)
                 else:
                     menu.addAction(open_action)
+            elif ext.lower() == '.md':
+                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
+                if 'docs' in icons:
+                    preview_action.setIcon(QIcon(icons['docs']))
+                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
+                if menu.actions():
+                    first_action = menu.actions()[0]
+                    menu.insertAction(first_action, preview_action)
+                    menu.insertSeparator(first_action)
+                else:
+                    menu.addAction(preview_action)
 
         menu.exec_(event.globalPos())
         del menu

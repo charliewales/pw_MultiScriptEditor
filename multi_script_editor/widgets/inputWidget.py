@@ -22,6 +22,7 @@ from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
 import managers
 from widgets.pythonSyntax import design
+from widgets.markdown_preview import MarkdownPreviewEdit
 
 addEndBracket = True
 
@@ -789,6 +790,19 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         popup.bookmarkDeleted.connect(on_deleted)
         popup.exec_()
 
+    def show_markdown_preview(self):
+        """
+        Instantiate the MarkdownPreviewEdit overlay to show a formatted
+        preview of the markdown content of this editor.
+        """
+        if hasattr(self, 'markdown_preview_widget') and self.markdown_preview_widget:
+            self.markdown_preview_widget.close_preview()
+            return
+        self.markdown_preview_widget = MarkdownPreviewEdit(self)
+        self.markdown_preview_widget.setMarkdown(self.toPlainText())
+        self.markdown_preview_widget.show()
+        self.markdown_preview_widget.setFocus()
+
     def keyPressEvent(self, event):
         # unsuppress autocomplete if alphanumeric or dot/underscore
         text = event.text()
@@ -816,7 +830,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.show_bookmarks_popup()
             return
 
-        # Open in browser shortcut, Ctrl+Alt+B
+        # Open in browser or Markdown Preview shortcut, Ctrl+Alt+B
         elif event.modifiers() == (Qt.ControlModifier | Qt.AltModifier) and event.key() == Qt.Key_B:
             file_path = getattr(self, 'file_path', None)
             if not file_path and hasattr(self, 'parent') and self.parent():
@@ -826,6 +840,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 if ext.lower() in ['.html', '.htm']:
                     import webbrowser
                     webbrowser.open(file_path)
+                    return
+                elif ext.lower() == '.md':
+                    self.show_markdown_preview()
                     return
 
         # Toggle bookmark, Ctrl+F2
