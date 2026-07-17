@@ -945,8 +945,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
 
         symbols = []
-        from icons import icons
-        from vendor.Qt.QtGui import QIcon
         open_icon = QIcon(icons['open'])
         missing_icon = QIcon(icons['missing'])
 
@@ -968,7 +966,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def removeRecentFile(self, path, prompt=True):
         if prompt:
-            from vendor.Qt.QtWidgets import QMessageBox
             reply = self.show_question_msg(
                 'Remove Recent File',
                 f'Are you sure you want to remove this file from the recent list?\n{path}',
@@ -1125,9 +1122,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             a = self.recent_files_menu.addAction("No recent files")
             a.setEnabled(False)
             return
-
-        from icons import icons
-        from vendor.Qt.QtGui import QIcon
         open_icon = QIcon(icons['open'])
         missing_icon = QIcon(icons['missing'])
 
@@ -1163,7 +1157,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.addNewTab(os.path.basename(path), text, file_path=path)
             self.addRecentFile(path)
         else:
-            from vendor.Qt.QtWidgets import QMessageBox
             reply = self.show_question_msg(
                 'File not found',
                 f'The file {path} does not exist.\nDo you want to remove it from the recent list?',
