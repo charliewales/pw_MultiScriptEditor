@@ -133,6 +133,7 @@ class BaseTextWidgetMixin:
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
                 open_action = QAction('Open in browser', self)
+                open_action.setShortcut('Ctrl+B')
                 open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():
                     first_action = menu.actions()[0]

@@ -408,6 +408,18 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.parseText(force=True)
             return
 
+        # Open in browser shortcut, Ctrl+B
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
+            file_path = getattr(self, 'file_path', None)
+            if not file_path and hasattr(self, 'parent') and self.parent():
+                file_path = getattr(self.parent(), 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                _, ext = os.path.splitext(file_path)
+                if ext.lower() in ['.html', '.htm']:
+                    import webbrowser
+                    webbrowser.open(file_path)
+                    return
+
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
