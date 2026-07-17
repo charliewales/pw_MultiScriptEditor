@@ -693,8 +693,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         settings = self._presenter.settings_model.load_settings()
         return settings.get('shortcuts', {}).get(action, None)
 
-    def loadSession(self):
-        sessions = self._presenter.get_session_tabs()
+    def loadSession(self, sessions=None):
+        if sessions is None:
+            sessions = self._presenter.get_session_tabs()
         self.tab.clear()
         active_index = -1
         if sessions:
@@ -705,8 +706,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 is_active = s.get('active', False)
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
 
-                # Store bookmarks to be loaded when text is populated
+                # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
                 w.needs_loading_bookmarks = s.get('bookmarks', [])
+                w.needs_loading_line = s.get('line', 1)
+                w.needs_loading_column = s.get('column', 0)
+                w.needs_loading_scroll_v = s.get('scroll_v', 0)
+                w.needs_loading_scroll_h = s.get('scroll_h', 0)
 
                 if is_active:
                     active_index = i
@@ -719,6 +724,35 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
                             w.set_bookmarks(w.needs_loading_bookmarks)
                             delattr(w, 'needs_loading_bookmarks')
+                        # Jump to the saved line and column!
+                        if hasattr(w, 'needs_loading_line'):
+                            line_num = w.needs_loading_line
+                            column_num = getattr(w, 'needs_loading_column', 0)
+                            if line_num > 1 or column_num > 0:
+                                block = w.document().findBlockByNumber(line_num - 1)
+                                if block.isValid():
+                                    cursor = w.textCursor()
+                                    col = min(column_num, max(0, block.length() - 1))
+                                    cursor.setPosition(block.position() + col)
+                                    w.setTextCursor(cursor)
+                                    if hasattr(w, 'highlight_current_line'):
+                                        w.highlight_current_line()
+                        # Restore scroll position
+                        if hasattr(w, 'needs_loading_scroll_v'):
+                            scroll_v = w.needs_loading_scroll_v
+                            scroll_h = w.needs_loading_scroll_h
+                            w.verticalScrollBar().setValue(scroll_v)
+                            w.horizontalScrollBar().setValue(scroll_h)
+                            QTimer.singleShot(0, lambda: w.verticalScrollBar().setValue(scroll_v))
+                            QTimer.singleShot(0, lambda: w.horizontalScrollBar().setValue(scroll_h))
+                    if hasattr(w, 'needs_loading_line'):
+                        delattr(w, 'needs_loading_line')
+                    if hasattr(w, 'needs_loading_column'):
+                        delattr(w, 'needs_loading_column')
+                    if hasattr(w, 'needs_loading_scroll_v'):
+                        delattr(w, 'needs_loading_scroll_v')
+                    if hasattr(w, 'needs_loading_scroll_h'):
+                        delattr(w, 'needs_loading_scroll_h')
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
@@ -736,9 +770,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.tab.count() == 0:
             self.tab.addNewTab()
 
-    def saveSession(self, verbos=False):
-        if not hasattr(self, '_presenter'):
-            return
+    def _get_tabs_data(self, save_full_text=False):
         tabs = []
         index = self.tab.currentIndex()
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
@@ -748,16 +780,54 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 continue
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
-            size = widget.edit.getFontSize()
-
+            size = 12
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'getFontSize'):
+                size = widget.edit.getFontSize()
             size = max(1, size - zoom_delta)
 
             file_path = getattr(widget, 'file_path', None)
             bookmarks = []
             if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_bookmarks'):
                 bookmarks = widget.edit.get_bookmarks()
-            tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path, 'bookmarks': bookmarks}
+
+            line = 1
+            column = 0
+            scroll_v = 0
+            scroll_h = 0
+            if hasattr(widget, 'edit'):
+                if hasattr(widget.edit, 'needs_loading_line'):
+                    line = widget.edit.needs_loading_line
+                    column = getattr(widget.edit, 'needs_loading_column', 0)
+                elif hasattr(widget.edit, 'textCursor'):
+                    line = widget.edit.textCursor().blockNumber() + 1
+                    column = widget.edit.textCursor().columnNumber()
+
+                if hasattr(widget.edit, 'needs_loading_scroll_v'):
+                    scroll_v = widget.edit.needs_loading_scroll_v
+                    scroll_h = widget.edit.needs_loading_scroll_h
+                else:
+                    scroll_v = widget.edit.verticalScrollBar().value()
+                    scroll_h = widget.edit.horizontalScrollBar().value()
+
+            tab = {
+                'name': name,
+                'text': text if (save_full_text or not file_path) else "",
+                'active': item == index,
+                'size': size,
+                'file_path': file_path,
+                'bookmarks': bookmarks,
+                'line': line,
+                'column': column,
+                'scroll_v': scroll_v,
+                'scroll_h': scroll_h
+            }
             tabs.append(tab)
+        return tabs
+
+    def saveSession(self, verbos=False):
+        if not hasattr(self, '_presenter'):
+            return
+        tabs = self._get_tabs_data(save_full_text=False)
         path = self._presenter.save_session(tabs)
         if verbos:
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
@@ -1748,19 +1818,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             item.setHidden(text not in item.text().lower())
 
     def autoSave(self):
-        tabs = []
-        index = self.tab.currentIndex()
-        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
-        for item in range(self.tab.count()):
-            name = self.tab.tabText(item)
-            text = self.tab.getTabText(item)
-            widget = self.tab.widget(item)
-            size = widget.edit.getFontSize()
-
-            size = max(1, size - zoom_delta)
-
-            tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
-            tabs.append(tab)
+        if not hasattr(self, '_presenter'):
+            return
+        tabs = self._get_tabs_data(save_full_text=True)
         self._presenter.save_backup(tabs)
 
     def fillSessionsMenu(self):
@@ -1812,15 +1872,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         name, ok = QInputDialog.getText(self, "Save Named Session", "Enter session name:")
         if ok and name.strip():
             name = name.strip()
-            tabs = []
-            index = self.tab.currentIndex()
-            for item in range(self.tab.count()):
-                name_tab = self.tab.tabText(item)
-                text = self.tab.getTabText(item)
-                widget = self.tab.widget(item)
-                size = widget.edit.getFontSize()
-                tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
-                tabs.append(tab)
+            tabs = self._get_tabs_data(save_full_text=True)
             self._presenter.save_named_session(name, tabs)
             self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
             self.fillSessionsMenu()
@@ -1833,15 +1885,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         )
         if res == QMessageBox.Yes:
             sessions = self._presenter.get_named_session_tabs(name)
-            self.tab.clear()
-            if sessions:
-                for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'), file_path=s.get('file_path'))
-                    if s.get('active'):
-                        self.tab.setCurrentIndex(i)
-                    w.setFontSize(s.get('size', None))
-            if self.tab.count() == 0:
-                self.tab.addNewTab()
+            self.loadSession(sessions)
             self.out.showMessage(">>> Loaded named session '{0}'.".format(name))
 
     def deleteNamedSession(self, name):
@@ -1859,14 +1903,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self._presenter.backup_exists():
             sessions = self._presenter.get_backup_tabs()
             if sessions:
-                self.tab.clear()
-                active = 0
-                for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text', ''), file_path=s.get('file_path'))
-                    if s.get('active'):
-                        active = i
-                    w.setFontSize(s.get('size', None))
-                self.tab.setCurrentIndex(active)
+                self.loadSession(sessions)
                 self.out.showMessage("Crash backup restored successfully.")
             else:
                 self.out.showMessage("Crash backup is empty or invalid.")

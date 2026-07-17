@@ -214,10 +214,60 @@ class tabWidgetClass(QTabWidget):
 
                     if text:
                         edit.addText(text)
-                        edit.moveCursor(QTextCursor.Start)
-                        edit.highlight_current_line()
+                        # Restore line and column once text is loaded
+                        if hasattr(edit, 'needs_loading_line'):
+                            line_num = edit.needs_loading_line
+                            column_num = getattr(edit, 'needs_loading_column', 0)
+                            delattr(edit, 'needs_loading_line')
+                            if hasattr(edit, 'needs_loading_column'):
+                                delattr(edit, 'needs_loading_column')
+                            if line_num > 1 or column_num > 0:
+                                block = edit.document().findBlockByNumber(line_num - 1)
+                                if block.isValid():
+                                    cursor = edit.textCursor()
+                                    col = min(column_num, max(0, block.length() - 1))
+                                    cursor.setPosition(block.position() + col)
+                                    edit.setTextCursor(cursor)
+                                    if hasattr(edit, 'highlight_current_line'):
+                                        edit.highlight_current_line()
+                                else:
+                                    edit.moveCursor(QTextCursor.Start)
+                                    edit.highlight_current_line()
+                            else:
+                                edit.moveCursor(QTextCursor.Start)
+                                edit.highlight_current_line()
+                        else:
+                            edit.moveCursor(QTextCursor.Start)
+                            edit.highlight_current_line()
+
+                        # Restore scroll once text is loaded
+                        if hasattr(edit, 'needs_loading_scroll_v'):
+                            scroll_v = edit.needs_loading_scroll_v
+                            scroll_h = edit.needs_loading_scroll_h
+                            delattr(edit, 'needs_loading_scroll_v')
+                            delattr(edit, 'needs_loading_scroll_h')
+                            if scroll_v > 0:
+                                edit.verticalScrollBar().setValue(scroll_v)
+                            if scroll_h > 0:
+                                edit.horizontalScrollBar().setValue(scroll_h)
+                            from vendor.Qt.QtCore import QTimer
+                            if scroll_v > 0 or scroll_h > 0:
+                                QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
+                                QTimer.singleShot(0, lambda: edit.horizontalScrollBar().setValue(scroll_h))
+
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
+                    else:
+                        if hasattr(edit, 'needs_loading_line'):
+                            delattr(edit, 'needs_loading_line')
+                        if hasattr(edit, 'needs_loading_column'):
+                            delattr(edit, 'needs_loading_column')
+                        if hasattr(edit, 'needs_loading_scroll_v'):
+                            delattr(edit, 'needs_loading_scroll_v')
+                        if hasattr(edit, 'needs_loading_scroll_h'):
+                            delattr(edit, 'needs_loading_scroll_h')
+                        edit.moveCursor(QTextCursor.Start)
+                        edit.highlight_current_line()
 
                     # Restore bookmarks once text is loaded
                     if hasattr(edit, 'set_bookmarks') and hasattr(edit, 'needs_loading_bookmarks'):

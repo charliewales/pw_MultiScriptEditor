@@ -426,7 +426,7 @@ class ScriptEditorUIBuilder:
         editor.clearBookmarks_act.setIcon(QIcon(icons.get('clear', '')))
         editor.clearBookmarks_act.triggered.connect(lambda: editor.tab.currentWidget().edit.clear_bookmarks() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
 
-        editor.bookmarksFinder_act = QAction("Bookmarks Finder...", editor)
+        editor.bookmarksFinder_act = QAction("Go to bookmark...", editor)
         editor.bookmarksFinder_act.setShortcut("Ctrl+B")
         editor.bookmarksFinder_act.setIcon(QIcon(icons.get('goto_line', '')))
         editor.bookmarksFinder_act.triggered.connect(lambda: editor.tab.currentWidget().edit.show_bookmarks_popup() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
