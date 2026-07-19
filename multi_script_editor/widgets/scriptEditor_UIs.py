@@ -299,6 +299,7 @@ class Ui_scriptEditor(object):
         self.tools_menu.addAction(self.addCursorsToLineEnds_act)
         self.tools_menu.addAction(self.addCursorAbove_act)
         self.tools_menu.addAction(self.addCursorBelow_act)
+        self.tools_menu.addSeparator()
         self.tools_menu.addAction(self.nextSelection_act)
         self.tools_menu.addAction(self.previousSelection_act)
         self.tools_menu.addAction(self.selectNextOccurrence_act)

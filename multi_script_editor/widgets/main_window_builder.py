@@ -130,15 +130,17 @@ class ScriptEditorUIBuilder:
         editor.addCursorsToLineEnds_act.triggered.connect(editor.tab.addCursorsToLineEnds)
         editor.addCursorsToLineEnds_act.setShortcut('Alt+Shift+I')
         editor.addCursorsToLineEnds_act.setShortcutContext(Qt.WindowShortcut)
-        editor.addCursorsToLineEnds_act.setIcon(QIcon(icons['replace']))
+        editor.addCursorsToLineEnds_act.setIcon(QIcon(icons['add_cursors_to_line_ends']))
 
         editor.addCursorAbove_act.triggered.connect(editor.tab.addCursorAbove)
         editor.addCursorAbove_act.setShortcut('Ctrl+Alt+Up')
         editor.addCursorAbove_act.setShortcutContext(Qt.WindowShortcut)
+        editor.addCursorAbove_act.setIcon(QIcon(icons['add_cursor_above']))
 
         editor.addCursorBelow_act.triggered.connect(editor.tab.addCursorBelow)
         editor.addCursorBelow_act.setShortcut('Ctrl+Alt+Down')
         editor.addCursorBelow_act.setShortcutContext(Qt.WindowShortcut)
+        editor.addCursorBelow_act.setIcon(QIcon(icons['add_cursor_below']))
 
         editor.find_act.triggered.connect(editor.findWidget)
         editor.find_act.setShortcut('Ctrl+F')
@@ -254,7 +256,7 @@ class ScriptEditorUIBuilder:
         editor.selectNextOccurrence_act.triggered.connect(editor.tab.selectNextOccurrence)
         editor.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         editor.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
-        editor.selectNextOccurrence_act.setIcon(QIcon(icons["replace"]))
+        editor.selectNextOccurrence_act.setIcon(QIcon(icons["select_next_occurrence"]))
 
         editor.nextSelection_act.triggered.connect(editor.tab.nextSelection)
         editor.nextSelection_act.setShortcut('Ctrl+J')
@@ -270,7 +272,7 @@ class ScriptEditorUIBuilder:
         editor.selectAllOccurrences_act.triggered.connect(editor.tab.selectAllOccurrences)
         editor.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
         editor.selectAllOccurrences_act.setShortcutContext(Qt.WindowShortcut)
-        editor.selectAllOccurrences_act.setIcon(QIcon(icons["replace"]))
+        editor.selectAllOccurrences_act.setIcon(QIcon(icons["select_all_occurrences"]))
 
         editor.always_ontop_act.triggered.connect(editor.always_ontop)
         editor.always_ontop_act.setShortcutContext(Qt.WidgetShortcut)
