@@ -206,7 +206,8 @@ class lineNumberBarClass(QWidget):
                 data = block.userData()
                 is_folded = data and getattr(data, 'folded', False)
                 
-            if is_fold_start and (is_folded or is_block_hovered):
+            is_in_folding_hover = getattr(self, 'hover_in_folding_area', False)
+            if is_fold_start and (is_folded or is_block_hovered or is_in_folding_hover):
                 cx = self.width() - 8
                 cy = round(pos_y) + int(block_height / 2)
                 
@@ -264,16 +265,28 @@ class lineNumberBarClass(QWidget):
                 break
             block = block.next()
 
-        self.hover_in_bookmark_area = (event.x() < 20)
+        hover_in_bookmark_area = (event.x() < 20)
+        hover_in_folding_area = (event.x() > self.width() - 20)
 
+        changed = False
         if getattr(self, 'hover_block_number', -1) != hover_block:
             self.hover_block_number = hover_block
+            changed = True
+        if getattr(self, 'hover_in_bookmark_area', False) != hover_in_bookmark_area:
+            self.hover_in_bookmark_area = hover_in_bookmark_area
+            changed = True
+        if getattr(self, 'hover_in_folding_area', False) != hover_in_folding_area:
+            self.hover_in_folding_area = hover_in_folding_area
+            changed = True
+
+        if changed:
             self.update()
         QWidget.mouseMoveEvent(self, event)
 
     def leaveEvent(self, event):
         self.hover_block_number = -1
         self.hover_in_bookmark_area = False
+        self.hover_in_folding_area = False
         self.update()
         QWidget.leaveEvent(self, event)
 
