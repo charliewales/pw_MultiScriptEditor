@@ -379,6 +379,11 @@ class ScriptEditorUIBuilder:
         editor.toggleMenus_act.triggered.connect(editor.toggleMenuBar)
         editor.addAction(editor.toggleMenus_act)
 
+        # Zen mode toggle setup
+        editor.zen_mode_act.setShortcutContext(Qt.WindowShortcut)
+        editor.zen_mode_act.triggered.connect(editor.toggleZenMode)
+        editor.addAction(editor.zen_mode_act)
+
         # Auto Close Delimiters toggle setup
         editor.autoCloseDelimiters_act.triggered.connect(editor.toggleAutoCloseDelimiters)
 
@@ -565,6 +570,7 @@ class ScriptEditorUIBuilder:
             editor.trimWhitespace_act: "Trim trailing whitespace in the current script",
             editor.saveOutputAs_act: "Save the output panel text to a file",
             editor.saveOutputToTab_act: "Copy the output panel text to a new tab",
+            editor.zen_mode_act: "Toggle Zen mode for distraction-free coding",
         }
 
         # Insert Bookmarks menu after File menu

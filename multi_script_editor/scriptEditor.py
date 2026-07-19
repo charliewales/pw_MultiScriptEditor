@@ -1351,6 +1351,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         clear_exec = data.get('clear_execute', None)
         echo_exec = data.get('echo_execute', None)
         geo = data.get('geometry', None)
+        is_max = data.get('maximized', False)
         out_wrap = data.get('out_wrap', None)
         outFontSize = data.get('outFontSize', 10)
         splitter = data.get('splitter', [600, 400])
@@ -1368,6 +1369,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.resize(geo[2], geo[3])
         else:
             self.resize(1080, 1080)
+
+        if is_max:
+            self.showMaximized()
+
         if center:
             x, y = center
             geo = self.geometry()
@@ -1497,14 +1502,26 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 data['theme'] = theme
         if theme == 'default':
             theme = 'Multi Script Editor'
-            self._current_settings['theme'] = theme
+        self._current_settings['theme'] = theme
         self.applyTheme(theme)
 
     def saveSettings(self):
         settings = self._current_settings
-        geo = self.geometry()
-        sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
-        center = [geo.center().x(), geo.center().y()]
+        in_zen_mode = getattr(self, 'zen_mode_act', None) and self.zen_mode_act.isChecked()
+        zen_state = getattr(self, '_zen_mode_state', {})
+
+        if in_zen_mode and 'rect' in zen_state:
+            rect = zen_state['rect']
+            sGeo = [rect[0], rect[1], rect[2], rect[3]]
+            center = [rect[0] + rect[2] / 2, rect[1] + rect[3] / 2]
+            is_max = zen_state.get('maximized', False)
+        else:
+            geo = self.normalGeometry() if hasattr(self, 'normalGeometry') else self.geometry()
+            frame_offset_x = self.geometry().x() - self.x()
+            frame_offset_y = self.geometry().y() - self.y()
+            sGeo = [geo.x() - frame_offset_x, geo.y() - frame_offset_y, geo.width(), geo.height()]
+            center = [geo.center().x(), geo.center().y()]
+            is_max = self.isMaximized()
         out_pt = self.out.getFontSize()
         size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
@@ -1519,10 +1536,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         word_wrap = self.wordWrap_act.isChecked()
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
-        show_outline = self.showOutline_act.isChecked()
+
+        in_zen_mode = getattr(self, 'zen_mode_act', None) and self.zen_mode_act.isChecked()
+        zen_state = getattr(self, '_zen_mode_state', {})
+
+        show_outline = zen_state.get('outline', self.showOutline_act.isChecked()) if in_zen_mode else self.showOutline_act.isChecked()
         show_outline_button = self.showOutlineButton_act.isChecked()
-        show_output = self.showOutput_act.isChecked()
-        show_menus = self.toggleMenus_act.isChecked()
+        show_output = zen_state.get('output', self.showOutput_act.isChecked()) if in_zen_mode else self.showOutput_act.isChecked()
+        show_menus = zen_state.get('menubar', self.toggleMenus_act.isChecked()) if in_zen_mode else self.toggleMenus_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
@@ -1560,6 +1581,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         data = dict(
             geometry=sGeo,
+            maximized=is_max,
             center=center,
             outFontSize=size,
             splitter=split_sizes,
@@ -1619,6 +1641,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def resizeEvent(self, event):
         self.adjustColmpeters()
+        if getattr(self, 'zen_mode_act', None) and self.zen_mode_act.isChecked():
+            self._updateZenModeMargins()
         super(scriptEditorClass, self).resizeEvent(event)
 
     def openLink(self, name, extra=""):
@@ -1759,6 +1783,51 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.menubar.setVisible(state)
         self.toggleMenus_act.setChecked(state)
 
+    def toggleZenMode(self, state=None):
+        if state is None:
+            state = self.zen_mode_act.isChecked()
+        self.zen_mode_act.setChecked(state)
+
+        if state:
+            geo = self.normalGeometry() if hasattr(self, 'normalGeometry') else self.geometry()
+            frame_offset_x = self.geometry().x() - self.x()
+            frame_offset_y = self.geometry().y() - self.y()
+            
+            self._zen_mode_state = {
+                'fullscreen': self.isFullScreen(),
+                'maximized': self.isMaximized(),
+                'rect': [geo.x() - frame_offset_x, geo.y() - frame_offset_y, geo.width(), geo.height()],
+                'menubar': self.toggleMenus_act.isChecked(),
+                'output': self.showOutput_act.isChecked(),
+                'outline': self.showOutline_act.isChecked()
+            }
+            if not self.isFullScreen():
+                self.showFullScreen()
+            if self.menubar.isVisible():
+                self.toggleMenuBar(False)
+            if self.verticalLayoutWidget.isVisible():
+                self.toggleOutput(False)
+            if self.showOutline_act.isChecked():
+                self.toggleOutline(False)
+            self._updateZenModeMargins()
+        else:
+            self.in_ly.setContentsMargins(0, 0, 0, 0)
+            if hasattr(self, '_zen_mode_state'):
+                if not self._zen_mode_state.get('fullscreen', False):
+                    self.showNormal()
+                    if self._zen_mode_state.get('maximized', False):
+                        QTimer.singleShot(50, self.showMaximized)
+                    elif 'rect' in self._zen_mode_state:
+                        rect = self._zen_mode_state['rect']
+                        def _restore_rect():
+                            self.move(rect[0], rect[1])
+                            self.resize(rect[2], rect[3])
+                        QTimer.singleShot(50, _restore_rect)
+
+                self.toggleMenuBar(self._zen_mode_state.get('menubar', True))
+                self.toggleOutput(self._zen_mode_state.get('output', True))
+                self.toggleOutline(self._zen_mode_state.get('outline', False))
+
     def toggleOutputBottom(self, state=None):
         if state is None:
             state = self.outputBottom_act.isChecked()
@@ -1774,6 +1843,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.splitter.setSizes(sizes[::-1])
         if hasattr(self, '_last_splitter_sizes') and self._last_splitter_sizes:
             self._last_splitter_sizes = self._last_splitter_sizes[::-1]
+
+    def _updateZenModeMargins(self):
+        from vendor.Qt.QtGui import QFontMetrics
+        max_width = 1200
+        if self.tab.count() > 0 and self.tab.widget(0) and hasattr(self.tab.widget(0), 'edit'):
+            fm = QFontMetrics(self.tab.widget(0).edit.font())
+            if hasattr(fm, 'horizontalAdvance'):
+                char_width = fm.horizontalAdvance('W')
+            else:
+                char_width = fm.width('W')
+            # 120 columns + 100 padding for line numbers and scrollbar
+            max_width = (char_width * 120) + 100
+
+        current_width = self.width()
+        if current_width > max_width:
+            margin = (current_width - max_width) // 2
+        else:
+            margin = 0
+        self.in_ly.setContentsMargins(margin, 0, margin, 0)
 
     def saveOutputAs(self):
         file_path, _ = QFileDialog.getSaveFileName(self, "Save output as", "", "Python Files (*.py);;All Files (*)")
