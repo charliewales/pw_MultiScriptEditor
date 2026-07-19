@@ -72,6 +72,7 @@ class MarkdownPreviewEdit(QTextEdit):
 
         # Create the close info button on top of the text edit area
         self.close_button = QPushButton(" Esc", self)
+        self.close_button.setToolTip("Press Esc or click to exit markdown preview")
         self.close_button.clicked.connect(self.close_preview)
 
         # Set the "File > Quit" icon to the button
