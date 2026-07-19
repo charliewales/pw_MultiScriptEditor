@@ -243,17 +243,13 @@ class tabWidgetClass(QTabWidget):
                         # Restore scroll once text is loaded
                         if hasattr(edit, 'needs_loading_scroll_v'):
                             scroll_v = edit.needs_loading_scroll_v
-                            scroll_h = edit.needs_loading_scroll_h
                             delattr(edit, 'needs_loading_scroll_v')
-                            delattr(edit, 'needs_loading_scroll_h')
+                            if hasattr(edit, 'needs_loading_scroll_h'):
+                                delattr(edit, 'needs_loading_scroll_h')
                             if scroll_v > 0:
                                 edit.verticalScrollBar().setValue(scroll_v)
-                            if scroll_h > 0:
-                                edit.horizontalScrollBar().setValue(scroll_h)
-                            from vendor.Qt.QtCore import QTimer
-                            if scroll_v > 0 or scroll_h > 0:
+                                from vendor.Qt.QtCore import QTimer
                                 QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
-                                QTimer.singleShot(0, lambda: edit.horizontalScrollBar().setValue(scroll_h))
 
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)

@@ -309,9 +309,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.ensureCursorVisible()
 
     def showEvent(self, event):
+        super(scriptEditorClass, self).showEvent(event)
         data = self._current_settings
         if not data:
             self.saveSettings()
+        # Restore scroll positions of active tab once the window is shown
+        current_widget = self.tab.currentWidget()
+        if current_widget and hasattr(current_widget, 'edit'):
+            edit = current_widget.edit
+            if hasattr(edit, 'needs_loading_scroll_v'):
+                scroll_v = edit.needs_loading_scroll_v
+                if hasattr(edit, 'needs_loading_scroll_v'):
+                    delattr(edit, 'needs_loading_scroll_v')
+                if hasattr(edit, 'needs_loading_scroll_h'):
+                    delattr(edit, 'needs_loading_scroll_h')
+                if scroll_v > 0:
+                    edit.verticalScrollBar().setValue(scroll_v)
+                    QTimer.singleShot(50, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
@@ -763,22 +777,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                                     w.setTextCursor(cursor)
                                     if hasattr(w, 'highlight_current_line'):
                                         w.highlight_current_line()
-                        # Restore scroll position
-                        if hasattr(w, 'needs_loading_scroll_v'):
-                            scroll_v = w.needs_loading_scroll_v
-                            scroll_h = w.needs_loading_scroll_h
-                            w.verticalScrollBar().setValue(scroll_v)
-                            w.horizontalScrollBar().setValue(scroll_h)
-                            QTimer.singleShot(0, lambda: w.verticalScrollBar().setValue(scroll_v))
-                            QTimer.singleShot(0, lambda: w.horizontalScrollBar().setValue(scroll_h))
                     if hasattr(w, 'needs_loading_line'):
                         delattr(w, 'needs_loading_line')
                     if hasattr(w, 'needs_loading_column'):
                         delattr(w, 'needs_loading_column')
-                    if hasattr(w, 'needs_loading_scroll_v'):
-                        delattr(w, 'needs_loading_scroll_v')
-                    if hasattr(w, 'needs_loading_scroll_h'):
-                        delattr(w, 'needs_loading_scroll_h')
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
