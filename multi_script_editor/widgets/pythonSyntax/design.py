@@ -48,6 +48,7 @@ defaultColors = dict(
         tab_hover_text=(210, 210, 210),
         selection_background=(85, 85, 85),
         selection=(245, 165, 18),
+        border=(85, 85, 85),
 )
 
 predefinedThemes = {
@@ -544,6 +545,7 @@ def getColors(theme=False):
     has_custom_bookmark = False
     has_custom_selection_bg = False
     has_custom_selection = False
+    has_custom_border = False
 
     if theme in predefinedThemes:
         result = {k:v for k,v in predefinedThemes[theme].items()}
@@ -553,6 +555,8 @@ def getColors(theme=False):
             has_custom_selection_bg = True
         if 'selection' in result:
             has_custom_selection = True
+        if 'border' in result:
+            has_custom_border = True
         for k, v in defaultColors.items():
             if k not in result:
                 if k == 'status_bar_text' and 'tab_selected_text' in result:
@@ -565,6 +569,8 @@ def getColors(theme=False):
             has_custom_selection_bg = True
         if 'selection' in result:
             has_custom_selection = True
+        if 'border' in result:
+            has_custom_border = True
 
     t_model = ThemesModel()
     theme_settings = t_model.read_settings()
@@ -579,6 +585,8 @@ def getColors(theme=False):
                 has_custom_selection_bg = True
             if 'selection' in colors:
                 has_custom_selection = True
+            if 'border' in colors:
+                has_custom_border = True
             if 'status_bar_text' not in colors and 'tab_selected_text' in colors:
                 result['status_bar_text'] = colors['tab_selected_text']
 
@@ -591,6 +599,10 @@ def getColors(theme=False):
         result['selection_background'] = result['highlight_line']
     if not has_custom_selection and 'string' in result:
         result['selection'] = result['string']
+
+    # Default border to highlight_line color if not explicitly customized
+    if not has_custom_border and 'highlight_line' in result:
+        result['border'] = result['highlight_line']
 
     return result
 
