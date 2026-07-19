@@ -151,6 +151,12 @@ class BaseTextWidgetMixin:
                     menu.insertSeparator(first_action)
                 else:
                     menu.addAction(preview_action)
+        if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
+            menu.addSeparator()
+            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            if hasattr(main_win, 'toggleMenus_act'):
+                show_menus_action.triggered.connect(main_win.toggleMenus_act.trigger)
+            menu.addAction(show_menus_action)
 
         menu.exec_(event.globalPos())
         del menu

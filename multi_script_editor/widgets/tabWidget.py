@@ -339,6 +339,13 @@ class tabWidgetClass(QTabWidget):
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
+        if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
+            menu.addSeparator()
+            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            if hasattr(self.p, 'toggleMenus_act'):
+                show_menus_action.triggered.connect(self.p.toggleMenus_act.trigger)
+            menu.addAction(show_menus_action)
+
         menu.exec_(QCursor.pos())
 
     def copyFilePath(self, index=None):
