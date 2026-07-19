@@ -1775,6 +1775,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(self, '_last_splitter_sizes') and self._last_splitter_sizes:
             self._last_splitter_sizes = self._last_splitter_sizes[::-1]
 
+    def saveOutputAs(self):
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save output as", "", "Python Files (*.py);;All Files (*)")
+        if file_path:
+            text = self.out.toPlainText()
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(text)
+            except Exception as e:
+                self.messageSignal.emit(f"Failed to save output: {str(e)}")
+            else:
+                self.messageSignal.emit(f"Output saved to {file_path}")
+
+    def saveOutputToTab(self):
+        import time
+        current_time = time.strftime("%H:%M:%S")
+        tab_name = f"output {current_time}"
+        text = self.out.toPlainText()
+        self.tab.addNewTab(tab_name, text)
+
     def toggleQuickTabSwitching(self, state=None):
         if state is None:
             state = self.quickTabSwitching_act.isChecked()
