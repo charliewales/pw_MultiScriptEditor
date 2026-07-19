@@ -366,6 +366,11 @@ class ScriptEditorUIBuilder:
         editor.showOutput_act.triggered.connect(editor.toggleOutput)
         # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
 
+        # Menus toggle setup
+        editor.toggleMenus_act.setShortcutContext(Qt.WindowShortcut)
+        editor.toggleMenus_act.triggered.connect(editor.toggleMenuBar)
+        editor.addAction(editor.toggleMenus_act)
+
         # Auto Close Delimiters toggle setup
         editor.autoCloseDelimiters_act.triggered.connect(editor.toggleAutoCloseDelimiters)
 

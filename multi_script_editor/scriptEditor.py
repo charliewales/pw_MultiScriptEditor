@@ -1459,6 +1459,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.showOutput_act.setChecked(show_output)
         self.toggleOutput(show_output)
 
+        show_menus = data.get('show_menus', True)
+        self.toggleMenus_act.setChecked(show_menus)
+        self.toggleMenuBar(show_menus)
+
         syntax_check = data.get('syntax_check', True)
         self.syntaxCheck_act.setChecked(syntax_check)
         self.toggleSyntaxCheck(syntax_check)
@@ -1518,6 +1522,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_outline = self.showOutline_act.isChecked()
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
+        show_menus = self.toggleMenus_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
@@ -1569,6 +1574,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_outline=show_outline,
             show_outline_button=show_outline_button,
             show_output=show_output,
+            show_menus=show_menus,
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
             occurrences_case_sensitive=occurrences_case_sensitive,
@@ -1746,6 +1752,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if any(s == 0 for s in sizes):
                 sizes = self.getDefaultSplitterSizes()
             self.splitter.setSizes(sizes)
+
+    def toggleMenuBar(self, state=None):
+        if state is None:
+            state = self.toggleMenus_act.isChecked()
+        self.menubar.setVisible(state)
+        self.toggleMenus_act.setChecked(state)
 
     def toggleOutputBottom(self, state=None):
         if state is None:
