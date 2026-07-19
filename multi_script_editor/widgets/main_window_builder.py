@@ -132,6 +132,14 @@ class ScriptEditorUIBuilder:
         editor.addCursorsToLineEnds_act.setShortcutContext(Qt.WindowShortcut)
         editor.addCursorsToLineEnds_act.setIcon(QIcon(icons['replace']))
 
+        editor.addCursorAbove_act.triggered.connect(editor.tab.addCursorAbove)
+        editor.addCursorAbove_act.setShortcut('Ctrl+Alt+Up')
+        editor.addCursorAbove_act.setShortcutContext(Qt.WindowShortcut)
+
+        editor.addCursorBelow_act.triggered.connect(editor.tab.addCursorBelow)
+        editor.addCursorBelow_act.setShortcut('Ctrl+Alt+Down')
+        editor.addCursorBelow_act.setShortcutContext(Qt.WindowShortcut)
+
         editor.find_act.triggered.connect(editor.findWidget)
         editor.find_act.setShortcut('Ctrl+F')
         editor.find_act.setShortcutContext(Qt.WindowShortcut)

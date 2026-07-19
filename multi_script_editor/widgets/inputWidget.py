@@ -1711,6 +1711,20 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         finally:
             self._is_manual_multi_selecting = False
 
+    def add_cursor_above(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursor_above()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def add_cursor_below(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursor_below()
+        finally:
+            self._is_manual_multi_selecting = False
+
 
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):

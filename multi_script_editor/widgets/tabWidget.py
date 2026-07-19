@@ -715,6 +715,12 @@ class tabWidgetClass(QTabWidget):
     def addCursorsToLineEnds(self):
         self.current().add_cursors_to_line_ends()
 
+    def addCursorAbove(self):
+        self.current().add_cursor_above()
+
+    def addCursorBelow(self):
+        self.current().add_cursor_below()
+
 
 
     def yes_no_question(self, question):
