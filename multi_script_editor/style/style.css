@@ -551,6 +551,12 @@ QCheckBox::indicator:hover
 QCheckBox::indicator:checked
 {
     background-color: rgb[background];
+    image: url("../icons/checkbox_checked.png");
+}
+
+QCheckBox::indicator:checked:disabled
+{
+    image: url("../icons/checkbox_checked_disabled.png");
 }
 
 QCheckBox:disabled
