@@ -403,11 +403,12 @@ class ScriptEditorUIBuilder:
         editor.saveOutputToTab_act = QAction("To tab", editor)
         editor.saveOutput_menu.addAction(editor.saveOutputAs_act)
         editor.saveOutput_menu.addAction(editor.saveOutputToTab_act)
-        
+
         editor.saveOutputAs_act.triggered.connect(editor.saveOutputAs)
         editor.saveOutputToTab_act.triggered.connect(editor.saveOutputToTab)
-        
+
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.saveOutput_menu)
+        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Sessions Submenu in File menu
         editor.sessions_menu = QMenu("Sessions", editor)
@@ -550,6 +551,20 @@ class ScriptEditorUIBuilder:
             editor.prevBookmark_act : "Navigate to the previous bookmark",
             editor.clearBookmarks_act : "Clear all bookmarks in the current document",
             editor.bookmarksFinder_act : "Search and navigate bookmarked lines",
+            editor.showOutlineButton_act: "Show or hide the code outline button in the status bar",
+            editor.unfold_all_act: "Unfold all code blocks",
+            editor.quickHelp_act: "Show quick help for the current word",
+            editor.addCursorAbove_act: "Add a cursor above the current line",
+            editor.fold_all_act: "Fold all code blocks",
+            editor.unfold_act: "Unfold the current code block",
+            editor.saveAs_act: "Save the current script as a new file",
+            editor.toggleMenus_act: "Toggle the main menu bar visibility",
+            editor.fold_act: "Fold the current code block",
+            editor.addCursorBelow_act: "Add a cursor below the current line",
+            editor.trimAutoWhitespace_act: "Automatically trim trailing whitespace on save",
+            editor.trimWhitespace_act: "Trim trailing whitespace in the current script",
+            editor.saveOutputAs_act: "Save the output panel text to a file",
+            editor.saveOutputToTab_act: "Copy the output panel text to a new tab",
         }
 
         # Insert Bookmarks menu after File menu
