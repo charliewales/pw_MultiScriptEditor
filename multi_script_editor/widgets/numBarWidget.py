@@ -205,9 +205,18 @@ class lineNumberBarClass(QWidget):
                 is_fold_start = block.blockNumber() in self.edit.folding_regions
                 data = block.userData()
                 is_folded = data and getattr(data, 'folded', False)
-                
+
             is_in_folding_hover = getattr(self, 'hover_in_folding_area', False)
-            if is_fold_start and (is_folded or is_block_hovered or is_in_folding_hover):
+            showing_bookmark = is_bookmarked or is_bookmark_hovered
+            
+            draw_chevron = False
+            if is_fold_start:
+                if is_in_folding_hover:
+                    draw_chevron = True
+                elif is_folded and not showing_bookmark:
+                    draw_chevron = True
+
+            if draw_chevron:
                 cx = self.width() - 8
                 cy = round(pos_y) + int(block_height / 2)
                 
