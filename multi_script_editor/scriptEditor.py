@@ -11,7 +11,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.3.0"
+mse_version = "6.4.0"
 
 root_path = os.path.dirname(__file__)
 vendor_path = os.path.join(root_path, 'vendor')
