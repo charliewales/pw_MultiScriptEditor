@@ -992,6 +992,26 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             if self.completer:
                 self.completer.updateCompleteList()
             return
+        # smart home
+        elif event.key() == Qt.Key_Home and not (event.modifiers() & Qt.ControlModifier):
+            cursor = self.textCursor()
+            mode = QTextCursor.KeepAnchor if (event.modifiers() & Qt.ShiftModifier) else QTextCursor.MoveAnchor
+            block_text = cursor.block().text()
+            first_non_space = len(block_text) - len(block_text.lstrip(' \t'))
+            current_pos_in_block = cursor.positionInBlock()
+            
+            if current_pos_in_block == first_non_space:
+                cursor.setPosition(cursor.block().position(), mode)
+            else:
+                cursor.setPosition(cursor.block().position() + first_non_space, mode)
+                
+            self.setTextCursor(cursor)
+            
+            if self.completer:
+                self.completer.updateCompleteList()
+            self.setFocus()
+            self.highlight_current_line()
+            return
         # close completer
         elif event.key() in escapeButtons:
             if event.key() == Qt.Key_Escape:
