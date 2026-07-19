@@ -19,15 +19,14 @@ or embedded in another application. The main purpose for integration - the abili
 
 ### Existing integration modules
 
-  - Houdini 19
-  - Nuke 13
-  - Maya 2022-2023
-  - 3DsMax 2014-2017
+  - Houdini 19-22
+  - Nuke 15-17
+  - Maya 2024-2027
     
 RV Integration in [nebukadhezer branch](https://github.com/nebukadhezer/multi_script_editor)
 
 If necessary, you can extend this to make your own integration module.
-The main pre condition - Should be used Python2.7.
+The main pre condition - Should be used Python 3+.
  
 
 ### Houdini features
@@ -51,9 +50,6 @@ The main pre condition - Should be used Python2.7.
   - Context completion for function PyNode with existing nodes in current scene
   - Context completion for function pm.createNode and cmds.createNode with existing Maya node types
 
-### 3DsMax features
-  - Works for now...
-
 
 # How to install
 
@@ -61,7 +57,6 @@ The main pre condition - Should be used Python2.7.
 [Houdini install](https://github.com/nebukadhezer/pw_MultiScriptEditor#houdini-13)
 [Maya install](https://github.com/nebukadhezer/pw_MultiScriptEditor#maya)
 [Nuke install](https://github.com/nebukadhezer/pw_MultiScriptEditor#nuke)
-[3DsMax install](https://github.com/nebukadhezer/pw_MultiScriptEditor#3dsmax)
 
 You can use single module installation for each case. Just extract module `multi_script_editor`
 to somewhere (no spaces and non ascii characters in path) and add this path to PYTHONPATH before start your app.

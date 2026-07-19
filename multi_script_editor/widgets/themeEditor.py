@@ -21,7 +21,7 @@ from vendor.Qt.QtWidgets import (
     QFileDialog,
 )
 from widgets import themeEditor_UIs as ui
-from core.settings_model import SettingsModel
+from core.settings_model import SettingsModel, ThemesModel
 from .pythonSyntax import design
 from widgets.tabWidget import tabWidgetClass
 
@@ -75,6 +75,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd2.wordWrap(False)
         self.splitter.setSizes([280, 800])
         self.s = SettingsModel()
+        self.t_model = ThemesModel()
         self.colors_lwd.itemDoubleClicked.connect(self.getNewColor)
         self.colors_lwd.setContextMenuPolicy(Qt.CustomContextMenu)
         self.colors_lwd.customContextMenuRequested.connect(self.openColorMenu)
@@ -161,11 +162,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             return self.parent()._current_settings
         return self.s.read_settings()
 
+    def get_theme_settings(self):
+        return self.t_model.read_settings()
+
     def save_settings(self, settings):
         if self.parent() and hasattr(self.parent(), 'save_settings_requested'):
             self.parent().save_settings_requested.emit(settings)
         else:
             self.s.write_settings(settings)
+
+    def save_theme_settings(self, theme_settings):
+        self.t_model.write_settings(theme_settings)
 
     def fillUI(self, restore=None):
         self.themeList_cbb.blockSignals(True)
@@ -173,12 +180,13 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if restore is None:
                 restore = self.themeList_cbb.currentText()
             settings = self.get_settings()
+            theme_settings = self.get_theme_settings()
             self.themeList_cbb.clear()
             for t in sorted(design.predefinedThemes.keys()):
                 self.themeList_cbb.addItem(t)
-            if settings.get('colors'):
+            if theme_settings.get('colors'):
                 added_separator = False
-                for x in sorted(settings.get('colors')):
+                for x in sorted(theme_settings.get('colors')):
                     if x not in design.predefinedThemes:
                         if not added_separator:
                             self.themeList_cbb.insertSeparator(self.themeList_cbb.count())
@@ -415,7 +423,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         return colors
 
     def showFontContextMenu(self, pos):
-        from vendor.Qt.QtWidgets import QMenu
         menu = QMenu(self)
         reset_action = menu.addAction("Reset to default")
         action = menu.exec_(self.choose_font_btn.mapToGlobal(pos))
@@ -513,9 +520,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def resetColorToDefault(self, item):
         color_name = item.text()
-        from widgets.pythonSyntax.design import defaultColors
-        if color_name in defaultColors:
-            default_color = defaultColors[color_name]
+        if color_name in design.defaultColors:
+            default_color = design.defaultColors[color_name]
             item.setData(32, default_color)
             pix = QPixmap(QSize(16,16))
             pix.fill(QColor(*default_color))
@@ -548,9 +554,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         menu.exec_(self.tabRadius_spb.mapToGlobal(position))
 
     def resetTabRadiusToDefault(self):
-        from widgets.pythonSyntax.design import defaultColors
-        if 'tab_radius' in defaultColors:
-            self.tabRadius_spb.setValue(defaultColors['tab_radius'])
+        if 'tab_radius' in design.defaultColors:
+            self.tabRadius_spb.setValue(design.defaultColors['tab_radius'])
             self.updateExample()
 
 
@@ -601,18 +606,24 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             name = name[0]
             if name in design.predefinedThemes:
                 name = name + ' (Custom)'
-            settings = self.get_settings()
-            if 'colors' in settings:
-                if name in settings['colors']:
+            theme_settings = self.get_theme_settings()
+            if 'colors' in theme_settings:
+                if name in theme_settings['colors']:
                     if not self.yes_no_question('Replace existing?'):
                         return False
 
             colors = self.getCurrentColors()
+            if 'colors' in theme_settings:
+                theme_settings['colors'][name] = colors
+            else:
+                theme_settings['colors'] = {name: colors}
+            self.save_theme_settings(theme_settings)
+            
+            # If the main window caches colors we need to apply them there too
+            settings = self.get_settings()
             if 'colors' in settings:
                 settings['colors'][name] = colors
-            else:
-                settings['colors'] = {name: colors}
-            self.save_settings(settings)
+            
             self.fillUI(name)
             self.updateUI()
             if self.parent() and hasattr(self.parent(), 'applyTheme'):
@@ -627,11 +638,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if text:
             if self.yes_no_question('Remove current theme?'):
                 name = self.themeList_cbb.currentText()
-                settings = self.get_settings()
-                if 'colors' in settings:
-                    if name in settings['colors']:
-                        del settings['colors'][name]
-                        self.save_settings(settings)
+                theme_settings = self.get_theme_settings()
+                if 'colors' in theme_settings:
+                    if name in theme_settings['colors']:
+                        del theme_settings['colors'][name]
+                        self.save_theme_settings(theme_settings)
+                        
+                        settings = self.get_settings()
+                        if 'colors' in settings and name in settings['colors']:
+                            del settings['colors'][name]
+                            self.save_settings(settings)
+                            
                         self.fillUI(False)
                         self.updateUI()
 
@@ -666,18 +683,23 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     if name in design.predefinedThemes:
                         name = name + ' (Custom)'
 
-                    settings = self.get_settings()
-                    if 'colors' in settings:
-                        if name in settings['colors']:
+                    theme_settings = self.get_theme_settings()
+                    if 'colors' in theme_settings:
+                        if name in theme_settings['colors']:
                             if not self.yes_no_question('Replace exists?'):
                                 return
 
+                    if 'colors' in theme_settings:
+                        theme_settings['colors'][name] = colors
+                    else:
+                        theme_settings['colors'] = {name: colors}
+
+                    self.save_theme_settings(theme_settings)
+                    
+                    settings = self.get_settings()
                     if 'colors' in settings:
                         settings['colors'][name] = colors
-                    else:
-                        settings['colors'] = {name: colors}
-
-                    self.save_settings(settings)
+                        
                     self.fillUI(name)
                     self.updateUI()
                     self.updateColors()
@@ -739,6 +761,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
+            if hasattr(self.parent(), 'theme_font'):
+                msg_box.setFont(self.parent().theme_font)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
             cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
@@ -769,6 +793,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
+        if hasattr(self.parent(), 'theme_font'):
+            msg_box.setFont(self.parent().theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
         msg_box.exec_()

@@ -1,5 +1,5 @@
 from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase
-from vendor.Qt.QtWidgets import QTextEdit
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit
 
 class BaseTextWidgetMixin:
     """
@@ -7,15 +7,30 @@ class BaseTextWidgetMixin:
     such as font size manipulation, word wrap, and whitespace rendering.
     Expects to be mixed into a QTextEdit or QTextBrowser.
     """
+    def getFontSize(self):
+        if hasattr(self, 'fs') and self.fs > 0:
+            return self.fs
+
+        size = self.font().pointSize()
+        if size > 0:
+            return size
+
+        return 10 # Safe fallback
+
+    def setFontSize(self, size):
+        if size >= 8: # Assuming minimumFontSize is around 8-10.
+            self.fs = size
+            self.setTextEditFontSize(self.fs)
+
     def changeFontSize(self, up):
-        f = self.font()
-        size = f.pointSize()
+        size = self.getFontSize()
+
         if up:
             size = min(30, size + 1)
         else:
             size = max(8, size - 1)
-        f.setPointSize(size)
-        self.setFont(f)
+
+        self.setFontSize(size)
 
     def setTextEditFontSize(self, size):
         f = self.font()
@@ -23,10 +38,16 @@ class BaseTextWidgetMixin:
         self.setFont(f)
 
     def wordWrap(self, state):
-        if state:
-            self.setLineWrapMode(QTextEdit.WidgetWidth)
+        if isinstance(self, QPlainTextEdit):
+            if state:
+                self.setLineWrapMode(QPlainTextEdit.WidgetWidth)
+            else:
+                self.setLineWrapMode(QPlainTextEdit.NoWrap)
         else:
-            self.setLineWrapMode(QTextEdit.NoWrap)
+            if state:
+                self.setLineWrapMode(QTextEdit.WidgetWidth)
+            else:
+                self.setLineWrapMode(QTextEdit.NoWrap)
 
     def set_font(self, font):
         self.setFont(font)
@@ -75,7 +96,9 @@ class BaseTextWidgetMixin:
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
         self.setFont(editor_font)
-        
+        if hasattr(self, 'fs'):
+            self.fs = pointSize
+
         if hasattr(self, 'completer') and self.completer:
             self.completer.setFont(editor_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
@@ -87,5 +110,39 @@ class BaseTextWidgetMixin:
         if hasattr(main_win, 'menubar'):
             menu.setFont(main_win.menubar.font())
             menu.setStyleSheet(main_win.menubar.styleSheet())
+
+        # Check if we are editing an HTML file to add "Open in browser"
+        import os
+        import webbrowser
+        from vendor.Qt.QtWidgets import QAction
+
+        file_path = None
+        curr = self
+        while curr:
+            file_path = getattr(curr, 'file_path', None)
+            if file_path:
+                break
+            if hasattr(curr, 'parent') and callable(curr.parent):
+                curr = curr.parent()
+            elif hasattr(curr, 'parentWidget') and callable(curr.parentWidget):
+                curr = curr.parentWidget()
+            else:
+                break
+
+        if file_path and os.path.exists(file_path):
+            _, ext = os.path.splitext(file_path)
+            if ext.lower() in ['.html', '.htm']:
+                from vendor.Qt.QtGui import QIcon
+                from icons import icons
+                open_action = QAction('Open in browser    \tCtrl+B', self)
+                open_action.setIcon(QIcon(icons['open_in_browser']))
+                open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
+                if menu.actions():
+                    first_action = menu.actions()[0]
+                    menu.insertAction(first_action, open_action)
+                    menu.insertSeparator(first_action)
+                else:
+                    menu.addAction(open_action)
+
         menu.exec_(event.globalPos())
         del menu

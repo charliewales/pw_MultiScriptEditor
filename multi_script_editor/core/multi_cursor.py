@@ -1,5 +1,5 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QTextCursor, QColor
+from vendor.Qt.QtGui import QTextCursor, QColor, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
 
 class MultiCursorManager:
@@ -68,6 +68,9 @@ class MultiCursorManager:
 
         key = event.key()
         modifiers = event.modifiers()
+
+        if key in (Qt.Key_Control, Qt.Key_Shift, Qt.Key_Alt, Qt.Key_Meta):
+            return False
 
         if key == Qt.Key_Escape:
             self.clear()
@@ -190,10 +193,19 @@ class MultiCursorManager:
 
         last_cursor = self.multi_cursors[-1]
         start_pos = last_cursor.position()
-        found_cursor = self.editor.document().find(target_text, start_pos)
+        try:
+            from core.settings_model import SettingsModel
+            data = SettingsModel().read_settings() or {}
+            case_sensitive = data.get('occurrences_case_sensitive', False)
+        except ImportError:
+            case_sensitive = False
+
+        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+
+        found_cursor = self.editor.document().find(target_text, start_pos, options)
 
         if found_cursor.isNull() or found_cursor.position() <= start_pos:
-            found_cursor = self.editor.document().find(target_text, 0)
+            found_cursor = self.editor.document().find(target_text, 0, options)
 
         if not found_cursor.isNull():
             already_selected = False
@@ -205,6 +217,7 @@ class MultiCursorManager:
             if not already_selected:
                 self.multi_cursors.append(found_cursor)
                 self.editor.setTextCursor(found_cursor)
+                self.editor.centerCursor()
 
         self.editor.highlight_current_line()
         if hasattr(self.editor, 'messageSignal'):
@@ -226,9 +239,18 @@ class MultiCursorManager:
 
         self.clear()
         self.is_auto_populated = getattr(self.editor, '_is_auto_selecting', False)
+        try:
+            from core.settings_model import SettingsModel
+            data = SettingsModel().read_settings() or {}
+            case_sensitive = data.get('occurrences_case_sensitive', False)
+        except ImportError:
+            case_sensitive = False
+
+        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
+
         start_pos = 0
         while True:
-            found_cursor = self.editor.document().find(target_text, start_pos)
+            found_cursor = self.editor.document().find(target_text, start_pos, options)
             if found_cursor.isNull() or found_cursor.position() <= start_pos:
                 break
             self.multi_cursors.append(found_cursor)
@@ -241,3 +263,57 @@ class MultiCursorManager:
                 self.editor.messageSignal.emit(f"{count} occurrences")
             else:
                 self.editor.messageSignal.emit(f"{count} occurrences selected")
+
+    def next_selection(self):
+        if not self.multi_cursors:
+            return
+        
+        main_cursor = self.editor.textCursor()
+        current_idx = -1
+        for i, mc in enumerate(self.multi_cursors):
+            if mc.position() == main_cursor.position() and mc.anchor() == main_cursor.anchor():
+                current_idx = i
+                break
+        
+        if current_idx == -1:
+            # If main cursor is not in the list, just go to the first one
+            next_idx = 0
+        else:
+            next_idx = (current_idx + 1) % len(self.multi_cursors)
+            
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = True
+        self.editor.setTextCursor(self.multi_cursors[next_idx])
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = False
+        self.editor.highlight_current_line()
+        self._center_cursor_in_editor()
+
+    def previous_selection(self):
+        if not self.multi_cursors:
+            return
+            
+        main_cursor = self.editor.textCursor()
+        current_idx = -1
+        for i, mc in enumerate(self.multi_cursors):
+            if mc.position() == main_cursor.position() and mc.anchor() == main_cursor.anchor():
+                current_idx = i
+                break
+        
+        if current_idx == -1:
+            prev_idx = len(self.multi_cursors) - 1
+        else:
+            prev_idx = (current_idx - 1) % len(self.multi_cursors)
+            
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = True
+        self.editor.setTextCursor(self.multi_cursors[prev_idx])
+        if hasattr(self.editor, '_is_auto_selecting'):
+            self.editor._is_auto_selecting = False
+        self.editor.highlight_current_line()
+        self._center_cursor_in_editor()
+
+    def _center_cursor_in_editor(self):
+        self.editor.centerCursor()
+
+

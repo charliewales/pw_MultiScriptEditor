@@ -53,12 +53,12 @@ QToolBar QToolButton
 }
 QToolBar QToolButton:hover
 {
-    background: rgba(255, 255, 255, 20);
+    background: rgb[highlight_line];
     border-radius: 6px;
 }
 QToolBar QToolButton:pressed
 {
-    background: rgba(255, 255, 255, 40);
+    background: rgb[highlight_line];
 }
 
 /**************MAINWINDOW*************/
@@ -107,13 +107,9 @@ QMenuBar::item:pressed
 
 /***************ITEM**************/
 
-QAbstractItemView
-{
-    background-color: rgb[background];
-}
-
 QListView::item:selected{
     background: rgb[highlight_line];
+    color: rgb[background];
 }
 
 /***************PUSHBUTTON***********/
@@ -148,6 +144,40 @@ QPushButton:checked
 {
     border-color: rgb[window];
     background-color: rgb[highlight_line];
+}
+
+QPushButton#CustomCloseBtn {
+    image: url("../icons/close_tab_grey.png");
+    background: transparent;
+    border: none;
+    margin: 0px 4px 0px 0px;
+    padding: 0px;
+}
+
+QPushButton#CustomCloseBtn:hover {
+    image: url("../icons/close_tab.png");
+    background: rgb[background];
+    border-radius: 4px;
+}
+
+QPushButton#CustomCloseBtn[isSelected="true"] {
+    image: url("../icons/close_tab.png");
+}
+
+QPushButton#CustomCloseBtn[isSelected="true"]:hover {
+    image: url("../icons/close_tab.png");
+    background: rgb[background];
+    border-radius: 4px;
+}
+
+QPushButton#CustomCloseBtn[isDirty="true"] {
+    image: none;
+}
+
+QPushButton#CustomCloseBtn[isDirty="true"]:hover {
+    image: none;
+    background: rgb[background];
+    border-radius: 4px;
 }
 
 /*********************MENU************/
@@ -350,30 +380,30 @@ QSpinBox::up-arrow  {
 /****************************************************/
  /******************TEXTEDIT****************/
 
-QTextEdit
+QTextEdit, QPlainTextEdit
 {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextEdit:disabled
+QTextEdit:disabled, QPlainTextEdit:disabled
 {
     background-color: rgb[background];
     color: rgb[comment];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextEdit:focus {
+QTextEdit:focus, QPlainTextEdit:focus {
     border: 1px solid rgb[highlight_line];
 }
 
-QTextBrowser
+QTextBrowser, QPlainTextEdit[readOnly="true"]
 {
     background-color: rgb[output_background];
     border: 1px solid rgb[highlight_line];
 }
 
-QTextBrowser:disabled
+QTextBrowser:disabled, QPlainTextEdit[readOnly="true"]:disabled
 {
     background-color: rgb[output_background];
     color: rgb[comment];
@@ -387,9 +417,8 @@ QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
     color: rgb[tab_selected_text];
 }
 
-QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QAbstractItemView:hover
+QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractItemView:hover
 {
-    background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
     color: rgb[tab_selected_text];
 }
@@ -411,8 +440,8 @@ QComboBox QAbstractItemView {
     outline: none;
 }
 
-QComboBox QAbstractItemView::item:selected,
-QComboBox QAbstractItemView::item:hover {
+QAbstractItemView::item:selected,
+QAbstractItemView::item:hover {
     background-color: rgb[highlight_line];
     border: 1px solid rgb[highlight_line];
     color: rgb[tab_selected_text];
@@ -491,8 +520,21 @@ QTabBar::close-button:hover {
 QTabBar QToolButton::right-arrow {
     image: url("../icons/right_arrow.png");
 }
+
+QTabBar QToolButton::right-arrow:hover {
+    image: url("../icons/right_arrow.png");
+    background: rgb[highlight_line];
+    border-radius: 4px;
+}
+
 QTabBar QToolButton::left-arrow {
     image: url("../icons/left_arrow.png");
+}
+
+QTabBar QToolButton::left-arrow:hover {
+    image: url("../icons/left_arrow.png");
+    background: rgb[highlight_line];
+    border-radius: 4px;
 }
 
 QCheckBox::indicator:hover
@@ -552,28 +594,25 @@ QHeaderView{
 }
 
 /*********** COMPLETER & SYMBOL WIDGET **************/
-completeMenuClass, SymbolWidget QListWidget
-{
+completeMenuClass,
+SymbolWidget QListWidget {
     color: rgb[completer_text];
     background-color: rgb[completer_background];
     alternate-background-color: rgb[completer_alt_background];
     font-size: [textsize]pt;
     height: 25px;
+    outline: none;
 }
-completeMenuClass::item:selected, SymbolWidget QListWidget::item:selected {
+
+completeMenuClass::item:selected,
+SymbolWidget QListWidget::item:selected {
     background: rgb[completer_selected_background];
 }
 
-completeMenuClass::item:hover, SymbolWidget QListWidget::item:hover
-{
+completeMenuClass::item:hover,
+SymbolWidget QListWidget::item:hover {
     background-color: rgb[completer_hover_background];
     color: rgb[completer_text];
-}
-
-QToolTip, QLabel#docTooltip {
-    color: rgb[completer_text];
-    background-color: rgb[completer_background];
-    border: 1px solid rgb[highlight_line];
 }
 
 QListWidget#outlineList
@@ -593,5 +632,13 @@ QLineEdit#outlineFilter
 
 QStatusBar, QStatusBar QLabel
 {
+    background-color: rgb[window];
     color: rgb[status_bar_text];
+}
+
+QToolTip
+{
+    background-color: rgb[background];
+    color: rgb[tab_selected_text];
+    border: 1px solid rgb[highlight_line];
 }

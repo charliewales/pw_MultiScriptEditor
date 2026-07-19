@@ -33,6 +33,7 @@ class ScriptEditorUIBuilder:
         editor.saveSeccion_act.setShortcut("Ctrl+Alt+S")
         editor.closeAllTabs_act.triggered.connect(editor.closeAllTabsWithConfirm)
         editor.closeAllTabs_act.setIcon(QIcon(icons['close_all_tabs']))
+        editor.closeAllTabs_act.setShortcut("Ctrl+Shift+Alt+W")
         editor.exit_act.triggered.connect(editor.close)
         editor.tabToSpaces_act.triggered.connect(editor.tabsToSpaces)
         editor.showAutocomplete_act.triggered.connect(editor.show_autocompletion)
@@ -46,7 +47,7 @@ class ScriptEditorUIBuilder:
         editor.duplicateLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.duplicateLine_act.setIcon(QIcon(icons['duplicate_line']))
         editor.duplicateLine_act.triggered.connect(editor.duplicateLine)
-        
+
         editor.deleteLine_act.setShortcut('Ctrl+D')
         editor.deleteLine_act.setShortcutContext(Qt.WidgetShortcut)
         editor.deleteLine_act.setIcon(QIcon(icons['delete_line']))
@@ -96,7 +97,7 @@ class ScriptEditorUIBuilder:
         editor.shortcuts_act.setIcon(QIcon(icons['shortcut']))
 
         editor.documentation_act.triggered.connect(editor.openDocumentation)
-        editor.documentation_act.setIcon(QIcon(icons['pw']))
+        editor.documentation_act.setIcon(QIcon(icons['docs']))
         editor.printHelp_act.triggered.connect(editor.mse_help)
         editor.printHelp_act.setIcon(QIcon(icons['print_help']))
 
@@ -140,6 +141,16 @@ class ScriptEditorUIBuilder:
         editor.goToSymbol_act.setShortcut('Ctrl+R')
         editor.goToSymbol_act.setShortcutContext(Qt.WindowShortcut)
         editor.goToSymbol_act.setIcon(QIcon(icons['goto_symbol']))
+
+        recent_files_sc = QShortcut(QKeySequence('Ctrl+P'), editor)
+        recent_files_sc.setContext(Qt.ApplicationShortcut)
+        recent_files_sc.activated.connect(editor.showRecentFiles)
+        editor._recent_files_sc = recent_files_sc
+
+        open_tabs_sc = QShortcut(QKeySequence('Ctrl+Tab'), editor)
+        open_tabs_sc.setContext(Qt.ApplicationShortcut)
+        open_tabs_sc.activated.connect(editor.showOpenTabs)
+        editor._open_tabs_sc = open_tabs_sc
 
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
@@ -188,14 +199,43 @@ class ScriptEditorUIBuilder:
         editor.add_quotes_act.setShortcutContext(Qt.WidgetShortcut)
         editor.add_quotes_act.setIcon(QIcon(icons['add_quotes']))
 
+        editor.f_string_act.triggered.connect(editor.tab.fString)
+        editor.f_string_act.setShortcut('Alt+F')
+        editor.f_string_act.setShortcutContext(Qt.WidgetShortcut)
+        editor.f_string_act.setIcon(QIcon(icons['add_quotes']))
+
+        editor.zoom_in_act.triggered.connect(partial(editor.change_global_font_size, True))
+        editor.zoom_in_act.setShortcutContext(Qt.WindowShortcut)
+        editor.zoom_in_act.setIcon(QIcon(icons['zoom_in']))
+
+        editor.zoom_out_act.triggered.connect(partial(editor.change_global_font_size, False))
+        editor.zoom_out_act.setShortcutContext(Qt.WindowShortcut)
+        editor.zoom_out_act.setIcon(QIcon(icons['zoom_out']))
+
+        editor.reset_zoom_act.triggered.connect(editor.restore_global_font_size)
+        editor.reset_zoom_act.setShortcutContext(Qt.WindowShortcut)
+        editor.reset_zoom_act.setIcon(QIcon(icons['zoom_reset']))
+
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)
         QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
-        
+        QShortcut(QKeySequence("Alt+f"), editor, editor.tab.fString)
+
         editor.selectNextOccurrence_act.triggered.connect(editor.tab.selectNextOccurrence)
         editor.selectNextOccurrence_act.setShortcut('Ctrl+Alt+D')
         editor.selectNextOccurrence_act.setShortcutContext(Qt.WindowShortcut)
         editor.selectNextOccurrence_act.setIcon(QIcon(icons["replace"]))
+
+        editor.nextSelection_act.triggered.connect(editor.tab.nextSelection)
+        editor.nextSelection_act.setShortcut('Ctrl+J')
+        editor.nextSelection_act.setShortcutContext(Qt.WindowShortcut)
+        editor.nextSelection_act.setIcon(QIcon(icons["down"]))
+
+        editor.previousSelection_act.triggered.connect(editor.tab.previousSelection)
+        editor.previousSelection_act.setShortcut('Ctrl+Shift+J')
+        editor.previousSelection_act.setShortcutContext(Qt.WindowShortcut)
+        editor.previousSelection_act.setIcon(QIcon(icons["up"]))
+
 
         editor.selectAllOccurrences_act.triggered.connect(editor.tab.selectAllOccurrences)
         editor.selectAllOccurrences_act.setShortcut('Ctrl+Shift+Alt+D')
@@ -270,6 +310,8 @@ class ScriptEditorUIBuilder:
         editor.clearHistory_act.triggered.connect(editor.clearHistory)
         editor.clearHistory_act.setShortcut('Ctrl+Shift+C')
 
+        QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
+
         # hide
         editor.donate_act.setVisible(False)
 
@@ -278,15 +320,35 @@ class ScriptEditorUIBuilder:
 
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
+        editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
+        editor.showOutlineButton_act.triggered.connect(editor.toggleOutlineButton)
+        # QShortcut(QKeySequence("Ctrl+Shift+O"), editor, editor.showOutline_act.trigger)
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
 
         editor.highlightAllOccurrences_act.triggered.connect(editor.toggleHighlightAllOccurrences)
+        editor.occurrencesCaseSensitive_act.triggered.connect(editor.toggleOccurrencesCaseSensitive)
+        editor.preferSingleQuotes_act.triggered.connect(editor.togglePreferSingleQuotes)
 
         # Output Bottom toggle setup
+        editor.outputBottom_act.setShortcut("Ctrl+U")
+        editor.outputBottom_act.setShortcutContext(Qt.WindowShortcut)
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
+        # QShortcut(QKeySequence("Ctrl+U"), editor, editor.outputBottom_act.trigger)
+
+        # Output toggle setup
+        editor.showOutput_act.setShortcut("Ctrl+K")
+        editor.showOutput_act.setShortcutContext(Qt.WindowShortcut)
+        editor.showOutput_act.triggered.connect(editor.toggleOutput)
+        # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
+
+        # Auto Close Delimiters toggle setup
+        editor.autoCloseDelimiters_act.triggered.connect(editor.toggleAutoCloseDelimiters)
+
+        # Quick Tab Switching toggle setup
+        editor.quickTabSwitching_act.triggered.connect(editor.toggleQuickTabSwitching)
 
         editor.outline_timer = QTimer(editor)
         editor.outline_timer.setSingleShot(True)
@@ -300,7 +362,7 @@ class ScriptEditorUIBuilder:
         editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Recent files Submenu
-        editor.recent_files_menu = QMenu("Recent files", editor)
+        editor.recent_files_menu = QMenu("Recent files    Ctrl+P", editor)
         editor.recent_files_menu.setIcon(QIcon(icons["file_recent"]))
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.recent_files_menu)
         editor.file_menu.insertSeparator(editor.closeAllTabs_act)
@@ -368,11 +430,17 @@ class ScriptEditorUIBuilder:
             editor.moveLineDown_act: "Move the current line or selection down",
             editor.comment_cat: "Toggle comment on the current line or selection",
             editor.add_quotes_act: "Add quotes around selected text or select text inside quotes",
+            editor.f_string_act: "Create an f-string from the current selection or clipboard",
             editor.autocomplete_act: "Toggle code autocomplete functionality",
+            editor.showAutocomplete_act: "Show code autocompletion",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
-            editor.highlightAllOccurrences_act: "Automatically select all occurrences on selection",
+            editor.highlightAllOccurrences_act: "Highlight all occurrences of the selected text",
+            editor.occurrencesCaseSensitive_act: "If enabled, case sensitive will be used when selecting occurrences",
+            editor.preferSingleQuotes_act: "If enabled, single quotes will be used when adding quotes and f-strings",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
+            editor.nextSelection_act: "Move to the next selection",
+            editor.previousSelection_act: "Move to the previous selection",
             editor.selectAllOccurrences_act: "Select all occurrences of the current word",
             editor.always_ontop_act: "Keep the application window always on top",
             editor.dir_act: "Execute dir() on the selected text",
@@ -384,8 +452,14 @@ class ScriptEditorUIBuilder:
             editor.execLine_act: "Execute the current line",
             editor.clearHistory_act: "Clear the output panel history",
             editor.showOutline_act: "Show or hide the code outline panel",
+            editor.showOutput_act: "Show or hide the output panel",
             editor.syntaxCheck_act: "Toggle live Python syntax checking",
             editor.outputBottom_act: "Move the output panel to the bottom of the window",
+            editor.autoCloseDelimiters_act: "Automatically close brackets, braces, and quotes",
+            editor.quickTabSwitching_act: "Enable switching tabs using Ctrl+1, Ctrl+2, etc., and display tab numbers when holding Ctrl",
+            editor.zoom_in_act: "Zoom in the editor font size",
+            editor.zoom_out_act: "Zoom out the editor font size",
+            editor.reset_zoom_act: "Reset the editor font size to theme default",
         }
         for act, tip in status_tips.items():
             if hasattr(act, 'setStatusTip'):

@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtCore import Qt, QTimer
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
 from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel, QApplication
 import os
@@ -35,8 +35,7 @@ class completeMenuClass(QListWidget):
 
         def doc_tooltip_focusOutEvent(event):
             QLabel.focusOutEvent(self.doc_tooltip, event)
-            from vendor.Qt.QtWidgets import QApplication
-            from vendor.Qt.QtCore import QTimer
+
 
             def _check_focus():
                 fw = QApplication.focusWidget()
@@ -138,9 +137,17 @@ class completeMenuClass(QListWidget):
                             'class': QColor(150, 220, 100),
                             'module': QColor(255, 150, 100),
                             'statement': QColor(200, 200, 200),
-                            'keyword': QColor(255, 100, 150)
+                            'keyword': QColor(255, 100, 150),
+                            'string': QColor(220, 180, 50)
                         }
-                        text_map = {'function': 'f', 'class': 'C', 'module': 'M', 'statement': 'V', 'keyword': 'K'}
+                        text_map = {
+                            'function': 'f',
+                            'class': 'C',
+                            'module': 'M',
+                            'statement': 'V',
+                            'keyword': 'K',
+                            'string': 'k'
+                        }
                         
                         pix = QPixmap(16, 16)
                         pix.fill(Qt.transparent)
@@ -252,8 +259,7 @@ class completeMenuClass(QListWidget):
 
     def focusOutEvent(self, event):
         super(completeMenuClass, self).focusOutEvent(event)
-        from vendor.Qt.QtWidgets import QApplication
-        from vendor.Qt.QtCore import QTimer
+
 
         def _check_focus():
             fw = QApplication.focusWidget()

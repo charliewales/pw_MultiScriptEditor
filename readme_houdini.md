@@ -1,18 +1,5 @@
 ## Houdini install
 
-### Houdini 13
-
-  - install PySide to default Python interpreter
-  - create new tool on shelf
-  - extract module `multi_script_editor` to PYTHONPATH
-
-    Example: `{HOME}/Documents/Houdini13.X/scripts/python/multi_script_editor`
-
-```python
-import multi_script_editor
-multi_script_editor.showHoudini(ontop=1)
-```
-
 ### Houdini 14+
 
   - extract module `multi_script_editor` to PYTHONPATH
@@ -22,9 +9,8 @@ multi_script_editor.showHoudini(ontop=1)
 
 ```python
 import multi_script_editor
-multi_script_editor.showHoudini()
+multi_script_editor.show()
 ```
 
 Also you can use .pypanel file:
->/managers/houdini/multi_script_editor_16.pypanel (for Houdini 14-16)
->/managers/houdini/multi_script_editor_17.pypanel (for Houdini 17+)
+>/managers/houdini/multi_script_editor_16.pypanel (for Houdini 16+)

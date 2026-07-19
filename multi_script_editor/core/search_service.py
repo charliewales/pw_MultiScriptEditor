@@ -25,6 +25,7 @@ class SearchService:
             cursor.insertText(replace)
             
         self.editor.setTextCursor(cursor)
+        self.editor.centerCursor()
         self.editor.setFocus()
         return number
 

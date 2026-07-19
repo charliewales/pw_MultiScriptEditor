@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument
-from vendor.Qt.QtWidgets import QTextBrowser, QTextEdit
+from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
 
 
 from widgets.pythonSyntax import syntaxHighLighter
@@ -11,10 +11,11 @@ from core.base_text_widget import BaseTextWidgetMixin
 font_name = 'monospace'
 
 
-class outputClass(BaseTextWidgetMixin, QTextBrowser):
+class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def __init__(self, theme='Multi Script Editor'):
         super(outputClass, self).__init__()
-        self.setLineWrapMode(QTextEdit.NoWrap)
+        self.setLineWrapMode(QPlainTextEdit.NoWrap)
+        self.setReadOnly(True)
         font = QFont(font_name)
         font.setStyleHint(QFont.Monospace)
         font.setFixedPitch(True)
@@ -59,7 +60,7 @@ class outputClass(BaseTextWidgetMixin, QTextBrowser):
                 self.find(text, options)
 
     def setTextEditFontSize(self, size):
-        style = '''QTextEdit
+        style = '''QPlainTextEdit
     {
         font-size: %spx;
     }''' % size
@@ -77,14 +78,14 @@ class outputClass(BaseTextWidgetMixin, QTextBrowser):
             else:
                 self.changeFontSize(False)
         # super(outputClass, self).wheelEvent(event)
-        QTextBrowser.wheelEvent(self, event)
+        QPlainTextEdit.wheelEvent(self, event)
 
     def applyHightLighter(self, theme=None, qss=None):
         self.blockSignals(True)
         colors = None
         if theme or not theme =='Multi Script Editor':
             colors = design.getColors(theme)
-        self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
+        self.hgl = syntaxHighLighter.PythonHighlighterClass(self.document(), colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)

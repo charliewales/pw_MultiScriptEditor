@@ -215,3 +215,45 @@ class TextHighlighterClass(BaseHighlighterClass):
     def __init__(self, document, colors=None):
         super(TextHighlighterClass, self).__init__(document, colors)
         self.rules = []
+
+class LogHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(LogHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        # Log Levels
+        rules.append((r'\b(ERROR|CRITICAL|FATAL|Exception|Failed)\b', 0, self.getStyle(self.colors.get('error', (255, 80, 80)), True)))
+        rules.append((r'\b(WARNING|WARN)\b', 0, self.getStyle(self.colors.get('warning', (255, 165, 0)), True)))
+        rules.append((r'\b(INFO|DEBUG|TRACE)\b', 0, self.getStyle(self.colors.get('info', (0, 200, 255)), False)))
+        
+        # Dates and Times
+        rules.append((r'\b\d{4}[-/]\d{2}[-/]\d{2}\b', 0, self.getStyle(self.colors.get('digits', (255, 255, 0)))))
+        rules.append((r'\b\d{2}:\d{2}:\d{2}(?:[,.]\d{3})?\b', 0, self.getStyle(self.colors.get('digits', (255, 255, 0)))))
+        
+        # Strings and paths
+        rules.append((r'".*?"|\'.*?\'', 0, self.getStyle(self.colors.get('string', (128, 255, 128)))))
+        
+        # Numbers
+        rules.append((r"\b\d+\b", 0, self.getStyle(self.colors.get('digits', (255, 255, 0)))))
+        
+        self.rules = [(re.compile(pat, re.IGNORECASE), index, fmt) for (pat, index, fmt) in rules]
+
+
+class JsonHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(JsonHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        # Strings (put first so they get overwritten by Keys if they match)
+        rules.append((r'"[^"\\]*(?:\\.[^"\\]*)*"', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        # Keys (strings before colon)
+        rules.append((r'("[^"\\]*(?:\\.[^"\\]*)*")\s*:', 1, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        # Booleans and Nulls
+        rules.append((r'\b(true|false|null)\b', 0, self.getStyle(self.colors.get('extra', (0,128,255)))))
+        # Numbers
+        rules.append((r"\b-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        # Comments (put last so they override any string/key/number formatting)
+        rules.append((r'//.*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
+

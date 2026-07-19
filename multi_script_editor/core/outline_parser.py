@@ -14,7 +14,7 @@ class OutlineParser:
                         symbols.append({
                             'name': "class {0}".format(node.name),
                             'line': node.lineno,
-                            'indent': 0,
+                            'indent': getattr(node, 'col_offset', 0) // 4,
                             'type': 'class'
                         })
                         self.generic_visit(node)
@@ -23,9 +23,10 @@ class OutlineParser:
                         symbols.append({
                             'name': "def {0}()".format(node.name),
                             'line': node.lineno,
-                            'indent': 1,
+                            'indent': getattr(node, 'col_offset', 0) // 4,
                             'type': 'function'
                         })
+                        self.generic_visit(node)
 
                 OutlineVisitor().visit(tree)
                 symbols.sort(key=lambda x: x['line'])
@@ -57,35 +58,35 @@ class OutlineParser:
                     continue
             
             elif ext in ['.js', '.jsx', '.ts', '.tsx']:
-                class_match = re.search(r'^\s*class\s+(\w+)', line)
+                class_match = re.search(r'^(\s*)class\s+(\w+)', line)
                 if class_match:
-                    symbols.append({'name': "class {0}".format(class_match.group(1)), 'line': line_num, 'indent': 0, 'type': 'class'})
+                    symbols.append({'name': "class {0}".format(class_match.group(2)), 'line': line_num, 'indent': len(class_match.group(1)) // 4, 'type': 'class'})
                     continue
-                func_match = re.search(r'^\s*(?:async\s+)?function\s+(\w+)', line)
+                func_match = re.search(r'^(\s*)(?:async\s+)?function\s+(\w+)', line)
                 if func_match:
-                    symbols.append({'name': "function {0}()".format(func_match.group(1)), 'line': line_num, 'indent': 1, 'type': 'function'})
+                    symbols.append({'name': "function {0}()".format(func_match.group(2)), 'line': line_num, 'indent': len(func_match.group(1)) // 4, 'type': 'function'})
                     continue
-                arrow_match = re.search(r'^\s*(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[a-zA-Z0-9_]+)\s*=>', line)
+                arrow_match = re.search(r'^(\s*)(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[a-zA-Z0-9_]+)\s*=>', line)
                 if arrow_match:
-                    symbols.append({'name': "{0}()".format(arrow_match.group(1)), 'line': line_num, 'indent': 1, 'type': 'function'})
+                    symbols.append({'name': "{0}()".format(arrow_match.group(2)), 'line': line_num, 'indent': len(arrow_match.group(1)) // 4, 'type': 'function'})
                     continue
 
             elif ext in ['.cpp', '.c', '.h', '.hpp', '.vex']:
-                class_match = re.search(r'^\s*(?:class|struct)\s+(\w+)', line)
+                class_match = re.search(r'^(\s*)(?:class|struct)\s+(\w+)', line)
                 if class_match:
-                    symbols.append({'name': "{0} {1}".format("class" if "class" in line else "struct", class_match.group(1)), 'line': line_num, 'indent': 0, 'type': 'class'})
+                    symbols.append({'name': "{0} {1}".format("class" if "class" in line else "struct", class_match.group(2)), 'line': line_num, 'indent': len(class_match.group(1)) // 4, 'type': 'class'})
                     continue
-                func_match = re.search(r'^\s*[\w\:]+\s+(\w+)\s*\([^)]*\)\s*(?:const\s*)?\{', line)
+                func_match = re.search(r'^(\s*)[\w\:]+\s+(\w+)\s*\([^)]*\)\s*(?:const\s*)?\{', line)
                 if func_match:
-                    name = func_match.group(1)
+                    name = func_match.group(2)
                     if name not in ['if', 'while', 'for', 'switch', 'catch']:
-                        symbols.append({'name': "{0}()".format(name), 'line': line_num, 'indent': 1, 'type': 'function'})
+                        symbols.append({'name': "{0}()".format(name), 'line': line_num, 'indent': len(func_match.group(1)) // 4, 'type': 'function'})
                     continue
             
             elif ext == '.mel':
-                proc_match = re.search(r'^\s*(?:global\s+)?proc\s+(?:[\w\[\]]+\s+)?(\w+)\s*\(', line)
+                proc_match = re.search(r'^(\s*)(?:global\s+)?proc\s+(?:[\w\[\]]+\s+)?(\w+)\s*\(', line)
                 if proc_match:
-                    symbols.append({'name': "proc {0}()".format(proc_match.group(1)), 'line': line_num, 'indent': 0, 'type': 'function'})
+                    symbols.append({'name': "proc {0}()".format(proc_match.group(2)), 'line': line_num, 'indent': len(proc_match.group(1)) // 4, 'type': 'function'})
                     continue
             
             elif ext in ['.html', '.htm']:
@@ -124,6 +125,15 @@ class OutlineParser:
                     keyword = usd_match.group(2)
                     decl = usd_match.group(3).strip()
                     symbols.append({'name': "{0} {1}".format(keyword, decl), 'line': line_num, 'indent': indent, 'type': 'usd'})
+                    continue
+
+            elif ext == '.json':
+                json_match = re.match(r'^(\s*)"([^"\\]*(?:\\.[^"\\]*)*)"\s*:', line)
+                if json_match:
+                    indent_str = json_match.group(1)
+                    indent = len(indent_str) // 2
+                    name = json_match.group(2)
+                    symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'json'})
                     continue
 
         return symbols

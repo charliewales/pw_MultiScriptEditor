@@ -1,3 +1,6 @@
+import os
+import re
+
 from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
 from vendor.Qt.QtGui import (
     QColor,
@@ -8,9 +11,7 @@ from vendor.Qt.QtGui import (
     QTextFormat,
     QGuiApplication,
 )
-from vendor.Qt.QtWidgets import QTextEdit, QApplication
-import re
-import os
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
 
 from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
 from widgets import completeWidget
@@ -21,18 +22,17 @@ from core.search_service import SearchService
 import managers
 from widgets.pythonSyntax import design
 
-import re
 addEndBracket = True
 
 indentLen = 4
-minimumFontSize = 10
+minimumFontSize = 8
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
 # font_name = 'monospace'
 font_name = 'Consolas'
 # font_name = 'Lucida Console'
 
 
-class inputClass(BaseTextWidgetMixin, QTextEdit):
+class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     executeSignal = Signal()
     saveSignal = Signal()
     inputSignal = Signal()
@@ -49,7 +49,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.desk = desk
         self.search_service = SearchService(self)
         self.multi_cursor_manager = MultiCursorManager(self)
-        self.setLineWrapMode(QTextEdit.NoWrap)
+        self.setLineWrapMode(QPlainTextEdit.NoWrap)
         if managers.context == 'hou':
             self.setCursorWidth(2)
         font = QFont(font_name)
@@ -144,28 +144,35 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         editor_font.setStyleHint(QFont.Monospace)
         self.blockSignals(True)
         self.setFont(editor_font)
+        if hasattr(self, 'fs'):
+            self.fs = pointSize
         self.blockSignals(False)
 
     def setFont(self, font):
         super(inputClass, self).setFont(font)
         if hasattr(self, 'completer') and self.completer:
-            completer_size = self.completer.font().pointSize()
             use_theme_font = True
+            colors = {}
             if hasattr(self, 'p') and self.p and hasattr(self.p, '_current_colors_cache'):
-                use_theme_font = self.p._current_colors_cache.get('use_theme_font_on_completer', True)
+                colors = self.p._current_colors_cache
+                use_theme_font = colors.get('use_theme_font_on_completer', True)
             if use_theme_font:
                 new_font = QFont(font)
             else:
                 new_font = QApplication.font("QListWidget")
-            if completer_size > 0:
-                new_font.setPointSize(completer_size)
+
+            if 'completer_text_size' in colors:
+                new_font.setPointSize(max(1, int(colors['completer_text_size'])))
+            else:
+                new_font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
             self.completer.setFont(new_font)
             if hasattr(self.completer, 'doc_tooltip') and self.completer.doc_tooltip:
                 self.completer.doc_tooltip.setFont(new_font)
 
     def focusOutEvent(self, event):
         self.saveSignal.emit()
-        QTextEdit.focusOutEvent(self,event)
+        QPlainTextEdit.focusOutEvent(self,event)
         QTimer.singleShot(10, self._check_focus_loss)
 
     def _check_focus_loss(self):
@@ -196,7 +203,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     def hideEvent(self, event):
         self.completer.updateCompleteList()
         try:
-            QTextEdit.hideEvent(self,event)
+            QPlainTextEdit.hideEvent(self,event)
         except:
             pass
 
@@ -215,24 +222,39 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
             ext = os.path.splitext(self.parent().file_path)[1]
 
+        self.comment_prefix = '#'
+        self.comment_suffix = ''
+
         if ext:
             ext = ext.lower()
             if ext == '.js':
                 highlighter_class = extraSyntaxes.JavascriptHighlighterClass
+                self.comment_prefix = '//'
             elif ext in ['.html', '.htm']:
                 highlighter_class = extraSyntaxes.HtmlHighlighterClass
+                self.comment_prefix = '<!--'
+                self.comment_suffix = '-->'
             elif ext in ['.yaml', '.yml']:
                 highlighter_class = extraSyntaxes.YamlHighlighterClass
             elif ext == '.md':
                 highlighter_class = extraSyntaxes.MarkdownHighlighterClass
+                self.comment_prefix = '<!--'
+                self.comment_suffix = '-->'
             elif ext == '.css':
                 highlighter_class = extraSyntaxes.CssHighlighterClass
+                self.comment_prefix = '/*'
+                self.comment_suffix = '*/'
             elif ext == '.txt':
                 highlighter_class = extraSyntaxes.TextHighlighterClass
+            elif ext == '.log':
+                highlighter_class = extraSyntaxes.LogHighlighterClass
             elif ext in ['.usd', '.usda']:
                 highlighter_class = extraSyntaxes.UsdHighlighterClass
+            elif ext == '.json':
+                highlighter_class = extraSyntaxes.JsonHighlighterClass
+                self.comment_prefix = '//'
 
-        self.hgl = highlighter_class(self, colors)
+        self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
@@ -243,7 +265,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
-        self.hgl = syntaxHighLighter.PythonHighlighterClass(self, colors)
+        self.hgl = syntaxHighLighter.PythonHighlighterClass(self.document(), colors)
         qss = design.applyColorToMainStyle(colors)
         self.setStyleSheet(qss)
         self.completer.setStyleSheet(qss)
@@ -386,6 +408,18 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             self.parseText(force=True)
             return
 
+        # Open in browser shortcut, Ctrl+B
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
+            file_path = getattr(self, 'file_path', None)
+            if not file_path and hasattr(self, 'parent') and self.parent():
+                file_path = getattr(self.parent(), 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                _, ext = os.path.splitext(file_path)
+                if ext.lower() in ['.html', '.htm']:
+                    import webbrowser
+                    webbrowser.open(file_path)
+                    return
+
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             if self.completer and self.completer.isVisible():
@@ -397,7 +431,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
 
             # auto indent
             add = self.getCurrentIndent()
-            
+
             if hasattr(self.p, 'trimAutoWhitespace_act') and self.p.trimAutoWhitespace_act.isChecked():
                 cursor = self.textCursor()
                 block = cursor.block()
@@ -409,9 +443,9 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                     c.movePosition(QTextCursor.EndOfBlock)
                     c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
                     c.removeSelectedText()
-                    
+
             if add:
-                QTextEdit.keyPressEvent(self, event)
+                QPlainTextEdit.keyPressEvent(self, event)
                 cursor = self.textCursor()
                 cursor.insertText(add)
                 self.setTextCursor(cursor)
@@ -532,7 +566,39 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         else:
             parse = 1
 
-        QTextEdit.keyPressEvent(self, event)
+        auto_close = True
+        if hasattr(self.p, 'autoCloseDelimiters_act'):
+            auto_close = self.p.autoCloseDelimiters_act.isChecked()
+
+        if auto_close:
+            delimiters = {'(': ')', '[': ']', '{': '}', '"': '"', "'": "'"}
+            if event.text() in delimiters:
+                cursor = self.textCursor()
+                if cursor.hasSelection():
+                    start = cursor.selectionStart()
+                    end = cursor.selectionEnd()
+
+                    cursor.beginEditBlock()
+                    cursor.setPosition(end)
+                    cursor.insertText(delimiters[event.text()])
+                    cursor.setPosition(start)
+                    cursor.insertText(event.text())
+                    cursor.endEditBlock()
+
+                    cursor.setPosition(start + 1)
+                    cursor.setPosition(end + 1, QTextCursor.KeepAnchor)
+                    self.setTextCursor(cursor)
+                    return
+                else:
+                    QPlainTextEdit.keyPressEvent(self, event)
+                    cursor = self.textCursor()
+                    cursor.insertText(delimiters[event.text()])
+                    cursor.movePosition(QTextCursor.Left)
+                    self.setTextCursor(cursor)
+                    self.highlight_current_line()
+                    return
+
+        QPlainTextEdit.keyPressEvent(self, event)
 
         # start parse text (Debounced to prevent lag on keypress)
         # Note: We now rely on textChanged signal for more reliable updates,
@@ -660,7 +726,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             self.setTextCursor(cursor)
             self.update()
 
-    def addQuotesSelected(self):
+    def addQuotesSelected(self, prefer_single_quotes=False):
         cursor = self.textCursor()
 
         if cursor.hasSelection():
@@ -708,8 +774,9 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                         is_quoted = True
 
             if not is_quoted:
+                quote_char = "'" if prefer_single_quotes else '"'
                 self.document().documentLayout().blockSignals(True)
-                cursor.insertText('"' + text + '"')
+                cursor.insertText(quote_char + text + quote_char)
                 self.document().documentLayout().blockSignals(False)
                 self.setTextCursor(cursor)
                 self.update()
@@ -740,10 +807,39 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             cursor.select(QTextCursor.WordUnderCursor)
             sel_text = cursor.selection().toPlainText()
             if sel_text:
-                cursor.insertText('"' + sel_text + '"')
+                quote_char = "'" if prefer_single_quotes else '"'
+                cursor.insertText(quote_char + sel_text + quote_char)
             self.document().documentLayout().blockSignals(False)
             self.setTextCursor(cursor)
             self.update()
+
+    def fStringSelected(self, prefer_single_quotes=False):
+        cursor = self.textCursor()
+        text_to_format = ""
+        has_selection = cursor.hasSelection()
+
+        if has_selection:
+            text_to_format = cursor.selection().toPlainText()
+        else:
+            clipboard = QApplication.clipboard()
+            text_to_format = clipboard.text()
+
+        quote_char = "'" if prefer_single_quotes else '"'
+        new_text = f'f{quote_char}{{{text_to_format}}}{quote_char}'
+
+        self.document().documentLayout().blockSignals(True)
+        cursor.beginEditBlock()
+        if has_selection:
+            cursor.removeSelectedText()
+        cursor.insertText(new_text)
+
+        if not text_to_format:
+            cursor.movePosition(QTextCursor.Left, QTextCursor.MoveAnchor, 2)
+
+        cursor.endEditBlock()
+        self.document().documentLayout().blockSignals(False)
+        self.setTextCursor(cursor)
+        self.update()
 
     def commentSelected(self):
         cursor = self.textCursor()
@@ -767,10 +863,12 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         def map_pos(p):
             rel_p = p - block_start
             lines = text.split('\n')
+            new_lines = new_text.split('\n')
             current_old_len = 0
             current_new_len = 0
             for i, line in enumerate(lines):
                 line_len = len(line) + 1 # +1 for \n
+                new_line_len = len(new_lines[i]) + 1 if i < len(new_lines) else line_len
                 if rel_p < current_old_len + line_len:
                     offset_in_line = rel_p - current_old_len
                     idx, shift = shifts[i]
@@ -778,8 +876,7 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
                         offset_in_line = max(idx, offset_in_line + shift)
                     return block_start + current_new_len + offset_in_line
                 current_old_len += line_len
-                idx, shift = shifts[i] if i < len(shifts) else (-1, 0)
-                current_new_len += line_len + shift
+                current_new_len += new_line_len
             return block_start + current_new_len
 
         new_start = map_pos(start)
@@ -811,6 +908,9 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self.update()
 
     def addRemoveComments(self, text):
+        prefix = getattr(self, 'comment_prefix', '#')
+        suffix = getattr(self, 'comment_suffix', '')
+
         result = text
         ofs = 0
         shifts = []
@@ -819,28 +919,53 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             ind = 0
             while ind < len(lines) and not lines[ind].strip():
                 ind += 1
-            if ind < len(lines) and lines[ind].strip()[0] == '#': # remove comment
+
+            is_commented = False
+            if ind < len(lines):
+                stripped = lines[ind].strip()
+                if stripped.startswith(prefix):
+                    is_commented = True
+                    # Check if suffix is needed and present
+                    if suffix and not stripped.endswith(suffix):
+                        is_commented = False
+
+            if is_commented: # remove comment
                 new_lines = []
                 for i, x in enumerate(lines):
-                    idx = x.find('#')
+                    idx = x.find(prefix)
                     shift = 0
                     if idx != -1:
-                        if len(x) > idx + 1 and x[idx+1] == ' ':
-                            new_lines.append(x[:idx] + x[idx+2:])
-                            shift = -2
-                            if i == ind: ofs = -2
+                        # remove suffix if exists
+                        if suffix:
+                            sidx = x.rfind(suffix)
+                            if sidx != -1:
+                                if sidx > 0 and x[sidx-1] == ' ':
+                                    x = x[:sidx-1] + x[sidx+len(suffix):]
+                                else:
+                                    x = x[:sidx] + x[sidx+len(suffix):]
+
+                        if len(x) > idx + len(prefix) and x[idx+len(prefix)] == ' ':
+                            new_lines.append(x[:idx] + x[idx+len(prefix)+1:])
+                            shift = -(len(prefix) + 1)
+                            if i == ind: ofs = shift
                         else:
-                            new_lines.append(x[:idx] + x[idx+1:])
-                            shift = -1
-                            if i == ind: ofs = -1
+                            new_lines.append(x[:idx] + x[idx+len(prefix):])
+                            shift = -len(prefix)
+                            if i == ind: ofs = shift
                     else:
                         new_lines.append(x)
                     shifts.append((idx, shift))
                 result = '\n'.join(new_lines)
             else:   # add comment
-                result = '\n'.join(['# ' + x for x in lines ])
-                shifts = [(0, 2)] * len(lines)
-                ofs = 2
+                new_lines = []
+                for x in lines:
+                    new_line = prefix + ' ' + x
+                    if suffix:
+                        new_line += ' ' + suffix
+                    new_lines.append(new_line)
+                result = '\n'.join(new_lines)
+                shifts = [(0, len(prefix) + 1)] * len(lines)
+                ofs = len(prefix) + 1
         else:
             shifts = [(0, 0)] * (text.count('\n') + 1)
         return result, ofs, shifts
@@ -878,9 +1003,20 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             if addEndBracket and before and comp.end_char:
                 brackets = {'"':'"', "'":"'"}#, '(':')', '[':']'}
                 if before[-1] in brackets:
+                    # Respect preferred quote style from settings
+                    prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+                    preferred_quote = "'" if prefer_single_quotes else '"'
+                    
+                    # Convert the opening quote if it does not match preference
+                    if before[-1] != preferred_quote:
+                        before = before[:-1] + preferred_quote
+                        
                     ofs = 1
-                    br = brackets[before[-1]]
-                    if end and end[0] == brackets[before[-1]]:
+                    br = preferred_quote
+                    
+                    # Convert or match the closing quote in end if it exists
+                    if end and end[0] in brackets:
+                        end = preferred_quote + end[1:]
                         br = ''
 
         # Auto-add parenthesis for functions/methods/classes
@@ -1008,15 +1144,15 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
     ########################### DROP
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
-        QTextEdit.dragEnterEvent(self,event)
+        QPlainTextEdit.dragEnterEvent(self,event)
 
     def dragMoveEvent(self, event):
         event.acceptProposedAction()
-        QTextEdit.dragMoveEvent(self,event)
+        QPlainTextEdit.dragMoveEvent(self,event)
 
     def dragLeaveEvent(self, event):
         event.accept()
-        QTextEdit.dragLeaveEvent(self,event)
+        QPlainTextEdit.dragLeaveEvent(self,event)
 
     def dropEvent(self, event):
         if event.mimeData().hasUrls():
@@ -1036,9 +1172,9 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             namespace = self.p.namespace
             text = managers.dropEvents[managers.context](namespace, text, event)
             mim.setText(text)
-            QTextEdit.dropEvent(self,event)
+            QPlainTextEdit.dropEvent(self,event)
         else:
-            QTextEdit.dropEvent(self,event)
+            QPlainTextEdit.dropEvent(self,event)
 
     def wheelEvent(self, event):
         if event.modifiers() == Qt.ControlModifier:
@@ -1049,26 +1185,12 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
             else:
                 self.changeFontSize(False)
         else:
-            QTextEdit.wheelEvent(self, event)
+            QPlainTextEdit.wheelEvent(self, event)
 
 
     def insertFromMimeData (self, source ):
         text = source.text()
         self.insertPlainText(text)
-
-    def getFontSize(self):
-        s = self.font().pointSize()
-        return s
-
-    def setFontSize(self,size):
-        if size > minimumFontSize:
-            if managers.context == 'hou':
-                self.fs = size
-                self.setTextEditFontSize(self.fs)
-            else:
-                f = self.font()
-                f.setPointSize(size)
-                self.setFont(f)
 
     def mousePressEvent(self, event):
         self.completer.updateCompleteList()
@@ -1118,6 +1240,20 @@ class inputClass(BaseTextWidgetMixin, QTextEdit):
         self._is_manual_multi_selecting = True
         try:
             self.multi_cursor_manager.select_all_occurrences()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def next_selection(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.next_selection()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def previous_selection(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.previous_selection()
         finally:
             self._is_manual_multi_selecting = False
 

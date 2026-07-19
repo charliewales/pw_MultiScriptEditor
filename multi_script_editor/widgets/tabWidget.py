@@ -1,10 +1,10 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal, QSize
-from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF
+from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
 from widgets.pythonSyntax.design import defaultColors
 import re
-from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget
+from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel
 from widgets import numBarWidget, inputWidget
 from widgets.pythonSyntax import design
 from icons import *
@@ -24,10 +24,17 @@ class tabWidgetClass(QTabWidget):
         # variables
         self.p = parent
         self.lastSearch = [0, None]
+        self._ctrl_pressed = False
+        self._mru_tabs = []
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
+        # Ensure scroll buttons are shown instead of squeezing tabs when they exceed the width
+        self.setUsesScrollButtons(True)
+        self.tabBar().setExpanding(False)
+        self.tabBar().setElideMode(Qt.ElideNone)
         self.tabCloseRequested.connect(self.closeTab)
+        self.currentChanged.connect(self.update_custom_close_buttons)
         self.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
         self.tabBar().customContextMenuRequested.connect(self.openMenu)
         # Corner Widget Layout
@@ -51,7 +58,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.setIconSize(QSize(24, 24))
         newTabButton.clicked.connect(lambda checked=False: self.addNewTab())
-        newTabButton.setToolTip("Add Tab (Ctrl+T)")
+        newTabButton.setToolTip("New Tab (Ctrl+T)")
         newTabButton.setShortcut('Ctrl+T')
 
         self.corner_layout.addWidget(self.toggleOutline_btn)
@@ -59,7 +66,12 @@ class tabWidgetClass(QTabWidget):
         self.setCornerWidget(self.corner_widget, Qt.TopLeftCorner)
 
         if hasattr(self.p, 'toolBar'):
-            self.setCornerWidget(self.p.toolBar, Qt.TopRightCorner)
+            self.right_corner_widget = QWidget(self)
+            self.right_corner_layout = QHBoxLayout(self.right_corner_widget)
+            self.right_corner_layout.setContentsMargins(15, 0, 0, 0)
+            self.right_corner_layout.setSpacing(0)
+            self.right_corner_layout.addWidget(self.p.toolBar)
+            self.setCornerWidget(self.right_corner_widget, Qt.TopRightCorner)
 
         self.desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
 
@@ -71,7 +83,108 @@ class tabWidgetClass(QTabWidget):
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
         sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
+
+        for i in range(1, 10):
+            QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
+
         self.currentChanged.connect(self.onTabChanged)
+        QApplication.instance().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        quick_tab_switching = True
+        if hasattr(self.p, 'quickTabSwitching_act'):
+            quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Control and not self._ctrl_pressed:
+                if quick_tab_switching:
+                    self._ctrl_pressed = True
+                    self.show_tab_numbers(True)
+            elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
+                if hasattr(self.p, 'showOpenTabs'):
+                    self.p.showOpenTabs()
+                return True
+        elif event.type() == QEvent.KeyRelease:
+            if event.key() == Qt.Key_Control and self._ctrl_pressed:
+                self._ctrl_pressed = False
+                self.show_tab_numbers(False)
+        elif event.type() == QEvent.WindowDeactivate or event.type() == QEvent.ApplicationDeactivate:
+            if self._ctrl_pressed:
+                self._ctrl_pressed = False
+                self.show_tab_numbers(False)
+        return False
+
+    def get_line_num_font_and_color(self, edit):
+        font = edit.font()
+        pt_size = font.pointSizeF()
+        if pt_size > 0:
+            if hasattr(edit, '_line_num_size_cache') and edit._line_num_size_cache is not None:
+                font.setPointSizeF(float(edit._line_num_size_cache))
+            else:
+                font.setPointSizeF(max(1.0, pt_size * 0.8))
+        else:
+            px_size = font.pixelSize()
+            if px_size > 0:
+                if hasattr(edit, '_line_num_size_cache') and edit._line_num_size_cache is not None:
+                    font.setPixelSize(edit._line_num_size_cache)
+                else:
+                    font.setPixelSize(max(1, int(px_size * 0.8)))
+
+        color = None
+        if hasattr(edit, '_line_num_text_cache') and edit._line_num_text_cache:
+            color = QColor.fromRgb(*edit._line_num_text_cache)
+
+        return font, color
+
+    def show_tab_numbers(self, show):
+        for i in range(min(self.count(), 9)):
+            tab_widget = self.widget(i)
+            if not tab_widget:
+                continue
+            if show:
+                btn = self.tabBar().tabButton(i, QTabBar.RightSide)
+                style = "border-radius: 4px; margin-right: 4px;"
+                if btn and type(btn).__name__ != 'QLabel':
+                    tab_widget._original_close_button = btn
+
+                    if not hasattr(tab_widget, '_tab_number_label'):
+                        lbl = QLabel(str(i + 1))
+                        lbl.setAlignment(Qt.AlignCenter)
+
+                        # Apply font and color from line numbers
+                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
+                        lbl.setFont(font)
+
+                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
+                        if color:
+                            style += f" color: {color.name()};"
+                        lbl.setStyleSheet(style)
+
+                        # Apply original button size
+                        if btn.size().width() > 0 and btn.size().height() > 0:
+                            lbl.setFixedSize(btn.size())
+
+                        tab_widget._tab_number_label = lbl
+                    else:
+                        tab_widget._tab_number_label.setText(str(i + 1))
+                        # Update size/style in case it changed
+                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
+                        tab_widget._tab_number_label.setFont(font)
+                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
+                        if color:
+                            style += f" color: {color.name()};"
+                        tab_widget._tab_number_label.setStyleSheet(style)
+                        if btn.size().width() > 0 and btn.size().height() > 0:
+                            tab_widget._tab_number_label.setFixedSize(btn.size())
+
+                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._tab_number_label)
+                    tab_widget._tab_number_label.show()
+            else:
+                current_btn = self.tabBar().tabButton(i, QTabBar.RightSide)
+                if current_btn and type(current_btn).__name__ == 'QLabel':
+                    if hasattr(tab_widget, '_original_close_button') and tab_widget._original_close_button:
+                        self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
+                        tab_widget._original_close_button.show()
 
     def toggle_outline(self, state):
         if hasattr(self.p, 'toggleOutline'):
@@ -81,19 +194,21 @@ class tabWidgetClass(QTabWidget):
         self.hideAllCompleters()
         if index >= 0:
             container = self.widget(index)
+            if hasattr(self, '_mru_tabs'):
+                if container in self._mru_tabs:
+                    self._mru_tabs.remove(container)
+                self._mru_tabs.insert(0, container)
+
             if hasattr(container, 'edit'):
                 edit = container.edit
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
                     text = ""
                     file_path = getattr(edit, 'needs_loading_file', None)
                     if file_path and os.path.exists(file_path):
-                        try:
-                            text = open(file_path, "r", encoding="utf-8").read()
-                        except Exception:
-                            try:
-                                text = open(file_path, "r").read()
-                            except Exception:
-                                text = getattr(edit, 'needs_loading_text', "") or ""
+                        from core.file_utils import read_file_text
+                        text = read_file_text(file_path)
+                        if not text:
+                            text = getattr(edit, 'needs_loading_text', "") or ""
                     else:
                         text = getattr(edit, 'needs_loading_text', "") or ""
 
@@ -102,6 +217,7 @@ class tabWidgetClass(QTabWidget):
                         edit.moveCursor(QTextCursor.Start)
                         edit.highlight_current_line()
                         edit.document().clearUndoRedoStacks()
+                        edit.document().setModified(False)
 
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
@@ -116,9 +232,18 @@ class tabWidgetClass(QTabWidget):
         if current_widget:
             current_widget.edit.setFocus()
 
+    def tabNeedsSaving(self, i):
+        widget = self.widget(i)
+        if not widget or not hasattr(widget, 'edit'):
+            return False
+        if hasattr(widget, 'file_path') and widget.file_path:
+            return widget.edit.document().isModified()
+        return bool(self.getCurrentText(i).strip())
+
     def closeTab(self, i):
         removed = False
-        if self.getCurrentText(i).strip():
+        widget_to_remove = self.widget(i)
+        if self.tabNeedsSaving(i):
             if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
                 self.removeTab(i)
                 removed = True
@@ -126,8 +251,11 @@ class tabWidgetClass(QTabWidget):
             self.removeTab(i)
             removed = True
 
-        if removed and self.count() == 0:
-            self.addNewTab()
+        if removed:
+            if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
+                self._mru_tabs.remove(widget_to_remove)
+            if self.count() == 0:
+                self.addNewTab()
 
     def openMenu(self, pos=None):
         if pos is not None and not isinstance(pos, bool):
@@ -201,6 +329,17 @@ class tabWidgetClass(QTabWidget):
             name = 'New Tab'
         else:
             name = str(name)
+
+        if file_path:
+            norm_file_path = os.path.normcase(os.path.abspath(file_path))
+            for i in range(self.count()):
+                w = self.widget(i)
+                w_file_path = getattr(w, 'file_path', None)
+                if w_file_path and os.path.normcase(os.path.abspath(w_file_path)) == norm_file_path:
+                    if make_current:
+                        self.setCurrentIndex(i)
+                    return w.edit
+
         cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
@@ -208,10 +347,24 @@ class tabWidgetClass(QTabWidget):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
         self.addTab(cont, name)
 
+        btn = QPushButton()
+        btn.setObjectName("CustomCloseBtn")
+        btn.setFixedSize(20, 20)
+        # btn.setCursor(Qt.ArrowCursor)
+        btn.setProperty('isDirty', False)
+        btn.setProperty('isSelected', self.count() - 1 == self.currentIndex())
+        btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
+        self.tabBar().setTabButton(self.count() - 1, QTabBar.RightSide, btn)
+        cont._custom_close_btn = btn
+
+        if file_path:
+            self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
+
         if hasattr(self.p, 'updateStatusBarInfo'):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
             cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
 
+        cont.edit.document().modificationChanged.connect(lambda state, c=cont: self.mark_tab_dirty(c, state))
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:
@@ -293,6 +446,54 @@ class tabWidgetClass(QTabWidget):
             self.closeTab(current_index)
 
 ############################## editor commands
+    def update_custom_close_buttons(self, index=None):
+        for i in range(self.count()):
+            cont = self.widget(i)
+            if hasattr(cont, '_custom_close_btn'):
+                btn = cont._custom_close_btn
+                is_sel = (i == self.currentIndex())
+                btn.setProperty('isSelected', is_sel)
+                btn.style().unpolish(btn)
+                btn.style().polish(btn)
+
+    def mark_tab_dirty(self, container, state):
+        if not hasattr(container, '_custom_close_btn'):
+            return
+
+        if not hasattr(container, 'file_path') or not container.file_path:
+            return
+
+        btn = container._custom_close_btn
+        btn.setProperty('isDirty', state)
+
+        if state:
+            theme_name = 'Multi Script Editor'
+            if hasattr(self.p, '_presenter'):
+                theme_name = self.p._presenter.settings_model.read_settings().get('theme', theme_name)
+            colors = design.getColors(theme_name)
+            window_color = colors.get('window', [160, 160, 160])
+
+            pixmap = QPixmap(btn.size())
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(QColor(*window_color))
+            painter.setPen(Qt.NoPen)
+
+            r = min(pixmap.width(), pixmap.height()) / 4.0
+            cx = pixmap.width() / 2.0
+            cy = pixmap.height() / 2.0
+            painter.drawEllipse(QRectF(cx - r, cy - r, r * 2.0, r * 2.0))
+            painter.end()
+
+            btn.setIcon(QIcon(pixmap))
+            btn.setIconSize(btn.size())
+        else:
+            btn.setIcon(QIcon())
+
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
     def apply_tab_style(self, colors=None):
         if not colors:
             colors = defaultColors
@@ -302,8 +503,10 @@ class tabWidgetClass(QTabWidget):
         tab_text_size = colors.get('tab_text_size', None)
         if tab_text_size is not None:
             self._tab_text_size = float(tab_text_size)
+        elif 'textsize' in colors:
+            self._tab_text_size = float(colors['textsize'])
         else:
-            self._tab_text_size = None
+            self._tab_text_size = 10.0
 
         ss = self.styleSheet()
         font_match = re.search(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', ss, flags=re.DOTALL)
@@ -323,6 +526,12 @@ class tabWidgetClass(QTabWidget):
 
     def copy(self):
         self.current().copy()
+
+    def switch_to_tab_index(self, index):
+        if hasattr(self.p, 'quickTabSwitching_act') and not self.p.quickTabSwitching_act.isChecked():
+            return
+        if 0 <= index < self.count():
+            self.setCurrentIndex(index)
 
     def _apply_tab_font(self, font):
         use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)
@@ -354,7 +563,7 @@ class tabWidgetClass(QTabWidget):
 
         self.tabBar().setFont(tab_font)
 
-        css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\n/*TAB_FONT_END*/\n" % (family, size_css)
+        css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\nQTabBar::scroller { width: 0px; }\n/*TAB_FONT_END*/\n" % (family, size_css)
         ss = self.styleSheet()
         ss = re.sub(r'/\*TAB_FONT_START\*/.*/\*TAB_FONT_END\*/', '', ss, flags=re.DOTALL)
         self.setStyleSheet(ss + css)
@@ -425,7 +634,12 @@ class tabWidgetClass(QTabWidget):
         self.current().commentSelected()
 
     def addQuotes(self):
-        self.current().addQuotesSelected()
+        prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+        self.current().addQuotesSelected(prefer_single_quotes)
+
+    def fString(self):
+        prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
+        self.current().fStringSelected(prefer_single_quotes)
 
     def selectNextOccurrence(self):
         self.current().select_next_occurrence()
@@ -433,11 +647,20 @@ class tabWidgetClass(QTabWidget):
     def selectAllOccurrences(self):
         self.current().select_all_occurrences()
 
+    def nextSelection(self):
+        self.current().next_selection()
+
+    def previousSelection(self):
+        self.current().previous_selection()
+
+
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Multi Script Editor")
         msg_box.setText(question)
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()
@@ -457,6 +680,7 @@ class EditorTabContainer(QWidget):
         if text:
             self.edit.addText(text)
             self.edit.document().clearUndoRedoStacks()
+            self.edit.document().setModified(False)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
