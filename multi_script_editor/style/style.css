@@ -384,8 +384,8 @@ QTextEdit, QPlainTextEdit
 {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
-    selection-background-color: rgb[highlight_line];
-    selection-color: rgb[string];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
 }
 
 QTextEdit:disabled, QPlainTextEdit:disabled
@@ -417,8 +417,8 @@ QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
     color: rgb[tab_selected_text];
-    selection-background-color: rgb[highlight_line];
-    selection-color: rgb[tab_selected_text];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
 }
 
 /* QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractItemView:hover
@@ -438,8 +438,8 @@ QComboBox QAbstractItemView {
     background-color: rgb[background];
     border: 1px solid rgb[highlight_line];
     color: rgb[tab_selected_text];
-    selection-background-color: rgb[highlight_line];
-    selection-color: rgb[tab_selected_text];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
     padding: 1px 1px 1px 1px;
     outline: none;
 }
