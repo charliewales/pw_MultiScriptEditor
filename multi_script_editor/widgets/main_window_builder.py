@@ -389,12 +389,6 @@ class ScriptEditorUIBuilder:
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
 
-        # Sessions Submenu in File menu
-        editor.sessions_menu = QMenu("Sessions", editor)
-        editor.sessions_menu.setIcon(QIcon(icons['open']))
-        editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
-        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.sessions_menu)
-        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Recent files Submenu
         editor.recent_files_menu = QMenu("Recent files    Ctrl+P", editor)
@@ -402,6 +396,13 @@ class ScriptEditorUIBuilder:
         editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.recent_files_menu)
         editor.file_menu.insertSeparator(editor.closeAllTabs_act)
         editor.updateRecentFilesMenu()
+
+        # Sessions Submenu in File menu
+        editor.sessions_menu = QMenu("Sessions", editor)
+        editor.sessions_menu.setIcon(QIcon(icons['open']))
+        editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
+        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.sessions_menu)
+        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
