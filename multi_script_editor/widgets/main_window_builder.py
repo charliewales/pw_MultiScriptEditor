@@ -349,7 +349,7 @@ class ScriptEditorUIBuilder:
         QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
 
         # hide
-        editor.donate_act.setVisible(False)
+        editor.donate_act.setIcon(QIcon(icons["donate"]))
 
         # Create status bar
         editor.statusBar()

@@ -1,5 +1,5 @@
 links = dict(
-    donate="",
+    donate="http://paypal.me/CRicoA",
     tutorials="http://paulwinex.com/portfolio/multi-script-editor",
     manual="https://github.com/charliewales/pw_MultiScriptEditor",
     qt5_docs="https://doc.qt.io/qtforpython-5/contents.html",
