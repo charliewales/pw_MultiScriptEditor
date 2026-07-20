@@ -586,6 +586,10 @@ class tabWidgetClass(QTabWidget):
     def copy(self):
         self.current().copy()
 
+    def showClipboardManager(self):
+        if hasattr(self.current(), 'show_clipboard_popup'):
+            self.current().show_clipboard_popup()
+
     def switch_to_tab_index(self, index):
         if hasattr(self.p, 'quickTabSwitching_act') and not self.p.quickTabSwitching_act.isChecked():
             return

@@ -111,6 +111,10 @@ class ScriptEditorUIBuilder:
         editor.redo_act.setShortcut('Ctrl+Y')
         editor.redo_act.setShortcutContext(Qt.WidgetShortcut)
         editor.redo_act.setIcon(QIcon(icons['redo']))
+        editor.clipboardManager_act.triggered.connect(editor.tab.showClipboardManager)
+        editor.clipboardManager_act.setShortcut('Ctrl+Shift+V')
+        editor.clipboardManager_act.setShortcutContext(Qt.WindowShortcut)
+        editor.clipboardManager_act.setIcon(QIcon(icons['paste']))
 
         editor.copy_act.triggered.connect(editor.tab.copy)
         editor.copy_act.setShortcut('Ctrl+C')

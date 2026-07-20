@@ -110,6 +110,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.folding_timer.timeout.connect(self.on_folding_timer_timeout)
         self.recompute_folding_regions()
 
+        # Initialize Clipboard Manager
+        from widgets.clipboardWidget import ClipboardManager
+        ClipboardManager.init()
+
     def _on_text_changed(self):
         if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
             pass
@@ -790,7 +794,48 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         popup.bookmarkDeleted.connect(on_deleted)
         popup.exec_()
 
+    def show_clipboard_popup(self):
+        """
+        Show the ClipboardWidget popup to search and paste previously copied text.
+        """
+        from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
+        ClipboardManager.init()
+
+        if not ClipboardManager._history:
+            if hasattr(self, 'messageSignal'):
+                self.messageSignal.emit("Clipboard history is empty.")
+            return
+
+        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
+        colors = {}
+        if hasattr(self, '_highlight_color_cache'):
+            from core.settings_model import SettingsModel
+            settings = SettingsModel().read_settings()
+            from widgets.pythonSyntax import design
+            theme = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+
+        popup = ClipboardWidget(
+            ClipboardManager._history,
+            parent=self.window(),
+            center_widget=self,
+            qss=qss,
+            font=self.font(),
+            colors=colors
+        )
+
+        def on_selected(text):
+            cursor = self.textCursor()
+            cursor.insertText(text)
+            self.setTextCursor(cursor)
+            from vendor.Qt.QtWidgets import QApplication
+            QApplication.clipboard().setText(text)
+
+        popup.textSelected.connect(on_selected)
+        popup.exec_()
+
     def show_markdown_preview(self):
+
         """
         Instantiate the MarkdownPreviewEdit overlay to show a formatted
         preview of the markdown content of this editor.
@@ -828,6 +873,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         # Bookmarks Finder shortcut, Ctrl+B
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
             self.show_bookmarks_popup()
+            return
+
+        # Clipboard Manager shortcut, Ctrl+Shift+V
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_V:
+            self.show_clipboard_popup()
             return
 
         # Open in browser or Markdown Preview shortcut, Ctrl+Alt+B
