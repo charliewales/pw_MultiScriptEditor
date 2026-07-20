@@ -208,6 +208,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 new_cursor.setPosition(curr_block.position())
                 self.setTextCursor(new_cursor)
 
+        # Update line number bar if present
+        if hasattr(self.parent(), 'lineNum'):
+            self.parent().lineNum.update()
+        elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+            self.parentWidget().lineNum.update()
+
     def ensure_current_line_visible(self):
         cursor = self.textCursor()
         block = cursor.block()
