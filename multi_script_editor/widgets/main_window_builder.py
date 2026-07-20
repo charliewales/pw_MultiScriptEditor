@@ -376,12 +376,14 @@ class ScriptEditorUIBuilder:
         editor.outputBottom_act.setShortcut("Ctrl+U")
         editor.outputBottom_act.setShortcutContext(Qt.WindowShortcut)
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
+        editor.addAction(editor.outputBottom_act)
         # QShortcut(QKeySequence("Ctrl+U"), editor, editor.outputBottom_act.trigger)
 
         # Output toggle setup
         editor.showOutput_act.setShortcut("Ctrl+K")
         editor.showOutput_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutput_act.triggered.connect(editor.toggleOutput)
+        editor.addAction(editor.showOutput_act)
         # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
 
         # Menus toggle setup
@@ -459,26 +461,31 @@ class ScriptEditorUIBuilder:
         editor.toggleBookmark_act.setShortcut("Ctrl+F2")
         editor.toggleBookmark_act.setIcon(QIcon(icons.get('bookmark_toggle', '')))
         editor.toggleBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.toggle_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        editor.addAction(editor.toggleBookmark_act)
 
         editor.nextBookmark_act = QAction("Next Bookmark", editor)
         editor.nextBookmark_act.setShortcut("F2")
         editor.nextBookmark_act.setIcon(QIcon(icons.get('bookmark_next', '')))
         editor.nextBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.next_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        editor.addAction(editor.nextBookmark_act)
 
         editor.prevBookmark_act = QAction("Previous Bookmark", editor)
         editor.prevBookmark_act.setShortcut("Shift+F2")
         editor.prevBookmark_act.setIcon(QIcon(icons.get('bookmark_prev', '')))
         editor.prevBookmark_act.triggered.connect(lambda: editor.tab.currentWidget().edit.prev_bookmark() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        editor.addAction(editor.prevBookmark_act)
 
         editor.clearBookmarks_act = QAction("Clear Bookmarks", editor)
         editor.clearBookmarks_act.setShortcut("Ctrl+Shift+F2")
         editor.clearBookmarks_act.setIcon(QIcon(icons.get('clear', '')))
         editor.clearBookmarks_act.triggered.connect(lambda: editor.tab.currentWidget().edit.clear_bookmarks() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        editor.addAction(editor.clearBookmarks_act)
 
         editor.bookmarksFinder_act = QAction("Go to bookmark...", editor)
         editor.bookmarksFinder_act.setShortcut("Ctrl+B")
         editor.bookmarksFinder_act.setIcon(QIcon(icons.get('goto_line', '')))
         editor.bookmarksFinder_act.triggered.connect(lambda: editor.tab.currentWidget().edit.show_bookmarks_popup() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
+        editor.addAction(editor.bookmarksFinder_act)
 
         # Create Bookmarks menu
         editor.bookmarks_menu = QMenu("Bookmarks", editor)
@@ -615,11 +622,7 @@ class ScriptEditorUIBuilder:
             tb = editor.editor_toolbar
             tb.clear()
 
-            # Align to the right by adding an expanding spacer widget
-            from vendor.Qt.QtWidgets import QWidget, QSizePolicy
-            spacer = QWidget()
-            spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-            tb.addWidget(spacer)
+
 
             # File Actions
             tb.addAction(editor.load_act)
@@ -665,3 +668,11 @@ class ScriptEditorUIBuilder:
             tb.addAction(editor.zoom_in_act)
             tb.addAction(editor.zoom_out_act)
             tb.addAction(editor.reset_zoom_act)
+
+        # Ensure all actions with window-level shortcuts are added to the main window
+        # so they remain active even if both the menus and toolbar are hidden.
+        for action in editor.findChildren(QAction):
+            if action.shortcut() and not action.shortcut().isEmpty():
+                if action.shortcutContext() != Qt.WidgetShortcut:
+                    if action not in editor.actions():
+                        editor.addAction(action)
