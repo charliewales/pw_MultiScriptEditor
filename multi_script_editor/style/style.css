@@ -652,3 +652,12 @@ QToolTip
     color: rgb[tab_selected_text];
     border: 1px solid rgb[border];
 }
+
+QToolBar#editorToolBar {
+    background-color: rgb[background];
+    border: none;
+    border-bottom: 1px solid rgb[border];
+    spacing: 4px;
+    padding: 2px;
+}
+

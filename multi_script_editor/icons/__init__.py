@@ -71,4 +71,7 @@ icons = dict(
     unfold=os.path.join(root, "unfold.png"),
     fold_all=os.path.join(root, "fold_all.png"),
     unfold_all=os.path.join(root, "unfold_all.png"),
+    f_string=os.path.join(root, "f_string.png"),
+    save_output_as=os.path.join(root, "save_output_as.png"),
+    save_output_to_tab=os.path.join(root, "save_output_to_tab.png"),
 )

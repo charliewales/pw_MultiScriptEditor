@@ -26,9 +26,9 @@ import vendor.Qt
 from icons import *
 from vendor.help import get_help
 
-from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
+from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal, QSize
 from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip, QToolBar
 from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
@@ -89,8 +89,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_ly.addWidget(self.outline_filter)
         self.outline_ly.addWidget(self.outline_list)
 
+        # Create container for editor toolbar and tab widget
+        self.editor_container = QWidget()
+        self.editor_container.setObjectName("editorContainer")
+        self.editor_ly = QVBoxLayout(self.editor_container)
+        self.editor_ly.setContentsMargins(0, 0, 0, 0)
+        self.editor_ly.setSpacing(0)
+
+        # Create the editor toolbar
+        self.editor_toolbar = QToolBar(self.editor_container)
+        self.editor_toolbar.setObjectName("editorToolBar")
+        self.editor_toolbar.setMovable(False)
+        self.editor_toolbar.setFloatable(False)
+        self.editor_toolbar.setIconSize(QSize(20, 20))
+
+        self.editor_ly.addWidget(self.editor_toolbar)
+        self.editor_ly.addWidget(self.tab)
+
         self.horizontal_splitter.addWidget(self.outline_panel)
-        self.horizontal_splitter.addWidget(self.tab)
+        self.horizontal_splitter.addWidget(self.editor_container)
         self.in_ly.addWidget(self.horizontal_splitter)
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)

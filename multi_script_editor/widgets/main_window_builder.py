@@ -221,7 +221,7 @@ class ScriptEditorUIBuilder:
         editor.f_string_act.triggered.connect(editor.tab.fString)
         editor.f_string_act.setShortcut('Alt+F')
         editor.f_string_act.setShortcutContext(Qt.WidgetShortcut)
-        editor.f_string_act.setIcon(QIcon(icons['add_quotes']))
+        editor.f_string_act.setIcon(QIcon(icons['f_string']))
 
         editor.zoom_in_act.triggered.connect(partial(editor.change_global_font_size, True))
         editor.zoom_in_act.setShortcutContext(Qt.WindowShortcut)
@@ -389,6 +389,13 @@ class ScriptEditorUIBuilder:
         editor.toggleMenus_act.triggered.connect(editor.toggleMenuBar)
         editor.addAction(editor.toggleMenus_act)
 
+        # Editor Toolbar toggle setup
+        editor.toggleEditorToolbar_act.setShortcut("Ctrl+Shift+T")
+        editor.toggleEditorToolbar_act.setShortcutContext(Qt.WindowShortcut)
+        editor.toggleEditorToolbar_act.setChecked(True)
+        editor.toggleEditorToolbar_act.toggled.connect(editor.editor_toolbar.setVisible)
+        editor.addAction(editor.toggleEditorToolbar_act)
+
         # Zen mode toggle setup
 
         # Auto Close Delimiters toggle setup
@@ -412,7 +419,9 @@ class ScriptEditorUIBuilder:
         editor.saveOutput_menu = QMenu("Save output", editor)
         editor.saveOutput_menu.setIcon(QIcon(icons['save']))
         editor.saveOutputAs_act = QAction("As...", editor)
+        editor.saveOutputAs_act.setIcon(QIcon(icons['save_output_as']))
         editor.saveOutputToTab_act = QAction("To tab", editor)
+        editor.saveOutputToTab_act.setIcon(QIcon(icons['save_output_to_tab']))
         editor.saveOutput_menu.addAction(editor.saveOutputAs_act)
         editor.saveOutput_menu.addAction(editor.saveOutputToTab_act)
 
@@ -571,6 +580,7 @@ class ScriptEditorUIBuilder:
             editor.unfold_act: "Unfold the current code block",
             editor.saveAs_act: "Save the current script as a new file",
             editor.toggleMenus_act: "Toggle the main menu bar visibility",
+            editor.toggleEditorToolbar_act: "Toggle visibility of the editor toolbar",
             editor.fold_act: "Fold the current code block",
             editor.addCursorBelow_act: "Add a cursor below the current line",
             editor.trimAutoWhitespace_act: "Automatically trim trailing whitespace on save",
@@ -589,3 +599,68 @@ class ScriptEditorUIBuilder:
         for act, tip in status_tips.items():
             if hasattr(act, 'setStatusTip'):
                 act.setStatusTip(tip)
+            if hasattr(act, 'setToolTip'):
+                try:
+                    shortcut = act.shortcut()
+                    if shortcut and not shortcut.isEmpty():
+                        act.setToolTip(f"{tip} ({shortcut.toString()})")
+                    else:
+                        act.setToolTip(tip)
+                except Exception:
+                    act.setToolTip(tip)
+
+        # Populate editor toolbar
+        if hasattr(editor, 'editor_toolbar'):
+            tb = editor.editor_toolbar
+            tb.clear()
+
+            # Align to the right by adding an expanding spacer widget
+            from vendor.Qt.QtWidgets import QWidget, QSizePolicy
+            spacer = QWidget()
+            spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            tb.addWidget(spacer)
+
+            # File Actions
+            tb.addAction(editor.load_act)
+            tb.addAction(editor.saveOutputAs_act)
+            tb.addAction(editor.saveOutputToTab_act)
+            tb.addAction(editor.closeAllTabs_act)
+
+            tb.addSeparator()
+
+            # Bookmarks Actions
+            if hasattr(editor, 'toggleBookmark_act'):
+                tb.addAction(editor.toggleBookmark_act)
+            if hasattr(editor, 'nextBookmark_act'):
+                tb.addAction(editor.nextBookmark_act)
+            if hasattr(editor, 'prevBookmark_act'):
+                tb.addAction(editor.prevBookmark_act)
+            if hasattr(editor, 'clearBookmarks_act'):
+                tb.addAction(editor.clearBookmarks_act)
+            if hasattr(editor, 'bookmarksFinder_act'):
+                tb.addAction(editor.bookmarksFinder_act)
+
+            tb.addSeparator()
+
+            # Edit Actions
+            tb.addAction(editor.clipboardManager_act)
+            tb.addAction(editor.find_act)
+            tb.addAction(editor.gotoLine_act)
+            tb.addAction(editor.goToSymbol_act)
+            tb.addAction(editor.comment_cat)
+            tb.addAction(editor.add_quotes_act)
+            tb.addAction(editor.f_string_act)
+            tb.addAction(editor.addCursorsToLineEnds_act)
+            tb.addAction(editor.addCursorAbove_act)
+            tb.addAction(editor.addCursorBelow_act)
+
+            tb.addSeparator()
+
+            # View Actions
+            tb.addAction(editor.fold_act)
+            tb.addAction(editor.unfold_act)
+            tb.addAction(editor.fold_all_act)
+            tb.addAction(editor.unfold_all_act)
+            tb.addAction(editor.zoom_in_act)
+            tb.addAction(editor.zoom_out_act)
+            tb.addAction(editor.reset_zoom_act)
