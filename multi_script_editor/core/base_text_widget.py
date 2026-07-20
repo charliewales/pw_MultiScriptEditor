@@ -154,6 +154,8 @@ class BaseTextWidgetMixin:
         if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
             menu.addSeparator()
             show_menus_action = QAction('Show menus\tCtrl+M', self)
+            if 'menu' in icons:
+                show_menus_action.setIcon(QIcon(icons['menu']))
             if hasattr(main_win, 'toggleMenus_act'):
                 show_menus_action.triggered.connect(main_win.toggleMenus_act.trigger)
             menu.addAction(show_menus_action)

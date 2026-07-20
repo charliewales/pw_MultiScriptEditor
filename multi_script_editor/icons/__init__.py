@@ -74,4 +74,5 @@ icons = dict(
     f_string=os.path.join(root, "f_string.png"),
     save_output_as=os.path.join(root, "save_output_as.png"),
     save_output_to_tab=os.path.join(root, "save_output_to_tab.png"),
+    menu=os.path.join(root, "menu.png"),
 )
