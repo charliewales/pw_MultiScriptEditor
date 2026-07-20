@@ -108,7 +108,7 @@
         <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
             <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
         <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
-            <span class="desc">Removes all bookmarks from the current active document.</span></li>
+            <span class="desc">Removes all bookmarks from the current active document. A confirmation dialog is displayed first to prevent accidental clearing.</span></li>
         <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
             <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
     </ul>
@@ -193,6 +193,8 @@
             <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
         <li><strong>Menus</strong><span class="shortcut">CTRL + M</span>
             <span class="desc">Toggles the visibility of the main window menu bar. If the menu bar is hidden, you can right-click the editor and choose "Show menus" from the context menu to display it again.</span></li>
+        <li><strong>Toolbar</strong><span class="shortcut">CTRL + ALT + T</span>
+            <span class="desc">Toggles the visibility of the editor toolbar above the tab bar. Toolbar visibility status is persisted across sessions.</span></li>
         <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
             <span class="desc">Toggles the visibility of the output console panel.</span></li>
         <li><strong>Output at the bottom</strong><span class="shortcut">CTRL + U</span>
@@ -201,11 +203,10 @@
             <span class="desc">Folds the current code block at the cursor's location.</span></li>
         <li><strong>Unfold</strong><span class="shortcut">ALT + +</span>
             <span class="desc">Unfolds the current code block at the cursor's location.</span></li>
-        <li><strong>Fold all</strong><span class="shortcut">CTRL + ALT + -</span>
+        <li><strong>Fold all</strong><span class="shortcut">ALT + SHIFT + -</span>
             <span class="desc">Folds all collapsible code blocks in the current document.</span></li>
-        <li><strong>Unfold all</strong><span class="shortcut">CTRL + ALT + +</span>
+        <li><strong>Unfold all</strong><span class="shortcut">ALT + SHIFT + +</span>
             <span class="desc">Unfolds all collapsed code blocks in the current document.</span></li>
-
         <li><strong>Zoom in</strong><span class="shortcut">CTRL + +</span>
             <span class="desc">Increases the editor font size globally.</span></li>
         <li><strong>Zoom out</strong><span class="shortcut">CTRL + -</span>
@@ -241,7 +242,7 @@
 
     <h3>Options Menu</h3>
     <ul>
-        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
+        <li><strong>Always on top</strong>
             <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
         <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
             <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
