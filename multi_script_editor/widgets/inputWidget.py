@@ -707,6 +707,32 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Clear all bookmarks in the current document.
         """
+        # Check if there are any bookmarks to clear first
+        has_bookmarks = False
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                has_bookmarks = True
+                break
+            block = block.next()
+
+        if not has_bookmarks:
+            return
+
+        from vendor.Qt.QtWidgets import QMessageBox
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle('Clear Bookmarks')
+        msg_box.setText("Are you sure you want to clear all bookmarks in the current document?")
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.setFont(self.font())
+
+        reply = msg_box.exec_()
+        if reply != QMessageBox.Yes:
+            return
+
         block = self.document().begin()
         while block.isValid():
             data = block.userData()
