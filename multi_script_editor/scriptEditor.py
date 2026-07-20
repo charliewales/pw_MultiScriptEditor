@@ -29,7 +29,7 @@ from vendor.help import get_help
 from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal, QSize
 from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
 from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip, QToolBar
-from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
+from widgets import about, findWidget, gotoLineWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
@@ -975,12 +975,34 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index < 0:
             return
 
-        # Get maximum line count
         edit_widget = self.tab.widget(index).edit
         max_lines = edit_widget.document().blockCount()
 
-        line_num, ok = QInputDialog.getInt(self, "Go to line", "Enter line number:", 1, 1, max_lines)
-        if ok:
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                font = QFont(edit_widget.font())
+        else:
+            font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        highlighter_class = None
+        if hasattr(edit_widget, 'hgl'):
+            highlighter_class = edit_widget.hgl.__class__
+
+        self.goto_line_widget = gotoLineWidget.GotoLineWidget(edit_widget, max_lines, self, edit_widget, qss=qss, font=font, colors=colors, highlighter_class=highlighter_class)
+
+        def _jump_to_line(line_num):
             block = edit_widget.document().findBlockByNumber(line_num - 1)
             if block.isValid():
                 cursor = edit_widget.textCursor()
@@ -988,6 +1010,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 edit_widget.setTextCursor(cursor)
                 edit_widget.centerCursor()
                 edit_widget.setFocus()
+
+        self.goto_line_widget.lineSelected.connect(_jump_to_line)
+        self.goto_line_widget.show()
+        self.goto_line_widget.search_le.setFocus()
 
     def goToSymbol(self):
         index = self.tab.currentIndex()
@@ -1166,8 +1192,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     current_widget.edit.setFocus()
 
         self._show_generic_symbol_widget(
-            symbols, on_tab_selected, 
-            hide_search=True, 
+            symbols, on_tab_selected,
+            hide_search=True,
             auto_accept_on_ctrl_release=True
         )
 
