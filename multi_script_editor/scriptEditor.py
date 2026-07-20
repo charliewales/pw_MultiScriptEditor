@@ -106,6 +106,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.editor_ly.addWidget(self.editor_toolbar)
         self.editor_ly.addWidget(self.tab)
 
+        # Hamburger menu button action for when menu is hidden
+        self.menu_toggle_act = QAction(self)
+        self.menu_toggle_act.setObjectName("menu_toggle_act")
+        self.menu_toggle_act.setIcon(QIcon(icons.get('menu', '')))
+        self.menu_toggle_act.setToolTip("Show Menus")
+        self.menu_toggle_act.triggered.connect(lambda: self.toggleMenuBar(True))
+
         self.horizontal_splitter.addWidget(self.outline_panel)
         self.horizontal_splitter.addWidget(self.editor_container)
         self.in_ly.addWidget(self.horizontal_splitter)
@@ -1811,6 +1818,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             state = self.toggleMenus_act.isChecked()
         self.menubar.setVisible(state)
         self.toggleMenus_act.setChecked(state)
+
+        # Dynamic toolbar menu button insertion/removal
+        if hasattr(self, 'editor_toolbar') and hasattr(self, 'menu_toggle_act'):
+            if not state:
+                # Add to toolbar if not already present
+                if self.menu_toggle_act not in self.editor_toolbar.actions():
+                    self.editor_toolbar.addAction(self.menu_toggle_act)
+            else:
+                self.editor_toolbar.removeAction(self.menu_toggle_act)
 
     def toggleOutputBottom(self, state=None):
         if state is None:
