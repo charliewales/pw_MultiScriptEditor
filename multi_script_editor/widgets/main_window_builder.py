@@ -639,10 +639,10 @@ class ScriptEditorUIBuilder:
                 tb.addAction(editor.nextBookmark_act)
             if hasattr(editor, 'prevBookmark_act'):
                 tb.addAction(editor.prevBookmark_act)
-            if hasattr(editor, 'clearBookmarks_act'):
-                tb.addAction(editor.clearBookmarks_act)
             if hasattr(editor, 'bookmarksFinder_act'):
                 tb.addAction(editor.bookmarksFinder_act)
+            if hasattr(editor, 'clearBookmarks_act'):
+                tb.addAction(editor.clearBookmarks_act)
 
             tb.addSeparator()
 
