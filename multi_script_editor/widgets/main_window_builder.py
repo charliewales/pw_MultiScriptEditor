@@ -239,18 +239,22 @@ class ScriptEditorUIBuilder:
         editor.fold_act.triggered.connect(editor.fold_current)
         editor.fold_act.setShortcut('Alt+-')
         editor.fold_act.setShortcutContext(Qt.WindowShortcut)
+        editor.fold_act.setIcon(QIcon(icons['fold']))
 
         editor.unfold_act.triggered.connect(editor.unfold_current)
         editor.unfold_act.setShortcut('Alt++')
         editor.unfold_act.setShortcutContext(Qt.WindowShortcut)
+        editor.unfold_act.setIcon(QIcon(icons['unfold']))
 
         editor.fold_all_act.triggered.connect(editor.fold_all)
         editor.fold_all_act.setShortcut('Alt+Shift+-')
         editor.fold_all_act.setShortcutContext(Qt.WindowShortcut)
+        editor.fold_all_act.setIcon(QIcon(icons['fold_all']))
 
         editor.unfold_all_act.triggered.connect(editor.unfold_all)
         editor.unfold_all_act.setShortcut('Alt+Shift++')
         editor.unfold_all_act.setShortcutContext(Qt.WindowShortcut)
+        editor.unfold_all_act.setIcon(QIcon(icons['unfold_all']))
 
         editor.autocomplete_act.setShortcut('Alt+A')
         editor.autocomplete_act.setShortcutContext(Qt.WindowShortcut)

@@ -67,4 +67,8 @@ icons = dict(
     add_cursors_to_line_ends=os.path.join(root, "add_cursors_to_line_ends.png"),
     select_next_occurrence=os.path.join(root, "select_next_occurrence.png"),
     select_all_occurrences=os.path.join(root, "select_all_occurrences.png"),
+    fold=os.path.join(root, "fold.png"),
+    unfold=os.path.join(root, "unfold.png"),
+    fold_all=os.path.join(root, "fold_all.png"),
+    unfold_all=os.path.join(root, "unfold_all.png"),
 )
