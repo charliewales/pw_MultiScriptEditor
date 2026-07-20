@@ -1798,7 +1798,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             geo = self.normalGeometry() if hasattr(self, 'normalGeometry') else self.geometry()
             frame_offset_x = self.geometry().x() - self.x()
             frame_offset_y = self.geometry().y() - self.y()
-            
+
             self._zen_mode_state = {
                 'fullscreen': self.isFullScreen(),
                 'maximized': self.isMaximized(),

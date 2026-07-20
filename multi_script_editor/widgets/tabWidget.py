@@ -91,6 +91,23 @@ class tabWidgetClass(QTabWidget):
         QApplication.instance().installEventFilter(self)
 
     def eventFilter(self, obj, event):
+        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease) and event.button() == Qt.MiddleButton:
+            # Check if click is on the tab bar or one of its children
+            p = obj
+            is_tabbar_click = False
+            while p:
+                if p == self.tabBar():
+                    is_tabbar_click = True
+                    break
+                p = p.parent()
+            if is_tabbar_click:
+                if event.type() == QEvent.MouseButtonPress:
+                    pos = self.tabBar().mapFrom(obj, event.pos())
+                    index = self.tabBar().tabAt(pos)
+                    if index >= 0:
+                        self.closeTab(index)
+                return True
+
         quick_tab_switching = True
         if hasattr(self.p, 'quickTabSwitching_act'):
             quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
@@ -507,8 +524,12 @@ class tabWidgetClass(QTabWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:
-            current_index = self.currentIndex()
-            self.closeTab(current_index)
+            pos = self.tabBar().mapFrom(self, event.pos())
+            index = self.tabBar().tabAt(pos)
+            if index >= 0:
+                self.closeTab(index)
+        else:
+            super(tabWidgetClass, self).mousePressEvent(event)
 
 ############################## editor commands
     def update_custom_close_buttons(self, index=None):
