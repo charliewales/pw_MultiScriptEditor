@@ -51,7 +51,7 @@
         <li><strong>Save script as</strong><span class="shortcut">CTRL + SHIFT + S</span>
             <span class="desc">Saves the script in the currently active tab to a new file and opens it in a new separate tab.</span></li>
         <li><strong>Save session</strong><span class="shortcut">CTRL + ALT + S</span>
-            <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, and their specific order, ensuring they are automatically restored the next time the editor is launched.</span></li>
+            <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, specific order, bookmarks, and code folding states, ensuring they are automatically restored the next time the editor is launched.</span></li>
         <li><strong>Recent files</strong><span class="shortcut">CTRL + P</span>
             <span class="desc">A sub-menu containing recently opened files. Pressing the shortcut opens a search popup palette to quickly filter and open recent files, or remove them from the list.</span></li>
         <li><strong>Save output</strong>
@@ -75,7 +75,7 @@
         <li><strong>Snippets</strong>
             <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion:
                 <ul class="feature-list">
-                    <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet.</li>
+                    <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet. Pressing Numpad Enter on a highlighted snippet in the insertion list executes it directly in the console.</li>
                     <li><strong>Import / Export</strong>: Import snippet collections from JSON files or export them for backup.</li>
                     <li><strong>Delete snippet</strong>: Allows removing custom snippets.</li>
                 </ul>
@@ -87,8 +87,10 @@
             <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
     </ul>
 
-    <h3>Tab Context Menu (Right-Click)</h3>
+    <h3>Tab Interactions & Context Menu</h3>
     <ul>
+        <li><strong>Middle-click</strong>
+            <span class="desc">Closes the tab directly under the mouse cursor.</span></li>
         <li><strong>Duplicate Tab</strong>
             <span class="desc">Creates a copy of the current tab with the same text.</span></li>
         <li><strong>Rename Tab</strong><span class="shortcut">ALT + R</span>
