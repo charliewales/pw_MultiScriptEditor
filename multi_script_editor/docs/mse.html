@@ -52,8 +52,28 @@
             <span class="desc">Saves the script in the currently active tab to a new file and opens it in a new separate tab.</span></li>
         <li><strong>Save session</strong><span class="shortcut">CTRL + ALT + S</span>
             <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, and their specific order, ensuring they are automatically restored the next time the editor is launched.</span></li>
+        <li><strong>Recent files</strong><span class="shortcut">CTRL + P</span>
+            <span class="desc">A sub-menu containing recently opened files. Pressing the shortcut opens a search popup palette to quickly filter and open recent files, or remove them from the list.</span></li>
+        <li><strong>Save output</strong>
+            <span class="desc">A sub-menu containing options to save the text in the output panel:
+                <ul class="feature-list">
+                    <li><strong>As...</strong>: Saves the output panel text to an external file.</li>
+                    <li><strong>To tab</strong>: Copies all text in the output panel into a new editor tab.</li>
+                </ul>
+            </span>
+        </li>
+        <li><strong>Sessions</strong>
+            <span class="desc">A sub-menu to manage and restore your editor workspaces:
+                <ul class="feature-list">
+                    <li><strong>Save session...</strong>: Saves the current active tabs and their arrangement as a named session.</li>
+                    <li><strong>Restore backup...</strong>: Restores a session backup file.</li>
+                    <li><strong>Delete session</strong>: A sub-menu to permanently delete a saved session.</li>
+                    <li><strong>List of saved sessions</strong>: Lists your saved sessions; clicking one restores all its tabs.</li>
+                </ul>
+            </span>
+        </li>
         <li><strong>Snippets</strong>
-            <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion.
+            <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion:
                 <ul class="feature-list">
                     <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet.</li>
                     <li><strong>Import / Export</strong>: Import snippet collections from JSON files or export them for backup.</li>
@@ -61,8 +81,6 @@
                 </ul>
             </span>
         </li>
-        <li><strong>Recent files</strong><span class="shortcut">CTRL + P</span>
-            <span class="desc">A sub-menu containing recently opened files. Pressing the shortcut opens a search popup palette to quickly filter and open recent files, or remove them from the list.</span></li>
         <li><strong>Close all tabs</strong>
             <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
         <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
@@ -89,7 +107,7 @@
             <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
         <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
             <span class="desc">Removes all bookmarks from the current active document.</span></li>
-        <li><strong>Bookmarks Finder...</strong><span class="shortcut">CTRL + B</span>
+        <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
             <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
     </ul>
 
@@ -99,6 +117,8 @@
             <span class="desc">Reverts the last text editing action in the active script, allowing you to step backward through your recent changes.</span></li>
         <li><strong>Redo</strong><span class="shortcut">CTRL + Y</span>
             <span class="desc">Re-applies the last undone action, allowing you to step forward through changes you previously undid.</span></li>
+        <li><strong>Clipboard manager</strong><span class="shortcut">CTRL + SHIFT + V</span>
+            <span class="desc">Opens a history widget displaying previously copied and cut code blocks. Selecting an item inserts it at the cursor, and pressing Delete on an entry removes it. History is persisted across sessions.</span></li>
         <li><strong>Copy</strong><span class="shortcut">CTRL + C</span>
             <span class="desc">Copies the currently selected text to the system clipboard for pasting elsewhere.</span></li>
         <li><strong>Cut</strong><span class="shortcut">CTRL + X</span>
@@ -121,8 +141,10 @@
             <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
         <li><strong>Add Cursors to line ends</strong><span class="shortcut">ALT + SHIFT + I</span>
             <span class="desc">Adds a cursor at the end of each selected line, allowing you to edit the ends of multiple lines simultaneously.</span></li>
-        <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
-            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
+        <li><strong>Add cursor above</strong><span class="shortcut">CTRL + ALT + UP</span>
+            <span class="desc">Adds a cursor on the line immediately above the current selection or topmost cursor, facilitating multi-cursor editing.</span></li>
+        <li><strong>Add cursor below</strong><span class="shortcut">CTRL + ALT + DOWN</span>
+            <span class="desc">Adds a cursor on the line immediately below the current selection or bottommost cursor, facilitating multi-cursor editing.</span></li>
         <li><strong>Next highlight/selection</strong><span class="shortcut">CTRL + J</span>
             <span class="desc">Moves the focus to the next highlighted occurrence or selection.</span></li>
         <li><strong>Previous highlight/selection</strong><span class="shortcut">CTRL + SHIFT + J</span>
@@ -131,6 +153,8 @@
             <span class="desc">Finds and selects the next instance of the currently selected word (or the word under the cursor), enabling multi-cursor editing for rapid refactoring.</span></li>
         <li><strong>Select all occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>
             <span class="desc">Selects every instance of the current word throughout the entire document, placing a cursor at each instance for simultaneous editing.</span></li>
+        <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
+            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
         <li><strong>Go to line</strong><span class="shortcut">CTRL + G</span>
             <span class="desc">Prompts for a line number and moves the cursor to that specific line in the editor, centering the cursor vertically in the viewport.</span></li>
         <li><strong>Go to symbol</strong><span class="shortcut">CTRL + R</span>
@@ -165,6 +189,8 @@
             <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
         <li><strong>Code outline button</strong>
             <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
+        <li><strong>Menus</strong><span class="shortcut">CTRL + M</span>
+            <span class="desc">Toggles the visibility of the main window menu bar. If the menu bar is hidden, you can right-click the editor and choose "Show menus" from the context menu to display it again.</span></li>
         <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
             <span class="desc">Toggles the visibility of the output console panel.</span></li>
         <li><strong>Output at the bottom</strong><span class="shortcut">CTRL + U</span>
@@ -177,6 +203,8 @@
             <span class="desc">Folds all collapsible code blocks in the current document.</span></li>
         <li><strong>Unfold all</strong><span class="shortcut">CTRL + ALT + +</span>
             <span class="desc">Unfolds all collapsed code blocks in the current document.</span></li>
+        <li><strong>Zen mode</strong><span class="shortcut">F11</span>
+            <span class="desc">Switches the editor to a distraction-free, full-screen environment. It hides the menu bar, output console, and outline sidebar, and centers the code editor (up to a maximum width of 120 columns). Toggling Zen mode off restores the previous window size, position, and layout.</span></li>
         <li><strong>Zoom in</strong><span class="shortcut">CTRL + +</span>
             <span class="desc">Increases the editor font size globally.</span></li>
         <li><strong>Zoom out</strong><span class="shortcut">CTRL + -</span>
