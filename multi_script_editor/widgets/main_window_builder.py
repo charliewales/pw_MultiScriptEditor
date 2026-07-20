@@ -390,10 +390,11 @@ class ScriptEditorUIBuilder:
         editor.addAction(editor.toggleMenus_act)
 
         # Editor Toolbar toggle setup
-        editor.toggleEditorToolbar_act.setShortcut("Ctrl+Shift+T")
+        editor.toggleEditorToolbar_act.setShortcut("Ctrl+Alt+T")
         editor.toggleEditorToolbar_act.setShortcutContext(Qt.WindowShortcut)
         editor.toggleEditorToolbar_act.setChecked(True)
         editor.toggleEditorToolbar_act.toggled.connect(editor.editor_toolbar.setVisible)
+        editor.toggleEditorToolbar_act.toggled.connect(editor.saveSettings)
         editor.addAction(editor.toggleEditorToolbar_act)
 
         # Zen mode toggle setup

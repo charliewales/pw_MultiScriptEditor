@@ -101,7 +101,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.editor_toolbar.setObjectName("editorToolBar")
         self.editor_toolbar.setMovable(False)
         self.editor_toolbar.setFloatable(False)
-        self.editor_toolbar.setIconSize(QSize(20, 20))
+        self.editor_toolbar.setIconSize(QSize(24, 24))
 
         self.editor_ly.addWidget(self.editor_toolbar)
         self.editor_ly.addWidget(self.tab)
@@ -1491,6 +1491,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.toggleMenus_act.setChecked(show_menus)
         self.toggleMenuBar(show_menus)
 
+        show_toolbar = data.get('show_toolbar', True)
+        self.toggleEditorToolbar_act.setChecked(show_toolbar)
+        self.editor_toolbar.setVisible(show_toolbar)
+
         syntax_check = data.get('syntax_check', True)
         self.syntaxCheck_act.setChecked(syntax_check)
         self.toggleSyntaxCheck(syntax_check)
@@ -1555,6 +1559,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
+        show_toolbar = self.toggleEditorToolbar_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
@@ -1608,6 +1613,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_outline_button=show_outline_button,
             show_output=show_output,
             show_menus=show_menus,
+            show_toolbar=show_toolbar,
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
             occurrences_case_sensitive=occurrences_case_sensitive,
