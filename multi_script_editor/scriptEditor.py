@@ -752,6 +752,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 w.needs_loading_column = s.get('column', 0)
                 w.needs_loading_scroll_v = s.get('scroll_v', 0)
                 w.needs_loading_scroll_h = s.get('scroll_h', 0)
+                w.needs_loading_folds = s.get('folds', [])
 
                 if is_active:
                     active_index = i
@@ -761,6 +762,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         w.addText(text)
                         w.document().clearUndoRedoStacks()
                         w.document().setModified(False)
+                        if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
+                            if hasattr(w, 'set_folded_blocks'):
+                                w.set_folded_blocks(w.needs_loading_folds)
+                            delattr(w, 'needs_loading_folds')
                         if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
                             w.set_bookmarks(w.needs_loading_bookmarks)
                             delattr(w, 'needs_loading_bookmarks')
@@ -781,6 +786,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         delattr(w, 'needs_loading_line')
                     if hasattr(w, 'needs_loading_column'):
                         delattr(w, 'needs_loading_column')
+                    if hasattr(w, 'needs_loading_folds'):
+                        delattr(w, 'needs_loading_folds')
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
@@ -837,6 +844,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     scroll_v = widget.edit.verticalScrollBar().value()
                     scroll_h = widget.edit.horizontalScrollBar().value()
 
+            folds = []
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_folded_blocks'):
+                folds = widget.edit.get_folded_blocks()
+
             tab = {
                 'name': name,
                 'text': text if (save_full_text or not file_path) else "",
@@ -847,7 +858,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 'line': line,
                 'column': column,
                 'scroll_v': scroll_v,
-                'scroll_h': scroll_h
+                'scroll_h': scroll_h,
+                'folds': folds
             }
             tabs.append(tab)
         return tabs

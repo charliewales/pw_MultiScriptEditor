@@ -301,6 +301,36 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         
         self.apply_folding_visibility()
 
+    def get_folded_blocks(self):
+        folded = []
+        doc = self.document()
+        block_count = doc.blockCount()
+        for i in range(block_count):
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if data and getattr(data, 'folded', False):
+                    folded.append(i)
+        return ",".join(str(x) for x in folded)
+
+    def set_folded_blocks(self, folded_data):
+        if not folded_data:
+            return
+        try:
+            folded_list = [int(x) for x in str(folded_data).split(',') if x.strip().isdigit()]
+        except:
+            return
+        doc = self.document()
+        for i in folded_list:
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+        self.apply_folding_visibility()
+
     def fold_all(self):
         doc = self.document()
         for i in self.folding_regions.keys():

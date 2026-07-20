@@ -253,6 +253,10 @@ class tabWidgetClass(QTabWidget):
 
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
+                        if hasattr(edit, 'needs_loading_folds') and edit.needs_loading_folds:
+                            if hasattr(edit, 'set_folded_blocks'):
+                                edit.set_folded_blocks(edit.needs_loading_folds)
+                            delattr(edit, 'needs_loading_folds')
                     else:
                         if hasattr(edit, 'needs_loading_line'):
                             delattr(edit, 'needs_loading_line')
@@ -262,6 +266,8 @@ class tabWidgetClass(QTabWidget):
                             delattr(edit, 'needs_loading_scroll_v')
                         if hasattr(edit, 'needs_loading_scroll_h'):
                             delattr(edit, 'needs_loading_scroll_h')
+                        if hasattr(edit, 'needs_loading_folds'):
+                            delattr(edit, 'needs_loading_folds')
                         edit.moveCursor(QTextCursor.Start)
                         edit.highlight_current_line()
 
@@ -270,6 +276,9 @@ class tabWidgetClass(QTabWidget):
                         if edit.needs_loading_bookmarks:
                             edit.set_bookmarks(edit.needs_loading_bookmarks)
                         delattr(edit, 'needs_loading_bookmarks')
+
+                    if hasattr(edit, 'needs_loading_folds'):
+                        delattr(edit, 'needs_loading_folds')
 
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
