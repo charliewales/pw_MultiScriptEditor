@@ -1151,9 +1151,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 name += ' - ' + os.path.dirname(path)
             symbols.append({'name': name, 'line': i, 'indent': 0})
 
+        def on_tab_selected(index):
+            if 0 <= index < self.tab.count():
+                self.tab.setCurrentIndex(index)
+                current_widget = self.tab.widget(index)
+                if current_widget and hasattr(current_widget, 'edit'):
+                    current_widget.edit.setFocus()
+
         self._show_generic_symbol_widget(
-            symbols, self.tab.switch_to_tab_index,
-            hide_search=True,
+            symbols, on_tab_selected, 
+            hide_search=True, 
             auto_accept_on_ctrl_release=True
         )
 
@@ -1365,174 +1372,181 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(self, 's') and hasattr(self.s, 'write_settings'):
             self.s.write_settings(settings)
         self.loadSettings()
-
     def loadSettings(self):
-        data = self._current_settings
+        self._loading_settings = True
+        try:
+            data = self._current_settings
 
-        always_ontop = data.get('always_ontop', False)
-        center = data.get('center', None)
-        clear_exec = data.get('clear_execute', None)
-        echo_exec = data.get('echo_execute', None)
-        geo = data.get('geometry', None)
-        is_max = data.get('maximized', False)
-        out_wrap = data.get('out_wrap', None)
-        outFontSize = data.get('outFontSize', 10)
-        splitter = data.get('splitter', [600, 400])
-        horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
-        wrap = data.get('wrap', None)
-        show_whitespace = data.get('show_whitespace', False)
-        font = data.get('font', False)
-        autocomplete = data.get('autocomplete', True)
-        fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
-        show_docstrings = data.get('show_docstrings', True)
-        trim_auto_whitespace = data.get('trim_auto_whitespace', False)
+            always_ontop = data.get('always_ontop', False)
+            center = data.get('center', None)
+            clear_exec = data.get('clear_execute', None)
+            echo_exec = data.get('echo_execute', None)
+            geo = data.get('geometry', None)
+            is_max = data.get('maximized', False)
+            out_wrap = data.get('out_wrap', None)
+            outFontSize = data.get('outFontSize', 10)
+            splitter = data.get('splitter', [600, 400])
+            horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
+            wrap = data.get('wrap', None)
+            show_whitespace = data.get('show_whitespace', False)
+            font = data.get('font', False)
+            autocomplete = data.get('autocomplete', True)
+            fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
+            show_docstrings = data.get('show_docstrings', True)
+            trim_auto_whitespace = data.get('trim_auto_whitespace', False)
 
-        if geo:
-            self.move(geo[0], geo[1])
-            self.resize(geo[2], geo[3])
-        else:
-            self.resize(1080, 1080)
+            if geo:
+                self.move(geo[0], geo[1])
+                self.resize(geo[2], geo[3])
+            else:
+                self.resize(1080, 1080)
 
-        if is_max:
-            self.showMaximized()
+            if is_max:
+                self.showMaximized()
 
-        if center:
-            x, y = center
-            geo = self.geometry()
-            geo.moveCenter(QPoint(x, y))
-            self.setGeometry(geo)
+            if center:
+                x, y = center
+                geo = self.geometry()
+                geo.moveCenter(QPoint(x, y))
+                self.setGeometry(geo)
 
-        output_bottom = data.get('output_bottom', False)
-        self.outputBottom_act.setChecked(output_bottom)
-        self.toggleOutputBottom(output_bottom)
+            output_bottom = data.get('output_bottom', False)
+            self.outputBottom_act.setChecked(output_bottom)
+            self.toggleOutputBottom(output_bottom)
 
-        if splitter:
-            if all(s > 0 for s in splitter):
-                self._last_splitter_sizes = splitter
-                self.splitter.setSizes(splitter)
+            if splitter:
+                if all(s > 0 for s in splitter):
+                    self._last_splitter_sizes = splitter
+                    self.splitter.setSizes(splitter)
+                else:
+                    default_sizes = self.getDefaultSplitterSizes()
+                    self._last_splitter_sizes = default_sizes
+                    self.splitter.setSizes(default_sizes)
             else:
                 default_sizes = self.getDefaultSplitterSizes()
                 self._last_splitter_sizes = default_sizes
                 self.splitter.setSizes(default_sizes)
-        else:
-            default_sizes = self.getDefaultSplitterSizes()
-            self._last_splitter_sizes = default_sizes
-            self.splitter.setSizes(default_sizes)
 
-        if horizontal_splitter_sizes:
-            self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
-        if out_wrap is not None:
-            self.out_wordWrap_act.setChecked(out_wrap)
-            self.out.wordWrap(out_wrap)
-        if wrap is not None:
-            self.wordWrap_act.setChecked(wrap)
-            self.tab.wordWrap(wrap)
-        if clear_exec:
-            self.clear_exec_act.setChecked(clear_exec)
-            self.show_clear_exec()
-        if echo_exec:
-            self.print_command_act.setChecked(echo_exec)
-        self.always_ontop_act.setChecked(always_ontop)
-        current_flags = self.windowFlags()
-        new_flags = current_flags
+            if horizontal_splitter_sizes:
+                self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
+            if out_wrap is not None:
+                self.out_wordWrap_act.setChecked(out_wrap)
+                self.out.wordWrap(out_wrap)
+            if wrap is not None:
+                self.wordWrap_act.setChecked(wrap)
+                self.tab.wordWrap(wrap)
+            if clear_exec:
+                self.clear_exec_act.setChecked(clear_exec)
+                self.show_clear_exec()
+            if echo_exec:
+                self.print_command_act.setChecked(echo_exec)
+            self.always_ontop_act.setChecked(always_ontop)
+            current_flags = self.windowFlags()
+            new_flags = current_flags
 
-        if always_ontop:
-            new_flags |= Qt.WindowStaysOnTopHint
-        else:
-            new_flags &= ~Qt.WindowStaysOnTopHint
+            if always_ontop:
+                new_flags |= Qt.WindowStaysOnTopHint
+            else:
+                new_flags &= ~Qt.WindowStaysOnTopHint
 
-        # PySide6 workaround to keep window controls enabled
-        new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
+            # PySide6 workaround to keep window controls enabled
+            new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
-        if current_flags != new_flags:
-            self.setWindowFlags(new_flags)
-            if self.isVisible():
-                self.show()
-        if show_whitespace is not None:
-            self.tab.render_whitespace(show_whitespace)
-            self.out.render_whitespace(show_whitespace)
-            self.whitespace_act.setChecked(show_whitespace)
-        if font:
-            self.tab.set_start_font(font)
-            self.out.set_start_font(font)
+            if current_flags != new_flags:
+                self.setWindowFlags(new_flags)
+                if self.isVisible():
+                    self.show()
+            if show_whitespace is not None:
+                self.tab.render_whitespace(show_whitespace)
+                self.out.render_whitespace(show_whitespace)
+                self.whitespace_act.setChecked(show_whitespace)
+            if font:
+                self.tab.set_start_font(font)
+                self.out.set_start_font(font)
 
-            outline_font = QFont(self.out.font())
-            if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
-            elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
-            self.outline_list.setFont(outline_font)
-            self.current_outline_font = outline_font
-            self.outline_filter.setFont(outline_font)
-            for i in range(self.outline_list.count()):
-                self.outline_list.item(i).setFont(outline_font)
-        self.autocomplete_act.setChecked(autocomplete)
-        self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
-        self.show_docstrings_act.setChecked(show_docstrings)
-        self.trimAutoWhitespace_act.setChecked(trim_auto_whitespace)
+                outline_font = QFont(self.out.font())
+                if outline_font.pointSize() > 0:
+                    outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
+                elif outline_font.pixelSize() > 0:
+                    outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
+                self.outline_list.setFont(outline_font)
+                self.current_outline_font = outline_font
+                self.outline_filter.setFont(outline_font)
+                for i in range(self.outline_list.count()):
+                    self.outline_list.item(i).setFont(outline_font)
+            self.autocomplete_act.setChecked(autocomplete)
+            self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
+            self.show_docstrings_act.setChecked(show_docstrings)
+            self.trimAutoWhitespace_act.setChecked(trim_auto_whitespace)
 
-        f = self.out.font()
-        f.setPointSize(outFontSize)
-        self.out.setFont(f)
+            f = self.out.font()
+            f.setPointSize(outFontSize)
+            self.out.setFont(f)
 
-        show_outline = data.get('show_outline', False)
-        self.showOutline_act.setChecked(show_outline)
-        self.toggleOutline(show_outline)
+            show_outline = data.get('show_outline', False)
+            self.showOutline_act.setChecked(show_outline)
+            self.toggleOutline(show_outline)
 
-        show_outline_button = data.get('show_outline_button', True)
-        self.showOutlineButton_act.setChecked(show_outline_button)
-        self.toggleOutlineButton(show_outline_button)
+            show_outline_button = data.get('show_outline_button', True)
+            self.showOutlineButton_act.setChecked(show_outline_button)
+            self.toggleOutlineButton(show_outline_button)
 
-        show_output = data.get('show_output', True)
-        self.showOutput_act.setChecked(show_output)
-        self.toggleOutput(show_output)
+            show_output = data.get('show_output', True)
+            self.showOutput_act.setChecked(show_output)
+            self.toggleOutput(show_output)
 
-        show_menus = data.get('show_menus', True)
-        self.toggleMenus_act.setChecked(show_menus)
-        self.toggleMenuBar(show_menus)
+            show_menus = data.get('show_menus', True)
+            self.toggleMenus_act.setChecked(show_menus)
+            self.toggleMenuBar(show_menus)
 
-        show_toolbar = data.get('show_toolbar', True)
-        self.toggleEditorToolbar_act.setChecked(show_toolbar)
-        self.editor_toolbar.setVisible(show_toolbar)
+            show_toolbar = data.get('show_toolbar', True)
+            self.toggleEditorToolbar_act.blockSignals(True)
+            self.toggleEditorToolbar_act.setChecked(show_toolbar)
+            self.toggleEditorToolbar_act.blockSignals(False)
+            self.editor_toolbar.setVisible(show_toolbar)
 
-        syntax_check = data.get('syntax_check', True)
-        self.syntaxCheck_act.setChecked(syntax_check)
-        self.toggleSyntaxCheck(syntax_check)
+            syntax_check = data.get('syntax_check', True)
+            self.syntaxCheck_act.setChecked(syntax_check)
+            self.toggleSyntaxCheck(syntax_check)
 
-        highlight_all = data.get('highlight_all_occurrences', True)
-        self.highlightAllOccurrences_act.setChecked(highlight_all)
+            highlight_all = data.get('highlight_all_occurrences', True)
+            self.highlightAllOccurrences_act.setChecked(highlight_all)
 
-        occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
-        self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
+            occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
+            self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
 
-        prefer_single_quotes = data.get('prefer_single_quotes', False)
-        self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
+            prefer_single_quotes = data.get('prefer_single_quotes', False)
+            self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
 
-        quick_tab_switching = data.get('quick_tab_switching', True)
-        self.quickTabSwitching_act.setChecked(quick_tab_switching)
+            quick_tab_switching = data.get('quick_tab_switching', True)
+            self.quickTabSwitching_act.setChecked(quick_tab_switching)
 
-        auto_close_delimiters = data.get('auto_close_delimiters', True)
-        self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
+            auto_close_delimiters = data.get('auto_close_delimiters', True)
+            self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
-        if hasattr(self, 'randomize_custom_act'):
-            self.randomize_custom_act.setChecked(data.get('randomize_custom_at_startup', False))
+            if hasattr(self, 'randomize_custom_act'):
+                self.randomize_custom_act.setChecked(data.get('randomize_custom_at_startup', False))
 
-        self.updateRecentFilesMenu()
+            self.updateRecentFilesMenu()
 
-        theme = data.get('theme', 'Multi Script Editor')
-        if data.get('randomize_custom_at_startup', False) and not getattr(self, '_theme_randomized', False):
-            self._theme_randomized = True
-            custom_themes = self.getCustomThemes()
-            if custom_themes:
-                import random
-                theme = random.choice(custom_themes)
-                data['theme'] = theme
-        if theme == 'default':
-            theme = 'Multi Script Editor'
-        self._current_settings['theme'] = theme
-        self.applyTheme(theme)
+            theme = data.get('theme', 'Multi Script Editor')
+            if data.get('randomize_custom_at_startup', False) and not getattr(self, '_theme_randomized', False):
+                self._theme_randomized = True
+                custom_themes = self.getCustomThemes()
+                if custom_themes:
+                    import random
+                    theme = random.choice(custom_themes)
+                    data['theme'] = theme
+            if theme == 'default':
+                theme = 'Multi Script Editor'
+            self._current_settings['theme'] = theme
+            self.applyTheme(theme)
+        finally:
+            self._loading_settings = False
 
     def saveSettings(self):
+        if getattr(self, '_loading_settings', False):
+            return
         settings = self._current_settings
         geo = self.normalGeometry() if hasattr(self, 'normalGeometry') else self.geometry()
         frame_offset_x = self.geometry().x() - self.x()
@@ -1834,8 +1848,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.addNewTab(tab_name, text)
 
     def toggleQuickTabSwitching(self, state=None):
-        if state is None:
-            state = self.quickTabSwitching_act.isChecked()
+        state = self.quickTabSwitching_act.isChecked()
         self._current_settings['quick_tab_switching'] = state
         self.saveSettings()
         if not state:
@@ -1843,14 +1856,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.show_tab_numbers(False)
 
     def toggleAutoCloseDelimiters(self, state=None):
-        if state is None:
-            state = self.autoCloseDelimiters_act.isChecked()
+        state = self.autoCloseDelimiters_act.isChecked()
         self._current_settings['auto_close_delimiters'] = state
         self.saveSettings()
 
     def toggleSyntaxCheck(self, state=None):
-        if state is None:
-            state = self.syntaxCheck_act.isChecked()
+        state = self.syntaxCheck_act.isChecked()
+        self._current_settings['syntax_check'] = state
+        self.saveSettings()
 
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
@@ -1861,8 +1874,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.statusBar().clearMessage()
 
     def toggleHighlightAllOccurrences(self, state=None):
-        if state is None:
-            state = self.highlightAllOccurrences_act.isChecked()
+        state = self.highlightAllOccurrences_act.isChecked()
         self._current_settings['highlight_all_occurrences'] = state
         self.saveSettings()
         for i in range(self.tab.count()):
@@ -1876,8 +1888,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         w.edit.highlight_current_line()
 
     def toggleOccurrencesCaseSensitive(self, state=None):
-        if state is None:
-            state = self.occurrencesCaseSensitive_act.isChecked()
+        state = self.occurrencesCaseSensitive_act.isChecked()
         self._current_settings['occurrences_case_sensitive'] = state
         self.saveSettings()
         for i in range(self.tab.count()):
@@ -1887,8 +1898,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     w.edit.auto_select_all_occurrences()
 
     def togglePreferSingleQuotes(self, state=None):
-        if state is None:
-            state = self.preferSingleQuotes_act.isChecked()
+        state = self.preferSingleQuotes_act.isChecked()
         self._current_settings['prefer_single_quotes'] = state
         self.saveSettings()
 

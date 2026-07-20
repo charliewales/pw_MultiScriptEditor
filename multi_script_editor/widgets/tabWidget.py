@@ -622,6 +622,9 @@ class tabWidgetClass(QTabWidget):
             return
         if 0 <= index < self.count():
             self.setCurrentIndex(index)
+            current_widget = self.widget(index)
+            if current_widget and hasattr(current_widget, 'edit'):
+                current_widget.edit.setFocus()
 
     def _apply_tab_font(self, font):
         use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)
