@@ -244,12 +244,11 @@ class tabWidgetClass(QTabWidget):
                         if hasattr(edit, 'needs_loading_scroll_v'):
                             scroll_v = edit.needs_loading_scroll_v
                             delattr(edit, 'needs_loading_scroll_v')
-                            if hasattr(edit, 'needs_loading_scroll_h'):
-                                delattr(edit, 'needs_loading_scroll_h')
                             if scroll_v > 0:
                                 edit.verticalScrollBar().setValue(scroll_v)
                                 from vendor.Qt.QtCore import QTimer
                                 QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
+                                QTimer.singleShot(150, lambda: edit.verticalScrollBar().setValue(scroll_v))
 
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
@@ -264,8 +263,6 @@ class tabWidgetClass(QTabWidget):
                             delattr(edit, 'needs_loading_column')
                         if hasattr(edit, 'needs_loading_scroll_v'):
                             delattr(edit, 'needs_loading_scroll_v')
-                        if hasattr(edit, 'needs_loading_scroll_h'):
-                            delattr(edit, 'needs_loading_scroll_h')
                         if hasattr(edit, 'needs_loading_folds'):
                             delattr(edit, 'needs_loading_folds')
                         edit.moveCursor(QTextCursor.Start)
@@ -744,7 +741,7 @@ class tabWidgetClass(QTabWidget):
         if hasattr(self.p, 'theme_font'):
             msg_box.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
-        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button

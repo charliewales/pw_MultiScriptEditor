@@ -1,6 +1,6 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument
-from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
+from vendor.Qt.QtWidgets import QPlainTextEdit
 
 
 from widgets.pythonSyntax import syntaxHighLighter

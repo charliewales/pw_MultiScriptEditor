@@ -11,11 +11,11 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
 root = os.path.dirname(__file__)
-if not root in sys.path:
+if root not in sys.path:
     sys.path.append(root)
 
 vendor_path = os.path.join(root, 'vendor')
-if not vendor_path in sys.path:
+if vendor_path not in sys.path:
     sys.path.insert(0, vendor_path)
 
 

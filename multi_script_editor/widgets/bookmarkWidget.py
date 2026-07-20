@@ -1,4 +1,4 @@
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
+from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics, QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
 from widgets.searchPopupWidget import SearchPopupWidget

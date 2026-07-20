@@ -1,5 +1,6 @@
 from core.settings_model import SettingsModel, ThemesModel
-import os, re
+import os
+import re
 
 
 defaultColors = dict(

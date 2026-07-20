@@ -321,11 +321,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 scroll_v = edit.needs_loading_scroll_v
                 if hasattr(edit, 'needs_loading_scroll_v'):
                     delattr(edit, 'needs_loading_scroll_v')
-                if hasattr(edit, 'needs_loading_scroll_h'):
-                    delattr(edit, 'needs_loading_scroll_h')
                 if scroll_v > 0:
                     edit.verticalScrollBar().setValue(scroll_v)
                     QTimer.singleShot(50, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
+                    QTimer.singleShot(150, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
@@ -751,7 +750,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 w.needs_loading_line = s.get('line', 1)
                 w.needs_loading_column = s.get('column', 0)
                 w.needs_loading_scroll_v = s.get('scroll_v', 0)
-                w.needs_loading_scroll_h = s.get('scroll_h', 0)
                 w.needs_loading_folds = s.get('folds', [])
 
                 if is_active:
@@ -828,7 +826,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             line = 1
             column = 0
             scroll_v = 0
-            scroll_h = 0
             if hasattr(widget, 'edit'):
                 if hasattr(widget.edit, 'needs_loading_line'):
                     line = widget.edit.needs_loading_line
@@ -839,10 +836,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
                 if hasattr(widget.edit, 'needs_loading_scroll_v'):
                     scroll_v = widget.edit.needs_loading_scroll_v
-                    scroll_h = widget.edit.needs_loading_scroll_h
                 else:
                     scroll_v = widget.edit.verticalScrollBar().value()
-                    scroll_h = widget.edit.horizontalScrollBar().value()
 
             folds = []
             if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_folded_blocks'):
@@ -858,7 +853,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 'line': line,
                 'column': column,
                 'scroll_v': scroll_v,
-                'scroll_h': scroll_h,
                 'folds': folds
             }
             tabs.append(tab)

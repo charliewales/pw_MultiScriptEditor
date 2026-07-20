@@ -1,7 +1,8 @@
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 from widgets import shortcuts_UIs
-import os, sys
+import os
+import sys
 
 class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
     def __init__(self, parent):
