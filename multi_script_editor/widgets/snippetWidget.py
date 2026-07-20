@@ -7,6 +7,7 @@ class SnippetWidget(SearchPopupWidget):
     snippetSelected = Signal(str)  # emits the snippet content
     snippetNameSelected = Signal(str)  # emits the snippet name for save mode
     snippetDeleted = Signal(str)  # emits the snippet name to delete
+    snippetExecuted = Signal(str)  # emits the snippet content to execute
 
     def __init__(self, snippets, parent=None, center_widget=None, qss=None, font=None, colors=None, mode="insert"):
         placeholder = "Enter snippet name to save..." if mode == "save" else "Search snippet to insert..."
@@ -72,10 +73,20 @@ class SnippetWidget(SearchPopupWidget):
         else:
             super(SnippetWidget, self).handle_enter()
 
+    def handle_execute(self):
+        if self.mode != "save":
+            item = self.list_widget.currentItem()
+            if item:
+                content = item.data(Qt.UserRole)
+                self.snippetExecuted.emit(content)
+                self.accept()
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
             item = self.list_widget.currentItem()
             if item:
                 self.snippetDeleted.emit(item.text())
+        elif event.key() == Qt.Key_Enter:
+            self.handle_execute()
         else:
             super(SnippetWidget, self).keyPressEvent(event)

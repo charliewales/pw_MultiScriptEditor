@@ -2280,6 +2280,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.deleteSnippet(name)
 
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
+        self.snippet_widget.snippetExecuted.connect(self._execute_snippet_text)
         self.snippet_widget.snippetDeleted.connect(do_delete)
         if hasattr(self.snippet_widget, 'exec'):
             self.snippet_widget.exec()
@@ -2294,6 +2295,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         cursor = edit_widget.textCursor()
         cursor.insertText(text + "\n")
         edit_widget.setFocus()
+
+    def _execute_snippet_text(self, text):
+        if self.print_command_act.isChecked():
+            text += '\n# Execute Snippet'
+        if text:
+            self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def deleteSnippet(self, name):
         res = self.show_question_msg(
