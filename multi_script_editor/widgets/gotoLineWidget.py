@@ -52,6 +52,13 @@ class GotoLineWidget(SearchPopupWidget):
         self.accept()
 
     def handle_enter(self):
+        item = self.list_widget.currentItem()
+        if item:
+            line = item.data(Qt.UserRole)
+            self.lineSelected.emit(line)
+            self.accept()
+            return
+            
         text = self.search_le.text()
         if text.isdigit():
             line_num = int(text)
