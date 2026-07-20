@@ -666,7 +666,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def get_bookmarks(self):
         """
-        Returns a sorted list of 1-based line numbers of all bookmarks.
+        Returns a comma-separated string of 1-based line numbers of all bookmarks.
         """
         bookmarks = []
         block = self.document().begin()
@@ -675,14 +675,20 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             if data and getattr(data, 'bookmarked', False):
                 bookmarks.append(block.blockNumber() + 1)
             block = block.next()
-        return sorted(bookmarks)
+        return ",".join(str(x) for x in sorted(bookmarks))
 
     def set_bookmarks(self, lines):
         """
         Restore bookmarks on the specified 1-based line numbers.
         """
+        if not lines:
+            return
+        try:
+            lines_list = [int(x) for x in str(lines).split(',') if x.strip().isdigit()]
+        except:
+            return
         doc = self.document()
-        for line in lines:
+        for line in lines_list:
             block = doc.findBlockByNumber(line - 1)
             if block.isValid():
                 data = block.userData()

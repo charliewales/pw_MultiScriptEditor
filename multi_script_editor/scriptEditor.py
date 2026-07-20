@@ -747,7 +747,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
 
                 # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
-                w.needs_loading_bookmarks = s.get('bookmarks', [])
+                w.needs_loading_bookmarks = s.get('bookmarks', "")
                 w.needs_loading_line = s.get('line', 1)
                 w.needs_loading_column = s.get('column', 0)
                 w.needs_loading_scroll_v = s.get('scroll_v', 0)
