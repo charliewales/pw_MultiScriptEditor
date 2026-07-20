@@ -480,7 +480,7 @@ class ScriptEditorUIBuilder:
         editor.bookmarksFinder_act.triggered.connect(lambda: editor.tab.currentWidget().edit.show_bookmarks_popup() if editor.tab.currentWidget() and hasattr(editor.tab.currentWidget(), 'edit') else None)
 
         # Create Bookmarks menu
-        editor.bookmarks_menu = QMenu("&Bookmarks", editor)
+        editor.bookmarks_menu = QMenu("Bookmarks", editor)
         editor.bookmarks_menu.setTearOffEnabled(True)
         editor.bookmarks_menu.addAction(editor.toggleBookmark_act)
         editor.bookmarks_menu.addAction(editor.nextBookmark_act)
