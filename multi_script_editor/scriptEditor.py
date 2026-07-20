@@ -1385,7 +1385,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             is_max = data.get('maximized', False)
             out_wrap = data.get('out_wrap', None)
             outFontSize = data.get('outFontSize', 10)
-            splitter = data.get('splitter', [600, 400])
+            splitter = data.get('splitter', [400, 600])
             horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
             wrap = data.get('wrap', None)
             show_whitespace = data.get('show_whitespace', False)
@@ -1789,7 +1789,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def getDefaultSplitterSizes(self):
         bottom = self.outputBottom_act.isChecked()
-        return [400, 600] if bottom else [600, 400]
+        return [600, 400] if bottom else [400, 600]
 
     def toggleOutput(self, state=None):
         if state is None:
