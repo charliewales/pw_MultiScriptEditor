@@ -382,7 +382,6 @@ class ScriptEditorUIBuilder:
         editor.showOutput_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutput_act.triggered.connect(editor.toggleOutput)
         editor.addAction(editor.showOutput_act)
-        # QShortcut(QKeySequence("Ctrl+Alt+J"), editor, editor.showOutput_act.trigger)
 
         # Menus toggle setup
         editor.toggleMenus_act.setShortcutContext(Qt.WindowShortcut)
@@ -434,10 +433,8 @@ class ScriptEditorUIBuilder:
 
         # Sessions Submenu in File menu
         editor.sessions_menu = QMenu("Sessions", editor)
-        editor.sessions_menu.setIcon(QIcon(icons['open']))
         editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
-        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.sessions_menu)
-        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
+        editor.menubar.insertMenu(editor.view_menu.menuAction(), editor.sessions_menu)
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
@@ -448,7 +445,6 @@ class ScriptEditorUIBuilder:
         editor.manageSnippet_act = QAction("Insert/save snippet", editor)
         editor.manageSnippet_act.setShortcut('Alt+S')
         editor.manageSnippet_act.setShortcutContext(Qt.WindowShortcut)
-        editor.manageSnippet_act.setStatusTip("Insert a snippet, or save selection as a new snippet")
         editor.manageSnippet_act.triggered.connect(editor.handleSnippetShortcut)
         editor.addAction(editor.manageSnippet_act)
 
@@ -495,7 +491,7 @@ class ScriptEditorUIBuilder:
 
         # Status tips for actions
         status_tips = {
-            editor.manageSnippet_act: "Insert a snippet, or save selection as a new snippet",
+            editor.manageSnippet_act: "Insert(Return)/Run(Enter) a snippet, or save selection as a new snippet",
             editor.load_act: "Open an existing script file",
             editor.save_act: "Save the current script",
             editor.saveSeccion_act: "Save the current session tabs and layout",
@@ -571,11 +567,11 @@ class ScriptEditorUIBuilder:
             editor.zoom_in_act: "Zoom in the editor font size",
             editor.zoom_out_act: "Zoom out the editor font size",
             editor.reset_zoom_act: "Reset the editor font size to theme default",
-            editor.toggleBookmark_act : "Toggle bookmark on the current line",
-            editor.nextBookmark_act : "Navigate to the next bookmark",
-            editor.prevBookmark_act : "Navigate to the previous bookmark",
-            editor.clearBookmarks_act : "Clear all bookmarks in the current document",
-            editor.bookmarksFinder_act : "Search and navigate bookmarked lines",
+            editor.toggleBookmark_act: "Toggle bookmark on the current line",
+            editor.nextBookmark_act: "Navigate to the next bookmark",
+            editor.prevBookmark_act: "Navigate to the previous bookmark",
+            editor.clearBookmarks_act: "Clear all bookmarks in the current document",
+            editor.bookmarksFinder_act: "Search and navigate bookmarked lines",
             editor.showOutlineButton_act: "Show or hide the code outline button in the status bar",
             editor.unfold_all_act: "Unfold all code blocks",
             editor.quickHelp_act: "Show quick help for the current word",
@@ -612,6 +608,22 @@ class ScriptEditorUIBuilder:
                         act.setToolTip(tip)
                 except Exception:
                     act.setToolTip(tip)
+
+        # Add status tips for top-level menus
+        if hasattr(editor, 'file_menu') and hasattr(editor.file_menu, 'menuAction'):
+            editor.file_menu.menuAction().setStatusTip("File operations")
+        if hasattr(editor, 'bookmarks_menu') and hasattr(editor.bookmarks_menu, 'menuAction'):
+            editor.bookmarks_menu.menuAction().setStatusTip("Manage line bookmarks")
+        if hasattr(editor, 'tools_menu') and hasattr(editor.tools_menu, 'menuAction'):
+            editor.tools_menu.menuAction().setStatusTip("Edit text and code")
+        if hasattr(editor, 'options_menu') and hasattr(editor.options_menu, 'menuAction'):
+            editor.options_menu.menuAction().setStatusTip("Editor options and preferences")
+        if hasattr(editor, 'run_menu') and hasattr(editor.run_menu, 'menuAction'):
+            editor.run_menu.menuAction().setStatusTip("Execute script and code selections")
+        if hasattr(editor, 'view_menu') and hasattr(editor.view_menu, 'menuAction'):
+            editor.view_menu.menuAction().setStatusTip("Change appearance and layout")
+        if hasattr(editor, 'help_menu') and hasattr(editor.help_menu, 'menuAction'):
+            editor.help_menu.menuAction().setStatusTip("Help, shortcuts and documentation")
 
         # Populate editor toolbar
         if hasattr(editor, 'editor_toolbar'):
