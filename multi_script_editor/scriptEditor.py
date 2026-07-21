@@ -107,7 +107,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.editor_ly.addWidget(self.tab)
 
         # Hamburger menu button action for when menu is hidden
-        self.menu_toggle_act = QAction(self)
+        self.menu_toggle_act = QAction("Show menus", self)
         self.menu_toggle_act.setObjectName("menu_toggle_act")
         self.menu_toggle_act.setIcon(QIcon(icons.get('menu', '')))
         self.menu_toggle_act.setToolTip("Show Menus")
