@@ -42,7 +42,20 @@
     <h2>Options by Menu</h2>
     <p>Below is a detailed breakdown of the different actions and tools grouped by the menu where they are located within the application, utilizing sentence case for ease of use:</p>
 
-    <h3>File Menu</h3>
+        <div class="nav-menu" style="margin-bottom: 20px; padding: 15px; background: #2a2a2a; border-radius: 5px;">
+        <h3>Navigation</h3>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 15px;">
+            <li><a href="#file-menu" style="color: #4da6ff; text-decoration: none;">File Menu</a></li>
+            <li><a href="#edit-menu" style="color: #4da6ff; text-decoration: none;">Edit Menu</a></li>
+            <li><a href="#bookmarks-menu" style="color: #4da6ff; text-decoration: none;">Bookmarks Menu</a></li>
+            <li><a href="#options-menu" style="color: #4da6ff; text-decoration: none;">Options Menu</a></li>
+            <li><a href="#run-menu" style="color: #4da6ff; text-decoration: none;">Run Menu</a></li>
+            <li><a href="#view-menu" style="color: #4da6ff; text-decoration: none;">View Menu</a></li>
+            <li><a href="#help-menu" style="color: #4da6ff; text-decoration: none;">Help Menu</a></li>
+        </ul>
+    </div>
+
+<h3 id="file-menu">File Menu</h3>
     <ul>
         <li><strong>Open script</strong><span class="shortcut">CTRL + O</span>
             <span class="desc">Opens an existing Python script file from your local filesystem, loading its contents into a new tab in the editor for editing and execution.</span></li>
@@ -87,33 +100,7 @@
             <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
     </ul>
 
-    <h3>Tab Interactions & Context Menu</h3>
-    <ul>
-        <li><strong>Middle-click</strong>
-            <span class="desc">Closes the tab directly under the mouse cursor.</span></li>
-        <li><strong>Duplicate Tab</strong>
-            <span class="desc">Creates a copy of the current tab with the same text.</span></li>
-        <li><strong>Double-click / Rename Tab</strong><span class="shortcut">ALT + R</span>
-            <span class="desc">Triggers an inline text editor directly on the tab label to rename it. Press Enter to confirm or Escape to cancel. Tab labels now display the full file name.</span></li>
-        <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
-            <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
-    </ul>
-
-    <h3>Bookmarks Menu</h3>
-    <ul>
-        <li><strong>Toggle Bookmark</strong><span class="shortcut">CTRL + F2</span>
-            <span class="desc">Toggles a bookmark on the current cursor line. A colored ribbon tag is displayed in the gutter. A semi-transparent hover preview is also shown when hovering over the gutter.</span></li>
-        <li><strong>Next Bookmark</strong><span class="shortcut">F2</span>
-            <span class="desc">Navigates the cursor to the next bookmark in the active document, centering the viewport on the line.</span></li>
-        <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
-            <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
-        <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
-            <span class="desc">Removes all bookmarks from the current active document. A confirmation dialog is displayed first to prevent accidental clearing.</span></li>
-        <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
-            <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
-    </ul>
-
-    <h3>Edit Menu</h3>
+    <h3 id="edit-menu">Edit Menu</h3>
     <ul>
         <li><strong>Undo</strong><span class="shortcut">CTRL + Z</span>
             <span class="desc">Reverts the last text editing action in the active script, allowing you to step backward through your recent changes.</span></li>
@@ -185,7 +172,70 @@
             <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
     </ul>
 
-    <h3>View Menu</h3>
+    <h3 id="bookmarks-menu">Bookmarks Menu</h3>
+    <ul>
+        <li><strong>Toggle Bookmark</strong><span class="shortcut">CTRL + F2</span>
+            <span class="desc">Toggles a bookmark on the current cursor line. A colored ribbon tag is displayed in the gutter. A semi-transparent hover preview is also shown when hovering over the gutter.</span></li>
+        <li><strong>Next Bookmark</strong><span class="shortcut">F2</span>
+            <span class="desc">Navigates the cursor to the next bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
+            <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
+            <span class="desc">Removes all bookmarks from the current active document. A confirmation dialog is displayed first to prevent accidental clearing.</span></li>
+        <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
+            <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
+    </ul>
+
+    <h3 id="options-menu">Options Menu</h3>
+    <ul>
+        <li><strong>Always on top</strong>
+            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
+        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
+            <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
+        <li><strong>Fuzzy autocomplete</strong>
+            <span class="desc">Enables a more flexible, fuzzy-matching algorithm for autocompletion, allowing you to find suggestions even if you skip characters or make minor typos.</span></li>
+        <li><strong>Show docstrings</strong>
+            <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
+        <li><strong>Syntax check</strong>
+            <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
+        <li><strong>Auto-close delimiters</strong>
+            <span class="desc">Toggles automatic closing of brackets, braces, parentheses, and quotes as you type in the editor.</span></li>
+        <li><strong>Quick tab switching</strong>
+            <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
+        <li><strong>Choose font...</strong>
+            <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor globally.</span></li>
+        <li><strong>Open settings folder</strong>
+            <span class="desc">Opens your operating system's file explorer directly to the directory where Multi Script Editor stores its configuration files, custom themes, user preferences, and session data.</span></li>
+        <li><strong>Theme</strong>
+            <span class="desc">A sub-menu allowing you to apply different pre-installed color themes or open the advanced Theme Editor (<strong>Edit...</strong>) to heavily customize the syntax highlighting and UI colors.</span></li>
+    </ul>
+
+    <h3 id="run-menu">Run Menu</h3>
+    <p><em>Note: Execution features (including code execution and Python helper queries like type, help, dir, and print) are exclusively supported for Python documents. They are automatically disabled and inactive when editing non-Python files (e.g. JSON, HTML, YAML, CSS).</em></p>
+    <ul>
+        <li><strong>Clear output before execution</strong><span class="shortcut">CTRL + ALT + C</span>
+            <span class="desc">When enabled, the application automatically clears the console output panel every time you run a script, keeping the output focused exclusively on the latest execution results.</span></li>
+        <li><strong>Clear output</strong><span class="shortcut">CTRL + SHIFT + C</span>
+            <span class="desc">Manually clears all text currently displayed in the output console panel.</span></li>
+        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>
+            <span class="desc">Wraps the word under the cursor with the Python <code>dir()</code> function and executes it. This prints all valid attributes and methods of the selected object in the output console.</span></li>
+        <li><strong>help()</strong><span class="shortcut">ALT + H</span>
+            <span class="desc">Wraps the word under the cursor with the Python <code>help()</code> function and executes it, displaying Python's built-in documentation for that specific object or function.</span></li>
+        <li><strong>print()</strong><span class="shortcut">ALT + E</span>
+            <span class="desc">Wraps the word under the cursor in a <code>print()</code> statement, making it easy to quickly output a variable's value during debugging.</span></li>
+        <li><strong>type()</strong><span class="shortcut">ALT + T</span>
+            <span class="desc">Wraps the word under the cursor in a Python <code>type()</code> function and executes it to reveal the object's class or data type in the output.</span></li>
+        <li><strong>Echo executed command</strong>
+            <span class="desc">If enabled, prints the exact code snippet being executed into the output console before displaying its result, which is extremely helpful for providing context to output logs.</span></li>
+        <li><strong>Execute all</strong><span class="shortcut">ALT + RETURN</span>
+            <span class="desc">Runs the entire script present in the current active tab from top to bottom.</span></li>
+        <li><strong>Execute line</strong><span class="shortcut">CTRL + SHIFT + RETURN</span>
+            <span class="desc">Runs only the specific single line of code where the text cursor is currently positioned.</span></li>
+        <li><strong>Execute selected</strong><span class="shortcut">CTRL + RETURN</span>
+            <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
+    </ul>
+
+    <h3 id="view-menu">View Menu</h3>
     <ul>
         <li><strong>Code Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
             <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
@@ -215,56 +265,7 @@
             <span class="desc">Resets the editor font size to the theme's default size.</span></li>
     </ul>
 
-    <h3>Run Menu</h3>
-    <p><em>Note: Execution features (including code execution and Python helper queries like type, help, dir, and print) are exclusively supported for Python documents. They are automatically disabled and inactive when editing non-Python files (e.g. JSON, HTML, YAML, CSS).</em></p>
-    <ul>
-        <li><strong>Clear output before execution</strong><span class="shortcut">CTRL + ALT + C</span>
-            <span class="desc">When enabled, the application automatically clears the console output panel every time you run a script, keeping the output focused exclusively on the latest execution results.</span></li>
-        <li><strong>Clear output</strong><span class="shortcut">CTRL + SHIFT + C</span>
-            <span class="desc">Manually clears all text currently displayed in the output console panel.</span></li>
-        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>
-            <span class="desc">Wraps the word under the cursor with the Python <code>dir()</code> function and executes it. This prints all valid attributes and methods of the selected object in the output console.</span></li>
-        <li><strong>help()</strong><span class="shortcut">ALT + H</span>
-            <span class="desc">Wraps the word under the cursor with the Python <code>help()</code> function and executes it, displaying Python's built-in documentation for that specific object or function.</span></li>
-        <li><strong>print()</strong><span class="shortcut">ALT + E</span>
-            <span class="desc">Wraps the word under the cursor in a <code>print()</code> statement, making it easy to quickly output a variable's value during debugging.</span></li>
-        <li><strong>type()</strong><span class="shortcut">ALT + T</span>
-            <span class="desc">Wraps the word under the cursor in a Python <code>type()</code> function and executes it to reveal the object's class or data type in the output.</span></li>
-        <li><strong>Echo executed command</strong>
-            <span class="desc">If enabled, prints the exact code snippet being executed into the output console before displaying its result, which is extremely helpful for providing context to output logs.</span></li>
-        <li><strong>Execute all</strong><span class="shortcut">ALT + RETURN</span>
-            <span class="desc">Runs the entire script present in the current active tab from top to bottom.</span></li>
-        <li><strong>Execute line</strong><span class="shortcut">CTRL + SHIFT + RETURN</span>
-            <span class="desc">Runs only the specific single line of code where the text cursor is currently positioned.</span></li>
-        <li><strong>Execute selected</strong><span class="shortcut">CTRL + RETURN</span>
-            <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
-    </ul>
-
-    <h3>Options Menu</h3>
-    <ul>
-        <li><strong>Always on top</strong>
-            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
-        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
-            <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
-        <li><strong>Fuzzy autocomplete</strong>
-            <span class="desc">Enables a more flexible, fuzzy-matching algorithm for autocompletion, allowing you to find suggestions even if you skip characters or make minor typos.</span></li>
-        <li><strong>Show docstrings</strong>
-            <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
-        <li><strong>Syntax check</strong>
-            <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
-        <li><strong>Auto-close delimiters</strong>
-            <span class="desc">Toggles automatic closing of brackets, braces, parentheses, and quotes as you type in the editor.</span></li>
-        <li><strong>Quick tab switching</strong>
-            <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
-        <li><strong>Choose font...</strong>
-            <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor globally.</span></li>
-        <li><strong>Open settings folder</strong>
-            <span class="desc">Opens your operating system's file explorer directly to the directory where Multi Script Editor stores its configuration files, custom themes, user preferences, and session data.</span></li>
-        <li><strong>Theme</strong>
-            <span class="desc">A sub-menu allowing you to apply different pre-installed color themes or open the advanced Theme Editor (<strong>Edit...</strong>) to heavily customize the syntax highlighting and UI colors.</span></li>
-    </ul>
-
-    <h3>Help Menu</h3>
+    <h3 id="help-menu">Help Menu</h3>
     <ul>
         <li><strong>Quick help</strong><span class="shortcut">F1</span>
             <span class="desc">Shows a quick reference guide overlay detailing the most common features and available host-specific environment variables.</span></li>
@@ -290,8 +291,22 @@
             <span class="desc">Opens this documentation file (<code>mse.html</code>) within your browser.</span></li>
         <li><strong>Help</strong>
             <span class="desc">Shows general application help and tips.</span></li>
+        <li><strong>Support</strong>
+            <span class="desc">Opens a web page where you can support the development of the application.</span></li>
         <li><strong>About</strong>
             <span class="desc">Displays the application version, author credits, and license information.</span></li>
+    </ul>
+
+    <h3>Tab Interactions & Context Menu</h3>
+    <ul>
+        <li><strong>Middle-click</strong>
+            <span class="desc">Closes the tab directly under the mouse cursor.</span></li>
+        <li><strong>Duplicate Tab</strong>
+            <span class="desc">Creates a copy of the current tab with the same text.</span></li>
+        <li><strong>Double-click / Rename Tab</strong><span class="shortcut">ALT + R</span>
+            <span class="desc">Triggers an inline text editor directly on the tab label to rename it. Press Enter to confirm or Escape to cancel. Tab labels now display the full file name.</span></li>
+        <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
+            <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
     </ul>
 
     <hr>
