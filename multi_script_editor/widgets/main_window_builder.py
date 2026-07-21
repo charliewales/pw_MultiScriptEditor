@@ -584,6 +584,7 @@ class ScriptEditorUIBuilder:
             editor.unfold_act: "Unfold the current code block",
             editor.saveAs_act: "Save the current script as a new file",
             editor.toggleMenus_act: "Toggle the main menu bar visibility",
+            editor.showStatusTips_act: "Toggle visibility of status bar tips",
             editor.toggleEditorToolbar_act: "Toggle visibility of the editor toolbar",
             editor.fold_act: "Fold the current code block",
             editor.addCursorBelow_act: "Add a cursor below the current line",
