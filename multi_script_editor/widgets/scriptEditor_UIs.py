@@ -384,8 +384,8 @@ class Ui_scriptEditor(object):
         self.view_menu.addAction(self.reset_zoom_act)
 
         self.run_menu.addSeparator()
-        self.run_menu.addAction(self.clear_exec_act)
         self.run_menu.addAction(self.clearHistory_act)
+        self.run_menu.addAction(self.clear_exec_act)
         self.run_menu.addSeparator()
         self.run_menu.addAction(self.dir_act)
         self.run_menu.addAction(self.help_act)
