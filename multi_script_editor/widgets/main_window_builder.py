@@ -446,7 +446,7 @@ class ScriptEditorUIBuilder:
         editor.menubar.insertMenu(editor.view_menu.menuAction(), editor.snippets_menu)
 
         # Snippets actions shortcuts
-        editor.manageSnippet_act = QAction("Insert/save snippet", editor)
+        editor.manageSnippet_act = QAction("Insert/run/save snippet", editor)
         editor.manageSnippet_act.setShortcut('Alt+S')
         editor.manageSnippet_act.setShortcutContext(Qt.WindowShortcut)
         editor.manageSnippet_act.triggered.connect(editor.handleSnippetShortcut)
