@@ -126,7 +126,7 @@ def contextMenu(parent):
 
 class nukeContextMenu(QMenu):
     def __init__(self, parent):
-        super(nukeContextMenu, self).__init__('Nuke')
+        super(nukeContextMenu, self).__init__('Nuke', parent)
         self.par = parent
         self.setTearOffEnabled(1)
         self.setWindowTitle('MSE %s Nuke' % self.par.ver)
