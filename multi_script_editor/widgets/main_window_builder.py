@@ -13,9 +13,6 @@ class ScriptEditorUIBuilder:
         editor.execLine_act.setIcon(QIcon(icons['line']))
         editor.execSel_act.setIcon(QIcon(icons['sel']))
         editor.clearHistory_act.setIcon(QIcon(icons['clear']))
-        editor.toolBar.setIconSize(QSize(32, 32))
-        editor.menubar.setNativeMenuBar(False)
-        editor.menubar.setStyleSheet("QMenu {icon-size: 20px;}")
 
         # connects
         editor.load_act.triggered.connect(editor.loadScript)

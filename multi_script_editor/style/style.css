@@ -187,11 +187,7 @@ QMenu
     color: rgb[tab_selected_text];
     border: 1px solid rgb[border];
     background-color: rgb[window];
-}
-
-QMenu::item
-{
-    padding: 2px 20px 2px 20px;
+    icon-size: 24px;
 }
 
 QMenu::item:selected
