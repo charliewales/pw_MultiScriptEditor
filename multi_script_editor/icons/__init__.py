@@ -76,4 +76,6 @@ icons = dict(
     save_output_to_tab=os.path.join(root, "save_output_to_tab.png"),
     menu=os.path.join(root, "menu.png"),
     show_autocomplete=os.path.join(root, "show_autocomplete.png"),
+    saved_snippet=os.path.join(root, "saved_snippet.png"),
+    saved_session=os.path.join(root, "saved_session.png"),
 )

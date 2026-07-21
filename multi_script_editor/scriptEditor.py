@@ -2045,7 +2045,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             restore_backup_act.setEnabled(False)
         self.sessions_menu.addAction(restore_backup_act)
 
-        self.delete_session_menu = QMenu("Delete session", self)
+        self.delete_session_menu = QMenu("Delete session", self.sessions_menu)
+        self.delete_session_menu.setFont(self.sessions_menu.font())
+        self.delete_session_menu.setStyleSheet(self.sessions_menu.styleSheet())
         self.delete_session_menu.setIcon(QIcon(icons["clear"]))
         self.delete_session_menu.menuAction().setStatusTip("Delete a saved session")
         self.sessions_menu.addMenu(self.delete_session_menu)
@@ -2057,19 +2059,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for name in names:
                 act = QAction(name, self)
                 act.setStatusTip(f"Load session: {name}")
+                act.setIcon(QIcon(icons['saved_session']))
                 act.triggered.connect(lambda checked=False, n=name: self.loadNamedSession(n))
                 self.sessions_menu.addAction(act)
 
                 del_act = QAction(name, self)
                 del_act.setStatusTip(f"Delete session: {name}")
+                del_act.setIcon(QIcon(icons['saved_session']))
                 del_act.triggered.connect(lambda checked=False, n=name: self.deleteNamedSession(n))
                 self.delete_session_menu.addAction(del_act)
         else:
             no_sessions_act = QAction("No saved sessions", self)
+            no_sessions_act.setIcon(QIcon(icons['saved_session']))
             no_sessions_act.setEnabled(False)
             self.sessions_menu.addAction(no_sessions_act)
 
             no_del_act = QAction("No saved sessions", self)
+            no_del_act.setIcon(QIcon(icons['saved_session']))
             no_del_act.setEnabled(False)
             self.delete_session_menu.addAction(no_del_act)
 
@@ -2229,7 +2235,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         import_act.triggered.connect(self.importSnippets)
         self.snippets_menu.addAction(import_act)
 
-        self.delete_snippet_menu = QMenu("Delete snippet", self)
+        self.delete_snippet_menu = QMenu("Delete snippet", self.snippets_menu)
+        self.delete_snippet_menu.setFont(self.snippets_menu.font())
+        self.delete_snippet_menu.setStyleSheet(self.snippets_menu.styleSheet())
         self.delete_snippet_menu.setIcon(QIcon(icons["clear"]))
         self.delete_snippet_menu.menuAction().setStatusTip("Delete a saved snippet")
         self.snippets_menu.addMenu(self.delete_snippet_menu)
@@ -2252,25 +2260,30 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
                 act = QAction(name, self)
                 act.setStatusTip(f"Insert snippet: {name}")
+                act.setIcon(QIcon(icons['saved_snippet']))
                 act.triggered.connect(lambda checked=False, n=name: self._insert_snippet_text(snippets[n]))
                 self.snippets_menu.addAction(act)
 
                 if name not in defaults:
                     del_act = QAction(name, self)
                     del_act.setStatusTip(f"Delete snippet: {name}")
+                    del_act.setIcon(QIcon(icons['saved_snippet']))
                     del_act.triggered.connect(lambda checked=False, n=name: self.deleteSnippet(n))
                     self.delete_snippet_menu.addAction(del_act)
 
             if not has_user_snippets:
                 no_del_act = QAction("No saved snippets", self)
+                no_del_act.setIcon(QIcon(icons['saved_snippet']))
                 no_del_act.setEnabled(False)
                 self.delete_snippet_menu.addAction(no_del_act)
         else:
             no_snippets_act = QAction("No saved snippets", self)
+            no_snippets_act.setIcon(QIcon(icons['saved_snippet']))
             no_snippets_act.setEnabled(False)
             self.snippets_menu.addAction(no_snippets_act)
 
             no_del_act = QAction("No saved snippets", self)
+            no_del_act.setIcon(QIcon(icons['saved_snippet']))
             no_del_act.setEnabled(False)
             self.delete_snippet_menu.addAction(no_del_act)
 
