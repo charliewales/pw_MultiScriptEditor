@@ -1554,6 +1554,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             quick_tab_switching = data.get('quick_tab_switching', True)
             self.quickTabSwitching_act.setChecked(quick_tab_switching)
 
+            show_status_tips = data.get('show_status_tips', True)
+            self.showStatusTips_act.setChecked(show_status_tips)
+            self.toggleStatusTips(show_status_tips)
+
             auto_close_delimiters = data.get('auto_close_delimiters', True)
             self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
@@ -1613,6 +1617,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         prefer_single_quotes = self.preferSingleQuotes_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
         quick_tab_switching = self.quickTabSwitching_act.isChecked()
+        show_status_tips = self.showStatusTips_act.isChecked()
         auto_close_delimiters = self.autoCloseDelimiters_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
@@ -1667,6 +1672,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             prefer_single_quotes=prefer_single_quotes,
             output_bottom=output_bottom,
             quick_tab_switching=quick_tab_switching,
+            show_status_tips=show_status_tips,
             auto_close_delimiters=auto_close_delimiters,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
@@ -1896,6 +1902,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not state:
             self.tab._ctrl_pressed = False
             self.tab.show_tab_numbers(False)
+
+    def toggleStatusTips(self, state=None):
+        state = self.showStatusTips_act.isChecked()
+        self._show_status_tips = state
+        self._current_settings['show_status_tips'] = state
+        self.saveSettings()
+        if not state:
+            self.statusBar().clearMessage()
 
     def toggleAutoCloseDelimiters(self, state=None):
         state = self.autoCloseDelimiters_act.isChecked()
@@ -2397,6 +2411,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 else:
                     self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
                 self.fillSnippetsMenu()
+
+    def event(self, e):
+        from vendor.Qt.QtCore import QEvent
+        if e.type() == QEvent.StatusTip:
+            if not getattr(self, '_show_status_tips', True):
+                return True
+        return super(scriptEditorClass, self).event(e)
 
 try:
     from PySide2.QtCore import QTextCodec

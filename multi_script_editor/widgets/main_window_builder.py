@@ -404,6 +404,10 @@ class ScriptEditorUIBuilder:
         # Quick Tab Switching toggle setup
         editor.quickTabSwitching_act.triggered.connect(editor.toggleQuickTabSwitching)
 
+        # Show Status Tips setup
+        editor.showStatusTips_act.setChecked(True)
+        editor.showStatusTips_act.triggered.connect(editor.toggleStatusTips)
+
         editor.outline_timer = QTimer(editor)
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
