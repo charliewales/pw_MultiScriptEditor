@@ -34,6 +34,7 @@ class ScriptEditorUIBuilder:
         editor.exit_act.triggered.connect(editor.close)
         editor.tabToSpaces_act.triggered.connect(editor.tabsToSpaces)
         editor.showAutocomplete_act.triggered.connect(editor.show_autocompletion)
+        editor.showAutocomplete_act.setIcon(QIcon(icons['show_autocomplete']))
         editor.trimWhitespace_act.triggered.connect(editor.trimTrailingWhitespace)
         editor.trimWhitespace_act.setIcon(QIcon(icons['trim_whitespace']))
         editor.quit_act.triggered.connect(editor.close)
@@ -651,9 +652,22 @@ class ScriptEditorUIBuilder:
             tb.addAction(editor.comment_cat)
             tb.addAction(editor.add_quotes_act)
             tb.addAction(editor.f_string_act)
+            tb.addSeparator()
+
+            tb.addAction(editor.deleteLine_act)
+            tb.addAction(editor.duplicateLine_act)
+            tb.addAction(editor.moveLineUp_act)
+            tb.addAction(editor.moveLineDown_act)
+
+            tb.addSeparator()
+
             tb.addAction(editor.addCursorsToLineEnds_act)
             tb.addAction(editor.addCursorAbove_act)
             tb.addAction(editor.addCursorBelow_act)
+
+            tb.addSeparator()
+
+            tb.addAction(editor.showAutocomplete_act)
 
             tb.addSeparator()
 
