@@ -441,10 +441,8 @@ class ScriptEditorUIBuilder:
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
-        editor.snippets_menu.setIcon(QIcon(icons['snippets']))
         editor.snippets_menu.menuAction().setStatusTip("Manage code snippets")
-        editor.file_menu.insertMenu(editor.closeAllTabs_act, editor.snippets_menu)
-        editor.file_menu.insertSeparator(editor.closeAllTabs_act)
+        editor.menubar.insertMenu(editor.view_menu.menuAction(), editor.snippets_menu)
 
         # Snippets actions shortcuts
         editor.manageSnippet_act = QAction("Insert/save snippet", editor)
