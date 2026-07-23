@@ -364,6 +364,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             font = QFont()
 
+        if font.family():
+            self.setFont(font)
+
         if hasattr(self, 'preview_tab_widget'):
             self.preview_tab_widget._tab_text_size = colors.get('tab_text_size')
             self.preview_tab_widget.apply_tab_style(colors)
