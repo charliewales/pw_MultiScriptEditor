@@ -57,8 +57,6 @@ class ScriptEditorUIBuilder:
         editor.settingsFile_act.triggered.connect(editor.openSettingsFile)
         editor.settingsFile_act.setIcon(QIcon(icons['settings']))
 
-        editor.theme_menu.setIcon(QIcon(icons['theme']))
-
         editor.donate_act.triggered.connect(lambda: editor.openLink('donate'))
         editor.openManual_act.triggered.connect(lambda: editor.openLink('manual'))
         editor.openManual_act.setIcon(QIcon(icons['github']))
