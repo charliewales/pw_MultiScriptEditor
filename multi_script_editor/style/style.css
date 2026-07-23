@@ -500,6 +500,20 @@ QTabBar::tab:selected {
     border-bottom-color: rgb[tab_selected_background];
 }
 
+QTabBar QLineEdit, QLineEdit#tabRenameEdit {
+    border-top-left-radius: [tab_radius];
+    border-top-right-radius: [tab_radius];
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    background-color: rgb[tab_selected_background];
+    color: rgb[tab_selected_text];
+    border: 1px solid rgb[tab_selected_border];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
 QTabBar::close-button {
     image: url("../icons/close_tab_grey.png");
     subcontrol-position: right center;

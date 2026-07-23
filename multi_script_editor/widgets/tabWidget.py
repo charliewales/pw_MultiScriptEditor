@@ -1,6 +1,6 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF, QTimer
 from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
 from widgets.pythonSyntax.design import defaultColors
 import re
@@ -88,17 +88,21 @@ class tabWidgetClass(QTabWidget):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
 
         self.currentChanged.connect(self.onTabChanged)
-        self.tabBarDoubleClicked.connect(self.renameTab)
+        self.tabBarDoubleClicked.connect(self.on_tab_bar_double_clicked)
         QApplication.instance().installEventFilter(self)
+
+    def on_tab_bar_double_clicked(self, index):
+        if QApplication.mouseButtons() & Qt.LeftButton:
+            self.renameTab(index)
 
     def eventFilter(self, obj, event):
         if obj == getattr(self, '_rename_edit', None) and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
-            self._rename_edit = None
-            obj.hide()
-            obj.deleteLater()
+            self.finishRename(commit=False)
             return True
 
-        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease) and event.button() == Qt.MiddleButton:
+        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
+            if getattr(self, '_rename_edit', None):
+                return True
             # Check if click is on the tab bar or one of its children
             p = obj
             is_tabbar_click = False
@@ -112,7 +116,7 @@ class tabWidgetClass(QTabWidget):
                     pos = self.tabBar().mapFrom(obj, event.pos())
                     index = self.tabBar().tabAt(pos)
                     if index >= 0:
-                        self.closeTab(index)
+                        QTimer.singleShot(0, lambda i=index: self.closeTab(i))
                 return True
 
         quick_tab_switching = True
@@ -323,6 +327,8 @@ class tabWidgetClass(QTabWidget):
         return bool(self.getCurrentText(i).strip())
 
     def closeTab(self, i):
+        if getattr(self, '_rename_edit', None):
+            self.finishRename(commit=False)
         removed = False
         widget_to_remove = self.widget(i)
         if self.tabNeedsSaving(i):
@@ -399,36 +405,52 @@ class tabWidgetClass(QTabWidget):
         self.addNewTab(new_name, text)
         self.setCurrentIndex(self.count() - 1)
 
+    def finishRename(self, commit=True):
+        edit = getattr(self, '_rename_edit', None)
+        if not edit:
+            return
+        self._rename_edit = None
+        try:
+            edit.editingFinished.disconnect()
+        except Exception:
+            pass
+        if commit:
+            widget = getattr(edit, '_widget_to_rename', None)
+            if widget:
+                new_text = edit.text()
+                idx = self.indexOf(widget)
+                if new_text and idx >= 0:
+                    self.setTabText(idx, new_text)
+        edit.hide()
+        edit.deleteLater()
+
     def renameTab(self, index=None):
         if index is None or isinstance(index, bool):
             index = self.currentIndex()
         if index < 0:
             return
 
+        if getattr(self, '_rename_edit', None):
+            self.finishRename(commit=True)
+
+        widget_to_rename = self.widget(index)
         rect = self.tabBar().tabRect(index)
-        
-        self._rename_edit = QLineEdit(self.tabBar())
-        self._rename_edit.setFont(self.tabBar().font())
-        self._rename_edit.setText(self.tabText(index))
-        self._rename_edit.selectAll()
-        
+
+        edit = QLineEdit(self.tabBar())
+        edit.setObjectName('tabRenameEdit')
+        edit._widget_to_rename = widget_to_rename
+        self._rename_edit = edit
+        edit.setFont(self.tabBar().font())
+        edit.setText(self.tabText(index))
+        edit.selectAll()
+
         # Adjust geometry slightly to fit nicely within the tab
-        self._rename_edit.setGeometry(rect.adjusted(2, 2, -2, -2))
-        self._rename_edit.installEventFilter(self)
-        
-        def commit_rename():
-            if not getattr(self, '_rename_edit', None):
-                return
-            new_text = self._rename_edit.text()
-            if new_text:
-                self.setTabText(index, new_text)
-            self._rename_edit.hide()
-            self._rename_edit.deleteLater()
-            self._rename_edit = None
-            
-        self._rename_edit.editingFinished.connect(commit_rename)
-        self._rename_edit.show()
-        self._rename_edit.setFocus()
+        edit.setGeometry(rect.adjusted(3, 1, -1, -1))
+        edit.installEventFilter(self)
+
+        edit.editingFinished.connect(lambda: self.finishRename(commit=True))
+        edit.show()
+        edit.setFocus()
 
     def currentTabName(self):
         index = self.currentIndex()
@@ -554,10 +576,12 @@ class tabWidgetClass(QTabWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:
+            if getattr(self, '_rename_edit', None):
+                return
             pos = self.tabBar().mapFrom(self, event.pos())
             index = self.tabBar().tabAt(pos)
             if index >= 0:
-                self.closeTab(index)
+                QTimer.singleShot(0, lambda i=index: self.closeTab(i))
         else:
             super(tabWidgetClass, self).mousePressEvent(event)
 
