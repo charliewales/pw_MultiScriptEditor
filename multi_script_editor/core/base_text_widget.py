@@ -114,6 +114,27 @@ class BaseTextWidgetMixin:
             menu.setFont(main_win.menubar.font())
             menu.setStyleSheet(main_win.menubar.styleSheet())
 
+        # Selection to tab action
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
+            sel_to_tab_action = QAction('Selection to tab', self)
+            
+            def create_selection_tab():
+                import datetime
+                time_str = datetime.datetime.now().strftime("%H:%M:%S")
+                tab_name = f"selection {time_str}"
+                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
+                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
+            
+            sel_to_tab_action.triggered.connect(create_selection_tab)
+            if menu.actions():
+                first_action = menu.actions()[0]
+                menu.insertAction(first_action, sel_to_tab_action)
+                menu.insertSeparator(first_action)
+            else:
+                menu.addAction(sel_to_tab_action)
+
         # Check if we are editing an HTML file to add "Open in browser"
         file_path = None
         curr = self
