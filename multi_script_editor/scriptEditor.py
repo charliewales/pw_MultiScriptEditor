@@ -2083,6 +2083,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         name, ok = QInputDialog.getText(self, "Save Named Session", "Enter session name:")
         if ok and name.strip():
             name = name.strip()
+            existing_sessions = self._presenter.get_named_sessions()
+            if name in existing_sessions:
+                res = self.show_question_msg(
+                    "Overwrite Session",
+                    "A session with the name '{0}' already exists. Do you want to overwrite it?".format(name),
+                    QMessageBox.Yes | QMessageBox.No
+                )
+                if res != QMessageBox.Yes:
+                    return
+
             tabs = self._get_tabs_data(save_full_text=True)
             self._presenter.save_named_session(name, tabs)
             self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
