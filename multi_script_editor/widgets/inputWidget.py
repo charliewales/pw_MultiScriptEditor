@@ -728,6 +728,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg_box.setDefaultButton(QMessageBox.No)
         msg_box.setFont(self.font())
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
 
         reply = msg_box.exec_()
         if reply != QMessageBox.Yes:

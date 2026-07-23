@@ -63,8 +63,14 @@ class SnippetWidget(SearchPopupWidget):
                     msg_box.setDefaultButton(QMessageBox.No)
                     if hasattr(self.parent(), 'theme_font'):
                         msg_box.setFont(self.parent().theme_font)
+                        msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                        for btn in msg_box.buttons():
+                            btn.setFont(self.parent().theme_font)
                     elif self._font:
                         msg_box.setFont(self._font)
+                        msg_box.setStyleSheet(f"* {{ font-family: '{self._font.family()}'; }}")
+                        for btn in msg_box.buttons():
+                            btn.setFont(self._font)
                     reply = msg_box.exec_()
                     if reply == QMessageBox.No:
                         return

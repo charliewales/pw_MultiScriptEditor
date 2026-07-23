@@ -723,6 +723,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if hasattr(self, 'theme_font'):
             msg_box.setFont(self.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.theme_font)
 
         if hasattr(msg_box, "exec"):
             return msg_box.exec()
@@ -2080,7 +2083,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.delete_session_menu.addAction(no_del_act)
 
     def saveNamedSession(self):
-        name, ok = QInputDialog.getText(self, "Save Named Session", "Enter session name:")
+        dlg = QInputDialog(self)
+        dlg.setWindowTitle("Save Named Session")
+        dlg.setLabelText("Enter session name:")
+        if hasattr(self, 'theme_font'):
+            dlg.setFont(self.theme_font)
+            dlg.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+        ok = dlg.exec_() == QInputDialog.Accepted
+        name = dlg.textValue()
         if ok and name.strip():
             name = name.strip()
             existing_sessions = self._presenter.get_named_sessions()
@@ -2197,11 +2207,29 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     data = json.load(stream)
                 imported_snippets = data.get("snippets", {})
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not read the file:\n{e}")
+                msg_box = QMessageBox(self)
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Error")
+                msg_box.setText(f"Could not read the file:\n{e}")
+                if hasattr(self, 'theme_font'):
+                    msg_box.setFont(self.theme_font)
+                    msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+                    for btn in msg_box.buttons():
+                        btn.setFont(self.theme_font)
+                msg_box.exec_()
                 return
 
         if not imported_snippets:
-            QMessageBox.information(self, "Import Snippets", "No snippets found in the selected file.")
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Information)
+            msg_box.setWindowTitle("Import Snippets")
+            msg_box.setText("No snippets found in the selected file.")
+            if hasattr(self, 'theme_font'):
+                msg_box.setFont(self.theme_font)
+                msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+                for btn in msg_box.buttons():
+                    btn.setFont(self.theme_font)
+            msg_box.exec_()
             return
 
         current_snippets = self._get_snippets()

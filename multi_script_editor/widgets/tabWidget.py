@@ -818,9 +818,15 @@ class tabWidgetClass(QTabWidget):
         msg_box.setText(question)
         if hasattr(self.p, 'theme_font'):
             msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()
+        if hasattr(self.p, 'theme_font'):
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 
