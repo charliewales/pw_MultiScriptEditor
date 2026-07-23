@@ -42,20 +42,23 @@
     <h2>Options by Menu</h2>
     <p>Below is a detailed breakdown of the different actions and tools grouped by the menu where they are located within the application, utilizing sentence case for ease of use:</p>
 
-        <div class="nav-menu" style="margin-bottom: 20px; padding: 15px; background: #2a2a2a; border-radius: 5px;">
+    <div class="nav-menu" style="margin-bottom: 20px; padding: 15px; background: #2a2a2a; border-radius: 5px;">
         <h3>Navigation</h3>
         <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 15px;">
             <li><a href="#file-menu" style="color: #4da6ff; text-decoration: none;">File Menu</a></li>
-            <li><a href="#edit-menu" style="color: #4da6ff; text-decoration: none;">Edit Menu</a></li>
             <li><a href="#bookmarks-menu" style="color: #4da6ff; text-decoration: none;">Bookmarks Menu</a></li>
+            <li><a href="#edit-menu" style="color: #4da6ff; text-decoration: none;">Edit Menu</a></li>
             <li><a href="#options-menu" style="color: #4da6ff; text-decoration: none;">Options Menu</a></li>
             <li><a href="#run-menu" style="color: #4da6ff; text-decoration: none;">Run Menu</a></li>
+            <li><a href="#sessions-menu" style="color: #4da6ff; text-decoration: none;">Sessions Menu</a></li>
+            <li><a href="#snippets-menu" style="color: #4da6ff; text-decoration: none;">Snippets Menu</a></li>
+            <li><a href="#theme-menu" style="color: #4da6ff; text-decoration: none;">Theme Menu</a></li>
             <li><a href="#view-menu" style="color: #4da6ff; text-decoration: none;">View Menu</a></li>
             <li><a href="#help-menu" style="color: #4da6ff; text-decoration: none;">Help Menu</a></li>
         </ul>
     </div>
 
-<h3 id="file-menu">File Menu</h3>
+    <h3 id="file-menu">File Menu</h3>
     <ul>
         <li><strong>Open script</strong><span class="shortcut">CTRL + O</span>
             <span class="desc">Opens an existing Python script file from your local filesystem, loading its contents into a new tab in the editor for editing and execution.</span></li>
@@ -75,29 +78,24 @@
                 </ul>
             </span>
         </li>
-        <li><strong>Sessions</strong>
-            <span class="desc">A sub-menu to manage and restore your editor workspaces:
-                <ul class="feature-list">
-                    <li><strong>Save session...</strong>: Saves the current active tabs and their arrangement as a named session.</li>
-                    <li><strong>Restore backup...</strong>: Restores a session backup file.</li>
-                    <li><strong>Delete session</strong>: A sub-menu to permanently delete a saved session.</li>
-                    <li><strong>List of saved sessions</strong>: Lists your saved sessions; clicking one restores all its tabs.</li>
-                </ul>
-            </span>
-        </li>
-        <li><strong>Snippets</strong>
-            <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion:
-                <ul class="feature-list">
-                    <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet. Pressing Numpad Enter on a highlighted snippet in the insertion list executes it directly in the console.</li>
-                    <li><strong>Import / Export</strong>: Import snippet collections from JSON files or export them for backup.</li>
-                    <li><strong>Delete snippet</strong>: Allows removing custom snippets.</li>
-                </ul>
-            </span>
-        </li>
-        <li><strong>Close all tabs</strong>
-            <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
+        <li><strong>Close all tabs</strong><span class="shortcut">CTRL + SHIFT + ALT + W</span>
+            <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved code.</span></li>
         <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
             <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
+    </ul>
+
+    <h3 id="bookmarks-menu">Bookmarks Menu</h3>
+    <ul>
+        <li><strong>Toggle Bookmark</strong><span class="shortcut">CTRL + F2</span>
+            <span class="desc">Toggles a bookmark on the current cursor line. A colored ribbon tag is displayed in the gutter. A semi-transparent hover preview is also shown when hovering over the gutter.</span></li>
+        <li><strong>Next Bookmark</strong><span class="shortcut">F2</span>
+            <span class="desc">Navigates the cursor to the next bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
+            <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
+        <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
+            <span class="desc">Removes all bookmarks from the current active document. A confirmation dialog is displayed first to prevent accidental clearing.</span></li>
+        <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
+            <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
     </ul>
 
     <h3 id="edit-menu">Edit Menu</h3>
@@ -128,11 +126,11 @@
             <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position upwards in the document.</span></li>
         <li><strong>Move line(s) down</strong><span class="shortcut">ALT + DOWN</span>
             <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
-        <li><strong>Add Cursors to line ends</strong><span class="shortcut">ALT + SHIFT + I</span>
+        <li><strong>Add cursors to line ends</strong><span class="shortcut">CTRL + SHIFT + I</span>
             <span class="desc">Adds a cursor at the end of each selected line, allowing you to edit the ends of multiple lines simultaneously.</span></li>
-        <li><strong>Add cursor above</strong><span class="shortcut">CTRL + ALT + UP</span>
+        <li><strong>Add cursor above</strong><span class="shortcut">CTRL + SHIFT + UP</span>
             <span class="desc">Adds a cursor on the line immediately above the current selection or topmost cursor, facilitating multi-cursor editing.</span></li>
-        <li><strong>Add cursor below</strong><span class="shortcut">CTRL + ALT + DOWN</span>
+        <li><strong>Add cursor below</strong><span class="shortcut">CTRL + SHIFT + DOWN</span>
             <span class="desc">Adds a cursor on the line immediately below the current selection or bottommost cursor, facilitating multi-cursor editing.</span></li>
         <li><strong>Next highlight/selection</strong><span class="shortcut">CTRL + J</span>
             <span class="desc">Moves the focus to the next highlighted occurrence or selection.</span></li>
@@ -156,40 +154,10 @@
             <span class="desc">Trims trailing spaces and tab characters from the ends of all lines in the active document immediately.</span></li>
         <li><strong>Show autocompletion</strong><span class="shortcut">CTRL + SPACE</span>
             <span class="desc">Manually triggers the autocomplete suggestions popup list at the current cursor position.</span></li>
-        <li><strong>Highlight all occurrences</strong>
-            <span class="desc">Toggles automatic visual highlighting of all matching occurrences of the selected word throughout the active document.</span></li>
-        <li><strong>Occurrences are case sensitive</strong>
-            <span class="desc">Toggles case sensitivity for matching word occurrences highlighted in the document.</span></li>
-        <li><strong>Prefer single quotes</strong>
-            <span class="desc">Toggles quote preference to single quotes instead of double quotes when using 'Add quotes' and f-string utilities.</span></li>
-        <li><strong>Trim auto whitespace</strong>
-            <span class="desc">Toggles automatic trimming of trailing whitespace whenever you save a script.</span></li>
-        <li><strong>Render whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
-            <span class="desc">Toggles the visibility of whitespace characters (spaces as dots, tabs as arrows) in the editor to aid in formatting and detecting trailing spaces.</span></li>
-        <li><strong>Word wrap</strong><span class="shortcut">ALT + W</span>
-            <span class="desc">Toggles automatic wrapping of long lines of code so they visually fit within the editor's width without requiring horizontal scrolling.</span></li>
-        <li><strong>Word wrap (output)</strong><span class="shortcut">CTRL + ALT + W</span>
-            <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
-    </ul>
-
-    <h3 id="bookmarks-menu">Bookmarks Menu</h3>
-    <ul>
-        <li><strong>Toggle Bookmark</strong><span class="shortcut">CTRL + F2</span>
-            <span class="desc">Toggles a bookmark on the current cursor line. A colored ribbon tag is displayed in the gutter. A semi-transparent hover preview is also shown when hovering over the gutter.</span></li>
-        <li><strong>Next Bookmark</strong><span class="shortcut">F2</span>
-            <span class="desc">Navigates the cursor to the next bookmark in the active document, centering the viewport on the line.</span></li>
-        <li><strong>Previous Bookmark</strong><span class="shortcut">SHIFT + F2</span>
-            <span class="desc">Navigates the cursor to the previous bookmark in the active document, centering the viewport on the line.</span></li>
-        <li><strong>Clear Bookmarks</strong><span class="shortcut">CTRL + SHIFT + F2</span>
-            <span class="desc">Removes all bookmarks from the current active document. A confirmation dialog is displayed first to prevent accidental clearing.</span></li>
-        <li><strong>Go to bookmark...</strong><span class="shortcut">CTRL + B</span>
-            <span class="desc">Opens a search popup palette to filter and jump to bookmarked lines in the current editor file.</span></li>
     </ul>
 
     <h3 id="options-menu">Options Menu</h3>
     <ul>
-        <li><strong>Always on top</strong>
-            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
         <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
             <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
         <li><strong>Fuzzy autocomplete</strong>
@@ -198,16 +166,30 @@
             <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
         <li><strong>Syntax check</strong>
             <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
-        <li><strong>Auto-close delimiters</strong>
+        <li><strong>Auto close delimiters</strong>
             <span class="desc">Toggles automatic closing of brackets, braces, parentheses, and quotes as you type in the editor.</span></li>
+        <li><strong>Highlight all occurrences</strong>
+            <span class="desc">Toggles automatic visual highlighting of all matching occurrences of the selected word throughout the active document. The highlighting is also synchronized dynamically to the output widget.</span></li>
+        <li><strong>Occurrences are case sensitive</strong>
+            <span class="desc">Toggles case sensitivity for matching word occurrences highlighted in the document.</span></li>
+        <li><strong>Prefer single quotes</strong>
+            <span class="desc">Toggles quote preference to single quotes instead of double quotes when using 'Add quotes' and f-string utilities.</span></li>
         <li><strong>Quick tab switching</strong>
             <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
+        <li><strong>Show status tips</strong>
+            <span class="desc">Toggles status bar tips that describe menu actions and tool buttons when hovered or highlighted.</span></li>
+        <li><strong>Render whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
+            <span class="desc">Toggles the visibility of whitespace characters (spaces as dots, tabs as arrows) in the editor to aid in formatting and detecting trailing spaces.</span></li>
+        <li><strong>Trim auto whitespace</strong>
+            <span class="desc">Toggles automatic trimming of trailing whitespace whenever you save a script.</span></li>
+        <li><strong>Word wrap</strong><span class="shortcut">ALT + W</span>
+            <span class="desc">Toggles automatic wrapping of long lines of code so they visually fit within the editor's width without requiring horizontal scrolling.</span></li>
+        <li><strong>Word wrap (output)</strong><span class="shortcut">CTRL + ALT + W</span>
+            <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
         <li><strong>Choose font...</strong>
             <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor globally.</span></li>
         <li><strong>Open settings folder</strong>
             <span class="desc">Opens your operating system's file explorer directly to the directory where Multi Script Editor stores its configuration files, custom themes, user preferences, and session data.</span></li>
-        <li><strong>Theme</strong>
-            <span class="desc">A sub-menu allowing you to apply different pre-installed color themes or open the advanced Theme Editor (<strong>Edit...</strong>) to heavily customize the syntax highlighting and UI colors.</span></li>
     </ul>
 
     <h3 id="run-menu">Run Menu</h3>
@@ -235,12 +217,51 @@
             <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
     </ul>
 
+    <h3 id="sessions-menu">Sessions Menu</h3>
+    <p><em>Top-level menu dedicated to workspace and session management.</em></p>
+    <ul>
+        <li><strong>Save session...</strong>
+            <span class="desc">Saves the current active tabs, their order, and code folding state as a custom named session. Prompts for confirmation before overwriting an existing named session.</span></li>
+        <li><strong>Restore backup...</strong>
+            <span class="desc">Restores a previously saved session backup file.</span></li>
+        <li><strong>Delete session</strong>
+            <span class="desc">A sub-menu allowing you to permanently delete any saved custom session.</span></li>
+        <li><strong>List of saved sessions</strong>
+            <span class="desc">Lists all your saved sessions. Clicking a session restores all its open tabs and layout.</span></li>
+    </ul>
+
+    <h3 id="snippets-menu">Snippets Menu</h3>
+    <p><em>Top-level menu for creating, managing, and quickly executing reusable code snippets.</em></p>
+    <ul>
+        <li><strong>Insert/run/save snippet</strong><span class="shortcut">ALT + S</span>
+            <span class="desc">Opens a dialog to search and insert a predefined snippet at the cursor, execute a snippet directly in the output console, or save the currently selected code as a new snippet. Pressing Numpad Enter on a highlighted snippet executes it directly.</span></li>
+        <li><strong>Import / Export</strong>
+            <span class="desc">Import snippet collections from JSON files or export your custom snippets for backup and sharing.</span></li>
+        <li><strong>Delete snippet</strong>
+            <span class="desc">Allows removing custom user snippets from your collection. Built-in default snippets are protected from deletion.</span></li>
+        <li><strong>Snippets List</strong>
+            <span class="desc">Lists all available snippets for quick insertion into your current editor document.</span></li>
+    </ul>
+
+    <h3 id="theme-menu">Theme Menu</h3>
+    <p><em>Top-level menu for switching color themes and opening the Theme Editor.</em></p>
+    <ul>
+        <li><strong>Edit...</strong><span class="shortcut">CTRL + SHIFT + T</span>
+            <span class="desc">Opens the advanced Code Theme Editor window to fully customize syntax highlighting colors, interface text sizes, font inheritance, and layout rounding.</span></li>
+        <li><strong>Randomize custom at startup</strong>
+            <span class="desc">When checked, automatically selects and applies a random custom theme from your saved custom themes every time the editor starts up.</span></li>
+        <li><strong>Predefined & Custom Themes List</strong>
+            <span class="desc">Lists all built-in predefined themes (e.g. Multi Script Editor, Dark, Light, Monokai) and your user-created or imported custom themes. Clicking any theme applies it globally across the editor instantly.</span></li>
+    </ul>
+
     <h3 id="view-menu">View Menu</h3>
     <ul>
-        <li><strong>Code Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
+        <li><strong>Always on top</strong>
+            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
+        <li><strong>Code outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
             <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
         <li><strong>Code outline button</strong>
-            <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
+            <span class="desc">Toggles the visibility of the outline toggle button in the status bar.</span></li>
         <li><strong>Menus</strong><span class="shortcut">CTRL + M</span>
             <span class="desc">Toggles the visibility of the main window menu bar. If the menu bar is hidden, a hamburger menu button dynamically appears in the toolbar to retain access to all menu options.</span></li>
         <li><strong>Toolbar</strong><span class="shortcut">CTRL + ALT + T</span>
@@ -304,7 +325,9 @@
         <li><strong>Duplicate Tab</strong>
             <span class="desc">Creates a copy of the current tab with the same text.</span></li>
         <li><strong>Double-click / Rename Tab</strong><span class="shortcut">ALT + R</span>
-            <span class="desc">Triggers an inline text editor directly on the tab label to rename it. Press Enter to confirm or Escape to cancel. Tab labels now display the full file name.</span></li>
+            <span class="desc">Triggers an inline text editor directly on the tab label to rename it. Press Enter to confirm or Escape to cancel. Tab labels display the file name.</span></li>
+        <li><strong>Selection to Tab</strong>
+            <span class="desc">Available via the text editor context menu. It creates a new tab using the currently highlighted selection as its initial content.</span></li>
         <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
             <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
     </ul>
@@ -312,7 +335,7 @@
     <hr>
 
     <h2>Code Theme Editor</h2>
-    <p>The Code Theme Editor is an advanced tool designed to let you customize the visual experience of Multi Script Editor. It is accessed by going to <strong>Options</strong> -> <strong>Theme</strong> -> <strong>Edit...</strong>.</p>
+    <p>The Code Theme Editor is an advanced tool designed to let you customize the visual experience of Multi Script Editor. It is accessed by going to <strong>Theme</strong> -> <strong>Edit...</strong> (or <strong>Options</strong> -> <strong>Theme</strong> -> <strong>Edit...</strong>).</p>
 
     <h3>Key Capabilities & Features:</h3>
     <ul>
@@ -320,7 +343,7 @@
             <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly. Newly added customizable colors include <code>line_num_text</code> (for the line number bar text), <code>status_bar_text</code> (for the status bar text), and <code>bookmark</code> (for the gutter bookmark ribbon/tag color).</span>
         </li>
         <li><strong>Typography & Font Customization per Theme:</strong>
-            <span class="desc">You can define a custom font specifically for your theme. Clicking <strong>Choose Font...</strong> opens a dialog to select the font family, style, weight, and size. You can reset a custom font back to the application's global default by right-clicking the button and choosing <em>"Reset to default"</em>.</span>
+            <span class="desc">You can define a custom font specifically for your theme. Clicking <strong>Choose Font...</strong> opens a dialog to select the font family, style, weight, and size. You can reset a custom font back to the application's global default by right-clicking the button and choosing <em>"Reset to default"</em>. Note that the selected theme font is uniformly applied across the entire Theme Editor UI itself (including dialogs, lists, and buttons) to ensure a consistent experience.</span>
         </li>
         <li><strong>Granular Interface Text Sizing:</strong>
             <span class="desc">Customize text sizes independently for different parts of the user interface:
