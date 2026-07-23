@@ -399,7 +399,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if main_style:
                 if font.family():
                     main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
-                self.setStyleSheet(main_style)
+                if self.styleSheet() != main_style:
+                    self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
