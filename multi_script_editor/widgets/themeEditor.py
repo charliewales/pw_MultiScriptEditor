@@ -199,7 +199,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 restore = settings.get('theme')
             if restore:
                 index = self.themeList_cbb.findText(restore)
-                self.themeList_cbb.setCurrentIndex(index)
+                if index >= 0:
+                    self.themeList_cbb.setCurrentIndex(index)
+                elif self.themeList_cbb.count():
+                    self.themeList_cbb.setCurrentIndex(0)
+            elif self.themeList_cbb.count():
+                self.themeList_cbb.setCurrentIndex(0)
         finally:
             self.themeList_cbb.blockSignals(False)
 
@@ -398,8 +403,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
                 if font.family():
-                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox, QAbstractItemView {{ font-family: '{font.family()}'; }}"
-                self.setStyleSheet(main_style)
+                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
+                if self.styleSheet() != main_style:
+                    self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
@@ -616,9 +622,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             dlg.setFont(self.parent().theme_font)
             dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
         ok = dlg.exec_() == QInputDialog.Accepted
-        name = dlg.textValue() if ok else ""
-        if name[1]:
-            name = name[0]
+        name = dlg.textValue().strip() if ok else ""
+        if name:
             if name in design.predefinedThemes:
                 name = name + ' (Custom)'
             theme_settings = self.get_theme_settings()
@@ -651,6 +656,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def deleteTheme(self):
         text = self.themeList_cbb.currentText()
         if text:
+            curr_idx = self.themeList_cbb.currentIndex()
+            prev_theme = None
+            for idx in range(curr_idx - 1, -1, -1):
+                item_text = self.themeList_cbb.itemText(idx)
+                if item_text and item_text.strip():
+                    prev_theme = item_text
+                    break
+
             if self.yes_no_question('Remove current theme?'):
                 name = self.themeList_cbb.currentText()
                 theme_settings = self.get_theme_settings()
@@ -664,8 +677,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                             del settings['colors'][name]
                             self.save_settings(settings)
 
-                        self.fillUI(False)
+                        self.fillUI(prev_theme)
                         self.updateUI()
+                        self.updateColors()
+                        if self.parent() and hasattr(self.parent(), 'applyTheme'):
+                            new_name = self.themeList_cbb.currentText()
+                            if new_name:
+                                self.parent().applyTheme(new_name)
+                        if self.parent() and hasattr(self.parent(), 'fillThemeMenu'):
+                            self.parent().fillThemeMenu()
 
     def exportTheme(self):
         name = self.themeList_cbb.currentText()
@@ -709,9 +729,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     dlg.setFont(self.parent().theme_font)
                     dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
                 ok = dlg.exec_() == QInputDialog.Accepted
-                name_input = dlg.textValue() if ok else ""
-                if name_input[1]:
-                    name = name_input[0]
+                name_input = dlg.textValue().strip() if ok else ""
+                if name_input:
+                    name = name_input
                     if name in design.predefinedThemes:
                         name = name + ' (Custom)'
 
@@ -792,10 +812,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 return True
 
         return False
-
-    def showEvent(self, event):
-        super(themeEditorClass, self).showEvent(event)
-        self.updateExample()
 
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):
