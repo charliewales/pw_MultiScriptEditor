@@ -398,9 +398,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
                 if font.family():
-                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
-                if self.styleSheet() != main_style:
-                    self.setStyleSheet(main_style)
+                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox, QAbstractItemView {{ font-family: '{font.family()}'; }}"
+                self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
@@ -793,6 +792,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 return True
 
         return False
+
+    def showEvent(self, event):
+        super(themeEditorClass, self).showEvent(event)
+        self.updateExample()
 
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):
