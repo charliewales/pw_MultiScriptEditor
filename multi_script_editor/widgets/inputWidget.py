@@ -1867,7 +1867,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
-
+            
         data = SettingsModel().read_settings() or {}
         if data.get('highlight_all_occurrences', True):
             cursor = self.textCursor()
@@ -1878,7 +1878,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     self._is_auto_selecting = True
                     self.select_all_occurrences()
                     self._is_auto_selecting = False
+                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                        self.p.out.highlight_word(text)
+                else:
+                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                        self.p.out.highlight_word("")
             else:
+                if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                    self.p.out.highlight_word("")
                 if self.multi_cursor_manager.has_cursors() and getattr(self.multi_cursor_manager, 'is_auto_populated', False):
                     self.multi_cursor_manager.clear()
                     self.highlight_current_line()
