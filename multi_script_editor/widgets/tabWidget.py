@@ -354,26 +354,35 @@ class tabWidgetClass(QTabWidget):
         if index < 0:
             return
 
+        widget = self.widget(index)
+        has_file = hasattr(widget, 'file_path') and bool(widget.file_path)
+
         menu = QMenu(self)
         if hasattr(self.p, 'menubar'):
             menu.setFont(self.p.menubar.font())
 
-        dup_action = QAction('Duplicate Tab', self)
-        dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
-        menu.addAction(dup_action)
 
-        ren_action = QAction('Rename Tab', self)
-        ren_action.setShortcut('Alt+R')
-        ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
-        menu.addAction(ren_action)
-
-        widget = self.widget(index)
-        if hasattr(widget, 'file_path') and widget.file_path:
+        if has_file:
             menu.addSeparator()
             copy_action = QAction('Copy File Path', self)
             copy_action.setShortcut('Alt+Shift+C')
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
+
+            del_action = QAction('Delete File', self)
+            del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
+            menu.addAction(del_action)
+
+            dup_title = 'Duplicate File' if has_file else 'Duplicate Tab'
+            dup_action = QAction(dup_title, self)
+            dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
+            menu.addAction(dup_action)
+
+            ren_title = 'Rename File' if has_file else 'Rename Tab'
+            ren_action = QAction(ren_title, self)
+            ren_action.setShortcut('Alt+R')
+            ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
+            menu.addAction(ren_action)
 
         if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
             menu.addSeparator()
@@ -385,6 +394,61 @@ class tabWidgetClass(QTabWidget):
             menu.addAction(show_menus_action)
 
         menu.exec_(QCursor.pos())
+
+    def deleteFile(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
+        widget = self.widget(index)
+        if not (hasattr(widget, 'file_path') and widget.file_path):
+            return
+
+        file_path = widget.file_path
+        filename = os.path.basename(file_path)
+
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setWindowTitle('Delete File')
+        msg_box.setText('Are you sure you want to delete "%s" from disk?' % filename)
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
+
+        reply = msg_box.exec_()
+
+        if reply == QMessageBox.Yes:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                widget.file_path = None
+                if hasattr(widget, 'edit') and hasattr(widget.edit, 'document'):
+                    widget.edit.document().setModified(False)
+                widget_to_remove = self.widget(index)
+                self.removeTab(index)
+                if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
+                    self._mru_tabs.remove(widget_to_remove)
+                if self.count() == 0:
+                    self.addNewTab()
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Deleted file: %s' % file_path)
+                elif hasattr(self.p, 'showStatusMessage'):
+                    self.p.showStatusMessage('Deleted file: %s' % file_path)
+            except Exception as e:
+                err_box = QMessageBox(self)
+                err_box.setIcon(QMessageBox.Critical)
+                err_box.setWindowTitle('Delete File Error')
+                err_box.setText('Could not delete file:\n%s' % str(e))
+                if hasattr(self.p, 'theme_font'):
+                    err_box.setFont(self.p.theme_font)
+                    err_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+                    for btn in err_box.buttons():
+                        btn.setFont(self.p.theme_font)
+                err_box.exec_()
 
     def copyFilePath(self, index=None):
         if index is None or isinstance(index, bool):
@@ -399,10 +463,39 @@ class tabWidgetClass(QTabWidget):
             index = self.currentIndex()
         if index < 0:
             return
-        name = self.tabText(index)
+        widget = self.widget(index)
         text = self.getCurrentText(index)
-        new_name = name + " (copy)"
-        self.addNewTab(new_name, text)
+        old_path = getattr(widget, 'file_path', None) if widget else None
+
+        if old_path:
+            dir_name = os.path.dirname(old_path)
+            base_name, ext = os.path.splitext(os.path.basename(old_path))
+            copy_name = "%s (copy)%s" % (base_name, ext)
+            new_path = os.path.join(dir_name, copy_name)
+            counter = 2
+            while os.path.exists(new_path):
+                copy_name = "%s (copy %d)%s" % (base_name, counter, ext)
+                new_path = os.path.join(dir_name, copy_name)
+                counter += 1
+
+            try:
+                with open(new_path, 'w') as f:
+                    f.write(text or '')
+                new_tab_name = os.path.basename(new_path)
+                self.addNewTab(new_tab_name, text, file_path=new_path)
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Duplicated file saved to: %s' % new_path)
+                elif hasattr(self.p, 'showStatusMessage'):
+                    self.p.showStatusMessage('Duplicated file saved to: %s' % new_path)
+            except Exception as e:
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Error duplicating file: %s' % str(e))
+                name = self.tabText(index) + " (copy)"
+                self.addNewTab(name, text)
+        else:
+            name = self.tabText(index) + " (copy)"
+            self.addNewTab(name, text)
+
         self.setCurrentIndex(self.count() - 1)
 
     def finishRename(self, commit=True):
@@ -417,10 +510,47 @@ class tabWidgetClass(QTabWidget):
         if commit:
             widget = getattr(edit, '_widget_to_rename', None)
             if widget:
-                new_text = edit.text()
+                new_text = edit.text().strip()
                 idx = self.indexOf(widget)
                 if new_text and idx >= 0:
-                    self.setTabText(idx, new_text)
+                    old_path = getattr(widget, 'file_path', None)
+                    if old_path:
+                        dir_name = os.path.dirname(old_path)
+                        _, old_ext = os.path.splitext(os.path.basename(old_path))
+                        new_base, new_ext = os.path.splitext(new_text)
+
+                        # Preserve original extension if not provided in new_text
+                        if not new_ext and old_ext:
+                            new_text = new_text + old_ext
+
+                        new_path = os.path.join(dir_name, new_text)
+
+                        if os.path.normpath(old_path) != os.path.normpath(new_path):
+                            if os.path.exists(old_path):
+                                try:
+                                    os.rename(old_path, new_path)
+                                    widget.file_path = new_path
+                                    self.setTabToolTip(idx, os.path.normpath(new_path))
+                                    self.setTabText(idx, os.path.basename(new_path))
+                                    if hasattr(widget, 'edit') and hasattr(widget.edit, 'applyHightLighter') and hasattr(self.p, '_current_settings'):
+                                        widget.edit.applyHightLighter(self.p._current_settings.get('theme', 'Multi Script Editor'))
+                                    if hasattr(self.p, 'out'):
+                                        self.p.out.showMessage('Renamed file to: %s' % new_path)
+                                    elif hasattr(self.p, 'showStatusMessage'):
+                                        self.p.showStatusMessage('Renamed file to: %s' % new_path)
+                                except Exception as e:
+                                    if hasattr(self.p, 'out'):
+                                        self.p.out.showMessage('Error renaming file: %s' % str(e))
+                                    elif hasattr(self.p, 'showStatusMessage'):
+                                        self.p.showStatusMessage('Error renaming file: %s' % str(e))
+                            else:
+                                widget.file_path = new_path
+                                self.setTabToolTip(idx, os.path.normpath(new_path))
+                                self.setTabText(idx, os.path.basename(new_path))
+                        else:
+                            self.setTabText(idx, os.path.basename(new_path))
+                    else:
+                        self.setTabText(idx, new_text)
         edit.hide()
         edit.deleteLater()
 
