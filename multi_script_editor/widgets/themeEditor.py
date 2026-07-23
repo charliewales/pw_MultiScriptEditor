@@ -364,9 +364,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             font = QFont()
 
-        if font.family():
-            self.setFont(font)
-
         if hasattr(self, 'preview_tab_widget'):
             self.preview_tab_widget._tab_text_size = colors.get('tab_text_size')
             self.preview_tab_widget.apply_tab_style(colors)
@@ -400,6 +397,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
+                if font.family():
+                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
                 self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
