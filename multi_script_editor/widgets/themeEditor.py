@@ -623,12 +623,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             else:
                 theme_settings['colors'] = {name: colors}
             self.save_theme_settings(theme_settings)
-            
+
             # If the main window caches colors we need to apply them there too
             settings = self.get_settings()
             if 'colors' in settings:
                 settings['colors'][name] = colors
-            
+
             self.fillUI(name)
             self.updateUI()
             if self.parent() and hasattr(self.parent(), 'applyTheme'):
@@ -648,12 +648,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     if name in theme_settings['colors']:
                         del theme_settings['colors'][name]
                         self.save_theme_settings(theme_settings)
-                        
+
                         settings = self.get_settings()
                         if 'colors' in settings and name in settings['colors']:
                             del settings['colors'][name]
                             self.save_settings(settings)
-                            
+
                         self.fillUI(False)
                         self.updateUI()
 
@@ -691,7 +691,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     theme_settings = self.get_theme_settings()
                     if 'colors' in theme_settings:
                         if name in theme_settings['colors']:
-                            if not self.yes_no_question('Replace exists?'):
+                            if not self.yes_no_question('Replace existing?'):
                                 return
 
                     if 'colors' in theme_settings:
@@ -700,11 +700,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                         theme_settings['colors'] = {name: colors}
 
                     self.save_theme_settings(theme_settings)
-                    
+
                     settings = self.get_settings()
                     if 'colors' in settings:
                         settings['colors'][name] = colors
-                        
+
                     self.fillUI(name)
                     self.updateUI()
                     self.updateColors()
@@ -798,6 +798,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
+        msg_box.setWindowTitle('?')
         if hasattr(self.parent(), 'theme_font'):
             msg_box.setFont(self.parent().theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)

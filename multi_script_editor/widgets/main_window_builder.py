@@ -438,12 +438,13 @@ class ScriptEditorUIBuilder:
         # Sessions Submenu in File menu
         editor.sessions_menu = QMenu("Sessions", editor)
         editor.sessions_menu.menuAction().setStatusTip("Manage and load saved sessions")
-        editor.menubar.insertMenu(editor.view_menu.menuAction(), editor.sessions_menu)
+        target_menu_act = editor.theme_menu.menuAction() if hasattr(editor, 'theme_menu') and hasattr(editor.theme_menu, 'menuAction') else editor.view_menu.menuAction()
+        editor.menubar.insertMenu(target_menu_act, editor.sessions_menu)
 
         # Snippets Submenu
         editor.snippets_menu = QMenu("Snippets", editor)
         editor.snippets_menu.menuAction().setStatusTip("Manage code snippets")
-        editor.menubar.insertMenu(editor.view_menu.menuAction(), editor.snippets_menu)
+        editor.menubar.insertMenu(target_menu_act, editor.snippets_menu)
 
         # Snippets actions shortcuts
         editor.manageSnippet_act = QAction("Insert/run/save snippet", editor)
@@ -625,6 +626,8 @@ class ScriptEditorUIBuilder:
             editor.options_menu.menuAction().setStatusTip("Editor options and preferences")
         if hasattr(editor, 'run_menu') and hasattr(editor.run_menu, 'menuAction'):
             editor.run_menu.menuAction().setStatusTip("Execute script and code selections")
+        if hasattr(editor, 'theme_menu') and hasattr(editor.theme_menu, 'menuAction'):
+            editor.theme_menu.menuAction().setStatusTip("Change color themes and syntax highlighting")
         if hasattr(editor, 'view_menu') and hasattr(editor.view_menu, 'menuAction'):
             editor.view_menu.menuAction().setStatusTip("Change appearance and layout")
         if hasattr(editor, 'help_menu') and hasattr(editor.help_menu, 'menuAction'):
