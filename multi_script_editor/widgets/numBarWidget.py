@@ -117,6 +117,10 @@ class lineNumberBarClass(QWidget):
         
         is_hovered = self.underMouse()
         
+        vp_offset = 0
+        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
+            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
+
         while block.isValid():
             if not block.isVisible():
                 block = block.next()
@@ -126,17 +130,18 @@ class lineNumberBarClass(QWidget):
             
             if is_plaintextedit:
                 block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top()
-                block_height = block_rect.height()
-                if pos_y > self.edit.viewport().height():
+                pos_y = block_rect.top() + vp_offset
+                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
+                block_height = layout_h if layout_h > 0 else block_rect.height()
+                if pos_y > self.edit.viewport().height() + vp_offset:
                     break
-                if pos_y + block_height < 0:
+                if pos_y + block_height < vp_offset:
                     block = block.next()
                     continue
             else:
                 # The top left position of the block in the document
                 block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y
+                pos_y = block_rect.top() - contents_y + vp_offset
                 block_height = block_rect.height()
                 
                 # Check if the position of the block is outside of the visible area.
@@ -151,10 +156,12 @@ class lineNumberBarClass(QWidget):
                 painter.setPen(Qt.NoPen)
                 if self.bg is not None:
                     painter.setBrush(QBrush(self.bg))
+                    top_y = int(round(pos_y))
+                    bottom_y = int(round(pos_y + block_height))
                     painter.drawRect(QRect(0,
-                            round(pos_y),
+                            top_y,
                             self.width(),
-                            round(block_height)))
+                            bottom_y - top_y))
                 painter.setPen(QPen(color))
 
             # Draw error indicator if this line has a syntax error
@@ -253,6 +260,10 @@ class lineNumberBarClass(QWidget):
         if block.previous().isValid():
             block = block.previous()
             
+        vp_offset = 0
+        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
+            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
+
         hover_block = -1
         is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
         while block.isValid():
@@ -262,11 +273,12 @@ class lineNumberBarClass(QWidget):
                 
             if is_plaintextedit:
                 block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top()
-                block_height = block_rect.height()
+                pos_y = block_rect.top() + vp_offset
+                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
+                block_height = layout_h if layout_h > 0 else block_rect.height()
             else:
                 block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y
+                pos_y = block_rect.top() - contents_y + vp_offset
                 block_height = block_rect.height()
                 
             if pos_y <= click_y <= pos_y + block_height:
@@ -308,6 +320,10 @@ class lineNumberBarClass(QWidget):
             if block.previous().isValid():
                 block = block.previous()
                 
+            vp_offset = 0
+            if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
+                vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
+
             is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
             while block.isValid():
                 if not block.isVisible():
@@ -316,11 +332,12 @@ class lineNumberBarClass(QWidget):
                     
                 if is_plaintextedit:
                     block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                    pos_y = block_rect.top()
-                    block_height = block_rect.height()
+                    pos_y = block_rect.top() + vp_offset
+                    layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
+                    block_height = layout_h if layout_h > 0 else block_rect.height()
                 else:
                     block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                    pos_y = block_rect.top() - contents_y
+                    pos_y = block_rect.top() - contents_y + vp_offset
                     block_height = block_rect.height()
                     
                 if pos_y <= click_y <= pos_y + block_height:
