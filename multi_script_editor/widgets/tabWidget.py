@@ -27,9 +27,14 @@ from vendor.Qt.QtWidgets import (
     QTabBar,
     QTabWidget,
     QWidget,
+    QFileDialog,
 )
 from widgets import inputWidget, numBarWidget
 from widgets.pythonSyntax import design
+from core.file_utils import read_file_text
+from core.git_manager import GitManager
+from core.diff_manager import DiffManager
+from widgets.git_dialogs import GitCommitDialog, GitHistoryDialog
 from widgets.pythonSyntax.design import defaultColors
 
 
@@ -296,7 +301,6 @@ class tabWidgetClass(QTabWidget):
                             delattr(edit, 'needs_loading_scroll_v')
                             if scroll_v > 0:
                                 edit.verticalScrollBar().setValue(scroll_v)
-                                from vendor.Qt.QtCore import QTimer
                                 QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
                                 QTimer.singleShot(150, lambda: edit.verticalScrollBar().setValue(scroll_v))
 
@@ -392,7 +396,7 @@ class tabWidgetClass(QTabWidget):
         has_file = hasattr(widget, 'file_path') and bool(widget.file_path)
 
         menu = QMenu(self)
-        
+
         def on_hover(action):
             if hasattr(self.p, 'statusBar'):
                 if action and action.statusTip():
@@ -400,7 +404,7 @@ class tabWidgetClass(QTabWidget):
                         self.p.statusBar().showMessage(action.statusTip())
                 else:
                     self.p.statusBar().clearMessage()
-                    
+
         menu.hovered.connect(on_hover)
 
         if hasattr(self.p, 'menubar') and self.p.menubar:
@@ -411,7 +415,6 @@ class tabWidgetClass(QTabWidget):
         if has_file and getattr(self.p, '_version_control_enabled', True):
             file_path = getattr(widget, 'file_path', None)
             if file_path and os.path.exists(file_path):
-                from core.git_manager import GitManager
                 if GitManager.is_in_repo(file_path):
                     git_menu = menu.addMenu('Git')
                     if hasattr(self.p, 'menubar') and self.p.menubar:
@@ -517,8 +520,6 @@ class tabWidgetClass(QTabWidget):
             git_menu.setFont(git_menu.parentWidget().font())
             git_menu.setStyleSheet(git_menu.parentWidget().styleSheet())
 
-        from core.git_manager import GitManager
-
         status_info = GitManager.get_file_status(file_path)
         branch = status_info.get('branch', 'HEAD')
         status_text = status_info.get('status_text', 'Clean')
@@ -579,8 +580,6 @@ class tabWidgetClass(QTabWidget):
             copy_rel_act.triggered.connect(lambda checked=False, rp=rel_path: QApplication.clipboard().setText(rp))
 
     def run_git_diff(self, file_path):
-        from core.git_manager import GitManager
-        from core.diff_manager import DiffManager
         head_path = GitManager.get_head_file_temp_path(file_path)
         if head_path and os.path.exists(head_path):
             DiffManager.run_diff(head_path, file_path, parent=self.p)
@@ -588,21 +587,18 @@ class tabWidgetClass(QTabWidget):
             QMessageBox.information(self, "Git Diff", "No previous HEAD revision found for this file.")
 
     def git_stage(self, file_path):
-        from core.git_manager import GitManager
         success, msg = GitManager.stage_file(file_path)
         self.update_tab_git_status(self.currentIndex())
         if hasattr(self.p, 'updateStatusBarInfo'):
             self.p.updateStatusBarInfo()
 
     def git_unstage(self, file_path):
-        from core.git_manager import GitManager
         success, msg = GitManager.unstage_file(file_path)
         self.update_tab_git_status(self.currentIndex())
         if hasattr(self.p, 'updateStatusBarInfo'):
             self.p.updateStatusBarInfo()
 
     def git_commit_dialog(self, file_path):
-        from widgets.git_dialogs import GitCommitDialog
         dlg = GitCommitDialog(parent=self.p, file_path=file_path)
         if dlg.exec_():
             self.update_tab_git_status(self.currentIndex())
@@ -610,12 +606,10 @@ class tabWidgetClass(QTabWidget):
                 self.p.updateStatusBarInfo()
 
     def git_history_dialog(self, file_path):
-        from widgets.git_dialogs import GitHistoryDialog
         dlg = GitHistoryDialog(parent=self.p, file_path=file_path)
         dlg.exec_()
 
     def git_discard_changes(self, index, file_path):
-        from core.git_manager import GitManager
         reply = QMessageBox.question(
             self,
             "Discard Changes",
@@ -652,7 +646,6 @@ class tabWidgetClass(QTabWidget):
             self.setTabToolTip(index, norm_path)
             return
 
-        from core.git_manager import GitManager
         status_info = GitManager.get_file_status(file_path)
         norm_path = os.path.normpath(file_path)
         if status_info.get('in_repo'):
@@ -667,9 +660,6 @@ class tabWidgetClass(QTabWidget):
 
         current_widget = self.widget(index)
         current_file = getattr(current_widget, 'file_path', "")
-
-        from core.diff_manager import DiffManager
-        from vendor.Qt.QtWidgets import QFileDialog
 
         # 1. List other open tabs with file paths
         other_tabs_count = 0
@@ -702,14 +692,6 @@ class tabWidgetClass(QTabWidget):
             if path:
                 DiffManager.run_diff(f1, path, parent=self.p)
         browse_file_act.triggered.connect(_browse_file)
-
-        # 3. Browse Directory option
-        browse_dir_act = compare_menu.addAction("Browse Directory...")
-        def _browse_dir(checked=False, f1=current_file):
-            path = QFileDialog.getExistingDirectory(self, "Select Directory to Compare")
-            if path:
-                DiffManager.run_diff(f1, path, parent=self.p)
-        browse_dir_act.triggered.connect(_browse_dir)
 
         compare_menu.addSeparator()
 

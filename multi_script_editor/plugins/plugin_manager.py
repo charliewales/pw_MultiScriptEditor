@@ -12,6 +12,7 @@ try:
 except ImportError:
     icons = {}
 from .plugin_base import BasePlugin
+from core.settings_model import SettingsModel
 
 class PluginManager(object):
     """
@@ -48,7 +49,6 @@ class PluginManager(object):
 
         # 2. Load user plugins (from mse_settings/plugins)
         try:
-            from core.settings_model import SettingsModel
             user_pref_dir = SettingsModel()._get_user_pref_folder()
             user_plugins_dir = os.path.join(user_pref_dir, "plugins")
             if os.path.exists(user_plugins_dir):

@@ -123,25 +123,6 @@ class CompareWidget(SearchPopupWidget):
                 'icon': 'open' if 'open' in icons else None,
                 'tooltip': "Select a file from disk to compare against current file"
             })
-            self.items_data.append({
-                'label': "Browse Directory...",
-                'type': 'browse_dir',
-                'icon': 'open' if 'open' in icons else None,
-                'tooltip': "Select a directory from disk to compare against current file"
-            })
-        else:
-            self.items_data.append({
-                'label': "Compare Two Files...",
-                'type': 'browse_two_files',
-                'icon': 'open' if 'open' in icons else None,
-                'tooltip': "Select two files from disk to compare"
-            })
-            self.items_data.append({
-                'label': "Compare Two Directories...",
-                'type': 'browse_two_dirs',
-                'icon': 'open' if 'open' in icons else None,
-                'tooltip': "Select two directories from disk to compare"
-            })
 
         # 3. Configure Diff Tool...
         self.items_data.append({

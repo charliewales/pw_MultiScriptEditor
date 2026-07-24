@@ -72,6 +72,9 @@ from widgets import scriptEditor_UIs as ui
 from widgets.main_window_builder import ScriptEditorUIBuilder
 from widgets.outline_utils import HtmlDelegate, create_symbol_item
 from widgets.pythonSyntax import design
+from widgets.diff_dialog import CompareWidget
+from core.git_manager import GitManager
+from widgets.git_popup import GitPopupWidget
 
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
@@ -284,7 +287,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             lang = lang_map.get(ext, 'Python')
 
             if os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
-                from core.git_manager import GitManager
                 git_info = GitManager.get_file_status(file_path)
                 if git_info.get('in_repo'):
                     branch = git_info.get('branch', 'HEAD')
@@ -1362,16 +1364,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if colors.get('use_theme_font_on_symbols', True) and edit_widget:
             font_data = colors.get('font')
             if font_data:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
             else:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(edit_widget.font())
         else:
-            from vendor.Qt.QtWidgets import QApplication
             font = QApplication.font("QListWidget")
 
-        from widgets.diff_dialog import CompareWidget
         popup = CompareWidget(self.tab, idx, parent=self, center_widget=center_w, qss=qss, font=font, colors=colors)
         if hasattr(popup, 'exec'):
             popup.exec()
@@ -1394,7 +1392,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.showStatusMessage("Current tab does not have a saved file on disk.")
             return
 
-        from core.git_manager import GitManager
         if not GitManager.is_in_repo(file_path):
             self.showStatusMessage("Current file is not in a Git repository.")
             return
@@ -1409,16 +1406,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if colors.get('use_theme_font_on_symbols', True) and edit_widget:
             font_data = colors.get('font')
             if font_data:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
             else:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(edit_widget.font())
         else:
-            from vendor.Qt.QtWidgets import QApplication
             font = QApplication.font("QListWidget")
 
-        from widgets.git_popup import GitPopupWidget
         popup = GitPopupWidget(
             parent=self,
             center_widget=center_w,
@@ -2343,13 +2336,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if colors.get('use_theme_font_on_symbols', True):
             font_data = colors.get('font')
             if font_data:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
             else:
-                from vendor.Qt.QtGui import QFont
                 font = QFont(edit_widget.font())
         else:
-            from vendor.Qt.QtWidgets import QApplication
             font = QApplication.font("QListWidget")
 
         if 'symbols_text_size' in colors:
