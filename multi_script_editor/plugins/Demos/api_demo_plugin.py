@@ -70,12 +70,12 @@ class ApiDemoPlugin(BasePlugin):
         # Preparing the text report
         report = (
             f"\n--- API Demo Plugin Report ---\n"
-            f"• Editor Version: {version}\n"
-            f"• Current Context: {context}\n"
-            f"• Help Method Available: {has_help}\n"
-            f"• Lines in Current Tab: {lines_count}\n"
-            f"• Parent widget: {mse_window}\n"
-            f"• Total Open Tabs: {total_tabs}\n"
+            f"Editor Version: {version}\n"
+            f"Current Context: {context}\n"
+            f"Help Method Available: {has_help}\n"
+            f"Lines in Current Tab: {lines_count}\n"
+            f"Parent widget: {mse_window}\n"
+            f"Total Open Tabs: {total_tabs}\n"
             f"------------------------------"
         )
 

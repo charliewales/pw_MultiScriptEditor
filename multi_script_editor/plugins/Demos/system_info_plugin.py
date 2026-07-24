@@ -4,6 +4,7 @@ import platform
 import subprocess
 import socket
 
+from vendor.Qt.QtGui import QTextCursor
 from vendor.Qt.QtWidgets import QAction
 from plugins.plugin_base import BasePlugin
 import vendor.Qt
@@ -102,7 +103,7 @@ class SystemInfoPlugin(BasePlugin):
     # Plugin Metadata
     name = "System Info"
     description = "Prints system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) to the output console."
-    version = "1.2.0"
+    version = "1.0.0"
 
     def register(self):
         """
@@ -155,26 +156,28 @@ class SystemInfoPlugin(BasePlugin):
 
             # 2. Format system info as a python comment block
             lines = [
-                f"# Hostname:   {hostname}",
-                f"# IP Address: {ip_addr}",
-                f"# Host App:   {host_context}",
-                f"# OS:         {os_name}",
-                f"# CPU:        {processor}",
-                f"# GPU:        {gpu}",
-                f"# RAM:        {ram}",
-                f"# Home Dir:   {home_dir}",
-                f"# Python:     {py_ver}",
-                f"# Qt Binding: {qt_ver}"
+                f"Hostname:   {hostname}",
+                f"IP Address: {ip_addr}",
+                f"Host App:   {host_context}",
+                f"OS:         {os_name}",
+                f"CPU:        {processor}",
+                f"GPU:        {gpu}",
+                f"RAM:        {ram}",
+                f"Home Dir:   {home_dir}",
+                f"Python:     {py_ver}",
+                f"Qt Binding: {qt_ver}"
             ]
 
-            title = "# SYSTEM SPECIFICATIONS"
+            title = "--- SYSTEM SPECIFICATIONS ---"
             max_len = max(len(line) for line in lines + [title])
-            separator = "# " + "=" * (max_len - 2)
+            # separator = "# " + "=" * (max_len - 2)
+            separator = "-" * (max_len - 2)
 
             info_block = (
-                f"{separator}\n"
+                "\n"
+                # f"{separator}\n"
                 f"{title}\n"
-                f"{separator}\n"
+                # f"{separator}\n"
                 + "\n".join(lines) + "\n"
                 f"{separator}\n"
             )
@@ -184,7 +187,6 @@ class SystemInfoPlugin(BasePlugin):
                 self.self_output.appendPlainText(info_block)
 
                 # Scroll to the bottom of the output
-                from vendor.Qt.QtGui import QTextCursor
                 self.self_output.moveCursor(QTextCursor.End)
                 self.self_output.ensureCursorVisible()
 
