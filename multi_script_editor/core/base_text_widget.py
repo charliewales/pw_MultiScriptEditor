@@ -1,8 +1,10 @@
 import os
 import webbrowser
-from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase, QIcon
-from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QAction
+
 from icons import icons
+from vendor.Qt.QtGui import QFont, QFontDatabase, QIcon, QTextOption
+from vendor.Qt.QtWidgets import QAction, QPlainTextEdit, QTextEdit
+
 
 class BaseTextWidgetMixin:
     """

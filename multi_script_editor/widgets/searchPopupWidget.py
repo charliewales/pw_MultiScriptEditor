@@ -1,5 +1,6 @@
-from vendor.Qt.QtCore import Qt, QSize, QEvent
-from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget
+from vendor.Qt.QtCore import QEvent, QSize, Qt
+from vendor.Qt.QtWidgets import QDialog, QLineEdit, QListWidget, QVBoxLayout
+
 
 class SearchPopupWidget(QDialog):
     def __init__(self, parent=None, center_widget=None, qss=None, font=None, colors=None, placeholder_text="Search..."):

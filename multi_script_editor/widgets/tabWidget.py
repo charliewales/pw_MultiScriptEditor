@@ -1,15 +1,36 @@
 import os
-
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF, QTimer
-from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
-from widgets.pythonSyntax.design import defaultColors
 import re
-from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel, QLineEdit
-from widgets import numBarWidget, inputWidget
-from widgets.pythonSyntax import design
+
 from icons import *
-
-
+from vendor.Qt.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
+from vendor.Qt.QtGui import (
+    QColor,
+    QCursor,
+    QFont,
+    QIcon,
+    QKeySequence,
+    QPainter,
+    QPixmap,
+    QTextCursor,
+)
+from vendor.Qt.QtWidgets import (
+    QAction,
+    QApplication,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QShortcut,
+    QTabBar,
+    QTabWidget,
+    QWidget,
+)
+from widgets import inputWidget, numBarWidget
+from widgets.pythonSyntax import design
+from widgets.pythonSyntax.design import defaultColors
 
 
 class tabWidgetClass(QTabWidget):

@@ -1,6 +1,8 @@
-from vendor.Qt.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 import re
+
+from vendor.Qt.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 from widgets.pythonSyntax import design, keywords
+
 
 class PythonHighlighterClass(QSyntaxHighlighter):
     def __init__(self, document, colors=None):

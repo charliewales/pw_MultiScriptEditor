@@ -1,5 +1,6 @@
+import os
 import platform
-import sys, os
+import sys
 
 main = __import__('__main__')
 

@@ -1,12 +1,15 @@
-import os, sys, re
+import os
+import re
+import sys
+
 import hou
+
 main = __import__('__main__')
 # hou = main.__dict__['hou']
-from vendor.Qt.QtWidgets import QMenu, QAction, QWidget
-from vendor.Qt.QtCore import Qt
-
-from managers.completeWidget import contextCompleterClass
 import managers
+from managers.completeWidget import contextCompleterClass
+from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtWidgets import QAction, QMenu, QWidget
 
 path = os.path.join(os.path.dirname(__file__), 'houdini')
 
@@ -22,7 +25,6 @@ if not path in sys.path:
     sys.path.insert(0, path)
 
 from multi_script_editor import scriptEditor
-
 
 _houdini_window = None
 

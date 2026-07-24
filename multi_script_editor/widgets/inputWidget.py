@@ -1,28 +1,26 @@
 import os
 import re
 
-from vendor.Qt.QtCore import QPoint, Qt, Signal, QTimer
+import managers
+from core.base_text_widget import BaseTextWidgetMixin
+from core.multi_cursor import MultiCursorManager
+from core.search_service import SearchService
+from core.settings_model import SettingsModel
+from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import (
     QColor,
     QFont,
     QFontDatabase,
     QFontMetrics,
-    QTextCursor,
-    QTextFormat,
     QGuiApplication,
     QTextBlockUserData,
+    QTextCursor,
+    QTextFormat,
 )
-from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
-
-from widgets.pythonSyntax import syntaxHighLighter, extraSyntaxes
+from vendor.Qt.QtWidgets import QApplication, QPlainTextEdit, QTextEdit
 from widgets import completeWidget
-from core.settings_model import SettingsModel
-from core.base_text_widget import BaseTextWidgetMixin
-from core.multi_cursor import MultiCursorManager
-from core.search_service import SearchService
-import managers
-from widgets.pythonSyntax import design
 from widgets.markdown_preview import MarkdownPreviewEdit
+from widgets.pythonSyntax import design, extraSyntaxes, syntaxHighLighter
 
 addEndBracket = True
 

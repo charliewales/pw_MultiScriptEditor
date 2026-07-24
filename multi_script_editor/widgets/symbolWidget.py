@@ -1,7 +1,8 @@
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics
-from widgets.outline_utils import create_symbol_item, HtmlDelegate
+from widgets.outline_utils import HtmlDelegate, create_symbol_item
 from widgets.searchPopupWidget import SearchPopupWidget
+
 
 class SymbolWidget(SearchPopupWidget):
     symbolSelected = Signal(object)  # emits the line number or any other data

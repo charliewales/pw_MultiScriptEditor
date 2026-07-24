@@ -1,8 +1,7 @@
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtWidgets import QListWidgetItem
 from vendor.Qt.QtGui import QFontMetrics
+from vendor.Qt.QtWidgets import QListWidgetItem
 from widgets.searchPopupWidget import SearchPopupWidget
-
 
 MAX_ENTRIES = 30
 

@@ -1,10 +1,12 @@
+import os
+
+import icons
+from docs.constants import TESTED_TEXT
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QIcon, QPixmap
 from vendor.Qt.QtWidgets import QDialog
-import icons
 from widgets import about_UIs
-import os
-from docs.constants import TESTED_TEXT
+
 
 class aboutClass(QDialog, about_UIs.Ui_Dialog):
     def __init__(self, parent):

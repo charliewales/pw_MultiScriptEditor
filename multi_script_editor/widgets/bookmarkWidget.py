@@ -1,10 +1,11 @@
+import html
+
+from icons import icons
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics, QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
-from widgets.searchPopupWidget import SearchPopupWidget
 from widgets.outline_utils import HtmlDelegate
-from icons import icons
-import html
+from widgets.searchPopupWidget import SearchPopupWidget
 
 
 def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_class=None):

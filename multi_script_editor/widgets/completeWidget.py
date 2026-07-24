@@ -1,9 +1,9 @@
-from vendor.Qt.QtCore import Qt, QTimer
-from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
-from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel, QApplication
-from . pythonSyntax import design
 import managers
+from vendor.Qt.QtCore import Qt, QTimer
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
+from vendor.Qt.QtWidgets import QApplication, QLabel, QListWidget, QListWidgetItem
 
+from .pythonSyntax import design
 
 
 class completeMenuClass(QListWidget):

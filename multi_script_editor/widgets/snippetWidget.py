@@ -1,7 +1,8 @@
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtWidgets import QListWidgetItem, QMessageBox
 from vendor.Qt.QtGui import QFontMetrics
+from vendor.Qt.QtWidgets import QListWidgetItem, QMessageBox
 from widgets.searchPopupWidget import SearchPopupWidget
+
 
 class SnippetWidget(SearchPopupWidget):
     snippetSelected = Signal(str)  # emits the snippet content

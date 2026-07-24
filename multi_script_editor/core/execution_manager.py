@@ -1,6 +1,8 @@
 import sys
 import traceback
+
 from vendor.Qt.QtCore import QCoreApplication
+
 
 class StdoutProxy:
     def __init__(self, write_func):

@@ -1,7 +1,9 @@
 from __future__ import with_statement
+
+import codecs
 import json
 import os
-import codecs
+
 from core.settings_model import SettingsModel
 
 sessionFilename = 'pw_scriptEditor_session.json'

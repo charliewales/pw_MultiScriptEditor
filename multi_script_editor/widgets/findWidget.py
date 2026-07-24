@@ -1,6 +1,7 @@
-from vendor.Qt.QtCore import QTimer, Qt, Signal
-from vendor.Qt.QtWidgets import QWidget, QCheckBox
+from vendor.Qt.QtCore import Qt, QTimer, Signal
+from vendor.Qt.QtWidgets import QCheckBox, QWidget
 from widgets import findWidget_UIs as ui
+
 
 class findWidgetClass(QWidget, ui.Ui_findReplace):
     searchSignal = Signal(str, bool)

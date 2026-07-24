@@ -1,10 +1,12 @@
 import sys
 from functools import partial
-from vendor.Qt.QtCore import Qt, QSize, QTimer
-from vendor.Qt.QtGui import QIcon, QKeySequence
-from vendor.Qt.QtWidgets import QShortcut, QMenu, QAction
-from icons import icons
+
 import managers
+from icons import icons
+from vendor.Qt.QtCore import QSize, Qt, QTimer
+from vendor.Qt.QtGui import QIcon, QKeySequence
+from vendor.Qt.QtWidgets import QAction, QMenu, QShortcut
+
 
 class ScriptEditorUIBuilder:
     @staticmethod

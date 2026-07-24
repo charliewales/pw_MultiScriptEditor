@@ -1,11 +1,29 @@
+import os
+import re
+import sys
+
+import maya.OpenMayaUI as omui
+from managers.completeWidget import contextCompleterClass
+from maya import cmds, mel
+from vendor.Qt.QtCompat import wrapInstance
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QIcon
-from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout, QWidget
-from vendor.Qt.QtCompat import wrapInstance
-import maya.OpenMayaUI as omui
-from maya import cmds, mel
-import os, sys, re
-from managers.completeWidget import contextCompleterClass
+from vendor.Qt.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QListView,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 main = __import__('__main__')
 ns = main.__dict__
 

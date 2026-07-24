@@ -1,4 +1,7 @@
-import os, sys, re
+import os
+import re
+import sys
+
 # import nuke
 main = __import__('__main__')
 ns = main.__dict__
@@ -7,11 +10,21 @@ exec('import nukescripts', ns)
 nuke = ns['nuke']
 import nukescripts
 from managers.nuke import nodes
+
 nuke_nodes = dir(nodes)
 from managers.completeWidget import contextCompleterClass
-
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QApplication, QDialog, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout
+from vendor.Qt.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QDialog,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QPushButton,
+    QVBoxLayout,
+)
 
 p = os.path.dirname(__file__).replace('\\','/')
 if not p in sys.path:

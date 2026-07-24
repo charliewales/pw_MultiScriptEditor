@@ -1,6 +1,12 @@
-from vendor.Qt.QtWidgets import QListWidgetItem, QStyledItemDelegate, QApplication, QStyle
-from vendor.Qt.QtGui import QTextDocument, QIcon
-from vendor.Qt.QtCore import Qt, QSize, QRectF
+from vendor.Qt.QtCore import QRectF, QSize, Qt
+from vendor.Qt.QtGui import QIcon, QTextDocument
+from vendor.Qt.QtWidgets import (
+    QApplication,
+    QListWidgetItem,
+    QStyle,
+    QStyledItemDelegate,
+)
+
 
 class HtmlDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):

@@ -1,5 +1,7 @@
 import re
+
 from vendor.Qt.QtGui import QTextCursor, QTextDocument
+
 
 class SearchService:
     def __init__(self, editor):

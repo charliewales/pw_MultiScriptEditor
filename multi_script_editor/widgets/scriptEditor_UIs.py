@@ -9,7 +9,18 @@
 
 
 from vendor.Qt.QtCore import QMetaObject, QRect, Qt
-from vendor.Qt.QtWidgets import QAction, QApplication, QFrame, QMenu, QMenuBar, QSplitter, QToolBar, QVBoxLayout, QWidget
+from vendor.Qt.QtWidgets import (
+    QAction,
+    QApplication,
+    QFrame,
+    QMenu,
+    QMenuBar,
+    QSplitter,
+    QToolBar,
+    QVBoxLayout,
+    QWidget,
+)
+
 
 class Ui_scriptEditor(object):
     def setupUi(self, scriptEditor):

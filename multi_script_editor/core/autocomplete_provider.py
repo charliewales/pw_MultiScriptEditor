@@ -1,5 +1,7 @@
 import re
+
 import managers
+
 
 class CompletionItem:
     def __init__(self, name, complete, comp_type, docstring_val="", prefix_length=0):

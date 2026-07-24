@@ -1,7 +1,7 @@
-from core.settings_model import SettingsModel, ThemesModel
 import os
 import re
 
+from core.settings_model import SettingsModel, ThemesModel
 
 defaultColors = dict(
         background=(40, 40, 40),

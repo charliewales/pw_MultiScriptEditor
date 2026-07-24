@@ -1,6 +1,7 @@
 import ast
 import re
 
+
 class OutlineParser:
     @staticmethod
     def parse(code, ext='.py'):

@@ -1,9 +1,11 @@
+import os
+import sys
+
+from docs.constants import SHORTCUTS_TEXT
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import QDialog, QHeaderView, QTableWidgetItem
 from widgets import shortcuts_UIs
-import os
-import sys
-from docs.constants import SHORTCUTS_TEXT
+
 
 class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
     def __init__(self, parent):

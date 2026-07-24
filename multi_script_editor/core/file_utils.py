@@ -1,5 +1,6 @@
 import os
 
+
 def read_file_text(path):
     """
     Safely read text from a file, trying multiple encodings and falling back gracefully.

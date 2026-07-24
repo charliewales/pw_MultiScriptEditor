@@ -1,7 +1,10 @@
+import codecs
 import json
 import os
-import codecs
+
 from vendor.Qt.QtGui import QFont
+
+
 class SettingsModel:
     settings_filename = 'pw_scriptEditor_pref.json'
     _cached_settings = None

@@ -1,29 +1,31 @@
-import os
 import json
+import os
+
+from core.settings_model import SettingsModel, ThemesModel
 from vendor.Qt.QtCore import QSize, Qt, QTimer
-from vendor.Qt.QtGui import QColor, QIcon, QPixmap, QFont
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QPixmap
 from vendor.Qt.QtWidgets import (
+    QAction,
     QApplication,
     QColorDialog,
     QDialog,
+    QFileDialog,
+    QFontDialog,
     QInputDialog,
+    QLabel,
     QLineEdit,
     QListWidgetItem,
-    QMessageBox,
-    QMenuBar,
-    QStatusBar,
     QMainWindow,
-    QLabel,
-    QAction,
     QMenu,
-    QFontDialog,
+    QMenuBar,
+    QMessageBox,
     QPushButton,
-    QFileDialog,
+    QStatusBar,
 )
 from widgets import themeEditor_UIs as ui
-from core.settings_model import SettingsModel, ThemesModel
-from .pythonSyntax import design
 from widgets.tabWidget import tabWidgetClass
+
+from .pythonSyntax import design
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):

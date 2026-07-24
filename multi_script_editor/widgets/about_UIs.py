@@ -9,7 +9,17 @@
 
 from vendor.Qt.QtCore import QMetaObject
 from vendor.Qt.QtGui import QFont
-from vendor.Qt.QtWidgets import QApplication, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSpacerItem, QTextBrowser, QVBoxLayout
+from vendor.Qt.QtWidgets import (
+    QApplication,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QTextBrowser,
+    QVBoxLayout,
+)
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):

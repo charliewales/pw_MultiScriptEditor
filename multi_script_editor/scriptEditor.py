@@ -1,9 +1,9 @@
+import codecs
+import json
 import os
 import sys
 import webbrowser
 from functools import partial
-import json
-import codecs
 
 # Set preferred binding
 if not os.environ.get("QT_PREFERRED_BINDING"):
@@ -18,31 +18,60 @@ vendor_path = os.path.join(root_path, 'vendor')
 if vendor_path not in sys.path:
     sys.path.insert(0, vendor_path)
 
-import managers
-from core.execution_manager import ExecutionManager
-from core.file_utils import read_file_text
-from presenters.main_presenter import MainPresenter
-import vendor.Qt
-from icons import *
-from vendor.help import get_help
-
-from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal, QSize
-from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip, QToolBar
-from widgets import about, findWidget, gotoLineWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
-from widgets import scriptEditor_UIs as ui
-from core.outline_parser import OutlineParser
-from widgets.pythonSyntax import design
-from widgets.outline_utils import HtmlDelegate, create_symbol_item
-
-from widgets.main_window_builder import ScriptEditorUIBuilder
-from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
-from style.links import links
-from plugins.plugin_manager import PluginManager
-from docs.constants import HELP_TEXT
 import random
 import time
-from vendor.Qt.QtCore import QEvent
+
+import managers
+import vendor.Qt
+from core.execution_manager import ExecutionManager
+from core.file_utils import read_file_text
+from core.outline_parser import OutlineParser
+from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
+from docs.constants import HELP_TEXT
+from icons import *
+from plugins.plugin_manager import PluginManager
+from presenters.main_presenter import MainPresenter
+from style.links import links
+from vendor.help import get_help
+from vendor.Qt.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
+from vendor.Qt.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QApplication,
+    QFileDialog,
+    QFontDialog,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QShortcut,
+    QSplitter,
+    QStyle,
+    QToolBar,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
+)
+from widgets import (
+    about,
+    findWidget,
+    gotoLineWidget,
+    outputWidget,
+    shortcuts,
+    snippetWidget,
+    symbolWidget,
+    tabWidget,
+    themeEditor,
+)
+from widgets import scriptEditor_UIs as ui
+from widgets.main_window_builder import ScriptEditorUIBuilder
+from widgets.outline_utils import HtmlDelegate, create_symbol_item
+from widgets.pythonSyntax import design
+
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)

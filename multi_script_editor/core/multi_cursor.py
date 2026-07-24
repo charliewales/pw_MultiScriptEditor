@@ -1,6 +1,7 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QTextCursor, QColor, QTextDocument
+from vendor.Qt.QtGui import QColor, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
+
 
 class MultiCursorManager:
     def __init__(self, editor):
