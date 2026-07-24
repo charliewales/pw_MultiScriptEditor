@@ -177,6 +177,7 @@ class ExplorerWidget(QWidget):
     file_selected = Signal(str)
     folder_changed = Signal(str)
     bookmarks_changed = Signal(list)
+    sync_to_current_tab_requested = Signal()
 
     def __init__(self, parent=None, root_path=None):
         super(ExplorerWidget, self).__init__(parent)
@@ -191,13 +192,13 @@ class ExplorerWidget(QWidget):
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(2, 2, 2, 2)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(4)
 
         # Top Bar: QLineEdit for filter & direct path navigation
         self.path_filter_input = QLineEdit()
         self.path_filter_input.setObjectName("explorerPathFilterInput")
-        self.path_filter_input.setPlaceholderText("Filter or paste path + Enter...")
+        self.path_filter_input.setPlaceholderText("Enter path...")
         self.path_filter_input.setClearButtonEnabled(True)
 
         # Control Buttons on top right
@@ -208,6 +209,10 @@ class ExplorerWidget(QWidget):
         self.up_btn = QToolButton()
         self.up_btn.setToolTip("Up to Parent Directory")
         self.up_btn.setIcon(QIcon(icons.get("up", "")))
+
+        self.sync_tab_btn = QToolButton()
+        self.sync_tab_btn.setToolTip("Set Root to Current Tab Directory")
+        self.sync_tab_btn.setIcon(QIcon(icons.get("view_file", icons.get("open", ""))))
 
         self.add_bookmark_btn = QToolButton()
         self.add_bookmark_btn.setToolTip("Bookmark Current Directory")
@@ -226,17 +231,14 @@ class ExplorerWidget(QWidget):
         self.refresh_btn.setIcon(QIcon(icons.get("reload_plugins", icons.get("clear", ""))))
 
         self.controls_layout.addWidget(self.up_btn)
+        self.controls_layout.addWidget(self.sync_tab_btn)
         self.controls_layout.addWidget(self.add_bookmark_btn)
         self.controls_layout.addWidget(self.bookmarks_menu_btn)
         self.controls_layout.addWidget(self.refresh_btn)
+        self.controls_layout.addStretch()
 
-        top_header_layout = QHBoxLayout()
-        top_header_layout.setContentsMargins(0, 0, 0, 0)
-        top_header_layout.setSpacing(2)
-        top_header_layout.addWidget(self.path_filter_input, 1)
-        top_header_layout.addLayout(self.controls_layout)
-
-        main_layout.addLayout(top_header_layout)
+        main_layout.addLayout(self.controls_layout)
+        main_layout.addWidget(self.path_filter_input)
 
         # Tree View & File System Model
         self.fs_model = QFileSystemModel()
@@ -266,10 +268,10 @@ class ExplorerWidget(QWidget):
         self._update_bookmarks_menu()
 
     def _setup_connections(self):
-        self.path_filter_input.textChanged.connect(self._on_filter_changed)
         self.path_filter_input.returnPressed.connect(self._on_path_entered)
 
         self.up_btn.clicked.connect(self.navigate_up)
+        self.sync_tab_btn.clicked.connect(self.sync_to_current_tab_requested.emit)
         self.add_bookmark_btn.clicked.connect(self.add_current_to_bookmarks)
         self.refresh_btn.clicked.connect(self.refresh_tree)
 
@@ -287,6 +289,10 @@ class ExplorerWidget(QWidget):
 
         path = os.path.abspath(path)
         self._current_root = path
+
+        self.path_filter_input.blockSignals(True)
+        self.path_filter_input.setText(path)
+        self.path_filter_input.blockSignals(False)
 
         source_index = self.fs_model.setRootPath(path)
         proxy_index = self.proxy_model.mapFromSource(source_index)
@@ -314,15 +320,12 @@ class ExplorerWidget(QWidget):
     def _on_path_entered(self):
         text = self.path_filter_input.text().strip().strip('"\'')
         if not text:
+            self.path_filter_input.setText(self._current_root)
             return
 
         norm_path = os.path.abspath(os.path.expanduser(text))
 
         if os.path.exists(norm_path):
-            # Clear filter FIRST so proxy model reveals all contents
-            self.path_filter_input.blockSignals(True)
-            self.path_filter_input.clear()
-            self.path_filter_input.blockSignals(False)
             self.proxy_model.setFilterFixedString("")
 
             if os.path.isdir(norm_path):
@@ -333,8 +336,8 @@ class ExplorerWidget(QWidget):
                 self._select_and_highlight_file(norm_path)
                 self.file_selected.emit(norm_path)
         else:
-            # If not a disk path, apply as search filter text
-            self.proxy_model.setFilterFixedString(text)
+            # If not a disk path, revert to current root
+            self.path_filter_input.setText(self._current_root)
 
     def _select_and_highlight_file(self, filepath):
         source_index = self.fs_model.index(filepath)
@@ -442,6 +445,7 @@ class ExplorerWidget(QWidget):
             target_path = self._current_root
 
         menu = QMenu(self)
+        menu.setFont(self.font())
 
         if os.path.isfile(target_path):
             open_act = QAction("Open in Editor", menu)
@@ -612,9 +616,10 @@ class ExplorerWidget(QWidget):
                 image: none;
             }}
         """
-        self.setStyleSheet(qss)
+        # self.setStyleSheet(qss)
 
         if font:
             self.setFont(font)
             self.tree_view.setFont(font)
             self.path_filter_input.setFont(font)
+            self.bookmarks_menu.setFont(font)

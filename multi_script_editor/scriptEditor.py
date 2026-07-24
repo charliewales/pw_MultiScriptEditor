@@ -155,6 +155,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # Explorer Panel
         self.explorer_widget = explorerWidget.ExplorerWidget(self)
         self.explorer_widget.file_selected.connect(self.loadScript)
+        self.explorer_widget.sync_to_current_tab_requested.connect(self._sync_explorer_to_tab)
 
         # Left Sidebar TabWidget (combines Explorer and Outline)
         self.sidebar_tab_widget = QTabWidget()
@@ -1451,6 +1452,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             popup.exec()
         else:
             popup.exec_()
+
+    def _sync_explorer_to_tab(self):
+        index = self.tab.currentIndex()
+        if index >= 0:
+            w = self.tab.widget(index)
+            if hasattr(w, 'file_path') and w.file_path and os.path.exists(w.file_path):
+                self.explorer_widget.set_root_path(os.path.dirname(w.file_path))
 
     def loadScript(self, file_path=None):
         if file_path and isinstance(file_path, str) and os.path.exists(file_path):
