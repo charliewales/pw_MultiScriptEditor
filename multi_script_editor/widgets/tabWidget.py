@@ -76,6 +76,7 @@ class tabWidgetClass(QTabWidget):
         self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
         self.toggleOutline_btn.setIconSize(QSize(24, 24))
         self.toggleOutline_btn.setToolTip("Toggle Code Outline (Ctrl+Shift+O)")
+        self.toggleOutline_btn.setStatusTip("Show or hide the code outline panel")
         self.toggleOutline_btn.setCheckable(True)
         self.toggleOutline_btn.toggled.connect(self.toggle_outline)
 
@@ -86,6 +87,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setIconSize(QSize(24, 24))
         newTabButton.clicked.connect(lambda checked=False: self.addNewTab())
         newTabButton.setToolTip("New Tab (Ctrl+T)")
+        newTabButton.setStatusTip("Open a new empty editor tab")
         newTabButton.setShortcut('Ctrl+T')
 
         self.corner_layout.addWidget(self.toggleOutline_btn)

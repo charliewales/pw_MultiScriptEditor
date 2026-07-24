@@ -33,15 +33,44 @@ FILE_TYPE_COLORS = {
     # Docs / Text
     ".md": "#98c379", ".txt": "#98c379", ".rst": "#98c379", ".log": "#abb2bf",
     # C / C++ / Rust / Go
-    ".c": "#c678dd", ".cpp": "#c678dd", ".h": "#c678dd", ".hpp": "#c678dd",
-    ".rs": "#d19a66", ".go": "#00add8",
+    # ".c": "#c678dd", ".cpp": "#c678dd", ".h": "#c678dd", ".hpp": "#c678dd",
+    # ".rs": "#d19a66", ".go": "#00add8",
     # Web
-    ".html": "#e06c75", ".css": "#56b6c2", ".js": "#e5c07b", ".ts": "#61afef",
-    # Shell / Scripts
+    ".html": "#e06c75", ".htm": "#e06c75", ".css": "#56b6c2", ".js": "#e5c07b",
+    # ".jsx": "#61afef", ".tsx": "#61afef",
+    # Shell / Scripts / Batch
     ".sh": "#98c379", ".bat": "#98c379", ".cmd": "#98c379", ".ps1": "#98c379",
-    # Media
-    ".png": "#c678dd", ".jpg": "#c678dd", ".jpeg": "#c678dd", ".gif": "#c678dd", ".svg": "#c678dd",
+    # USD
+    ".usd": "#e5c07b", ".usda": "#e5c07b",
 }
+
+SUPPORTED_EXTENSIONS_EXTRA = set()
+
+
+def register_supported_extension(ext):
+    """
+    Dynamically register an extra supported file extension for Explorer filtering.
+    """
+    if not ext:
+        return
+    if not ext.startswith("."):
+        ext = "." + ext
+    SUPPORTED_EXTENSIONS_EXTRA.add(ext.lower())
+
+
+def get_supported_extensions():
+    """
+    Dynamically returns all supported file extensions in Multi Script Editor.
+    Fetches SUPPORTED_EXTENSIONS from scriptEditor and combines with FILE_TYPE_COLORS.
+    """
+    exts = set(FILE_TYPE_COLORS.keys()) | SUPPORTED_EXTENSIONS_EXTRA
+    try:
+        import scriptEditor
+        if hasattr(scriptEditor, 'SUPPORTED_EXTENSIONS'):
+            exts.update(scriptEditor.SUPPORTED_EXTENSIONS)
+    except Exception:
+        pass
+    return exts
 
 
 def get_default_bookmarks():
@@ -63,21 +92,27 @@ def get_default_bookmarks():
 class FileSystemFilterProxyModel(QSortFilterProxyModel):
     """
     Custom proxy model that recursively filters, sorts by extension ascending,
-    and colors different file types in QFileSystemModel.
+    colors file types, and supports filtering by supported file types dynamically.
     """
     def __init__(self, parent=None):
         super(FileSystemFilterProxyModel, self).__init__(parent)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self._filter_text = ""
+        self._show_all_files = False
 
     def setFilterFixedString(self, pattern):
         self._filter_text = pattern.strip().lower() if pattern else ""
         super(FileSystemFilterProxyModel, self).setFilterFixedString(pattern)
 
-    def filterAcceptsRow(self, source_row, source_parent):
-        if not self._filter_text:
-            return True
+    def setShowAllFiles(self, enabled):
+        """
+        If enabled (True / Checked button): Show ALL files.
+        If disabled (False / Unchecked button): Show ONLY supported file types.
+        """
+        self._show_all_files = bool(enabled)
+        self.invalidateFilter()
 
+    def filterAcceptsRow(self, source_row, source_parent):
         source_model = self.sourceModel()
         index = source_model.index(source_row, 0, source_parent)
         if not index.isValid():
@@ -85,16 +120,28 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
 
         file_name = source_model.fileName(index)
 
-        # Direct match on name
-        if self._filter_text in file_name.lower():
+        if not source_model.isDir(index):
+            # If show_all_files is False (Unchecked button), filter to supported extensions only
+            if not self._show_all_files:
+                ext = os.path.splitext(file_name)[1].lower()
+                if ext not in get_supported_extensions():
+                    return False
+
+            # Check if name text filter matches
+            if self._filter_text:
+                if self._filter_text not in file_name.lower():
+                    return False
+
             return True
 
         # If it's a directory, check if any child item matches recursively
-        if source_model.isDir(index):
-            num_children = source_model.rowCount(index)
-            for i in range(num_children):
-                if self.filterAcceptsRow(i, index):
-                    return True
+        num_children = source_model.rowCount(index)
+        if num_children == 0:
+            return True
+
+        for i in range(num_children):
+            if self.filterAcceptsRow(i, index):
+                return True
 
         return False
 
@@ -146,13 +193,35 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
 
 class ExplorerTreeView(QTreeView):
     """
-    Subclassed QTreeView to catch Return/Enter key presses to open files in tabs or toggle folders.
+    Subclassed QTreeView to catch Return/Enter, Middle Click, and Backspace keys for navigation.
     """
     file_open_requested = Signal(str)
+    directory_set_root_requested = Signal(str)
+    navigate_parent_requested = Signal()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            idx = self.indexAt(event.pos())
+            if idx.isValid():
+                model = self.model()
+                source_index = model.mapToSource(idx) if hasattr(model, 'mapToSource') else idx
+                fs_model = model.sourceModel() if hasattr(model, 'sourceModel') else model
+                path = fs_model.filePath(source_index)
+                if os.path.isdir(path):
+                    self.directory_set_root_requested.emit(path)
+                    event.accept()
+                    return
+                elif os.path.isfile(path):
+                    self.file_open_requested.emit(path)
+                    event.accept()
+                    return
+        super(ExplorerTreeView, self).mousePressEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
-            current_index = self.currentIndex()
+        key = event.key()
+        current_index = self.currentIndex()
+
+        if key in (Qt.Key_Return, Qt.Key_Enter):
             if current_index.isValid():
                 model = self.model()
                 source_index = model.mapToSource(current_index) if hasattr(model, 'mapToSource') else current_index
@@ -163,9 +232,15 @@ class ExplorerTreeView(QTreeView):
                     event.accept()
                     return
                 elif os.path.isdir(path):
-                    self.setExpanded(current_index, not self.isExpanded(current_index))
+                    self.directory_set_root_requested.emit(path)
                     event.accept()
                     return
+
+        elif key == Qt.Key_Backspace:
+            self.navigate_parent_requested.emit()
+            event.accept()
+            return
+
         super(ExplorerTreeView, self).keyPressEvent(event)
 
 
@@ -199,7 +274,6 @@ class ExplorerWidget(QWidget):
         self.path_filter_input = QLineEdit()
         self.path_filter_input.setObjectName("explorerPathFilterInput")
         self.path_filter_input.setPlaceholderText("Enter path...")
-        self.path_filter_input.setClearButtonEnabled(True)
 
         # Control Buttons on top right
         self.controls_layout = QHBoxLayout()
@@ -208,18 +282,37 @@ class ExplorerWidget(QWidget):
 
         self.up_btn = QToolButton()
         self.up_btn.setToolTip("Up to Parent Directory")
+        self.up_btn.setStatusTip("Navigate up to the parent directory")
         self.up_btn.setIcon(QIcon(icons.get("up", "")))
 
         self.sync_tab_btn = QToolButton()
         self.sync_tab_btn.setToolTip("Set Root to Current Tab Directory")
+        self.sync_tab_btn.setStatusTip("Set the explorer root path to match the currently active tab")
         self.sync_tab_btn.setIcon(QIcon(icons.get("view_file", icons.get("open", ""))))
+
+        self.auto_sync_tab_btn = QToolButton()
+        self.auto_sync_tab_btn.setCheckable(True)
+        self.auto_sync_tab_btn.setChecked(False)
+        self.auto_sync_tab_btn.setToolTip("Toggle: Auto-Sync Explorer Root on Tab Change")
+        self.auto_sync_tab_btn.setStatusTip("Automatically set the explorer root path when switching tabs")
+        self.auto_sync_tab_btn.setIcon(QIcon(icons.get("file_recent", icons.get("open", ""))))
+
+        self.filter_supported_btn = QToolButton()
+        self.filter_supported_btn.setCheckable(True)
+        self.filter_supported_btn.setChecked(False)
+        self.filter_supported_btn.setText("*.*")
+        self.filter_supported_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.filter_supported_btn.setToolTip("Toggle: Show All Files (Checked = All files, Unchecked = Supported files only)")
+        self.filter_supported_btn.setStatusTip("Toggle whether to show all files or only supported scripts/files")
 
         self.add_bookmark_btn = QToolButton()
         self.add_bookmark_btn.setToolTip("Bookmark Current Directory")
+        self.add_bookmark_btn.setStatusTip("Add the current directory to your explorer bookmarks")
         self.add_bookmark_btn.setIcon(QIcon(icons.get("bookmark_toggle", "")))
 
         self.bookmarks_menu_btn = QToolButton()
         self.bookmarks_menu_btn.setToolTip("Show Saved Directory Favorites")
+        self.bookmarks_menu_btn.setStatusTip("Show a menu of your bookmarked directories")
         self.bookmarks_menu_btn.setIcon(QIcon(icons.get("bookmark_prev", icons.get("bookmark_toggle", ""))))
 
         self.bookmarks_menu = QMenu(self)
@@ -228,10 +321,13 @@ class ExplorerWidget(QWidget):
 
         self.refresh_btn = QToolButton()
         self.refresh_btn.setToolTip("Refresh Directory")
+        self.refresh_btn.setStatusTip("Refresh the file explorer view")
         self.refresh_btn.setIcon(QIcon(icons.get("reload_plugins", icons.get("clear", ""))))
 
         self.controls_layout.addWidget(self.up_btn)
         self.controls_layout.addWidget(self.sync_tab_btn)
+        self.controls_layout.addWidget(self.auto_sync_tab_btn)
+        self.controls_layout.addWidget(self.filter_supported_btn)
         self.controls_layout.addWidget(self.add_bookmark_btn)
         self.controls_layout.addWidget(self.bookmarks_menu_btn)
         self.controls_layout.addWidget(self.refresh_btn)
@@ -268,17 +364,26 @@ class ExplorerWidget(QWidget):
         self._update_bookmarks_menu()
 
     def _setup_connections(self):
+        self.path_filter_input.textChanged.connect(self.path_filter_input.setToolTip)
         self.path_filter_input.returnPressed.connect(self._on_path_entered)
 
         self.up_btn.clicked.connect(self.navigate_up)
         self.sync_tab_btn.clicked.connect(self.sync_to_current_tab_requested.emit)
+        self.auto_sync_tab_btn.toggled.connect(self._on_auto_sync_toggled)
+        self.filter_supported_btn.toggled.connect(self.proxy_model.setShowAllFiles)
         self.add_bookmark_btn.clicked.connect(self.add_current_to_bookmarks)
         self.refresh_btn.clicked.connect(self.refresh_tree)
 
         self.tree_view.doubleClicked.connect(self._on_item_double_clicked)
         self.tree_view.file_open_requested.connect(self.file_selected.emit)
+        self.tree_view.directory_set_root_requested.connect(self.set_root_path)
+        self.tree_view.navigate_parent_requested.connect(self.navigate_up)
         self.tree_view.customContextMenuRequested.connect(self._show_context_menu)
         self.fs_model.directoryLoaded.connect(self._on_directory_loaded)
+
+    def _on_auto_sync_toggled(self, checked):
+        if checked:
+            self.sync_to_current_tab_requested.emit()
 
     def set_root_path(self, path):
         if not path or not os.path.exists(path):
@@ -290,9 +395,7 @@ class ExplorerWidget(QWidget):
         path = os.path.abspath(path)
         self._current_root = path
 
-        self.path_filter_input.blockSignals(True)
         self.path_filter_input.setText(path)
-        self.path_filter_input.blockSignals(False)
 
         source_index = self.fs_model.setRootPath(path)
         proxy_index = self.proxy_model.mapFromSource(source_index)
@@ -447,30 +550,46 @@ class ExplorerWidget(QWidget):
         menu = QMenu(self)
         menu.setFont(self.font())
 
+        def on_hover(action):
+            main_window = self.window()
+            if hasattr(main_window, 'statusBar'):
+                if action and action.statusTip():
+                    if getattr(main_window, '_show_status_tips', True):
+                        main_window.statusBar().showMessage(action.statusTip())
+                else:
+                    main_window.statusBar().clearMessage()
+                    
+        menu.hovered.connect(on_hover)
+
         if os.path.isfile(target_path):
-            open_act = QAction("Open in Editor", menu)
+            open_act = QAction("Open in editor [MMB]", menu)
+            open_act.setStatusTip("Open this file in a new tab (Middle Mouse Button)")
             open_act.setIcon(QIcon(icons.get("open", "")))
             open_act.triggered.connect(lambda: self.file_selected.emit(target_path))
             menu.addAction(open_act)
         elif os.path.isdir(target_path):
-            set_root_act = QAction("Set as Explorer Root", menu)
+            set_root_act = QAction("Set as explorer root [MMB]", menu)
+            set_root_act.setStatusTip("Navigate into this folder (Middle Mouse Button)")
             set_root_act.setIcon(QIcon(icons.get("open", "")))
             set_root_act.triggered.connect(lambda: self.set_root_path(target_path))
             menu.addAction(set_root_act)
 
-            bookmark_act = QAction("Add to Favorites/Bookmarks", menu)
+            bookmark_act = QAction("Add to favorites/bookmarks", menu)
+            bookmark_act.setStatusTip("Bookmark this folder")
             bookmark_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
             bookmark_act.triggered.connect(lambda: self.add_path_to_bookmarks(target_path))
             menu.addAction(bookmark_act)
 
         menu.addSeparator()
 
-        open_os_act = QAction("Reveal in File Explorer", menu)
+        open_os_act = QAction("Reveal in file explorer", menu)
+        open_os_act.setStatusTip("Open in system file manager")
         open_os_act.setIcon(QIcon(icons.get("file_recent", "")))
         open_os_act.triggered.connect(lambda: self._open_in_os_explorer(target_path))
         menu.addAction(open_os_act)
 
-        copy_path_act = QAction("Copy Full Path", menu)
+        copy_path_act = QAction("Copy full path", menu)
+        copy_path_act.setStatusTip("Copy the absolute file path to clipboard")
         copy_path_act.setIcon(QIcon(icons.get("copy", "")))
         copy_path_act.triggered.connect(lambda: QApplication.clipboard().setText(target_path))
         menu.addAction(copy_path_act)
@@ -479,11 +598,13 @@ class ExplorerWidget(QWidget):
 
         target_dir = target_path if os.path.isdir(target_path) else os.path.dirname(target_path)
 
-        new_file_act = QAction("New File...", menu)
+        new_file_act = QAction("New file...", menu)
+        new_file_act.setStatusTip("Create a new file in this directory")
         new_file_act.triggered.connect(lambda: self._create_new_file(target_dir))
         menu.addAction(new_file_act)
 
-        new_folder_act = QAction("New Folder...", menu)
+        new_folder_act = QAction("New folder...", menu)
+        new_folder_act.setStatusTip("Create a new folder in this directory")
         new_folder_act.triggered.connect(lambda: self._create_new_folder(target_dir))
         menu.addAction(new_folder_act)
 
@@ -491,11 +612,13 @@ class ExplorerWidget(QWidget):
             menu.addSeparator()
 
             rename_act = QAction("Rename...", menu)
+            rename_act.setStatusTip("Rename this file or folder")
             rename_act.setIcon(QIcon(icons.get("rename_file", "")))
             rename_act.triggered.connect(lambda: self._rename_path(target_path))
             menu.addAction(rename_act)
 
             delete_act = QAction("Delete", menu)
+            delete_act.setStatusTip("Move this file or folder to trash")
             delete_act.setIcon(QIcon(icons.get("delete_file", "")))
             delete_act.triggered.connect(lambda: self._delete_path(target_path))
             menu.addAction(delete_act)
