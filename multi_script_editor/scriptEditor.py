@@ -51,6 +51,7 @@ from vendor.Qt.QtWidgets import (
     QShortcut,
     QSplitter,
     QStyle,
+    QTabWidget,
     QToolBar,
     QToolTip,
     QVBoxLayout,
@@ -58,6 +59,7 @@ from vendor.Qt.QtWidgets import (
 )
 from widgets import (
     about,
+    explorerWidget,
     findWidget,
     gotoLineWidget,
     outputWidget,
@@ -150,12 +152,24 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.menu_toggle_act.setToolTip("Show Menus")
         self.menu_toggle_act.triggered.connect(lambda: self.toggleMenuBar(True))
 
-        self.horizontal_splitter.addWidget(self.outline_panel)
+        # Explorer Panel
+        self.explorer_widget = explorerWidget.ExplorerWidget(self)
+        self.explorer_widget.file_selected.connect(self.loadScript)
+
+        # Left Sidebar TabWidget (combines Explorer and Outline)
+        self.sidebar_tab_widget = QTabWidget()
+        self.sidebar_tab_widget.setObjectName("sidebarTabWidget")
+        self.sidebar_tab_widget.setTabPosition(QTabWidget.North)
+        self.sidebar_tab_widget.addTab(self.explorer_widget, QIcon(icons.get("open", "")), "Explorer")
+        self.sidebar_tab_widget.addTab(self.outline_panel, QIcon(icons.get("outline", "")), "Outline")
+        self.sidebar_tab_widget.currentChanged.connect(self._on_sidebar_tab_changed)
+
+        self.horizontal_splitter.addWidget(self.sidebar_tab_widget)
         self.horizontal_splitter.addWidget(self.editor_container)
         self.in_ly.addWidget(self.horizontal_splitter)
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)
-        self.horizontal_splitter.setSizes([0, 800])  # Start with outline panel collapsed
+        self.horizontal_splitter.setSizes([0, 800])  # Start with sidebar collapsed
 
         for m in self.file_menu, self.tools_menu, self.options_menu, self.run_menu, self.help_menu:
             m.setWindowTitle('MSE {0}'.format(self.ver))
@@ -712,6 +726,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.outline_filter.setFont(outline_font)
             for i in range(self.outline_list.count()):
                 self.outline_list.item(i).setFont(outline_font)
+
+            if hasattr(self, 'explorer_widget'):
+                self.explorer_widget.apply_theme(colors, outline_font)
 
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
@@ -1431,7 +1448,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             popup.exec_()
 
-    def loadScript(self):
+    def loadScript(self, file_path=None):
+        if file_path and isinstance(file_path, str) and os.path.exists(file_path):
+            text = read_file_text(file_path)
+            self.tab.addNewTab(os.path.basename(file_path), text, file_path=file_path)
+            self.addRecentFile(file_path)
+            return
+
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
@@ -1677,9 +1700,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             f.setPointSize(outFontSize)
             self.out.setFont(f)
 
-            show_outline = data.get('show_outline', False)
-            self.showOutline_act.setChecked(show_outline)
-            self.toggleOutline(show_outline)
+            if hasattr(self, 'explorer_widget'):
+                bookmarks = data.get('explorer_bookmarks', [])
+                if bookmarks:
+                    self.explorer_widget.set_bookmarks(bookmarks)
+                path = data.get('explorer_current_path', '')
+                if path and os.path.exists(path):
+                    self.explorer_widget.set_root_path(path)
+
+            show_explorer = data.get('show_explorer', False)
+            if show_explorer:
+                self.toggleExplorer(True)
+            else:
+                show_outline = data.get('show_outline', False)
+                self.showOutline_act.setChecked(show_outline)
+                self.toggleOutline(show_outline)
 
             show_outline_button = data.get('show_outline_button', True)
             self.showOutlineButton_act.setChecked(show_outline_button)
@@ -1771,6 +1806,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_whitespace = self.whitespace_act.isChecked()
 
         show_outline = self.showOutline_act.isChecked()
+        show_explorer = self.showExplorer_act.isChecked()
+        explorer_bookmarks = self.explorer_widget.get_bookmarks() if hasattr(self, 'explorer_widget') else []
+        explorer_current_path = self.explorer_widget.get_current_root() if hasattr(self, 'explorer_widget') else ""
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
@@ -1827,6 +1865,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_whitespace=show_whitespace,
             font=font_data,
             show_outline=show_outline,
+            show_explorer=show_explorer,
+            explorer_bookmarks=explorer_bookmarks,
+            explorer_current_path=explorer_current_path,
             show_outline_button=show_outline_button,
             show_output=show_output,
             show_menus=show_menus,
@@ -1969,22 +2010,97 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             os.system('open "%s"' % path)
 
     # NEW FEATURES METHODS
-    def toggleOutline(self, state):
-        self.showOutline_act.setChecked(state)
-        if state:
-            sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
-            if sizes[0] == 0:
-                sizes = [200, 600]
-            self.horizontal_splitter.setSizes(sizes)
-            self._updateOutlineNow()
+    def _on_sidebar_tab_changed(self, index):
+        if not hasattr(self, 'horizontal_splitter'):
+            return
+        if self.horizontal_splitter.sizes()[0] > 0:
+            if index == 0:
+                self.showExplorer_act.setChecked(True)
+                self.showOutline_act.setChecked(False)
+            elif index == 1:
+                self.showExplorer_act.setChecked(False)
+                self.showOutline_act.setChecked(True)
+                self._updateOutlineNow()
+
+    def toggleExplorer(self, state=None):
+        if not hasattr(self, 'sidebar_tab_widget'):
+            return
+
+        if state is None:
+            sizes = self.horizontal_splitter.sizes()
+            is_collapsed = sizes[0] == 0
+            is_current_tab = self.sidebar_tab_widget.currentIndex() == 0
+
+            if is_collapsed or not is_current_tab:
+                self.sidebar_tab_widget.setCurrentIndex(0)
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
+                if restore_sizes[0] == 0:
+                    restore_sizes = [250, 550]
+                self.horizontal_splitter.setSizes(restore_sizes)
+                self.showExplorer_act.setChecked(True)
+                self.showOutline_act.setChecked(False)
+            else:
+                if sizes[0] != 0:
+                    self._last_horizontal_splitter_sizes = sizes
+                self.horizontal_splitter.setSizes([0, 800])
+                self.showExplorer_act.setChecked(False)
+                self.showOutline_act.setChecked(False)
         else:
-            if self.horizontal_splitter.sizes()[0] != 0:
-                self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
-            self.horizontal_splitter.setSizes([0, 800])
+            self.showExplorer_act.setChecked(state)
+            if state:
+                self.sidebar_tab_widget.setCurrentIndex(0)
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
+                if restore_sizes[0] == 0:
+                    restore_sizes = [250, 550]
+                self.horizontal_splitter.setSizes(restore_sizes)
+                self.showOutline_act.setChecked(False)
+            else:
+                if self.horizontal_splitter.sizes()[0] != 0:
+                    self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
+                self.horizontal_splitter.setSizes([0, 800])
+
+    def toggleOutline(self, state=None):
+        if not hasattr(self, 'sidebar_tab_widget'):
+            return
+
+        if state is None:
+            sizes = self.horizontal_splitter.sizes()
+            is_collapsed = sizes[0] == 0
+            is_current_tab = self.sidebar_tab_widget.currentIndex() == 1
+
+            if is_collapsed or not is_current_tab:
+                self.sidebar_tab_widget.setCurrentIndex(1)
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
+                if restore_sizes[0] == 0:
+                    restore_sizes = [250, 550]
+                self.horizontal_splitter.setSizes(restore_sizes)
+                self.showOutline_act.setChecked(True)
+                self.showExplorer_act.setChecked(False)
+                self._updateOutlineNow()
+            else:
+                if sizes[0] != 0:
+                    self._last_horizontal_splitter_sizes = sizes
+                self.horizontal_splitter.setSizes([0, 800])
+                self.showOutline_act.setChecked(False)
+                self.showExplorer_act.setChecked(False)
+        else:
+            self.showOutline_act.setChecked(state)
+            if state:
+                self.sidebar_tab_widget.setCurrentIndex(1)
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
+                if restore_sizes[0] == 0:
+                    restore_sizes = [250, 550]
+                self.horizontal_splitter.setSizes(restore_sizes)
+                self.showExplorer_act.setChecked(False)
+                self._updateOutlineNow()
+            else:
+                if self.horizontal_splitter.sizes()[0] != 0:
+                    self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
+                self.horizontal_splitter.setSizes([0, 800])
 
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
             self.tab.toggleOutline_btn.blockSignals(True)
-            self.tab.toggleOutline_btn.setChecked(state)
+            self.tab.toggleOutline_btn.setChecked(self.showOutline_act.isChecked())
             self.tab.toggleOutline_btn.blockSignals(False)
 
     def toggleOutlineButton(self, state):

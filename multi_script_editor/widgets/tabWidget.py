@@ -55,6 +55,7 @@ class tabWidgetClass(QTabWidget):
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
+        self.setAcceptDrops(True)
         # Ensure scroll buttons are shown instead of squeezing tabs when they exceed the width
         self.setUsesScrollButtons(True)
         self.tabBar().setExpanding(False)
@@ -1034,6 +1035,36 @@ class tabWidgetClass(QTabWidget):
                 QTimer.singleShot(0, lambda i=index: self.closeTab(i))
         else:
             super(tabWidgetClass, self).mousePressEvent(event)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super(tabWidgetClass, self).dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super(tabWidgetClass, self).dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if os.path.exists(file_path):
+                        if os.path.isfile(file_path):
+                            if hasattr(self.p, 'loadScript'):
+                                self.p.loadScript(file_path)
+                            elif hasattr(self.p, 'openRecentFile'):
+                                self.p.openRecentFile(file_path)
+                        elif os.path.isdir(file_path):
+                            if hasattr(self.p, 'explorer_widget'):
+                                self.p.explorer_widget.set_root_path(file_path)
+            return
+        super(tabWidgetClass, self).dropEvent(event)
 
 ############################## editor commands
     def update_custom_close_buttons(self, index=None):

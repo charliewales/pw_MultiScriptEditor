@@ -364,6 +364,12 @@ class ScriptEditorUIBuilder:
         # Create status bar
         editor.statusBar()
 
+        # Explorer toggle setup
+        editor.showExplorer_act.setShortcut("Ctrl+E")
+        editor.showExplorer_act.setShortcutContext(Qt.WindowShortcut)
+        editor.showExplorer_act.triggered.connect(editor.toggleExplorer)
+        editor.showExplorer_act.setIcon(QIcon(icons.get("open", "")))
+
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
@@ -594,6 +600,7 @@ class ScriptEditorUIBuilder:
             editor.shortcuts_act: "Show a list of application shortcuts",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
             editor.showAutocomplete_act: "Show code autocompletion",
+            editor.showExplorer_act: "Show or hide the file explorer panel",
             editor.showOutline_act: "Show or hide the code outline panel",
             editor.showOutlineButton_act: "Show or hide the code outline button in the status bar",
             editor.showOutput_act: "Show or hide the output panel",
