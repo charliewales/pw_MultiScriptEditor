@@ -1763,9 +1763,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     auto_sync = data.get('explorer_auto_sync', False)
                     self.explorer_widget.auto_sync_tab_btn.setChecked(auto_sync)
                 if getattr(self.explorer_widget, 'filter_supported_btn', None):
-                    show_all = data.get('explorer_show_all_files', False)
-                    self.explorer_widget.filter_supported_btn.setChecked(show_all)
-                    self.explorer_widget.proxy_model.setShowAllFiles(show_all)
+                    filter_supported = data.get('explorer_filter_supported', data.get('explorer_show_all_files', True))
+                    self.explorer_widget.filter_supported_btn.setChecked(filter_supported)
+                    self.explorer_widget.proxy_model.setFilterSupportedOnly(filter_supported)
 
             show_explorer = data.get('show_explorer', False)
             if show_explorer:
@@ -1869,7 +1869,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         explorer_bookmarks = self.explorer_widget.get_bookmarks() if hasattr(self, 'explorer_widget') else []
         explorer_current_path = self.explorer_widget.get_current_root() if hasattr(self, 'explorer_widget') else ""
         explorer_auto_sync = self.explorer_widget.auto_sync_tab_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None) else False
-        explorer_show_all_files = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else False
+        explorer_filter_supported = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else True
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
@@ -1930,7 +1930,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             explorer_bookmarks=explorer_bookmarks,
             explorer_current_path=explorer_current_path,
             explorer_auto_sync=explorer_auto_sync,
-            explorer_show_all_files=explorer_show_all_files,
+            explorer_filter_supported=explorer_filter_supported,
             show_outline_button=show_outline_button,
             show_output=show_output,
             show_menus=show_menus,

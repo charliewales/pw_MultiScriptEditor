@@ -368,14 +368,12 @@ class ScriptEditorUIBuilder:
         editor.showExplorer_act.setShortcut("Ctrl+E")
         editor.showExplorer_act.setShortcutContext(Qt.WindowShortcut)
         editor.showExplorer_act.triggered.connect(editor.toggleExplorer)
-        editor.showExplorer_act.setIcon(QIcon(icons.get("open", "")))
 
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
         editor.showOutlineButton_act.triggered.connect(editor.toggleOutlineButton)
-        # QShortcut(QKeySequence("Ctrl+Shift+O"), editor, editor.showOutline_act.trigger)
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
@@ -389,7 +387,6 @@ class ScriptEditorUIBuilder:
         editor.outputBottom_act.setShortcutContext(Qt.WindowShortcut)
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
         editor.addAction(editor.outputBottom_act)
-        # QShortcut(QKeySequence("Ctrl+U"), editor, editor.outputBottom_act.trigger)
 
         # Output toggle setup
         editor.showOutput_act.setShortcut("Ctrl+K")

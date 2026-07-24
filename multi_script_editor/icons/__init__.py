@@ -94,4 +94,5 @@ icons = dict(
     explorer=os.path.join(root, "open.png"),
     new_file=os.path.join(root, "new_file.png"),
     new_folder=os.path.join(root, "new_folder.png"),
+    filter_files=os.path.join(root, "filter_files.png"),
 )

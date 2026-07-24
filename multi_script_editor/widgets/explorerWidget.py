@@ -98,18 +98,18 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
         super(FileSystemFilterProxyModel, self).__init__(parent)
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self._filter_text = ""
-        self._show_all_files = False
+        self._filter_supported_only = True
 
     def setFilterFixedString(self, pattern):
         self._filter_text = pattern.strip().lower() if pattern else ""
         super(FileSystemFilterProxyModel, self).setFilterFixedString(pattern)
 
-    def setShowAllFiles(self, enabled):
+    def setFilterSupportedOnly(self, enabled):
         """
-        If enabled (True / Checked button): Show ALL files.
-        If disabled (False / Unchecked button): Show ONLY supported file types.
+        If enabled (True / Checked button): Show ONLY supported file types.
+        If disabled (False / Unchecked button): Show ALL files.
         """
-        self._show_all_files = bool(enabled)
+        self._filter_supported_only = bool(enabled)
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
@@ -121,8 +121,8 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
         file_name = source_model.fileName(index)
 
         if not source_model.isDir(index):
-            # If show_all_files is False (Unchecked button), filter to supported extensions only
-            if not self._show_all_files:
+            # If _filter_supported_only is True (Checked button), filter to supported extensions only
+            if self._filter_supported_only:
                 ext = os.path.splitext(file_name)[1].lower()
                 if ext not in get_supported_extensions():
                     return False
@@ -299,10 +299,10 @@ class ExplorerWidget(QWidget):
 
         self.filter_supported_btn = QToolButton()
         self.filter_supported_btn.setCheckable(True)
-        self.filter_supported_btn.setChecked(False)
+        self.filter_supported_btn.setChecked(True)
         self.filter_supported_btn.setText("*.*")
         self.filter_supported_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.filter_supported_btn.setToolTip("Toggle: Show All Files (Checked = All files, Unchecked = Supported files only)")
+        self.filter_supported_btn.setToolTip("Toggle: Show all files (Checked = Supported files only, Unchecked = All files)")
         self.filter_supported_btn.setStatusTip("Toggle whether to show all files or only supported scripts/files")
 
         self.add_bookmark_btn = QToolButton()
@@ -370,7 +370,7 @@ class ExplorerWidget(QWidget):
         self.up_btn.clicked.connect(self.navigate_up)
         self.sync_tab_btn.clicked.connect(self.sync_to_current_tab_requested.emit)
         self.auto_sync_tab_btn.toggled.connect(self._on_auto_sync_toggled)
-        self.filter_supported_btn.toggled.connect(self.proxy_model.setShowAllFiles)
+        self.filter_supported_btn.toggled.connect(self.proxy_model.setFilterSupportedOnly)
         self.add_bookmark_btn.clicked.connect(self.add_current_to_bookmarks)
         self.refresh_btn.clicked.connect(self.refresh_tree)
 
