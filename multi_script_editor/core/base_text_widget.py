@@ -116,6 +116,50 @@ class BaseTextWidgetMixin:
             menu.setFont(main_win.menubar.font())
             menu.setStyleSheet(main_win.menubar.styleSheet())
 
+        # Resolve file path for Git / File specific actions
+        file_path = None
+        curr = self
+        while curr:
+            file_path = getattr(curr, 'file_path', None)
+            if file_path:
+                break
+            if hasattr(curr, 'parent') and callable(curr.parent):
+                curr = curr.parent()
+            elif hasattr(curr, 'parentWidget') and callable(curr.parentWidget):
+                curr = curr.parentWidget()
+            else:
+                break
+
+        # Place Git menu at the very top if file is inside a Git repository and version control is enabled
+        if file_path and os.path.exists(file_path) and getattr(main_win, '_version_control_enabled', True):
+            from core.git_manager import GitManager
+            if GitManager.is_in_repo(file_path):
+                from vendor.Qt.QtWidgets import QMenu
+                git_menu = QMenu('Git', self)
+                if hasattr(main_win, 'menubar') and main_win.menubar:
+                    git_menu.setFont(main_win.menubar.font())
+                    git_menu.setStyleSheet(main_win.menubar.styleSheet())
+                elif menu.font():
+                    git_menu.setFont(menu.font())
+                    git_menu.setStyleSheet(menu.styleSheet())
+                if 'github' in icons:
+                    git_menu.setIcon(QIcon(icons['github']))
+                tab_widget = getattr(main_win, 'tab', None)
+                if tab_widget and hasattr(tab_widget, 'build_git_menu'):
+                    tab_idx = tab_widget.indexOf(curr) if hasattr(tab_widget, 'indexOf') else -1
+                    if tab_idx < 0:
+                        tab_idx = tab_widget.currentIndex()
+                    if tab_idx >= 0:
+                        tab_widget.build_git_menu(git_menu, tab_idx)
+
+                actions = menu.actions()
+                if actions:
+                    first_act = actions[0]
+                    menu.insertMenu(first_act, git_menu)
+                    menu.insertSeparator(first_act)
+                else:
+                    menu.addMenu(git_menu)
+
         # Selection to tab action
         cursor = self.textCursor()
         if cursor.hasSelection():
@@ -137,21 +181,6 @@ class BaseTextWidgetMixin:
             else:
                 menu.addAction(sel_to_tab_action)
 
-        # Check if we are editing an HTML file to add "Open in browser"
-        file_path = None
-        curr = self
-        while curr:
-            file_path = getattr(curr, 'file_path', None)
-            if file_path:
-                break
-            if hasattr(curr, 'parent') and callable(curr.parent):
-                curr = curr.parent()
-            elif hasattr(curr, 'parentWidget') and callable(curr.parentWidget):
-                curr = curr.parentWidget()
-            else:
-                break
-
-        if file_path and os.path.exists(file_path):
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
                 open_action = QAction('Open in browser    \tCtrl+Alt+B', self)

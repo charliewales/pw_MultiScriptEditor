@@ -242,6 +242,7 @@ class tabWidgetClass(QTabWidget):
     def onTabChanged(self, index):
         self.hideAllCompleters()
         if index >= 0:
+            self.update_tab_git_status(index)
             container = self.widget(index)
             if hasattr(self, '_mru_tabs'):
                 if container in self._mru_tabs:
@@ -366,6 +367,18 @@ class tabWidgetClass(QTabWidget):
             if self.count() == 0:
                 self.addNewTab()
 
+    def closeOtherTabs(self, keep_index=None):
+        if keep_index is None or isinstance(keep_index, bool):
+            keep_index = self.currentIndex()
+        keep_widget = self.widget(keep_index)
+        for i in range(self.count() - 1, -1, -1):
+            if self.widget(i) != keep_widget:
+                self.closeTab(i)
+
+    def closeAllTabs(self):
+        for i in range(self.count() - 1, -1, -1):
+            self.closeTab(i)
+
     def openMenu(self, pos=None):
         if pos is not None and not isinstance(pos, bool):
             index = self.tabBar().tabAt(pos)
@@ -379,33 +392,90 @@ class tabWidgetClass(QTabWidget):
         has_file = hasattr(widget, 'file_path') and bool(widget.file_path)
 
         menu = QMenu(self)
-        if hasattr(self.p, 'menubar'):
+        if hasattr(self.p, 'menubar') and self.p.menubar:
             menu.setFont(self.p.menubar.font())
+            menu.setStyleSheet(self.p.menubar.styleSheet())
 
+        # Git menu (if file exists in git repo and version control is enabled)
+        if has_file and getattr(self.p, '_version_control_enabled', True):
+            file_path = getattr(widget, 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                from core.git_manager import GitManager
+                if GitManager.is_in_repo(file_path):
+                    git_menu = menu.addMenu('Git')
+                    if hasattr(self.p, 'menubar') and self.p.menubar:
+                        git_menu.setFont(self.p.menubar.font())
+                        git_menu.setStyleSheet(self.p.menubar.styleSheet())
+                    elif menu.font():
+                        git_menu.setFont(menu.font())
+                        git_menu.setStyleSheet(menu.styleSheet())
+                    if 'github' in icons:
+                        git_menu.setIcon(QIcon(icons['github']))
+                    self.build_git_menu(git_menu, index)
+                    menu.addSeparator()
 
+        # Tab management actions (available for all tabs)
+        close_action = QAction('Close Tab', self)
+        close_action.setShortcut('Ctrl+W')
+        if 'close_tab' in icons:
+            close_action.setIcon(QIcon(icons['close_tab']))
+        close_action.triggered.connect(lambda checked=False, idx=index: self.closeTab(idx))
+        menu.addAction(close_action)
+
+        if self.count() > 1:
+            close_others_action = QAction('Close Other Tabs', self)
+            close_others_action.triggered.connect(lambda checked=False, idx=index: self.closeOtherTabs(idx))
+            menu.addAction(close_others_action)
+
+            close_all_action = QAction('Close All Tabs', self)
+            if 'close_all_tabs' in icons:
+                close_all_action.setIcon(QIcon(icons['close_all_tabs']))
+            close_all_action.triggered.connect(lambda checked=False: self.closeAllTabs())
+            menu.addAction(close_all_action)
+
+        menu.addSeparator()
+
+        dup_title = 'Duplicate file' if has_file else 'Duplicate Tab'
+        dup_action = QAction(dup_title, self)
+        if 'duplicate_file' in icons:
+            dup_action.setIcon(QIcon(icons['duplicate_file']))
+        dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
+        menu.addAction(dup_action)
+
+        ren_title = 'Rename File' if has_file else 'Rename Tab'
+        ren_action = QAction(ren_title, self)
+        ren_action.setShortcut('Alt+R')
+        if 'rename_file' in icons:
+            ren_action.setIcon(QIcon(icons['rename_file']))
+        ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
+        menu.addAction(ren_action)
+
+        # File specific actions (only when tab has a file_path)
         if has_file:
             menu.addSeparator()
-            copy_action = QAction('Copy File Path', self)
+
+            copy_action = QAction('Copy file path', self)
             copy_action.setShortcut('Alt+Shift+C')
+            if 'copy' in icons:
+                copy_action.setIcon(QIcon(icons['copy']))
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
-            del_action = QAction('Delete File', self)
+            del_action = QAction('Delete file', self)
+            if 'delete_file' in icons:
+                del_action.setIcon(QIcon(icons['delete_file']))
             del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
             menu.addAction(del_action)
 
-            dup_title = 'Duplicate File' if has_file else 'Duplicate Tab'
-            dup_action = QAction(dup_title, self)
-            dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
-            menu.addAction(dup_action)
-
-            ren_title = 'Rename File' if has_file else 'Rename Tab'
-            ren_action = QAction(ren_title, self)
-            ren_action.setShortcut('Alt+R')
-            ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
-            menu.addAction(ren_action)
-
             compare_menu = menu.addMenu('Compare with...')
+            if 'git_diff' in icons:
+                compare_menu.setIcon(QIcon(icons['git_diff']))
+            if hasattr(self.p, 'menubar') and self.p.menubar:
+                compare_menu.setFont(self.p.menubar.font())
+                compare_menu.setStyleSheet(self.p.menubar.styleSheet())
+            elif menu.font():
+                compare_menu.setFont(menu.font())
+                compare_menu.setStyleSheet(menu.styleSheet())
             self.build_compare_menu(compare_menu, index)
 
         if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
@@ -418,6 +488,155 @@ class tabWidgetClass(QTabWidget):
             menu.addAction(show_menus_action)
 
         menu.exec_(QCursor.pos())
+
+    def build_git_menu(self, git_menu, index):
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        if not file_path:
+            return
+
+        if hasattr(self.p, 'menubar') and self.p.menubar:
+            git_menu.setFont(self.p.menubar.font())
+            git_menu.setStyleSheet(self.p.menubar.styleSheet())
+        elif git_menu.parentWidget() and hasattr(git_menu.parentWidget(), 'font'):
+            git_menu.setFont(git_menu.parentWidget().font())
+            git_menu.setStyleSheet(git_menu.parentWidget().styleSheet())
+
+        from core.git_manager import GitManager
+
+        status_info = GitManager.get_file_status(file_path)
+        branch = status_info.get('branch', 'HEAD')
+        status_text = status_info.get('status_text', 'Clean')
+
+        branch_act = git_menu.addAction(f"Branch: {branch} ({status_text})")
+        branch_act.setEnabled(False)
+        if 'git_branch' in icons:
+            branch_act.setIcon(QIcon(icons['git_branch']))
+        git_menu.addSeparator()
+
+        diff_act = git_menu.addAction("Git Diff (vs HEAD)")
+        if 'git_diff' in icons:
+            diff_act.setIcon(QIcon(icons['git_diff']))
+        diff_act.triggered.connect(lambda checked=False, fp=file_path: self.run_git_diff(fp))
+
+        if status_info.get('is_staged'):
+            unstage_act = git_menu.addAction("Unstage File")
+            if 'git_unstage' in icons:
+                unstage_act.setIcon(QIcon(icons['git_unstage']))
+            unstage_act.triggered.connect(lambda checked=False, fp=file_path: self.git_unstage(fp))
+        else:
+            stage_act = git_menu.addAction("Stage File")
+            if 'git_stage' in icons:
+                stage_act.setIcon(QIcon(icons['git_stage']))
+            stage_act.triggered.connect(lambda checked=False, fp=file_path: self.git_stage(fp))
+
+        commit_act = git_menu.addAction("Commit File...")
+        if 'git_commit' in icons:
+            commit_act.setIcon(QIcon(icons['git_commit']))
+        commit_act.triggered.connect(lambda checked=False, fp=file_path: self.git_commit_dialog(fp))
+
+        if status_info.get('is_modified'):
+            discard_act = git_menu.addAction("Discard Changes...")
+            if 'git_discard' in icons:
+                discard_act.setIcon(QIcon(icons['git_discard']))
+            discard_act.triggered.connect(lambda checked=False, idx=index, fp=file_path: self.git_discard_changes(idx, fp))
+
+        git_menu.addSeparator()
+
+        log_act = git_menu.addAction("File History / Log...")
+        if 'git_history' in icons:
+            log_act.setIcon(QIcon(icons['git_history']))
+        log_act.triggered.connect(lambda checked=False, fp=file_path: self.git_history_dialog(fp))
+
+        rel_path = status_info.get('relative_path', '')
+        if rel_path:
+            copy_rel_act = git_menu.addAction("Copy Path Relative to Repo")
+            if 'copy' in icons:
+                copy_rel_act.setIcon(QIcon(icons['copy']))
+            copy_rel_act.triggered.connect(lambda checked=False, rp=rel_path: QApplication.clipboard().setText(rp))
+
+    def run_git_diff(self, file_path):
+        from core.git_manager import GitManager
+        from core.diff_manager import DiffManager
+        head_path = GitManager.get_head_file_temp_path(file_path)
+        if head_path and os.path.exists(head_path):
+            DiffManager.run_diff(head_path, file_path, parent=self.p)
+        else:
+            QMessageBox.information(self, "Git Diff", "No previous HEAD revision found for this file.")
+
+    def git_stage(self, file_path):
+        from core.git_manager import GitManager
+        success, msg = GitManager.stage_file(file_path)
+        self.update_tab_git_status(self.currentIndex())
+        if hasattr(self.p, 'updateStatusBarInfo'):
+            self.p.updateStatusBarInfo()
+
+    def git_unstage(self, file_path):
+        from core.git_manager import GitManager
+        success, msg = GitManager.unstage_file(file_path)
+        self.update_tab_git_status(self.currentIndex())
+        if hasattr(self.p, 'updateStatusBarInfo'):
+            self.p.updateStatusBarInfo()
+
+    def git_commit_dialog(self, file_path):
+        from widgets.git_dialogs import GitCommitDialog
+        dlg = GitCommitDialog(parent=self.p, file_path=file_path)
+        if dlg.exec_():
+            self.update_tab_git_status(self.currentIndex())
+            if hasattr(self.p, 'updateStatusBarInfo'):
+                self.p.updateStatusBarInfo()
+
+    def git_history_dialog(self, file_path):
+        from widgets.git_dialogs import GitHistoryDialog
+        dlg = GitHistoryDialog(parent=self.p, file_path=file_path)
+        dlg.exec_()
+
+    def git_discard_changes(self, index, file_path):
+        from core.git_manager import GitManager
+        reply = QMessageBox.question(
+            self,
+            "Discard Changes",
+            f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            success, msg = GitManager.discard_changes(file_path)
+            if success:
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                        text = f.read()
+                    w = self.widget(index)
+                    if hasattr(w, 'edit') and w.edit:
+                        w.edit.setText(text)
+                        w.edit.document().setModified(False)
+                except Exception:
+                    pass
+                self.update_tab_git_status(index)
+                if hasattr(self.p, 'updateStatusBarInfo'):
+                    self.p.updateStatusBarInfo()
+
+    def update_tab_git_status(self, index):
+        if index < 0 or index >= self.count():
+            return
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        norm_path = os.path.normpath(file_path)
+        if not getattr(self.p, '_version_control_enabled', True):
+            self.setTabToolTip(index, norm_path)
+            return
+
+        from core.git_manager import GitManager
+        status_info = GitManager.get_file_status(file_path)
+        norm_path = os.path.normpath(file_path)
+        if status_info.get('in_repo'):
+            tooltip = f"{norm_path}\nGit: {status_info['branch']} [{status_info['status_text']}]"
+        else:
+            tooltip = norm_path
+        self.setTabToolTip(index, tooltip)
 
     def build_compare_menu(self, compare_menu, index):
         if index < 0 or index >= self.count():
@@ -474,7 +693,7 @@ class tabWidgetClass(QTabWidget):
         # 4. Configure Diff Tool option
         cfg_act = compare_menu.addAction("Configure Diff Tool...")
         cfg_act.triggered.connect(lambda checked=False: DiffManager.configure_diff_tool(parent=self.p))
-        
+
     def deleteFile(self, index=None):
         if index is None or isinstance(index, bool):
             index = self.currentIndex()

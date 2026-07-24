@@ -208,12 +208,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def setupStatusBarWidgets(self):
         self.lbl_msg = QLabel("")
+        self.lbl_git = QLabel("")
+        self.lbl_git.setVisible(False)
         self.lbl_lang = QLabel("Language")
         self.lbl_wrap = QLabel("Wrap: OFF")
         self.lbl_lines = QLabel("0 lines")
         self.lbl_cursor = QLabel("Ln 1, Col 1")
 
-        for lbl in (self.lbl_msg, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
+        for lbl in (self.lbl_msg, self.lbl_git, self.lbl_cursor, self.lbl_lines, self.lbl_lang, self.lbl_wrap):
             lbl.setStyleSheet("padding: 0 5px;")
             self.statusBar().addPermanentWidget(lbl)
 
@@ -261,7 +263,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         total_lines = w.edit.document().blockCount()
         self.lbl_lines.setText(f"{total_lines} lines")
 
-        # Language
+        # Language & Git status
         file_path = getattr(w, 'file_path', None)
         if file_path:
             ext = os.path.splitext(file_path)[1].lower()
@@ -278,8 +280,26 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 '.json': 'JSON'
             }
             lang = lang_map.get(ext, 'Python')
+
+            if os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
+                from core.git_manager import GitManager
+                git_info = GitManager.get_file_status(file_path)
+                if git_info.get('in_repo'):
+                    branch = git_info.get('branch', 'HEAD')
+                    status_code = git_info.get('status_code', 'CLEAN')
+                    self.lbl_git.setText(f"Git: {branch} [{status_code}]")
+                    self.lbl_git.setToolTip(
+                        f"Repo: {git_info.get('repo_root')}\nBranch: {branch}\nStatus: {git_info.get('status_text')}"
+                    )
+                    self.lbl_git.setVisible(True)
+                else:
+                    self.lbl_git.setVisible(False)
+            else:
+                self.lbl_git.setVisible(False)
         else:
             lang = 'Python'
+            self.lbl_git.setVisible(False)
+
         self.lbl_lang.setText(lang)
         if lang == 'Python' and hasattr(w.edit, 'runLinter'):
             w.edit.runLinter()
@@ -717,7 +737,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if self.statusBar():
                 self.statusBar().setFont(status_bar_font)
-                for lbl in (self.lbl_msg, self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
+                for lbl in (self.lbl_msg, self.lbl_git, self.lbl_lang, self.lbl_wrap, self.lbl_lines, self.lbl_cursor):
                     lbl.setFont(status_bar_font)
 
         s = self._current_settings
@@ -1646,6 +1666,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.showStatusTips_act.setChecked(show_status_tips)
             self.toggleStatusTips(show_status_tips)
 
+            version_control = data.get('version_control', True)
+            self.versionControl_act.setChecked(version_control)
+            self.toggleVersionControl(version_control)
+
             auto_close_delimiters = data.get('auto_close_delimiters', True)
             self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
@@ -1705,6 +1729,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         output_bottom = self.outputBottom_act.isChecked()
         quick_tab_switching = self.quickTabSwitching_act.isChecked()
         show_status_tips = self.showStatusTips_act.isChecked()
+        version_control = self.versionControl_act.isChecked()
         auto_close_delimiters = self.autoCloseDelimiters_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
@@ -1760,6 +1785,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             output_bottom=output_bottom,
             quick_tab_switching=quick_tab_switching,
             show_status_tips=show_status_tips,
+            version_control=version_control,
             auto_close_delimiters=auto_close_delimiters,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
@@ -1996,6 +2022,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.saveSettings()
         if not state:
             self.statusBar().clearMessage()
+
+    def toggleVersionControl(self, state=None):
+        state = self.versionControl_act.isChecked()
+        self._version_control_enabled = state
+        self._current_settings['version_control'] = state
+        self.saveSettings()
+        # Force update status info to hide or show git status
+        self.updateStatusInfo()
 
     def toggleAutoCloseDelimiters(self, state=None):
         state = self.autoCloseDelimiters_act.isChecked()

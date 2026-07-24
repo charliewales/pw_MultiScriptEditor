@@ -410,6 +410,10 @@ class ScriptEditorUIBuilder:
         editor.showStatusTips_act.setChecked(True)
         editor.showStatusTips_act.triggered.connect(editor.toggleStatusTips)
 
+        # Version Control (Git) setup
+        editor.versionControl_act.setChecked(True)
+        editor.versionControl_act.triggered.connect(editor.toggleVersionControl)
+
         editor.outline_timer = QTimer(editor)
         editor.outline_timer.setSingleShot(True)
         editor.outline_timer.timeout.connect(editor._updateOutlineNow)
