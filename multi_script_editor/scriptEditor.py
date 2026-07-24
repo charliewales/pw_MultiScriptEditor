@@ -2029,7 +2029,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._current_settings['version_control'] = state
         self.saveSettings()
         # Force update status info to hide or show git status
-        self.updateStatusInfo()
+        self.updateStatusBarInfo()
 
     def toggleAutoCloseDelimiters(self, state=None):
         state = self.autoCloseDelimiters_act.isChecked()
