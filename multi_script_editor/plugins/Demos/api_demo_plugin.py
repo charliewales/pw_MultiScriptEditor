@@ -25,7 +25,7 @@ class ApiDemoPlugin(BasePlugin):
         actions, and connect them to your custom methods.
         """
         # Create a QAction that will appear in the menu
-        self.action = QAction("Run API Demo", self.editor)
+        self.action = QAction("API Demo Tool", self.editor)
         # Connect the action's trigger signal to our custom method
         self.action.triggered.connect(self.run_demo)
 
@@ -64,6 +64,7 @@ class ApiDemoPlugin(BasePlugin):
         context = self.self_context or "Standalone (No context)"
         # self.self_help returns the editor's help method, if available.
         has_help = "Yes" if callable(self.self_help) else "No"
+        # self.self_main returns the editor's main widget
         mse_window = self.self_main
 
         # Preparing the text report
@@ -73,7 +74,7 @@ class ApiDemoPlugin(BasePlugin):
             f"• Current Context: {context}\n"
             f"• Help Method Available: {has_help}\n"
             f"• Lines in Current Tab: {lines_count}\n"
-            # f"• Parent widget: {mse_window}\n"
+            f"• Parent widget: {mse_window}\n"
             f"• Total Open Tabs: {total_tabs}\n"
             f"------------------------------"
         )

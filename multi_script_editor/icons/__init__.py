@@ -78,4 +78,6 @@ icons = dict(
     show_autocomplete=os.path.join(root, "show_autocomplete.png"),
     saved_snippet=os.path.join(root, "saved_snippet.png"),
     saved_session=os.path.join(root, "saved_session.png"),
+    reload_plugins=os.path.join(root, "reload_plugins.png"),
+    plugin_action=os.path.join(root, "plugin_action.png"),
 )

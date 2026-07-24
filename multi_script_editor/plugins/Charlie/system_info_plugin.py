@@ -2,11 +2,11 @@ import os
 import sys
 import platform
 import subprocess
+import socket
 
 from vendor.Qt.QtWidgets import QAction
 from plugins.plugin_base import BasePlugin
 import vendor.Qt
-
 
 def get_ram_info():
     """
@@ -43,7 +43,6 @@ def get_ram_info():
     except Exception:
         pass
     return "Unknown RAM"
-
 
 def get_gpu_info():
     """
@@ -93,24 +92,23 @@ def get_gpu_info():
         pass
     return "Unknown GPU"
 
-
 class SystemInfoPlugin(BasePlugin):
     """
     SystemInfoPlugin demonstrates:
     1. Gathering external system information using Python's platform module and subprocesses.
     2. Using the status bar to show progress for slow operations.
-    3. Inserting text exactly where the user's cursor currently is.
+    3. Printing dynamically formatted text to the output console.
     """
     # Plugin Metadata
     name = "System Info"
-    description = "Inserts system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) at the current cursor position."
+    description = "Prints system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) to the output console."
     version = "1.2.0"
 
     def register(self):
         """
         Create the UI action for this plugin.
         """
-        self.action = QAction("Insert System Info", self.editor)
+        self.action = QAction("Print system info", self.editor)
         self.action.triggered.connect(self.insert_system_info)
 
         # Add to the Plugins menu via the PluginManager
@@ -127,19 +125,9 @@ class SystemInfoPlugin(BasePlugin):
 
     def insert_system_info(self):
         """
-        Gathers system information and inserts it into the active editor tab at the cursor position.
+        Gathers system information and prints it to the output console.
         """
-        # 1. Ensure a tab is actually open
-        idx = self.editor.tab.currentIndex()
-        if idx < 0:
-            return
-
-        # 2. Access the custom tab widget
-        widget = self.editor.tab.widget(idx)
-        if not widget or not hasattr(widget, 'edit'):
-            return
-
-        # 3. Show a temporary status bar message since GPU/RAM checks can take a moment
+        # 1. Show a temporary status bar message since GPU/RAM checks can take a moment
         self.editor.statusBar().showMessage("Gathering system information...")
 
         try:
@@ -155,36 +143,51 @@ class SystemInfoPlugin(BasePlugin):
 
             home_dir = os.path.expanduser("~")
 
+            # Network info
+            hostname = platform.node() or socket.gethostname()
+            try:
+                ip_addr = socket.gethostbyname(hostname)
+            except Exception:
+                ip_addr = "Unknown IP"
+
             # Use BasePlugin API to get the current context
             host_context = self.self_context or "Standalone"
 
-            # 4. Format system info as a python comment block
+            # 2. Format system info as a python comment block
+            lines = [
+                f"# Hostname:   {hostname}",
+                f"# IP Address: {ip_addr}",
+                f"# Host App:   {host_context}",
+                f"# OS:         {os_name}",
+                f"# CPU:        {processor}",
+                f"# GPU:        {gpu}",
+                f"# RAM:        {ram}",
+                f"# Home Dir:   {home_dir}",
+                f"# Python:     {py_ver}",
+                f"# Qt Binding: {qt_ver}"
+            ]
+
+            title = "# SYSTEM SPECIFICATIONS"
+            max_len = max(len(line) for line in lines + [title])
+            separator = "# " + "=" * (max_len - 2)
+
             info_block = (
-                f"# ==========================================\n"
-                f"# SYSTEM SPECIFICATIONS\n"
-                f"# ==========================================\n"
-                f"# Host App:   {host_context}\n"
-                f"# OS:         {os_name}\n"
-                f"# CPU:        {processor}\n"
-                f"# GPU:        {gpu}\n"
-                f"# RAM:        {ram}\n"
-                f"# Home Dir:   {home_dir}\n"
-                f"# Python:     {py_ver}\n"
-                f"# Qt Binding: {qt_ver}\n"
-                f"# ==========================================\n"
+                f"{separator}\n"
+                f"{title}\n"
+                f"{separator}\n"
+                + "\n".join(lines) + "\n"
+                f"{separator}\n"
             )
 
-            # 5. Insert the text exactly where the user left their cursor
-            edit = widget.edit
-            cursor = edit.textCursor()
+            # 3. Output the text to the editor's output console
+            if self.self_output:
+                self.self_output.appendPlainText(info_block)
 
-            # Wrap changes in an edit block so the user can undo the insertion with Ctrl+Z
-            cursor.beginEditBlock()
-            try:
-                # cursor.insertText replaces any selected text, or inserts at the caret position
-                cursor.insertText(info_block)
-            finally:
-                cursor.endEditBlock()
+                # Scroll to the bottom of the output
+                from vendor.Qt.QtGui import QTextCursor
+                self.self_output.moveCursor(QTextCursor.End)
+                self.self_output.ensureCursorVisible()
+
         finally:
-            # 6. Always clear the status bar message when done, even if an error occurs
+            # 4. Always clear the status bar message when done, even if an error occurs
             self.editor.statusBar().clearMessage()

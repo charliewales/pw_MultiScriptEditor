@@ -6,6 +6,11 @@ import importlib.util
 import traceback
 
 from vendor.Qt.QtWidgets import QMenu, QAction
+from vendor.Qt.QtGui import QIcon
+try:
+    from icons import icons
+except ImportError:
+    icons = {}
 from .plugin_base import BasePlugin
 
 class PluginManager(object):
@@ -66,15 +71,15 @@ class PluginManager(object):
         for root, dirs, files in os.walk(directory):
             # Skip hidden/private directories
             dirs[:] = [d for d in dirs if not d.startswith('.') and not d.startswith('_')]
-            
+
             rel_dir = os.path.relpath(root, directory)
             if rel_dir == '.':
                 rel_dir = ""
-                
+
             for item in files:
                 if not item.endswith(".py") or item.startswith("_") or item.startswith("."):
                     continue
-                
+
                 module_name = item[:-3]
                 if not is_user and module_name in ("plugin_base", "plugin_manager"):
                     continue
@@ -82,7 +87,7 @@ class PluginManager(object):
                 try:
                     # Namespace user plugins uniquely to avoid collisions with built-ins
                     full_module_name = f"mse_user_plugin_{module_name}" if is_user else f"{__package__}.{module_name}"
-                    
+
                     # Always load from file directly to ensure robust hot-reloading
                     file_path = os.path.join(root, item)
                     spec = importlib.util.spec_from_file_location(full_module_name, file_path)
@@ -102,14 +107,14 @@ class PluginManager(object):
                             plugin_inst = cls(self.editor)
                             plugin_inst.is_user = is_user
                             plugin_inst.rel_dir = rel_dir
-                            
+
                             try:
                                 plugin_inst.register()
-                                
+
                                 # Use a unique key to prevent clashes
                                 key = f"{plugin_inst.name} (User)" if is_user else plugin_inst.name
                                 self.plugins[key] = plugin_inst
-                                
+
                                 prefix = "[User] " if is_user else ""
                                 self.editor.out.showMessage(f"Plugin loaded: {prefix}{plugin_inst.name} (v{plugin_inst.version})")
                             except Exception as register_err:
@@ -153,11 +158,15 @@ class PluginManager(object):
         """
         self.menu = QMenu("Plugins", self.editor.menubar)
         self.menu.setTearOffEnabled(True)
-        
+
+        # Ensure the menu uses the editor's theme font
+        if hasattr(self.editor, 'menubar') and self.editor.menubar:
+            self.menu.setFont(self.editor.menubar.font())
+
         # Try to insert menu after the Options menu (which means before the Run menu)
         menubar_actions = self.editor.menubar.actions()
         insert_before_action = None
-        
+
         # We try to insert before 'run_menu', or 'help_menu' if 'run_menu' isn't available
         if hasattr(self.editor, 'run_menu'):
             insert_before_action = self.editor.run_menu.menuAction()
@@ -171,14 +180,22 @@ class PluginManager(object):
 
     def add_plugin_action(self, plugin_inst, action):
         """
-        Called by plugins to register an action in the Plugins menu.
+        Allows plugins to add actions to the menu. The manager handles submenus and (USER) labels.
         """
         rel_dir = getattr(plugin_inst, 'rel_dir', '')
         is_user = getattr(plugin_inst, 'is_user', False)
         
+        # Set status bar text automatically from plugin description
+        description = getattr(plugin_inst, 'description', '')
+        if description:
+            action.setStatusTip(description)
+
         if is_user:
             action.setText(f"{action.text()} (USER)")
             
+        if action.icon().isNull() and icons.get('plugin_action'):
+            action.setIcon(QIcon(icons['plugin_action']))
+
         self.plugin_actions.append((rel_dir, action, is_user))
 
     def finalize_menu(self):
@@ -193,7 +210,7 @@ class PluginManager(object):
 
         for rel_dir, action, is_user in self.plugin_actions:
             target_menu = self.menu
-            
+
             if rel_dir:
                 # Create submenus if needed. Handle nested directories.
                 parts = rel_dir.replace('\\', '/').split('/')
@@ -206,16 +223,21 @@ class PluginManager(object):
                     if current_path not in self.submenus:
                         new_menu = QMenu(part, current_menu)
                         new_menu.setTearOffEnabled(True)
+                        new_menu.setFont(self.menu.font())
+                        if icons.get('menu'):
+                            new_menu.setIcon(QIcon(icons['menu']))
                         current_menu.addMenu(new_menu)
                         self.submenus[current_path] = new_menu
                     current_menu = self.submenus[current_path]
                 target_menu = current_menu
-            
+
             target_menu.addAction(action)
 
         self.menu.addSeparator()
-        
+
         # Add reload action
-        reload_action = QAction("Reload Plugins", self.menu)
+        reload_action = QAction("Reload plugins", self.menu)
+        if icons.get('reload_plugins'):
+            reload_action.setIcon(QIcon(icons['reload_plugins']))
         reload_action.triggered.connect(self.load_plugins)
         self.menu.addAction(reload_action)

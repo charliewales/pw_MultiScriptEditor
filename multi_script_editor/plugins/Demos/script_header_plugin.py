@@ -21,7 +21,7 @@ class ScriptHeaderPlugin(BasePlugin):
         """
         Create the UI action for this plugin.
         """
-        self.action = QAction("Insert Script Header", self.editor)
+        self.action = QAction("Insert script header", self.editor)
         self.action.triggered.connect(self.insert_header)
 
         # Add to the Plugins menu via the PluginManager
