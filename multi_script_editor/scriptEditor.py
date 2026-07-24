@@ -163,7 +163,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.tab.count() > 0:
             QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
         self.fillThemeMenu()
-        self.setWindowStyle()
+        current_theme = self._current_settings.get('theme', 'Multi Script Editor')
+        self.applyTheme(current_theme)
         self.addArgs()
         self.updateStatusBarInfo()
 
