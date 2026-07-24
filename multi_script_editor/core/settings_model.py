@@ -159,7 +159,8 @@ class SettingsModel:
                     recent_files=[],
                     randomize_custom_at_startup=False,
                     quick_tab_switching=True,
-                    auto_close_delimiters=True
+                    auto_close_delimiters=True,
+                    diff_tool_path=""
                     )
 
 

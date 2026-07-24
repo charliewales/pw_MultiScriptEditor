@@ -1316,6 +1316,48 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             except:
                 self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
+    def openDiffDialog(self):
+        from core.diff_manager import DiffManager
+        from vendor.Qt.QtGui import QCursor
+        from vendor.Qt.QtWidgets import QFileDialog, QMenu
+
+        idx = self.tab.currentIndex()
+        current_widget = self.tab.widget(idx) if idx >= 0 else None
+        current_file = getattr(current_widget, 'file_path', "") if current_widget else ""
+
+        menu = QMenu(self)
+        if hasattr(self, 'menubar') and self.menubar:
+            menu.setFont(self.menubar.font())
+
+        if current_file and os.path.exists(current_file):
+            self.tab.build_compare_menu(menu, idx)
+        else:
+            def _compare_files():
+                f1, _ = QFileDialog.getOpenFileName(self, "Select First File")
+                if f1:
+                    f2, _ = QFileDialog.getOpenFileName(self, "Select Second File")
+                    if f2:
+                        DiffManager.run_diff(f1, f2, parent=self)
+
+            def _compare_dirs():
+                d1 = QFileDialog.getExistingDirectory(self, "Select First Directory")
+                if d1:
+                    d2 = QFileDialog.getExistingDirectory(self, "Select Second Directory")
+                    if d2:
+                        DiffManager.run_diff(d1, d2, parent=self)
+
+            act_files = menu.addAction("Compare Two Files...")
+            act_files.triggered.connect(_compare_files)
+
+            act_dirs = menu.addAction("Compare Two Directories...")
+            act_dirs.triggered.connect(_compare_dirs)
+
+            menu.addSeparator()
+            cfg_act = menu.addAction("Configure Diff Tool...")
+            cfg_act.triggered.connect(lambda: DiffManager.configure_diff_tool(parent=self))
+
+        menu.exec_(QCursor.pos())
+
     def loadScript(self):
         d = os.getenv('HOME')
         if not d:

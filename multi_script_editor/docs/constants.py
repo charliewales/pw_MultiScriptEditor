@@ -60,7 +60,8 @@ Toggle Word Wrap                            >   ALT + W
 Toggle Clear Output before Execute          >   CTRL + ALT + C
 Toggle Output Word Wrap                     >   CTRL + ALT + W
 Toggle Always On Top                        >   CTRL + ALT + T
-Clear Output                                >   CTRL + SHIFT + C
+Compare with...                             >   CTRL + SHIFT + C
+Clear Output                                >   CTRL + ALT + SHIFT + C
 Duplicate line(s) or selected text          >   CTRL + SHIFT + D
 Select Next Occurrence                      >   CTRL + ALT + D
 Select All Occurrences                      >   CTRL + SHIFT + ALT + D

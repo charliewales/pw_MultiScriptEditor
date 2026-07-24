@@ -405,6 +405,9 @@ class tabWidgetClass(QTabWidget):
             ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
             menu.addAction(ren_action)
 
+            compare_menu = menu.addMenu('Compare with...')
+            self.build_compare_menu(compare_menu, index)
+
         if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
             menu.addSeparator()
             show_menus_action = QAction('Show menus\tCtrl+M', self)
@@ -416,6 +419,62 @@ class tabWidgetClass(QTabWidget):
 
         menu.exec_(QCursor.pos())
 
+    def build_compare_menu(self, compare_menu, index):
+        if index < 0 or index >= self.count():
+            return
+
+        current_widget = self.widget(index)
+        current_file = getattr(current_widget, 'file_path', "")
+
+        from core.diff_manager import DiffManager
+        from vendor.Qt.QtWidgets import QFileDialog
+
+        # 1. List other open tabs with file paths
+        other_tabs_count = 0
+        for i in range(self.count()):
+            if i == index:
+                continue
+            w = self.widget(i)
+            other_file = getattr(w, 'file_path', "")
+            if other_file and os.path.exists(other_file):
+                other_tabs_count += 1
+                tab_title = self.tabText(i)
+                act_text = f"{tab_title}  ({other_file})"
+                act = compare_menu.addAction(act_text)
+                act.triggered.connect(
+                    lambda checked=False, f1=current_file, f2=other_file: DiffManager.run_diff(
+                        f1, f2, parent=self.p
+                    )
+                )
+
+        if other_tabs_count == 0:
+            no_act = compare_menu.addAction("No other open saved files")
+            no_act.setEnabled(False)
+
+        compare_menu.addSeparator()
+
+        # 2. Browse File option
+        browse_file_act = compare_menu.addAction("Browse File...")
+        def _browse_file(checked=False, f1=current_file):
+            path, _ = QFileDialog.getOpenFileName(self, "Select File to Compare")
+            if path:
+                DiffManager.run_diff(f1, path, parent=self.p)
+        browse_file_act.triggered.connect(_browse_file)
+
+        # 3. Browse Directory option
+        browse_dir_act = compare_menu.addAction("Browse Directory...")
+        def _browse_dir(checked=False, f1=current_file):
+            path = QFileDialog.getExistingDirectory(self, "Select Directory to Compare")
+            if path:
+                DiffManager.run_diff(f1, path, parent=self.p)
+        browse_dir_act.triggered.connect(_browse_dir)
+
+        compare_menu.addSeparator()
+
+        # 4. Configure Diff Tool option
+        cfg_act = compare_menu.addAction("Configure Diff Tool...")
+        cfg_act.triggered.connect(lambda checked=False: DiffManager.configure_diff_tool(parent=self.p))
+        
     def deleteFile(self, index=None):
         if index is None or isinstance(index, bool):
             index = self.currentIndex()
