@@ -10,6 +10,7 @@ class DiffManager(object):
     """
 
     COMMON_PATHS = [
+        # Windows
         r"C:\Program Files\Meld\Meld.exe",
         r"C:\Program Files (x86)\Meld\Meld.exe",
         r"C:\Program Files\WinMerge\WinMergeU.exe",
@@ -18,6 +19,33 @@ class DiffManager(object):
         r"C:\Program Files (x86)\KDiff3\kdiff3.exe",
         r"C:\Program Files\Beyond Compare 4\BCompare.exe",
         r"C:\Program Files\Beyond Compare 5\BCompare.exe",
+        # macOS
+        "/Applications/Meld.app/Contents/MacOS/Meld",
+        "/Applications/KDiff3.app/Contents/MacOS/kdiff3",
+        "/Applications/Beyond Compare.app/Contents/MacOS/bcomp",
+        "/Applications/Beyond Compare.app/Contents/MacOS/BCompare",
+        "/Applications/Kaleidoscope.app/Contents/MacOS/ksdiff",
+        "/Applications/DiffMerge.app/Contents/MacOS/DiffMerge",
+        "/Applications/Araxis Merge.app/Contents/MacOS/araxisgitmerge",
+        "/opt/homebrew/bin/meld",
+        "/opt/homebrew/bin/kdiff3",
+        "/opt/homebrew/bin/bcompare",
+        "/opt/homebrew/bin/ksdiff",
+        "/usr/local/bin/meld",
+        "/usr/local/bin/kdiff3",
+        "/usr/local/bin/bcompare",
+        "/usr/local/bin/ksdiff",
+        "/usr/bin/opendiff",
+        # Linux
+        "/usr/bin/meld",
+        "/usr/local/bin/meld",
+        "/usr/bin/kdiff3",
+        "/usr/local/bin/kdiff3",
+        "/usr/bin/bcompare",
+        "/usr/local/bin/bcompare",
+        "/usr/bin/kompare",
+        "/usr/bin/diffmerge",
+        "/var/lib/flatpak/exports/bin/org.gnome.Meld",
     ]
 
     @classmethod
@@ -47,7 +75,18 @@ class DiffManager(object):
                 return path
 
         # Try common CLI names in PATH
-        for cmd in ["meld", "WinMergeU", "winmerge", "kdiff3", "bcompare"]:
+        for cmd in [
+            "meld",
+            "WinMergeU",
+            "winmerge",
+            "kdiff3",
+            "bcompare",
+            "bcomp",
+            "ksdiff",
+            "diffmerge",
+            "kompare",
+            "opendiff",
+        ]:
             if cls.is_valid_tool(cmd):
                 return cmd
 
