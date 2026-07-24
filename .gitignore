@@ -7,3 +7,4 @@ _tmp
 *.pyc
 .history/
 .agents/
+scratch/
