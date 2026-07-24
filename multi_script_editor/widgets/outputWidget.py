@@ -1,3 +1,4 @@
+import os
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument, QColor
 from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
@@ -31,6 +32,7 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         else:
             self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
+        self.setAcceptDrops(True)
         self.applyHightLighter(theme)
         self.selectionChanged.connect(self._on_selection_changed)
 
@@ -117,3 +119,32 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            QPlainTextEdit.dragEnterEvent(self, event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            QPlainTextEdit.dragMoveEvent(self, event)
+
+    def dragLeaveEvent(self, event):
+        event.accept()
+        QPlainTextEdit.dragLeaveEvent(self, event)
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            main_window = self.window()
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if os.path.isfile(file_path):
+                        if hasattr(main_window, 'openRecentFile'):
+                            main_window.openRecentFile(file_path)
+            return
+        QPlainTextEdit.dropEvent(self, event)
