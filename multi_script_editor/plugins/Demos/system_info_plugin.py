@@ -4,8 +4,9 @@ import platform
 import subprocess
 
 from vendor.Qt.QtWidgets import QAction
-from .plugin_base import BasePlugin
+from plugins.plugin_base import BasePlugin
 import vendor.Qt
+
 
 def get_ram_info():
     """
@@ -42,6 +43,7 @@ def get_ram_info():
     except Exception:
         pass
     return "Unknown RAM"
+
 
 def get_gpu_info():
     """
@@ -94,55 +96,69 @@ def get_gpu_info():
 
 class SystemInfoPlugin(BasePlugin):
     """
-    Plugin that inserts system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) at the current cursor position.
+    SystemInfoPlugin demonstrates:
+    1. Gathering external system information using Python's platform module and subprocesses.
+    2. Using the status bar to show progress for slow operations.
+    3. Inserting text exactly where the user's cursor currently is.
     """
+    # Plugin Metadata
     name = "System Info"
     description = "Inserts system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) at the current cursor position."
     version = "1.2.0"
 
     def register(self):
-        # Create action
+        """
+        Create the UI action for this plugin.
+        """
         self.action = QAction("Insert System Info", self.editor)
         self.action.triggered.connect(self.insert_system_info)
-        
-        # Add to the Plugins menu if it exists
-        if hasattr(self.editor, 'plugin_manager') and self.editor.plugin_manager.menu:
-            self.editor.plugin_manager.menu.addAction(self.action)
+
+        # Add to the Plugins menu via the PluginManager
+        if hasattr(self.editor, 'plugin_manager'):
+            self.editor.plugin_manager.add_plugin_action(self, self.action)
 
     def unregister(self):
-        # Remove action from menu and delete it
+        """
+        Remove the UI action safely when the plugin unloads.
+        """
         if hasattr(self, 'action'):
-            if hasattr(self.editor, 'plugin_manager') and self.editor.plugin_manager.menu:
-                self.editor.plugin_manager.menu.removeAction(self.action)
             self.action.deleteLater()
             del self.action
 
     def insert_system_info(self):
+        """
+        Gathers system information and inserts it into the active editor tab at the cursor position.
+        """
+        # 1. Ensure a tab is actually open
         idx = self.editor.tab.currentIndex()
         if idx < 0:
             return
-            
+
+        # 2. Access the custom tab widget
         widget = self.editor.tab.widget(idx)
         if not widget or not hasattr(widget, 'edit'):
             return
 
-        # Show a temporary status bar message since GPU check can take a moment
+        # 3. Show a temporary status bar message since GPU/RAM checks can take a moment
         self.editor.statusBar().showMessage("Gathering system information...")
-        
+
         try:
-            # Gather system information
+            # Gather standard system information
             os_name = f"{platform.system()} {platform.release()} ({platform.machine()})"
             py_ver = sys.version.replace("\n", " ")
             qt_ver = f"{vendor.Qt.__binding__} {vendor.Qt.__binding_version__}"
             processor = platform.processor() or "Unknown CPU"
+
+            # Execute external commands to get hardware info
             ram = get_ram_info()
             gpu = get_gpu_info()
-            home_dir = os.path.expanduser("~")
-            
-            # Determine host app context
-            host_context = getattr(self.editor, 'ver', 'Standalone')
 
-            # Format system info as a python comment block
+            home_dir = os.path.expanduser("~")
+
+            # Use BasePlugin API to get the current context
+            host_context = self.self_context or "Standalone"
+
+            # 4. Format system info as a python comment block
             info_block = (
                 f"# ==========================================\n"
                 f"# SYSTEM SPECIFICATIONS\n"
@@ -158,14 +174,17 @@ class SystemInfoPlugin(BasePlugin):
                 f"# ==========================================\n"
             )
 
+            # 5. Insert the text exactly where the user left their cursor
             edit = widget.edit
             cursor = edit.textCursor()
-            
-            # Insert at current cursor position within an edit block for undo/redo
+
+            # Wrap changes in an edit block so the user can undo the insertion with Ctrl+Z
             cursor.beginEditBlock()
             try:
+                # cursor.insertText replaces any selected text, or inserts at the caret position
                 cursor.insertText(info_block)
             finally:
                 cursor.endEditBlock()
         finally:
+            # 6. Always clear the status bar message when done, even if an error occurs
             self.editor.statusBar().clearMessage()

@@ -18,6 +18,8 @@ class PluginManager(object):
         self.plugins = {}  # Store active plugin instances
         self.loaded_modules = {}  # Store imported module names
         self.menu = None
+        self.plugin_actions = [] # Store tuples of (rel_dir, action, is_user)
+        self.submenus = {} # Store created QMenu objects
 
         # Expose plugin_base modules under absolute names so user plugins
         # can also import them absolutely (e.g. from plugins.plugin_base import BasePlugin)
@@ -56,32 +58,33 @@ class PluginManager(object):
 
     def _load_plugins_from_directory(self, directory, is_user=False):
         """
-        Scan a directory for plugin files and import/register them.
+        Scan a directory (and its subdirectories) for plugin files and import/register them.
         """
         if not os.path.exists(directory):
             return
 
-        for item in os.listdir(directory):
-            if not item.endswith(".py") or item.startswith("_") or item.startswith("."):
-                continue
+        for root, dirs, files in os.walk(directory):
+            # Skip hidden/private directories
+            dirs[:] = [d for d in dirs if not d.startswith('.') and not d.startswith('_')]
             
-            module_name = item[:-3]
-            if not is_user and module_name in ("plugin_base", "plugin_manager"):
-                continue
-
-            try:
-                # Namespace user plugins uniquely to avoid collisions with built-ins
-                full_module_name = f"mse_user_plugin_{module_name}" if is_user else f"{__package__}.{module_name}"
+            rel_dir = os.path.relpath(root, directory)
+            if rel_dir == '.':
+                rel_dir = ""
                 
-                if not is_user:
-                    # Built-in plugins loaded relative to current package
-                    if full_module_name in sys.modules:
-                        module = importlib.reload(sys.modules[full_module_name])
-                    else:
-                        module = importlib.import_module(f".{module_name}", package=__package__)
-                else:
-                    # User plugins loaded from an absolute location
-                    file_path = os.path.join(directory, item)
+            for item in files:
+                if not item.endswith(".py") or item.startswith("_") or item.startswith("."):
+                    continue
+                
+                module_name = item[:-3]
+                if not is_user and module_name in ("plugin_base", "plugin_manager"):
+                    continue
+
+                try:
+                    # Namespace user plugins uniquely to avoid collisions with built-ins
+                    full_module_name = f"mse_user_plugin_{module_name}" if is_user else f"{__package__}.{module_name}"
+                    
+                    # Always load from file directly to ensure robust hot-reloading
+                    file_path = os.path.join(root, item)
                     spec = importlib.util.spec_from_file_location(full_module_name, file_path)
                     if spec is None or spec.loader is None:
                         raise ImportError(f"Could not load spec for {file_path}")
@@ -90,32 +93,35 @@ class PluginManager(object):
                     sys.modules[full_module_name] = module
                     spec.loader.exec_module(module)
 
-                self.loaded_modules[module_name] = module
+                    self.loaded_modules[module_name] = module
 
-                # Inspect classes in the module
-                for name, cls in inspect.getmembers(module, inspect.isclass):
-                    if issubclass(cls, BasePlugin) and cls is not BasePlugin:
-                        # Instantiate the plugin
-                        plugin_inst = cls(self.editor)
-                        try:
-                            plugin_inst.register()
+                    # Inspect classes in the module
+                    for name, cls in inspect.getmembers(module, inspect.isclass):
+                        if issubclass(cls, BasePlugin) and cls is not BasePlugin:
+                            # Instantiate the plugin
+                            plugin_inst = cls(self.editor)
+                            plugin_inst.is_user = is_user
+                            plugin_inst.rel_dir = rel_dir
                             
-                            # Use a unique key to prevent clashes
-                            key = f"{plugin_inst.name} (User)" if is_user else plugin_inst.name
-                            self.plugins[key] = plugin_inst
-                            
-                            prefix = "[User] " if is_user else ""
-                            self.editor.out.showMessage(f"Plugin loaded: {prefix}{plugin_inst.name} (v{plugin_inst.version})")
-                        except Exception as register_err:
-                            self.editor.out.showMessage(
-                                f"Error registering plugin '{name}' from '{module_name}': {register_err}\n"
-                                f"{traceback.format_exc()}"
-                            )
-            except Exception as import_err:
-                self.editor.out.showMessage(
-                    f"Error importing plugin module '{module_name}': {import_err}\n"
-                    f"{traceback.format_exc()}"
-                )
+                            try:
+                                plugin_inst.register()
+                                
+                                # Use a unique key to prevent clashes
+                                key = f"{plugin_inst.name} (User)" if is_user else plugin_inst.name
+                                self.plugins[key] = plugin_inst
+                                
+                                prefix = "[User] " if is_user else ""
+                                self.editor.out.showMessage(f"Plugin loaded: {prefix}{plugin_inst.name} (v{plugin_inst.version})")
+                            except Exception as register_err:
+                                self.editor.out.showMessage(
+                                    f"Error registering plugin '{name}' from '{module_name}': {register_err}\n"
+                                    f"{traceback.format_exc()}"
+                                )
+                except Exception as import_err:
+                    self.editor.out.showMessage(
+                        f"Error importing plugin module '{module_name}': {import_err}\n"
+                        f"{traceback.format_exc()}"
+                    )
 
     def unload_plugins(self):
         """
@@ -132,6 +138,8 @@ class PluginManager(object):
                     f"{traceback.format_exc()}"
                 )
         self.plugins.clear()
+        self.plugin_actions.clear()
+        self.submenus.clear()
 
         # Remove menu if exists
         if self.menu:
@@ -144,6 +152,7 @@ class PluginManager(object):
         Create the Plugins menu on the menubar.
         """
         self.menu = QMenu("Plugins", self.editor.menubar)
+        self.menu.setTearOffEnabled(True)
         
         # Try to insert menu after the Options menu (which means before the Run menu)
         menubar_actions = self.editor.menubar.actions()
@@ -160,27 +169,52 @@ class PluginManager(object):
         else:
             self.editor.menubar.addMenu(self.menu)
 
+    def add_plugin_action(self, plugin_inst, action):
+        """
+        Called by plugins to register an action in the Plugins menu.
+        """
+        rel_dir = getattr(plugin_inst, 'rel_dir', '')
+        is_user = getattr(plugin_inst, 'is_user', False)
+        
+        if is_user:
+            action.setText(f"{action.text()} (USER)")
+            
+        self.plugin_actions.append((rel_dir, action, is_user))
+
     def finalize_menu(self):
         """
-        Append plugin metadata and reload actions to the Plugins menu.
+        Organize collected plugin actions into submenus and sort them alphabetically.
         """
         if not self.menu:
             return
 
+        # Sort actions alphabetically by action text
+        self.plugin_actions.sort(key=lambda x: x[1].text().lower())
+
+        for rel_dir, action, is_user in self.plugin_actions:
+            target_menu = self.menu
+            
+            if rel_dir:
+                # Create submenus if needed. Handle nested directories.
+                parts = rel_dir.replace('\\', '/').split('/')
+                current_menu = self.menu
+                current_path = ""
+                for part in parts:
+                    if not part:
+                        continue
+                    current_path = f"{current_path}/{part}" if current_path else part
+                    if current_path not in self.submenus:
+                        new_menu = QMenu(part, current_menu)
+                        new_menu.setTearOffEnabled(True)
+                        current_menu.addMenu(new_menu)
+                        self.submenus[current_path] = new_menu
+                    current_menu = self.submenus[current_path]
+                target_menu = current_menu
+            
+            target_menu.addAction(action)
+
         self.menu.addSeparator()
         
-        # Add list of active plugins
-        if self.plugins:
-            self.menu.addAction("Loaded Plugins:").setEnabled(False)
-            for name, plugin in self.plugins.items():
-                action = self.menu.addAction(f"  • {name} (v{plugin.version})")
-                action.setToolTip(plugin.description)
-                action.setEnabled(False)
-            self.menu.addSeparator()
-        else:
-            self.menu.addAction("No plugins loaded").setEnabled(False)
-            self.menu.addSeparator()
-
         # Add reload action
         reload_action = QAction("Reload Plugins", self.menu)
         reload_action.triggered.connect(self.load_plugins)
