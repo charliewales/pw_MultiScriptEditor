@@ -21,6 +21,7 @@ class GitManager(object):
     def run_git_cmd(cls, args, cwd=None):
         """
         Executes a git command and returns (returncode, stdout, stderr).
+        Preserves leading whitespace in stdout (essential for `git status --porcelain`).
         """
         try:
             cmd = ['git'] + args
@@ -32,9 +33,9 @@ class GitManager(object):
                 creationflags=cls._get_subprocess_flags()
             )
             stdout_bytes, stderr_bytes = proc.communicate()
-            stdout = stdout_bytes.decode('utf-8', errors='replace')
-            stderr = stderr_bytes.decode('utf-8', errors='replace')
-            return proc.returncode, stdout.strip(), stderr.strip()
+            stdout = stdout_bytes.decode('utf-8', errors='replace').rstrip('\r\n')
+            stderr = stderr_bytes.decode('utf-8', errors='replace').strip()
+            return proc.returncode, stdout, stderr
         except Exception as e:
             return -1, '', str(e)
 
@@ -55,7 +56,7 @@ class GitManager(object):
         folder = os.path.dirname(os.path.abspath(file_path))
         code, stdout, _ = cls.run_git_cmd(['rev-parse', '--show-toplevel'], cwd=folder)
         if code == 0 and stdout:
-            return os.path.normpath(stdout)
+            return os.path.normpath(stdout.strip())
         return None
 
     @classmethod
@@ -73,7 +74,7 @@ class GitManager(object):
             return ''
         code, stdout, _ = cls.run_git_cmd(['rev-parse', '--abbrev-ref', 'HEAD'], cwd=folder)
         if code == 0 and stdout:
-            return stdout
+            return stdout.strip()
         return ''
 
     @classmethod
@@ -84,7 +85,7 @@ class GitManager(object):
             'in_repo': bool,
             'repo_root': str,
             'branch': str,
-            'status_code': str ('M', 'U', 'A', 'STAGED', 'CLEAN', etc.),
+            'status_code': str ('M', 'U', 'A', 'S', 'M+', 'CLEAN', etc.),
             'status_text': str,
             'is_modified': bool,
             'is_staged': bool,
@@ -127,7 +128,7 @@ class GitManager(object):
         code, stdout, _ = cls.run_git_cmd(['status', '--porcelain', rel_path], cwd=repo_root)
         if code == 0 and stdout:
             # Porcelain format: XY FILENAME
-            # X = index status, Y = work tree status
+            # X = index (staged) status, Y = work tree (unstaged) status
             line = stdout.splitlines()[0]
             if len(line) >= 2:
                 x, y = line[0], line[1]
@@ -145,8 +146,12 @@ class GitManager(object):
                         result['status_code'] = 'M+'
                         result['status_text'] = 'Staged & Modified'
                     elif result['is_staged']:
-                        result['status_code'] = 'A'
-                        result['status_text'] = 'Staged'
+                        if x == 'A':
+                            result['status_code'] = 'A'
+                            result['status_text'] = 'Added (Staged)'
+                        else:
+                            result['status_code'] = 'S'
+                            result['status_text'] = 'Staged'
                     elif result['is_modified']:
                         result['status_code'] = 'M'
                         result['status_text'] = 'Modified'
