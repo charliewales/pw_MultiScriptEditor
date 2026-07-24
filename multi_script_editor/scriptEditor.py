@@ -1226,9 +1226,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     f.write(text)
                 self.addRecentFile(path[0])
                 self.tab.addNewTab(os.path.basename(path[0]), text, file_path=path[0])
-                self.out.showMessage('Saved to: %s' % path[0])
+                self.out.showMessage('Saved to: %s' % os.path.normpath(path[0]))
             except Exception as e:
-                self.out.showMessage('Error saving file: %s (%s)' % (path[0], str(e)))
+                self.out.showMessage('Error saving file: %s (%s)' % (os.path.normpath(path[0]), str(e)))
 
 
     def saveScript(self):
@@ -1246,10 +1246,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             try:
                 with open(cont.file_path, 'w') as f:
                     f.write(text)
-                self.out.showMessage('Saved to: %s' % cont.file_path)
+                self.out.showMessage('Saved to: %s' % os.path.normpath(cont.file_path))
                 cont.edit.document().setModified(False)
             except Exception as e:
-                self.out.showMessage('Error saving file: %s (%s)' % (cont.file_path, str(e)))
+                self.out.showMessage('Error saving file: %s (%s)' % (os.path.normpath(cont.file_path), str(e)))
             return
 
         # Otherwise do Save As
@@ -1266,12 +1266,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     cont.file_path = path[0]
                 self.tab.setTabText(index, os.path.basename(path[0]))
                 self.tab.setTabToolTip(index, os.path.normpath(path[0]))
-                self.out.showMessage('Saved to: %s' % path[0])
+                self.out.showMessage('Saved to: %s' % os.path.normpath(path[0]))
                 cont.edit.document().setModified(False)
                 if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
                     cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
             except:
-                self.out.showMessage('Error save file; %s' % path[0])
+                self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
     def loadScript(self):
         d = os.getenv('HOME')

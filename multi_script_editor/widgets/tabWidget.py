@@ -435,9 +435,9 @@ class tabWidgetClass(QTabWidget):
                 if self.count() == 0:
                     self.addNewTab()
                 if hasattr(self.p, 'out'):
-                    self.p.out.showMessage('Deleted file: %s' % file_path)
+                    self.p.out.showMessage('Deleted file: %s' % os.path.normpath(file_path))
                 elif hasattr(self.p, 'showStatusMessage'):
-                    self.p.showStatusMessage('Deleted file: %s' % file_path)
+                    self.p.showStatusMessage('Deleted file: %s' % os.path.normpath(file_path))
             except Exception as e:
                 err_box = QMessageBox(self)
                 err_box.setIcon(QMessageBox.Critical)
@@ -483,10 +483,11 @@ class tabWidgetClass(QTabWidget):
                     f.write(text or '')
                 new_tab_name = os.path.basename(new_path)
                 self.addNewTab(new_tab_name, text, file_path=new_path)
+                norm_new_path = os.path.normpath(new_path)
                 if hasattr(self.p, 'out'):
-                    self.p.out.showMessage('Duplicated file saved to: %s' % new_path)
+                    self.p.out.showMessage('Duplicated file saved to: %s' % norm_new_path)
                 elif hasattr(self.p, 'showStatusMessage'):
-                    self.p.showStatusMessage('Duplicated file saved to: %s' % new_path)
+                    self.p.showStatusMessage('Duplicated file saved to: %s' % norm_new_path)
             except Exception as e:
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Error duplicating file: %s' % str(e))
@@ -524,20 +525,21 @@ class tabWidgetClass(QTabWidget):
                             new_text = new_text + old_ext
 
                         new_path = os.path.join(dir_name, new_text)
+                        norm_new_path = os.path.normpath(new_path)
 
-                        if os.path.normpath(old_path) != os.path.normpath(new_path):
+                        if os.path.normpath(old_path) != norm_new_path:
                             if os.path.exists(old_path):
                                 try:
                                     os.rename(old_path, new_path)
                                     widget.file_path = new_path
-                                    self.setTabToolTip(idx, os.path.normpath(new_path))
+                                    self.setTabToolTip(idx, norm_new_path)
                                     self.setTabText(idx, os.path.basename(new_path))
                                     if hasattr(widget, 'edit') and hasattr(widget.edit, 'applyHightLighter') and hasattr(self.p, '_current_settings'):
                                         widget.edit.applyHightLighter(self.p._current_settings.get('theme', 'Multi Script Editor'))
                                     if hasattr(self.p, 'out'):
-                                        self.p.out.showMessage('Renamed file to: %s' % new_path)
+                                        self.p.out.showMessage('Renamed file to: %s' % norm_new_path)
                                     elif hasattr(self.p, 'showStatusMessage'):
-                                        self.p.showStatusMessage('Renamed file to: %s' % new_path)
+                                        self.p.showStatusMessage('Renamed file to: %s' % norm_new_path)
                                 except Exception as e:
                                     if hasattr(self.p, 'out'):
                                         self.p.out.showMessage('Error renaming file: %s' % str(e))
@@ -570,7 +572,21 @@ class tabWidgetClass(QTabWidget):
         edit.setObjectName('tabRenameEdit')
         edit._widget_to_rename = widget_to_rename
         self._rename_edit = edit
-        edit.setFont(self.tabBar().font())
+        tab_font = getattr(self, '_tab_label_font', None) or self.tabBar().font()
+        edit.setFont(tab_font)
+        family = tab_font.family()
+        pt_size = tab_font.pointSizeF()
+        px_size = tab_font.pixelSize()
+        if pt_size > 0:
+            size_css = "font-size: %spt;" % pt_size
+        elif px_size > 0:
+            size_css = "font-size: %spx;" % px_size
+        else:
+            size_css = ""
+
+        if family:
+            edit.setStyleSheet("QLineEdit#tabRenameEdit { font-family: '%s'; %s }" % (family, size_css))
+
         edit.setText(self.tabText(index))
         edit.selectAll()
 
@@ -838,6 +854,7 @@ class tabWidgetClass(QTabWidget):
             else:
                 size_css = ""
 
+        self._tab_label_font = QFont(tab_font)
         self.tabBar().setFont(tab_font)
 
         css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\nQTabBar::scroller { width: 0px; }\n/*TAB_FONT_END*/\n" % (family, size_css)
