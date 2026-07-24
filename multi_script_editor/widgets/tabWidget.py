@@ -424,6 +424,8 @@ class tabWidgetClass(QTabWidget):
 
         if self.count() > 1:
             close_others_action = QAction('Close Other Tabs', self)
+            if 'close_other_tabs' in icons:
+                close_others_action.setIcon(QIcon(icons['close_other_tabs']))
             close_others_action.triggered.connect(lambda checked=False, idx=index: self.closeOtherTabs(idx))
             menu.addAction(close_others_action)
 

@@ -21,6 +21,7 @@ class ScriptEditorUIBuilder:
         editor.load_act.setIcon(QIcon(icons['open']))
         editor.load_act.setShortcut("Ctrl+O")
         editor.diffTool_act.triggered.connect(editor.openDiffDialog)
+        editor.diffTool_act.setIcon(QIcon(icons['git_diff']))
         editor.diffTool_act.setShortcut("Ctrl+Shift+C")
         editor.save_act.triggered.connect(editor.saveScript)
         editor.save_act.setIcon(QIcon(icons['save']))
