@@ -490,7 +490,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             if ext == '.js':
                 highlighter_class = extraSyntaxes.JavascriptHighlighterClass
                 self.comment_prefix = '//'
-            elif ext in ['.html', '.htm']:
+            elif ext in ['.html', '.htm', '.xml']:
                 highlighter_class = extraSyntaxes.HtmlHighlighterClass
                 self.comment_prefix = '<!--'
                 self.comment_suffix = '-->'
@@ -513,6 +513,17 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             elif ext == '.json':
                 highlighter_class = extraSyntaxes.JsonHighlighterClass
                 self.comment_prefix = '//'
+            elif ext in ['.bat', '.cmd']:
+                highlighter_class = extraSyntaxes.BatchHighlighterClass
+                self.comment_prefix = 'REM '
+            elif ext == '.sh':
+                highlighter_class = extraSyntaxes.BashHighlighterClass
+                self.comment_prefix = '#'
+            elif ext == '.ini':
+                highlighter_class = extraSyntaxes.IniHighlighterClass
+                self.comment_prefix = ';'
+
+
 
         self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)

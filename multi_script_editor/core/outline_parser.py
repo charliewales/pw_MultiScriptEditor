@@ -137,4 +137,30 @@ class OutlineParser:
                     symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'json'})
                     continue
 
+            elif ext == '.xml':
+                tag_match = re.match(r'^(\s*)<([a-zA-Z0-9_\-\.:]+)', line)
+                if tag_match:
+                    indent_str = tag_match.group(1)
+                    indent = len(indent_str) // 4
+                    name = "<{0}>".format(tag_match.group(2))
+                    symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'xml'})
+                    continue
+
+            elif ext == '.ini':
+                section_match = re.match(r'^(\s*)\[([^\]]+)\]', line)
+                if section_match:
+                    indent_str = section_match.group(1)
+                    indent = len(indent_str) // 4
+                    name = "[{0}]".format(section_match.group(2))
+                    symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'ini_section'})
+                    continue
+                key_match = re.match(r'^(\s*)([^=;#\[\]]+?)\s*=', line)
+                if key_match:
+                    indent_str = key_match.group(1)
+                    indent = (len(indent_str) // 4) + 1
+                    name = key_match.group(2).strip()
+                    symbols.append({'name': name, 'line': line_num, 'indent': indent, 'type': 'ini_key'})
+                    continue
+
         return symbols
+

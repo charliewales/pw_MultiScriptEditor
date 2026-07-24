@@ -1307,7 +1307,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(cont, 'file_path') and cont.file_path:
             d = os.path.dirname(cont.file_path)
 
-        path = QFileDialog.getSaveFileName(self, 'Save script as', d, "All Supported Files (*.css *.html *.htm *.js *.json *.log *.md *.py *.txt *.usd *.usda *.yaml *.yml);;CSS Files (*.css);;HTML Files (*.html *.htm);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getSaveFileName(self, 'Save script as', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -1346,7 +1346,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.css *.html *.htm *.js *.json *.log *.md *.py *.txt *.usd *.usda *.yaml *.yml);;CSS Files (*.css);;HTML Files (*.html *.htm);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -1458,7 +1458,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.css *.html *.htm *.js *.json *.log *.md *.py *.txt *.usd *.usda *.yaml *.yml);;CSS Files (*.css);;HTML Files (*.html *.htm);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
         if path[0]:
             if os.path.exists(path[0]):
                 text = read_file_text(path[0])

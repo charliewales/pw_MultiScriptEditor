@@ -98,7 +98,16 @@ def create_symbol_item(sym, theme_colors=None, font=None, ext='.py'):
     elif ext in ['.html', '.htm']:
         parts = name.split(' ', 1)
         if len(parts) == 2:
-            html_name = f'<span style="color:{c_kw}">{parts[0]}</span> <span style="color:{c_meth}">{parts[1]}</span>'
+            p0 = parts[0].replace('<', '&lt;').replace('>', '&gt;')
+            html_name = f'<span style="color:{c_kw}">{p0}</span> <span style="color:{c_meth}">{parts[1]}</span>'
+    elif ext == '.xml':
+        escaped = name.replace('<', '&lt;').replace('>', '&gt;')
+        html_name = f'<span style="color:{c_kw}">{escaped}</span>'
+    elif ext == '.ini':
+        if sym_type == 'ini_section':
+            html_name = f'<span style="color:{c_kw}">{name}</span>'
+        else:
+            html_name = f'<span style="color:{c_meth}">{name}</span>'
     elif ext in ['.css', '.scss', '.less']:
         html_name = f'<span style="color:{c_kw}">{name}</span>'
     elif ext in ['.md', '.markdown', '.generic']:

@@ -259,3 +259,73 @@ class JsonHighlighterClass(BaseHighlighterClass):
         
         self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
 
+class BatchHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(BatchHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        keywords = ['echo', 'set', 'if', 'else', 'for', 'in', 'do', 'goto', 'call', 'exit', 'pause', 'shift', 'start', 'type', 'copy', 'del', 'ren', 'move', 'md', 'cd', 'rd', 'rem']
+        
+        # Keywords
+        rules.append((r'(?i)\b(' + '|'.join(keywords) + r')\b', 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        
+        # Variables like %VAR% or !VAR!
+        rules.append((r'%.*?%|!.*?!', 0, self.getStyle(self.colors.get('extra', (0,128,255)))))
+        
+        # Labels like :start
+        rules.append((r'(?i)^\s*:[a-zA-Z0-9_]+', 0, self.getStyle(self.colors.get('methods', (0,255,0)))))
+        
+        # Strings
+        rules.append((r'".*?"', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        
+        # Comments (REM or ::)
+        rules.append((r'(?i)^\s*rem\s+.*|^\s*::.*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
+
+
+class BashHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(BashHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        keywords = ['if', 'then', 'else', 'elif', 'fi', 'for', 'while', 'in', 'do', 'done', 'case', 'esac', 'function', 'return', 'exit', 'echo', 'export', 'set', 'unset', 'source', 'alias', 'read', 'break', 'continue']
+        
+        # Keywords
+        rules.append((r'\b(' + '|'.join(keywords) + r')\b', 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        
+        # Variables like $VAR or ${VAR}
+        rules.append((r'\$([a-zA-Z_][a-zA-Z0-9_]*|\{[^}]+\})', 0, self.getStyle(self.colors.get('extra', (0,128,255)))))
+        
+        # Strings
+        rules.append((r'".*?"|\'.*?\'', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        
+        # Numbers
+        rules.append((r"\b[\d.]+\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        
+        # Comments
+        rules.append((r'#.*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
+
+class IniHighlighterClass(BaseHighlighterClass):
+    def __init__(self, document, colors=None):
+        super(IniHighlighterClass, self).__init__(document, colors)
+        rules = []
+        
+        # Sections [Section]
+        rules.append((r'^\s*\[[^\]]+\]', 0, self.getStyle(self.colors.get('keywords', (255,128,0)), True)))
+        
+        # Keys (before = or :)
+        rules.append((r'^\s*([^=:]+?)(?=\s*[=:])', 1, self.getStyle(self.colors.get('methods', (0,255,0)))))
+        
+        # Strings
+        rules.append((r'".*?"|\'.*?\'', 0, self.getStyle(self.colors.get('string', (128,255,128)))))
+        
+        # Numbers
+        rules.append((r"\b[\d.]+\b", 0, self.getStyle(self.colors.get('digits', (255,255,0)))))
+        
+        # Comments (; or #)
+        rules.append((r'[;#].*', 0, self.getStyle(self.colors.get('comment', (128,128,128)))))
+        
+        self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
