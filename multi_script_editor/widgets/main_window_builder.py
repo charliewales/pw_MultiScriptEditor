@@ -610,6 +610,7 @@ class ScriptEditorUIBuilder:
             editor.undo_act: "Undo the last action",
             editor.unfold_act: "Unfold the current code block",
             editor.unfold_all_act: "Unfold all code blocks",
+            editor.versionControl_act: "Toggle Git version control features",
             editor.whitespace_act: "Show or hide whitespace characters in the editor",
             editor.wordWrap_act: "Toggle word wrap in the editor",
             editor.zoom_in_act: "Zoom in the editor font size",
