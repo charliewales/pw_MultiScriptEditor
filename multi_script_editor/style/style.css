@@ -61,6 +61,27 @@ QToolBar QToolButton:pressed
     background: rgb[highlight_line];
 }
 
+QToolButton {
+    background: transparent;
+    border: none;
+}
+
+QToolButton:hover {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+QToolButton:pressed {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+QToolButton:checked {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+
 /**************MAINWINDOW*************/
 
 QMainWindow::separator

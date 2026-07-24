@@ -78,6 +78,40 @@ from widgets.diff_dialog import CompareWidget
 from core.git_manager import GitManager
 from widgets.git_popup import GitPopupWidget
 
+SUPPORTED_FILE_TYPES = {
+    'Bash': ['.sh'],
+    'Batch': ['.bat', '.cmd'],
+    'CSS': ['.css'],
+    'HTML': ['.html', '.htm'],
+    'INI': ['.ini'],
+    'JavaScript': ['.js'],
+    'JSON': ['.json'],
+    'Log': ['.log'],
+    'Markdown': ['.md'],
+    'Python': ['.py', '.pyw', '.pyx'],
+    'Text': ['.txt'],
+    'USD': ['.usd', '.usda'],
+    'XML': ['.xml'],
+    'YAML': ['.yaml', '.yml'],
+}
+
+SUPPORTED_EXTENSIONS = set()
+for _exts in SUPPORTED_FILE_TYPES.values():
+    SUPPORTED_EXTENSIONS.update(_exts)
+
+
+def build_file_dialog_filter():
+    all_ext_str = " ".join(f"*{ext}" for ext in sorted(SUPPORTED_EXTENSIONS))
+    category_filters = [f"All Supported Files ({all_ext_str})"]
+    for cat_name in sorted(SUPPORTED_FILE_TYPES.keys()):
+        exts_str = " ".join(f"*{ext}" for ext in sorted(SUPPORTED_FILE_TYPES[cat_name]))
+        category_filters.append(f"{cat_name} Files ({exts_str})")
+    category_filters.append("All Files (*.*)")
+    return ";;".join(category_filters)
+
+
+FILE_DIALOG_FILTER_STRING = build_file_dialog_filter()
+
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)
@@ -203,6 +237,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.tab.currentChanged.connect(self.statusBar().clearMessage)
         self.tab.currentChanged.connect(self.updateStatusBarInfo)
+        self.tab.currentChanged.connect(self._on_tab_changed_sync_explorer)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
 
         # start
@@ -1312,7 +1347,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(cont, 'file_path') and cont.file_path:
             d = os.path.dirname(cont.file_path)
 
-        path = QFileDialog.getSaveFileName(self, 'Save script as', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getSaveFileName(self, 'Save script as', d, FILE_DIALOG_FILTER_STRING)
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -1351,7 +1386,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getSaveFileName(self, 'Save script', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getSaveFileName(self, 'Save script', d, FILE_DIALOG_FILTER_STRING)
         if path[0]:
             try:
                 with open(path[0], 'w') as f:
@@ -1453,6 +1488,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             popup.exec_()
 
+    def _on_tab_changed_sync_explorer(self, index):
+        if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None):
+            if self.explorer_widget.auto_sync_tab_btn.isChecked():
+                self._sync_explorer_to_tab()
+
     def _sync_explorer_to_tab(self):
         index = self.tab.currentIndex()
         if index >= 0:
@@ -1470,7 +1510,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         d = os.getenv('HOME')
         if not d:
             d = os.path.expanduser('~')
-        path = QFileDialog.getOpenFileName(self, 'Open script', d, "All Supported Files (*.bat *.cmd *.css *.html *.htm *.ini *.js *.json *.log *.md *.py *.sh *.txt *.usd *.usda *.xml *.yaml *.yml);;Bash Files (*.sh);;Batch Files (*.bat *.cmd);;CSS Files (*.css);;HTML Files (*.html *.htm);;INI Files (*.ini);;JavaScript Files (*.js);;JSON Files (*.json);;Log Files (*.log);;Markdown Files (*.md);;Python Files (*.py);;Text Files (*.txt);;USD Files (*.usd *.usda);;XML Files (*.xml);;YAML Files (*.yaml *.yml);;All Files (*.*)")
+        path = QFileDialog.getOpenFileName(self, 'Open script', d, FILE_DIALOG_FILTER_STRING)
         if path[0]:
             if os.path.exists(path[0]):
                 text = read_file_text(path[0])
@@ -1719,6 +1759,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 path = data.get('explorer_current_path', '')
                 if path and os.path.exists(path):
                     self.explorer_widget.set_root_path(path)
+                if getattr(self.explorer_widget, 'auto_sync_tab_btn', None):
+                    auto_sync = data.get('explorer_auto_sync', False)
+                    self.explorer_widget.auto_sync_tab_btn.setChecked(auto_sync)
+                if getattr(self.explorer_widget, 'filter_supported_btn', None):
+                    show_all = data.get('explorer_show_all_files', False)
+                    self.explorer_widget.filter_supported_btn.setChecked(show_all)
+                    self.explorer_widget.proxy_model.setShowAllFiles(show_all)
 
             show_explorer = data.get('show_explorer', False)
             if show_explorer:
@@ -1821,6 +1868,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         show_explorer = self.showExplorer_act.isChecked()
         explorer_bookmarks = self.explorer_widget.get_bookmarks() if hasattr(self, 'explorer_widget') else []
         explorer_current_path = self.explorer_widget.get_current_root() if hasattr(self, 'explorer_widget') else ""
+        explorer_auto_sync = self.explorer_widget.auto_sync_tab_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None) else False
+        explorer_show_all_files = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else False
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
@@ -1880,6 +1929,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_explorer=show_explorer,
             explorer_bookmarks=explorer_bookmarks,
             explorer_current_path=explorer_current_path,
+            explorer_auto_sync=explorer_auto_sync,
+            explorer_show_all_files=explorer_show_all_files,
             show_outline_button=show_outline_button,
             show_output=show_output,
             show_menus=show_menus,

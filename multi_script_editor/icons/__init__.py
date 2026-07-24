@@ -92,4 +92,6 @@ icons = dict(
     rename_file=os.path.join(root, "rename_file.png"),
     close_other_tabs=os.path.join(root, "close_other_tabs.png"),
     explorer=os.path.join(root, "open.png"),
+    new_file=os.path.join(root, "new_file.png"),
+    new_folder=os.path.join(root, "new_folder.png"),
 )

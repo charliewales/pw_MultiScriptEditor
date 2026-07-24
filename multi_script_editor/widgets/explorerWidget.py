@@ -600,11 +600,15 @@ class ExplorerWidget(QWidget):
 
         new_file_act = QAction("New file...", menu)
         new_file_act.setStatusTip("Create a new file in this directory")
+        if "new_file" in icons:
+            new_file_act.setIcon(QIcon(icons["new_file"]))
         new_file_act.triggered.connect(lambda: self._create_new_file(target_dir))
         menu.addAction(new_file_act)
 
         new_folder_act = QAction("New folder...", menu)
         new_folder_act.setStatusTip("Create a new folder in this directory")
+        if "new_folder" in icons:
+            new_folder_act.setIcon(QIcon(icons["new_folder"]))
         new_folder_act.triggered.connect(lambda: self._create_new_folder(target_dir))
         menu.addAction(new_folder_act)
 
