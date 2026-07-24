@@ -239,6 +239,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.lbl_lang.setText("")
             self.lbl_lines.setText("0 lines")
             self.lbl_cursor.setText("Ln 1, Col 1")
+            if hasattr(self, 'diffTool_act'):
+                self.diffTool_act.setEnabled(False)
             return
 
         w = self.tab.widget(idx)
@@ -309,6 +311,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         for act in (self.execAll_act, self.execLine_act, self.execSel_act, self.clearHistory_act, self.clear_exec_act):
             if hasattr(self, act.objectName()):
                 act.setEnabled(is_python)
+
+        has_file_path = bool(file_path and os.path.exists(file_path))
+        if hasattr(self, 'diffTool_act'):
+            self.diffTool_act.setEnabled(has_file_path)
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
@@ -1337,46 +1343,40 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
     def openDiffDialog(self):
-        from core.diff_manager import DiffManager
-        from vendor.Qt.QtGui import QCursor
-        from vendor.Qt.QtWidgets import QFileDialog, QMenu
-
         idx = self.tab.currentIndex()
-        current_widget = self.tab.widget(idx) if idx >= 0 else None
+        if idx < 0:
+            return
+
+        current_widget = self.tab.widget(idx)
         current_file = getattr(current_widget, 'file_path', "") if current_widget else ""
+        if not current_file or not os.path.exists(current_file):
+            return
 
-        menu = QMenu(self)
-        if hasattr(self, 'menubar') and self.menubar:
-            menu.setFont(self.menubar.font())
+        edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
+        center_w = edit_widget if edit_widget else self
 
-        if current_file and os.path.exists(current_file):
-            self.tab.build_compare_menu(menu, idx)
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True) and edit_widget:
+            font_data = colors.get('font')
+            if font_data:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(edit_widget.font())
         else:
-            def _compare_files():
-                f1, _ = QFileDialog.getOpenFileName(self, "Select First File")
-                if f1:
-                    f2, _ = QFileDialog.getOpenFileName(self, "Select Second File")
-                    if f2:
-                        DiffManager.run_diff(f1, f2, parent=self)
+            from vendor.Qt.QtWidgets import QApplication
+            font = QApplication.font("QListWidget")
 
-            def _compare_dirs():
-                d1 = QFileDialog.getExistingDirectory(self, "Select First Directory")
-                if d1:
-                    d2 = QFileDialog.getExistingDirectory(self, "Select Second Directory")
-                    if d2:
-                        DiffManager.run_diff(d1, d2, parent=self)
-
-            act_files = menu.addAction("Compare Two Files...")
-            act_files.triggered.connect(_compare_files)
-
-            act_dirs = menu.addAction("Compare Two Directories...")
-            act_dirs.triggered.connect(_compare_dirs)
-
-            menu.addSeparator()
-            cfg_act = menu.addAction("Configure Diff Tool...")
-            cfg_act.triggered.connect(lambda: DiffManager.configure_diff_tool(parent=self))
-
-        menu.exec_(QCursor.pos())
+        from widgets.diff_dialog import CompareWidget
+        popup = CompareWidget(self.tab, idx, parent=self, center_widget=center_w, qss=qss, font=font, colors=colors)
+        if hasattr(popup, 'exec'):
+            popup.exec()
+        else:
+            popup.exec_()
 
     def loadScript(self):
         d = os.getenv('HOME')
