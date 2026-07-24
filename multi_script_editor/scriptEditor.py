@@ -1378,6 +1378,62 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             popup.exec_()
 
+    def openGitPopup(self):
+        if not getattr(self, '_version_control_enabled', True):
+            self.showStatusMessage("Version Control (GIT) is disabled in options.")
+            return
+
+        idx = self.tab.currentIndex()
+        if idx < 0:
+            return
+
+        current_widget = self.tab.widget(idx)
+        file_path = getattr(current_widget, 'file_path', "") if current_widget else ""
+
+        if not file_path or not os.path.exists(file_path):
+            self.showStatusMessage("Current tab does not have a saved file on disk.")
+            return
+
+        from core.git_manager import GitManager
+        if not GitManager.is_in_repo(file_path):
+            self.showStatusMessage("Current file is not in a Git repository.")
+            return
+
+        edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
+        center_w = edit_widget if edit_widget else self
+
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True) and edit_widget:
+            font_data = colors.get('font')
+            if font_data:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(edit_widget.font())
+        else:
+            from vendor.Qt.QtWidgets import QApplication
+            font = QApplication.font("QListWidget")
+
+        from widgets.git_popup import GitPopupWidget
+        popup = GitPopupWidget(
+            parent=self,
+            center_widget=center_w,
+            qss=qss,
+            font=font,
+            colors=colors,
+            file_path=file_path,
+            tab_widget=self.tab,
+            tab_index=idx
+        )
+        if hasattr(popup, 'exec'):
+            popup.exec()
+        else:
+            popup.exec_()
+
     def loadScript(self):
         d = os.getenv('HOME')
         if not d:

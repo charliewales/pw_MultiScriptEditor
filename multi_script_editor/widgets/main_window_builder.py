@@ -172,6 +172,11 @@ class ScriptEditorUIBuilder:
         open_tabs_sc.activated.connect(editor.showOpenTabs)
         editor._open_tabs_sc = open_tabs_sc
 
+        git_popup_sc = QShortcut(QKeySequence('Ctrl+Shift+G'), editor)
+        git_popup_sc.setContext(Qt.ApplicationShortcut)
+        git_popup_sc.activated.connect(editor.openGitPopup)
+        editor._git_popup_sc = git_popup_sc
+
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
         editor.spacesToTabs_act.triggered.connect(editor.spacesToTabs)
