@@ -770,6 +770,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 text = s.get('text')
                 file_path = s.get('file_path')
                 is_active = s.get('active', False)
+
+                if file_path and not os.path.exists(file_path):
+                    self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
+
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
 
                 # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
