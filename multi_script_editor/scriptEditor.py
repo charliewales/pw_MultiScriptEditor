@@ -195,7 +195,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.sidebar_tab_widget = QTabWidget()
         self.sidebar_tab_widget.setObjectName("sidebarTabWidget")
         self.sidebar_tab_widget.setTabPosition(QTabWidget.North)
-        self.sidebar_tab_widget.addTab(self.explorer_widget, QIcon(icons.get("open", "")), "Explorer")
+        self.sidebar_tab_widget.addTab(self.explorer_widget, QIcon(icons.get("explorer_panel", icons.get("open", ""))), "Explorer")
         self.sidebar_tab_widget.addTab(self.outline_panel, QIcon(icons.get("outline", "")), "Outline")
         self.sidebar_tab_widget.currentChanged.connect(self._on_sidebar_tab_changed)
 

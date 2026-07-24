@@ -300,8 +300,7 @@ class ExplorerWidget(QWidget):
         self.filter_supported_btn = QToolButton()
         self.filter_supported_btn.setCheckable(True)
         self.filter_supported_btn.setChecked(True)
-        self.filter_supported_btn.setText("*.*")
-        self.filter_supported_btn.setToolButtonStyle(Qt.ToolButtonTextOnly)
+        self.filter_supported_btn.setIcon(QIcon(icons.get("filter_files", "")))
         self.filter_supported_btn.setToolTip("Toggle: Show all files (Checked = Supported files only, Unchecked = All files)")
         self.filter_supported_btn.setStatusTip("Toggle whether to show all files or only supported scripts/files")
 

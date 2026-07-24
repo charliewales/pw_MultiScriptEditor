@@ -363,11 +363,11 @@ class ScriptEditorUIBuilder:
 
         # Create status bar
         editor.statusBar()
-
         # Explorer toggle setup
         editor.showExplorer_act.setShortcut("Ctrl+E")
         editor.showExplorer_act.setShortcutContext(Qt.WindowShortcut)
         editor.showExplorer_act.triggered.connect(editor.toggleExplorer)
+        editor.showExplorer_act.setIcon(QIcon(icons.get("explorer_panel", icons.get("open", ""))))
 
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
@@ -667,6 +667,7 @@ class ScriptEditorUIBuilder:
 
 
             # File Actions
+            tb.addAction(editor.showExplorer_act)
             tb.addAction(editor.load_act)
             tb.addAction(editor.saveOutputAs_act)
             tb.addAction(editor.saveOutputToTab_act)
