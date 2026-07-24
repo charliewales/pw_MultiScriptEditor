@@ -19,6 +19,7 @@ from vendor.Qt.QtGui import (
 )
 from vendor.Qt.QtWidgets import QApplication, QPlainTextEdit, QTextEdit
 from widgets import completeWidget
+from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
 from widgets.markdown_preview import MarkdownPreviewEdit
 from widgets.pythonSyntax import design, extraSyntaxes, syntaxHighLighter
 
@@ -124,7 +125,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def recompute_folding_regions(self):
         doc = self.document()
         block_count = doc.blockCount()
-        
+
         # 1. Determine indentation of each block
         indents = {}
         last_indent = 0
@@ -137,7 +138,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 leading = len(text) - len(text.lstrip())
                 indents[i] = leading
                 last_indent = leading
-                
+
         # 2. Find folding regions
         folding_regions = {}
         for i in range(block_count - 1):
@@ -152,7 +153,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         if indents[j] <= indent_current:
                             end_idx = j - 1
                             break
-                            
+
                     # Leave up to 2 trailing empty lines unfolded
                     empty_count = 0
                     while end_idx > i + 1 and empty_count < 2:
@@ -162,9 +163,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                             empty_count += 1
                         else:
                             break
-                            
+
                     folding_regions[i] = (i + 1, end_idx)
-                    
+
         self.folding_regions = folding_regions
 
     def apply_folding_visibility(self):
@@ -173,23 +174,23 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             doc = self.document()
             block_count = doc.blockCount()
             hide_until = -1
-            
+
             for i in range(block_count):
                 block = doc.findBlockByNumber(i)
                 if not block.isValid():
                     continue
-                
+
                 should_be_visible = (i > hide_until)
                 if block.isVisible() != should_be_visible:
                     block.setVisible(should_be_visible)
-                
+
                 if should_be_visible and i in self.folding_regions:
                     data = block.userData()
                     if data and getattr(data, 'folded', False):
                         start_idx, end_idx = self.folding_regions[i]
                         if end_idx > hide_until:
                             hide_until = end_idx
-            
+
             self.document().markContentsDirty(0, self.document().characterCount())
         finally:
             self.setUpdatesEnabled(True)
@@ -217,7 +218,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         block = cursor.block()
         if not block.isValid():
             return
-            
+
         block_num = block.blockNumber()
         if not block.isVisible():
             doc = self.document()
@@ -236,7 +237,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def fold_current(self):
         cursor = self.textCursor()
         curr_block_num = cursor.blockNumber()
-        
+
         target_block_num = -1
         for i in range(curr_block_num, -1, -1):
             if i in self.folding_regions:
@@ -244,7 +245,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 if i <= curr_block_num <= end_idx:
                     target_block_num = i
                     break
-        
+
         if target_block_num != -1:
             doc = self.document()
             block = doc.findBlockByNumber(target_block_num)
@@ -259,7 +260,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def unfold_current(self):
         cursor = self.textCursor()
         curr_block_num = cursor.blockNumber()
-        
+
         target_block_num = -1
         for i in range(curr_block_num, -1, -1):
             if i in self.folding_regions:
@@ -267,7 +268,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 if i <= curr_block_num <= end_idx:
                     target_block_num = i
                     break
-                    
+
         if target_block_num != -1:
             doc = self.document()
             block = doc.findBlockByNumber(target_block_num)
@@ -282,15 +283,15 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         block = doc.findBlockByNumber(block_num)
         if not block.isValid():
             return
-        
+
         data = block.userData()
         if not data:
             data = BlockUserData()
             block.setUserData(data)
-            
+
         new_state = not data.folded
         data.folded = new_state
-        
+
         if recursive and block_num in self.folding_regions:
             start_idx, end_idx = self.folding_regions[block_num]
             for i in range(start_idx, end_idx + 1):
@@ -302,7 +303,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                             child_data = BlockUserData()
                             child_block.setUserData(child_data)
                         child_data.folded = new_state
-                        
+
         self.apply_folding_visibility()
 
     def get_folded_blocks(self):
@@ -869,7 +870,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Show the ClipboardWidget popup to search and paste previously copied text.
         """
-        from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
         ClipboardManager.init()
 
         if not ClipboardManager._history:
@@ -1120,14 +1120,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             block_text = cursor.block().text()
             first_non_space = len(block_text) - len(block_text.lstrip(' \t'))
             current_pos_in_block = cursor.positionInBlock()
-            
+
             if current_pos_in_block == first_non_space:
                 cursor.setPosition(cursor.block().position(), mode)
             else:
                 cursor.setPosition(cursor.block().position() + first_non_space, mode)
-                
+
             self.setTextCursor(cursor)
-            
+
             if self.completer:
                 self.completer.updateCompleteList()
             self.setFocus()
@@ -1592,14 +1592,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     # Respect preferred quote style from settings
                     prefer_single_quotes = self.p.preferSingleQuotes_act.isChecked() if hasattr(self.p, 'preferSingleQuotes_act') else False
                     preferred_quote = "'" if prefer_single_quotes else '"'
-                    
+
                     # Convert the opening quote if it does not match preference
                     if before[-1] != preferred_quote:
                         before = before[:-1] + preferred_quote
-                        
+
                     ofs = 1
                     br = preferred_quote
-                    
+
                     # Convert or match the closing quote in end if it exists
                     if end and end[0] in brackets:
                         end = preferred_quote + end[1:]
@@ -1870,7 +1870,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
-            
+
         data = SettingsModel().read_settings() or {}
         if data.get('highlight_all_occurrences', True):
             cursor = self.textCursor()

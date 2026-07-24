@@ -61,6 +61,7 @@ from widgets import (
     findWidget,
     gotoLineWidget,
     outputWidget,
+    pluginWidget,
     shortcuts,
     snippetWidget,
     symbolWidget,
@@ -2191,6 +2192,51 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.saveSnippet()
         else:
             self.insertSnippet()
+
+    def handlePluginShortcut(self):
+        if not hasattr(self, 'plugin_manager') or not self.plugin_manager.plugins:
+            self.out.showMessage(">>> No plugins loaded.")
+            return
+
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        index = self.tab.currentIndex()
+        if index < 0:
+            return
+
+        edit_widget = self.tab.widget(index).edit
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                from vendor.Qt.QtGui import QFont
+                font = QFont(edit_widget.font())
+        else:
+            from vendor.Qt.QtWidgets import QApplication
+            font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        self.plugin_widget = pluginWidget.PluginWidget(self.plugin_manager.plugins, self, edit_widget, qss=qss, font=font, colors=colors)
+
+        def execute_plugin(plugin_inst):
+            if hasattr(plugin_inst, 'action') and plugin_inst.action:
+                plugin_inst.action.trigger()
+
+        self.plugin_widget.pluginSelected.connect(execute_plugin)
+
+        if hasattr(self.plugin_widget, 'exec'):
+            self.plugin_widget.exec()
+        else:
+            self.plugin_widget.exec_()
 
     def _get_snippets(self):
         snippets_model = SnippetsModel()

@@ -13,7 +13,7 @@ class ScriptHeaderPlugin(BasePlugin):
     It shows how to access the underlying Qt QTextEdit widget and insert text
     using QTextCursor while respecting the editor's undo/redo stack.
     """
-    name = "Script Header Generator"
+    name = "Script header generator"
     description = "Inserts a standard Python script header at the top of the active editor tab."
     version = "1.0.0"
 
@@ -21,7 +21,7 @@ class ScriptHeaderPlugin(BasePlugin):
         """
         Create the UI action for this plugin.
         """
-        self.action = QAction("Insert script header", self.editor)
+        self.action = QAction("Script header generator", self.editor)
         self.action.triggered.connect(self.insert_header)
 
         # Add to the Plugins menu via the PluginManager

@@ -1,7 +1,10 @@
+import html
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtGui import QFontMetrics
+from vendor.Qt.QtGui import QFontMetrics, QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
 from widgets.searchPopupWidget import SearchPopupWidget
+from widgets.outline_utils import HtmlDelegate
+from icons import icons
 
 MAX_ENTRIES = 30
 
@@ -83,14 +86,19 @@ class ClipboardWidget(SearchPopupWidget):
         self.history = history
         self.allow_delete = True
 
+        self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
+
         # Calculate dynamic size based on the longest item preview
         fm = QFontMetrics(font) if font else QFontMetrics(self.font())
         max_text_width = 0
-        for text in self.history:
+        for idx, text in enumerate(self.history):
             preview = text.replace('\n', ' ↵ ').replace('\r', '').strip()
             if len(preview) > 100:
                 preview = preview[:97] + "..."
-            w = fm.horizontalAdvance(preview) if hasattr(fm, 'horizontalAdvance') else fm.width(preview)
+            
+            label = f"{idx + 1}: {preview}"
+            w = fm.horizontalAdvance(label) if hasattr(fm, 'horizontalAdvance') else fm.width(label)
+            w += 40 # Icon and margin padding
             if w > max_text_width:
                 max_text_width = w
 
@@ -104,7 +112,15 @@ class ClipboardWidget(SearchPopupWidget):
         self.list_widget.clear()
         filter_text = filter_text.lower()
 
-        for text in self.history:
+        def rgb2hex(rgb):
+            if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
+                return "#ffffff"
+            return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
+
+        c_line = rgb2hex(self.colors.get('methods', (120, 190, 205))) if self.colors else "#78becd"
+        c_text = rgb2hex(self.colors.get('default', (210, 210, 210))) if self.colors else "#d2d2d2"
+
+        for idx, text in enumerate(self.history):
             preview = text.replace('\n', ' ↵ ').replace('\r', '').strip()
             # Search both in preview (with arrows) and original text
             if filter_text in preview.lower() or filter_text in text.lower():
@@ -115,7 +131,15 @@ class ClipboardWidget(SearchPopupWidget):
                 if len(display_text) > 100:
                     display_text = display_text[:97] + "..."
 
-                item.setText(display_text)
+                num = idx + 1
+                escaped_text = html.escape(display_text)
+                html_text = f'<span style="color:{c_line}">{num}:</span> &nbsp;<span style="color:{c_text}">{escaped_text}</span>'
+
+                item.setText(html_text)
+                
+                if 'paste' in icons:
+                    item.setIcon(QIcon(icons['paste']))
+
                 if self._font:
                     item.setFont(self._font)
                 self.list_widget.addItem(item)

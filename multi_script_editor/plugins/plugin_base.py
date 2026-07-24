@@ -88,3 +88,24 @@ class BasePlugin(object):
     def get_tab_count(self):
         """Returns the number of open tabs."""
         return self.editor.tab.count()
+
+    def get_current_tab_selected_text(self):
+        """Returns the selected text from the currently active tab."""
+        idx = self.editor.tab.currentIndex()
+        if idx < 0:
+            return ""
+        widget = self.editor.tab.widget(idx)
+        if widget and hasattr(widget, 'edit'):
+            cursor = widget.edit.textCursor()
+            if cursor.hasSelection():
+                return cursor.selectedText()
+        return ""
+
+    def get_output_selected_text(self):
+        """Returns the selected text from the output widget."""
+        out_widget = self.self_output
+        if out_widget:
+            cursor = out_widget.textCursor()
+            if cursor.hasSelection():
+                return cursor.selectedText()
+        return ""

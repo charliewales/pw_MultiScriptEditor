@@ -15,7 +15,7 @@ class ApiDemoPlugin(BasePlugin):
     4. Implement `unregister(self)` to cleanly remove your tools when the plugin reloads.
     """
     # Plugin Metadata - Used by the PluginManager to identify and display the plugin
-    name = "API Demo Tool"
+    name = "API demo tool"
     description = "Demonstrates how to use Editor Variables and Tab methods provided by BasePlugin."
     version = "1.0.0"
 
@@ -25,7 +25,7 @@ class ApiDemoPlugin(BasePlugin):
         actions, and connect them to your custom methods.
         """
         # Create a QAction that will appear in the menu
-        self.action = QAction("API Demo Tool", self.editor)
+        self.action = QAction("API demo tool", self.editor)
         # Connect the action's trigger signal to our custom method
         self.action.triggered.connect(self.run_demo)
 
@@ -69,14 +69,14 @@ class ApiDemoPlugin(BasePlugin):
 
         # Preparing the text report
         report = (
-            f"\n--- API Demo Plugin Report ---\n"
+            f"--- API Demo Plugin Report ---\n"
             f"Editor Version: {version}\n"
             f"Current Context: {context}\n"
             f"Help Method Available: {has_help}\n"
             f"Lines in Current Tab: {lines_count}\n"
             f"Parent widget: {mse_window}\n"
             f"Total Open Tabs: {total_tabs}\n"
-            f"------------------------------"
+            f"------------------------------\n"
         )
 
         # 3. Accessing the output console

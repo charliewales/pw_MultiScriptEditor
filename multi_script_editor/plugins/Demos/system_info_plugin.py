@@ -101,7 +101,7 @@ class SystemInfoPlugin(BasePlugin):
     3. Printing dynamically formatted text to the output console.
     """
     # Plugin Metadata
-    name = "System Info"
+    name = "Print system info"
     description = "Prints system specifications (OS, Python, Qt, CPU, GPU, RAM, Home Dir) to the output console."
     version = "1.0.0"
 
@@ -170,14 +170,10 @@ class SystemInfoPlugin(BasePlugin):
 
             title = "--- SYSTEM SPECIFICATIONS ---"
             max_len = max(len(line) for line in lines + [title])
-            # separator = "# " + "=" * (max_len - 2)
             separator = "-" * (max_len - 2)
 
             info_block = (
-                "\n"
-                # f"{separator}\n"
                 f"{title}\n"
-                # f"{separator}\n"
                 + "\n".join(lines) + "\n"
                 f"{separator}\n"
             )
