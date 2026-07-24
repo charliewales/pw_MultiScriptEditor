@@ -1,10 +1,10 @@
 import os
 
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF
+from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF, QTimer
 from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
 from widgets.pythonSyntax.design import defaultColors
 import re
-from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel
+from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel, QLineEdit
 from widgets import numBarWidget, inputWidget
 from widgets.pythonSyntax import design
 from icons import *
@@ -88,9 +88,37 @@ class tabWidgetClass(QTabWidget):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
 
         self.currentChanged.connect(self.onTabChanged)
+        self.tabBarDoubleClicked.connect(self.on_tab_bar_double_clicked)
         QApplication.instance().installEventFilter(self)
 
+    def on_tab_bar_double_clicked(self, index):
+        if QApplication.mouseButtons() & Qt.LeftButton:
+            self.renameTab(index)
+
     def eventFilter(self, obj, event):
+        if obj == getattr(self, '_rename_edit', None) and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+            self.finishRename(commit=False)
+            return True
+
+        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
+            if getattr(self, '_rename_edit', None):
+                return True
+            # Check if click is on the tab bar or one of its children
+            p = obj
+            is_tabbar_click = False
+            while p:
+                if p == self.tabBar():
+                    is_tabbar_click = True
+                    break
+                p = p.parent()
+            if is_tabbar_click:
+                if event.type() == QEvent.MouseButtonPress:
+                    pos = self.tabBar().mapFrom(obj, event.pos())
+                    index = self.tabBar().tabAt(pos)
+                    if index >= 0:
+                        QTimer.singleShot(0, lambda i=index: self.closeTab(i))
+                return True
+
         quick_tab_switching = True
         if hasattr(self.p, 'quickTabSwitching_act'):
             quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
@@ -214,10 +242,68 @@ class tabWidgetClass(QTabWidget):
 
                     if text:
                         edit.addText(text)
-                        edit.moveCursor(QTextCursor.Start)
-                        edit.highlight_current_line()
+                        # Restore line and column once text is loaded
+                        if hasattr(edit, 'needs_loading_line'):
+                            line_num = edit.needs_loading_line
+                            column_num = getattr(edit, 'needs_loading_column', 0)
+                            delattr(edit, 'needs_loading_line')
+                            if hasattr(edit, 'needs_loading_column'):
+                                delattr(edit, 'needs_loading_column')
+                            if line_num > 1 or column_num > 0:
+                                block = edit.document().findBlockByNumber(line_num - 1)
+                                if block.isValid():
+                                    cursor = edit.textCursor()
+                                    col = min(column_num, max(0, block.length() - 1))
+                                    cursor.setPosition(block.position() + col)
+                                    edit.setTextCursor(cursor)
+                                    if hasattr(edit, 'highlight_current_line'):
+                                        edit.highlight_current_line()
+                                else:
+                                    edit.moveCursor(QTextCursor.Start)
+                                    edit.highlight_current_line()
+                            else:
+                                edit.moveCursor(QTextCursor.Start)
+                                edit.highlight_current_line()
+                        else:
+                            edit.moveCursor(QTextCursor.Start)
+                            edit.highlight_current_line()
+
+                        # Restore scroll once text is loaded
+                        if hasattr(edit, 'needs_loading_scroll_v'):
+                            scroll_v = edit.needs_loading_scroll_v
+                            delattr(edit, 'needs_loading_scroll_v')
+                            if scroll_v > 0:
+                                edit.verticalScrollBar().setValue(scroll_v)
+                                from vendor.Qt.QtCore import QTimer
+                                QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
+                                QTimer.singleShot(150, lambda: edit.verticalScrollBar().setValue(scroll_v))
+
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
+                        if hasattr(edit, 'needs_loading_folds') and edit.needs_loading_folds:
+                            if hasattr(edit, 'set_folded_blocks'):
+                                edit.set_folded_blocks(edit.needs_loading_folds)
+                            delattr(edit, 'needs_loading_folds')
+                    else:
+                        if hasattr(edit, 'needs_loading_line'):
+                            delattr(edit, 'needs_loading_line')
+                        if hasattr(edit, 'needs_loading_column'):
+                            delattr(edit, 'needs_loading_column')
+                        if hasattr(edit, 'needs_loading_scroll_v'):
+                            delattr(edit, 'needs_loading_scroll_v')
+                        if hasattr(edit, 'needs_loading_folds'):
+                            delattr(edit, 'needs_loading_folds')
+                        edit.moveCursor(QTextCursor.Start)
+                        edit.highlight_current_line()
+
+                    # Restore bookmarks once text is loaded
+                    if hasattr(edit, 'set_bookmarks') and hasattr(edit, 'needs_loading_bookmarks'):
+                        if edit.needs_loading_bookmarks:
+                            edit.set_bookmarks(edit.needs_loading_bookmarks)
+                        delattr(edit, 'needs_loading_bookmarks')
+
+                    if hasattr(edit, 'needs_loading_folds'):
+                        delattr(edit, 'needs_loading_folds')
 
                     if hasattr(edit, 'needs_loading_file'):
                         delattr(edit, 'needs_loading_file')
@@ -241,6 +327,8 @@ class tabWidgetClass(QTabWidget):
         return bool(self.getCurrentText(i).strip())
 
     def closeTab(self, i):
+        if getattr(self, '_rename_edit', None):
+            self.finishRename(commit=False)
         removed = False
         widget_to_remove = self.widget(i)
         if self.tabNeedsSaving(i):
@@ -266,28 +354,101 @@ class tabWidgetClass(QTabWidget):
         if index < 0:
             return
 
+        widget = self.widget(index)
+        has_file = hasattr(widget, 'file_path') and bool(widget.file_path)
+
         menu = QMenu(self)
         if hasattr(self.p, 'menubar'):
             menu.setFont(self.p.menubar.font())
 
-        dup_action = QAction('Duplicate Tab', self)
-        dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
-        menu.addAction(dup_action)
 
-        ren_action = QAction('Rename Tab', self)
-        ren_action.setShortcut('Alt+R')
-        ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
-        menu.addAction(ren_action)
-
-        widget = self.widget(index)
-        if hasattr(widget, 'file_path') and widget.file_path:
+        if has_file:
             menu.addSeparator()
             copy_action = QAction('Copy File Path', self)
             copy_action.setShortcut('Alt+Shift+C')
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
+            del_action = QAction('Delete File', self)
+            del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
+            menu.addAction(del_action)
+
+            dup_title = 'Duplicate File' if has_file else 'Duplicate Tab'
+            dup_action = QAction(dup_title, self)
+            dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
+            menu.addAction(dup_action)
+
+            ren_title = 'Rename File' if has_file else 'Rename Tab'
+            ren_action = QAction(ren_title, self)
+            ren_action.setShortcut('Alt+R')
+            ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
+            menu.addAction(ren_action)
+
+        if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
+            menu.addSeparator()
+            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            if 'menu' in icons:
+                show_menus_action.setIcon(QIcon(icons['menu']))
+            if hasattr(self.p, 'toggleMenus_act'):
+                show_menus_action.triggered.connect(self.p.toggleMenus_act.trigger)
+            menu.addAction(show_menus_action)
+
         menu.exec_(QCursor.pos())
+
+    def deleteFile(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
+        widget = self.widget(index)
+        if not (hasattr(widget, 'file_path') and widget.file_path):
+            return
+
+        file_path = widget.file_path
+        filename = os.path.basename(file_path)
+
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setWindowTitle('Delete File')
+        msg_box.setText('Are you sure you want to delete "%s" from disk?' % filename)
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
+
+        reply = msg_box.exec_()
+
+        if reply == QMessageBox.Yes:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                widget.file_path = None
+                if hasattr(widget, 'edit') and hasattr(widget.edit, 'document'):
+                    widget.edit.document().setModified(False)
+                widget_to_remove = self.widget(index)
+                self.removeTab(index)
+                if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
+                    self._mru_tabs.remove(widget_to_remove)
+                if self.count() == 0:
+                    self.addNewTab()
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Deleted file: %s' % os.path.normpath(file_path))
+                elif hasattr(self.p, 'showStatusMessage'):
+                    self.p.showStatusMessage('Deleted file: %s' % os.path.normpath(file_path))
+            except Exception as e:
+                err_box = QMessageBox(self)
+                err_box.setIcon(QMessageBox.Critical)
+                err_box.setWindowTitle('Delete File Error')
+                err_box.setText('Could not delete file:\n%s' % str(e))
+                if hasattr(self.p, 'theme_font'):
+                    err_box.setFont(self.p.theme_font)
+                    err_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+                    for btn in err_box.buttons():
+                        btn.setFont(self.p.theme_font)
+                err_box.exec_()
 
     def copyFilePath(self, index=None):
         if index is None or isinstance(index, bool):
@@ -302,21 +463,140 @@ class tabWidgetClass(QTabWidget):
             index = self.currentIndex()
         if index < 0:
             return
-        name = self.tabText(index)
+        widget = self.widget(index)
         text = self.getCurrentText(index)
-        new_name = name + " (copy)"
-        self.addNewTab(new_name, text)
+        old_path = getattr(widget, 'file_path', None) if widget else None
+
+        if old_path:
+            dir_name = os.path.dirname(old_path)
+            base_name, ext = os.path.splitext(os.path.basename(old_path))
+            copy_name = "%s (copy)%s" % (base_name, ext)
+            new_path = os.path.join(dir_name, copy_name)
+            counter = 2
+            while os.path.exists(new_path):
+                copy_name = "%s (copy %d)%s" % (base_name, counter, ext)
+                new_path = os.path.join(dir_name, copy_name)
+                counter += 1
+
+            try:
+                with open(new_path, 'w') as f:
+                    f.write(text or '')
+                new_tab_name = os.path.basename(new_path)
+                self.addNewTab(new_tab_name, text, file_path=new_path)
+                norm_new_path = os.path.normpath(new_path)
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Duplicated file saved to: %s' % norm_new_path)
+                elif hasattr(self.p, 'showStatusMessage'):
+                    self.p.showStatusMessage('Duplicated file saved to: %s' % norm_new_path)
+            except Exception as e:
+                if hasattr(self.p, 'out'):
+                    self.p.out.showMessage('Error duplicating file: %s' % str(e))
+                name = self.tabText(index) + " (copy)"
+                self.addNewTab(name, text)
+        else:
+            name = self.tabText(index) + " (copy)"
+            self.addNewTab(name, text)
+
         self.setCurrentIndex(self.count() - 1)
+
+    def finishRename(self, commit=True):
+        edit = getattr(self, '_rename_edit', None)
+        if not edit:
+            return
+        self._rename_edit = None
+        try:
+            edit.editingFinished.disconnect()
+        except Exception:
+            pass
+        if commit:
+            widget = getattr(edit, '_widget_to_rename', None)
+            if widget:
+                new_text = edit.text().strip()
+                idx = self.indexOf(widget)
+                if new_text and idx >= 0:
+                    old_path = getattr(widget, 'file_path', None)
+                    if old_path:
+                        dir_name = os.path.dirname(old_path)
+                        _, old_ext = os.path.splitext(os.path.basename(old_path))
+                        new_base, new_ext = os.path.splitext(new_text)
+
+                        # Preserve original extension if not provided in new_text
+                        if not new_ext and old_ext:
+                            new_text = new_text + old_ext
+
+                        new_path = os.path.join(dir_name, new_text)
+                        norm_new_path = os.path.normpath(new_path)
+
+                        if os.path.normpath(old_path) != norm_new_path:
+                            if os.path.exists(old_path):
+                                try:
+                                    os.rename(old_path, new_path)
+                                    widget.file_path = new_path
+                                    self.setTabToolTip(idx, norm_new_path)
+                                    self.setTabText(idx, os.path.basename(new_path))
+                                    if hasattr(widget, 'edit') and hasattr(widget.edit, 'applyHightLighter') and hasattr(self.p, '_current_settings'):
+                                        widget.edit.applyHightLighter(self.p._current_settings.get('theme', 'Multi Script Editor'))
+                                    if hasattr(self.p, 'out'):
+                                        self.p.out.showMessage('Renamed file to: %s' % norm_new_path)
+                                    elif hasattr(self.p, 'showStatusMessage'):
+                                        self.p.showStatusMessage('Renamed file to: %s' % norm_new_path)
+                                except Exception as e:
+                                    if hasattr(self.p, 'out'):
+                                        self.p.out.showMessage('Error renaming file: %s' % str(e))
+                                    elif hasattr(self.p, 'showStatusMessage'):
+                                        self.p.showStatusMessage('Error renaming file: %s' % str(e))
+                            else:
+                                widget.file_path = new_path
+                                self.setTabToolTip(idx, os.path.normpath(new_path))
+                                self.setTabText(idx, os.path.basename(new_path))
+                        else:
+                            self.setTabText(idx, os.path.basename(new_path))
+                    else:
+                        self.setTabText(idx, new_text)
+        edit.hide()
+        edit.deleteLater()
 
     def renameTab(self, index=None):
         if index is None or isinstance(index, bool):
             index = self.currentIndex()
         if index < 0:
             return
-        text = self.tabText(index)
-        result = QInputDialog.getText(self, 'New name', 'Enter New Name', text=text)
-        if result[1]:
-            self.setTabText(index, result[0])
+
+        if getattr(self, '_rename_edit', None):
+            self.finishRename(commit=True)
+
+        widget_to_rename = self.widget(index)
+        rect = self.tabBar().tabRect(index)
+
+        edit = QLineEdit(self.tabBar())
+        edit.setObjectName('tabRenameEdit')
+        edit._widget_to_rename = widget_to_rename
+        self._rename_edit = edit
+        tab_font = getattr(self, '_tab_label_font', None) or self.tabBar().font()
+        edit.setFont(tab_font)
+        family = tab_font.family()
+        pt_size = tab_font.pointSizeF()
+        px_size = tab_font.pixelSize()
+        if pt_size > 0:
+            size_css = "font-size: %spt;" % pt_size
+        elif px_size > 0:
+            size_css = "font-size: %spx;" % px_size
+        else:
+            size_css = ""
+
+        if family:
+            edit.setStyleSheet("QLineEdit#tabRenameEdit { font-family: '%s'; %s }" % (family, size_css))
+
+        edit.setText(self.tabText(index))
+        edit.selectAll()
+
+        # Adjust geometry slightly to fit nicely within the tab
+        edit.setGeometry(rect.adjusted(3, 1, -1, -1))
+        edit.installEventFilter(self)
+
+        edit.editingFinished.connect(lambda: self.finishRename(commit=True))
+        edit.show()
+        edit.setFocus()
 
     def currentTabName(self):
         index = self.currentIndex()
@@ -442,8 +722,14 @@ class tabWidgetClass(QTabWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:
-            current_index = self.currentIndex()
-            self.closeTab(current_index)
+            if getattr(self, '_rename_edit', None):
+                return
+            pos = self.tabBar().mapFrom(self, event.pos())
+            index = self.tabBar().tabAt(pos)
+            if index >= 0:
+                QTimer.singleShot(0, lambda i=index: self.closeTab(i))
+        else:
+            super(tabWidgetClass, self).mousePressEvent(event)
 
 ############################## editor commands
     def update_custom_close_buttons(self, index=None):
@@ -527,11 +813,18 @@ class tabWidgetClass(QTabWidget):
     def copy(self):
         self.current().copy()
 
+    def showClipboardManager(self):
+        if hasattr(self.current(), 'show_clipboard_popup'):
+            self.current().show_clipboard_popup()
+
     def switch_to_tab_index(self, index):
         if hasattr(self.p, 'quickTabSwitching_act') and not self.p.quickTabSwitching_act.isChecked():
             return
         if 0 <= index < self.count():
             self.setCurrentIndex(index)
+            current_widget = self.widget(index)
+            if current_widget and hasattr(current_widget, 'edit'):
+                current_widget.edit.setFocus()
 
     def _apply_tab_font(self, font):
         use_theme_font = getattr(self, '_use_theme_font_on_tab_label', True)
@@ -561,6 +854,7 @@ class tabWidgetClass(QTabWidget):
             else:
                 size_css = ""
 
+        self._tab_label_font = QFont(tab_font)
         self.tabBar().setFont(tab_font)
 
         css = "\n/*TAB_FONT_START*/\nQTabBar::tab { font-family: '%s'; %s }\nQTabBar::scroller { width: 0px; }\n/*TAB_FONT_END*/\n" % (family, size_css)
@@ -653,6 +947,16 @@ class tabWidgetClass(QTabWidget):
     def previousSelection(self):
         self.current().previous_selection()
 
+    def addCursorsToLineEnds(self):
+        self.current().add_cursors_to_line_ends()
+
+    def addCursorAbove(self):
+        self.current().add_cursor_above()
+
+    def addCursorBelow(self):
+        self.current().add_cursor_below()
+
+
 
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
@@ -661,9 +965,15 @@ class tabWidgetClass(QTabWidget):
         msg_box.setText(question)
         if hasattr(self.p, 'theme_font'):
             msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
-        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()
+        if hasattr(self.p, 'theme_font'):
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 
@@ -685,6 +995,7 @@ class EditorTabContainer(QWidget):
         self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
         self.edit.inputSignal.connect(lambda :self.lineNum.update())
         self.edit.document().blockCountChanged.connect(lambda :self.lineNum.update())
+        self.edit.cursorPositionChanged.connect(lambda :self.lineNum.update())
 
         hbox.addWidget(self.lineNum)
         hbox.addWidget(self.edit)

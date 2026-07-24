@@ -14,7 +14,7 @@ QWidget:disabled
 }
 QWidget:focus
 {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QWidget:item:hover
@@ -68,7 +68,7 @@ QMainWindow::separator
     background-color: rgb[highlight_line];
     color: rgb[tab_selected_text];
     padding-left: 4px;
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     spacing: 2px;
 }
 
@@ -78,7 +78,7 @@ QMainWindow::separator:hover
     background-color: rgb[highlight_line];
     color: rgb[tab_selected_text];
     padding-left: 4px;
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     spacing: 3px;
 }
 
@@ -185,13 +185,9 @@ QPushButton#CustomCloseBtn[isDirty="true"]:hover {
 QMenu
 {
     color: rgb[tab_selected_text];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     background-color: rgb[window];
-}
-
-QMenu::item
-{
-    padding: 2px 20px 2px 20px;
+    icon-size: 24px;
 }
 
 QMenu::item:selected
@@ -203,7 +199,7 @@ QMenu::item:selected
 QMenu::tearoff
 {
     background-color: rgb[background];
-    border: 1px dashed rgb[highlight_line];
+    border: 1px dashed rgb[border];
     height: 4px;
 }
 
@@ -226,11 +222,11 @@ QMenu::separator
 /**********************GROUPBOX**********/
 QGroupBox:focus
 {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QGroupBox {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     background: rgb[background];
     border-radius: 4px;
     margin-top: 2.5ex;
@@ -247,7 +243,7 @@ QGroupBox::title {
 /***********SCROLLBAR***************/
 
 QScrollBar:horizontal {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     background: rgb[background];
     height: 15px;
     margin: 0px 16px 0 16px;
@@ -268,7 +264,7 @@ QScrollBar::handle:vertical:pressed {
 
 QScrollBar::add-line:horizontal,
 QScrollBar::sub-line:horizontal {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     border-radius: 1px;
     background: rgb[window];
     width: 14px;
@@ -276,7 +272,7 @@ QScrollBar::sub-line:horizontal {
 
 QScrollBar::add-line:vertical,
 QScrollBar::sub-line:vertical {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     border-radius: 1px;
     background: rgb[window];
     height: 14px;
@@ -306,7 +302,7 @@ QScrollBar:vertical {
     background: rgb[window];
     width: 15px;
     margin: 16px 0 16px 0;
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QScrollBar::up-arrow:vertical,
@@ -383,45 +379,49 @@ QSpinBox::up-arrow  {
 QTextEdit, QPlainTextEdit
 {
     background-color: rgb[background];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
 }
 
 QTextEdit:disabled, QPlainTextEdit:disabled
 {
     background-color: rgb[background];
     color: rgb[comment];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QTextEdit:focus, QPlainTextEdit:focus {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QTextBrowser, QPlainTextEdit[readOnly="true"]
 {
     background-color: rgb[output_background];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QTextBrowser:disabled, QPlainTextEdit[readOnly="true"]:disabled
 {
     background-color: rgb[output_background];
     color: rgb[comment];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QComboBox, QSpinBox, QAbstractSpinBox, QLineEdit, QAbstractItemView
 {
     background-color: rgb[background];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     color: rgb[tab_selected_text];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
 }
 
-QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractItemView:hover
+/* QComboBox:hover, QAbstractSpinBox:hover, QLineEdit:hover, QTextEdit:hover, QPlainTextEdit:hover, QAbstractItemView:hover
 {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     color: rgb[tab_selected_text];
-}
+} */
 
 QComboBox:on, QSpinBox:on
 {
@@ -432,10 +432,10 @@ QComboBox:on, QSpinBox:on
 
 QComboBox QAbstractItemView {
     background-color: rgb[background];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     color: rgb[tab_selected_text];
-    selection-background-color: rgb[highlight_line];
-    selection-color: rgb[tab_selected_text];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
     padding: 1px 1px 1px 1px;
     outline: none;
 }
@@ -443,7 +443,7 @@ QComboBox QAbstractItemView {
 QAbstractItemView::item:selected,
 QAbstractItemView::item:hover {
     background-color: rgb[highlight_line];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     color: rgb[tab_selected_text];
 }
 
@@ -468,7 +468,7 @@ QSplitter::handle:hover, QSplitter::handle:pressed {
 }
 
 QTabWidget::pane  { /* The tab widget frame */
-    border-top: 1px solid rgb[highlight_line];
+    border-top: 1px solid rgb[border];
 }
 
 
@@ -498,6 +498,20 @@ QTabBar::tab:selected {
     color: rgb[tab_selected_text];
     border: 1px solid rgb[tab_selected_border];
     border-bottom-color: rgb[tab_selected_background];
+}
+
+QTabBar QLineEdit, QLineEdit#tabRenameEdit {
+    border-top-left-radius: [tab_radius];
+    border-top-right-radius: [tab_radius];
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    background-color: rgb[tab_selected_background];
+    color: rgb[tab_selected_text];
+    border: 1px solid rgb[tab_selected_border];
+    selection-background-color: rgb[selection_background];
+    selection-color: rgb[selection];
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 QTabBar::close-button {
@@ -539,7 +553,7 @@ QTabBar QToolButton::left-arrow:hover {
 
 QCheckBox::indicator:hover
 {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 /**************CHECKBOX***************/
@@ -547,6 +561,12 @@ QCheckBox::indicator:hover
 QCheckBox::indicator:checked
 {
     background-color: rgb[background];
+    image: url("../icons/checkbox_checked.png");
+}
+
+QCheckBox::indicator:checked:disabled
+{
+    image: url("../icons/checkbox_checked_disabled.png");
 }
 
 QCheckBox:disabled
@@ -558,14 +578,14 @@ QCheckBox::indicator
 {
     color: #b1b1b1;
     background-color: rgb[window];
-    border: 1px solid rgb[highlight_line];
-    width: 12px;
-    height: 12px;
+    border: 1px solid rgb[border];
+    width: 16px;
+    height: 16px;
 }
 
 QCheckBox::indicator:disabled
 {
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 QCheckBox
 {
@@ -589,7 +609,7 @@ QHeaderView{
  QHeaderView::section
 {
     background: rgb[highlight_line];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     padding: 2px 3px 2px 3px;
 }
 
@@ -619,14 +639,14 @@ QListWidget#outlineList
 {
     background-color: rgb[outline_background];
     color: rgb[default];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
 }
 
 QLineEdit#outlineFilter
 {
     background-color: rgb[outline_background];
     color: rgb[tab_selected_text];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
     padding: 2px;
 }
 
@@ -640,5 +660,13 @@ QToolTip
 {
     background-color: rgb[background];
     color: rgb[tab_selected_text];
-    border: 1px solid rgb[highlight_line];
+    border: 1px solid rgb[border];
+}
+
+QToolBar#editorToolBar {
+    background-color: rgb[background];
+    border: none;
+    border-bottom: 1px solid rgb[border];
+    spacing: 4px;
+    padding: 2px;
 }

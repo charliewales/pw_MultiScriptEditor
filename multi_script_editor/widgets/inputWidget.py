@@ -10,6 +10,7 @@ from vendor.Qt.QtGui import (
     QTextCursor,
     QTextFormat,
     QGuiApplication,
+    QTextBlockUserData,
 )
 from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QApplication
 
@@ -21,6 +22,7 @@ from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
 import managers
 from widgets.pythonSyntax import design
+from widgets.markdown_preview import MarkdownPreviewEdit
 
 addEndBracket = True
 
@@ -30,6 +32,13 @@ escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_
 # font_name = 'monospace'
 font_name = 'Consolas'
 # font_name = 'Lucida Console'
+
+
+class BlockUserData(QTextBlockUserData):
+    def __init__(self):
+        super(BlockUserData, self).__init__()
+        self.folded = False
+        self.bookmarked = False
 
 
 class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
@@ -87,12 +96,23 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
+        self.cursorPositionChanged.connect(self.ensure_current_line_visible)
 
         self.selectionChanged.connect(self.auto_select_all_occurrences)
 
         # Flag to prevent recursion
         self._is_auto_selecting = False
         self._is_undo_redo = False
+
+        self.folding_regions = {}
+        self.folding_timer = QTimer(self)
+        self.folding_timer.setSingleShot(True)
+        self.folding_timer.timeout.connect(self.on_folding_timer_timeout)
+        self.recompute_folding_regions()
+
+        # Initialize Clipboard Manager
+        from widgets.clipboardWidget import ClipboardManager
+        ClipboardManager.init()
 
     def _on_text_changed(self):
         if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
@@ -101,6 +121,247 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             pass
         else:
             self.autocomplete_timer.start(200)
+        self.folding_timer.start(200)
+
+    def recompute_folding_regions(self):
+        doc = self.document()
+        block_count = doc.blockCount()
+        
+        # 1. Determine indentation of each block
+        indents = {}
+        last_indent = 0
+        for i in range(block_count):
+            block = doc.findBlockByNumber(i)
+            text = block.text()
+            if not text.strip():
+                indents[i] = last_indent
+            else:
+                leading = len(text) - len(text.lstrip())
+                indents[i] = leading
+                last_indent = leading
+                
+        # 2. Find folding regions
+        folding_regions = {}
+        for i in range(block_count - 1):
+            indent_current = indents[i]
+            next_idx = i + 1
+            if next_idx < block_count:
+                indent_next = indents[next_idx]
+                if indent_next > indent_current:
+                    # Line i is a folding start
+                    end_idx = block_count - 1
+                    for j in range(i + 2, block_count):
+                        if indents[j] <= indent_current:
+                            end_idx = j - 1
+                            break
+                            
+                    # Leave up to 2 trailing empty lines unfolded
+                    empty_count = 0
+                    while end_idx > i + 1 and empty_count < 2:
+                        block_at_end = doc.findBlockByNumber(end_idx)
+                        if block_at_end.isValid() and not block_at_end.text().strip():
+                            end_idx -= 1
+                            empty_count += 1
+                        else:
+                            break
+                            
+                    folding_regions[i] = (i + 1, end_idx)
+                    
+        self.folding_regions = folding_regions
+
+    def apply_folding_visibility(self):
+        self.setUpdatesEnabled(False)
+        try:
+            doc = self.document()
+            block_count = doc.blockCount()
+            hide_until = -1
+            
+            for i in range(block_count):
+                block = doc.findBlockByNumber(i)
+                if not block.isValid():
+                    continue
+                
+                should_be_visible = (i > hide_until)
+                if block.isVisible() != should_be_visible:
+                    block.setVisible(should_be_visible)
+                
+                if should_be_visible and i in self.folding_regions:
+                    data = block.userData()
+                    if data and getattr(data, 'folded', False):
+                        start_idx, end_idx = self.folding_regions[i]
+                        if end_idx > hide_until:
+                            hide_until = end_idx
+            
+            self.document().markContentsDirty(0, self.document().characterCount())
+        finally:
+            self.setUpdatesEnabled(True)
+            self.viewport().update()
+
+        # Ensure the cursor is visible (never stranded on a hidden line)
+        cursor = self.textCursor()
+        if not cursor.block().isVisible():
+            curr_block = cursor.block()
+            while curr_block.isValid() and not curr_block.isVisible():
+                curr_block = curr_block.previous()
+            if curr_block.isValid():
+                new_cursor = self.textCursor()
+                new_cursor.setPosition(curr_block.position())
+                self.setTextCursor(new_cursor)
+
+        # Update line number bar if present
+        if hasattr(self.parent(), 'lineNum'):
+            self.parent().lineNum.update()
+        elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+            self.parentWidget().lineNum.update()
+
+    def ensure_current_line_visible(self):
+        cursor = self.textCursor()
+        block = cursor.block()
+        if not block.isValid():
+            return
+            
+        block_num = block.blockNumber()
+        if not block.isVisible():
+            doc = self.document()
+            changed = False
+            for parent_idx, (start_idx, end_idx) in self.folding_regions.items():
+                if start_idx <= block_num <= end_idx:
+                    parent_block = doc.findBlockByNumber(parent_idx)
+                    if parent_block.isValid():
+                        data = parent_block.userData()
+                        if data and getattr(data, 'folded', False):
+                            data.folded = False
+                            changed = True
+            if changed:
+                self.apply_folding_visibility()
+
+    def fold_current(self):
+        cursor = self.textCursor()
+        curr_block_num = cursor.blockNumber()
+        
+        target_block_num = -1
+        for i in range(curr_block_num, -1, -1):
+            if i in self.folding_regions:
+                start_idx, end_idx = self.folding_regions[i]
+                if i <= curr_block_num <= end_idx:
+                    target_block_num = i
+                    break
+        
+        if target_block_num != -1:
+            doc = self.document()
+            block = doc.findBlockByNumber(target_block_num)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+                self.apply_folding_visibility()
+
+    def unfold_current(self):
+        cursor = self.textCursor()
+        curr_block_num = cursor.blockNumber()
+        
+        target_block_num = -1
+        for i in range(curr_block_num, -1, -1):
+            if i in self.folding_regions:
+                start_idx, end_idx = self.folding_regions[i]
+                if i <= curr_block_num <= end_idx:
+                    target_block_num = i
+                    break
+                    
+        if target_block_num != -1:
+            doc = self.document()
+            block = doc.findBlockByNumber(target_block_num)
+            if block.isValid():
+                data = block.userData()
+                if data:
+                    data.folded = False
+                    self.apply_folding_visibility()
+
+    def toggle_fold(self, block_num, recursive=False):
+        doc = self.document()
+        block = doc.findBlockByNumber(block_num)
+        if not block.isValid():
+            return
+        
+        data = block.userData()
+        if not data:
+            data = BlockUserData()
+            block.setUserData(data)
+            
+        new_state = not data.folded
+        data.folded = new_state
+        
+        if recursive and block_num in self.folding_regions:
+            start_idx, end_idx = self.folding_regions[block_num]
+            for i in range(start_idx, end_idx + 1):
+                if i in self.folding_regions:
+                    child_block = doc.findBlockByNumber(i)
+                    if child_block.isValid():
+                        child_data = child_block.userData()
+                        if not child_data:
+                            child_data = BlockUserData()
+                            child_block.setUserData(child_data)
+                        child_data.folded = new_state
+                        
+        self.apply_folding_visibility()
+
+    def get_folded_blocks(self):
+        folded = []
+        doc = self.document()
+        block_count = doc.blockCount()
+        for i in range(block_count):
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if data and getattr(data, 'folded', False):
+                    folded.append(i)
+        return ",".join(str(x) for x in folded)
+
+    def set_folded_blocks(self, folded_data):
+        if not folded_data:
+            return
+        try:
+            folded_list = [int(x) for x in str(folded_data).split(',') if x.strip().isdigit()]
+        except:
+            return
+        doc = self.document()
+        for i in folded_list:
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+        self.apply_folding_visibility()
+
+    def fold_all(self):
+        doc = self.document()
+        for i in self.folding_regions.keys():
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.folded = True
+        self.apply_folding_visibility()
+
+    def unfold_all(self):
+        doc = self.document()
+        for i in self.folding_regions.keys():
+            block = doc.findBlockByNumber(i)
+            if block.isValid():
+                data = block.userData()
+                if data:
+                    data.folded = False
+        self.apply_folding_visibility()
+
+    def on_folding_timer_timeout(self):
+        self.recompute_folding_regions()
+        self.apply_folding_visibility()
 
     def set_start_font(self, font_d=None):
         if not font_d:
@@ -386,6 +647,280 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 result += '    '
         return result
 
+    def toggle_bookmark(self, block_num=None):
+        """
+        Toggle bookmark on a specific block number or current cursor block if None.
+        """
+        doc = self.document()
+        if block_num is None:
+            block_num = self.textCursor().blockNumber()
+
+        block = doc.findBlockByNumber(block_num)
+        if block.isValid():
+            data = block.userData()
+            if not data:
+                data = BlockUserData()
+                block.setUserData(data)
+
+            data.bookmarked = not data.bookmarked
+
+            # Trigger repaint on line number bar
+            if hasattr(self.parent(), 'lineNum'):
+                self.parent().lineNum.update()
+            elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+                self.parentWidget().lineNum.update()
+
+    def get_bookmarks(self):
+        """
+        Returns a comma-separated string of 1-based line numbers of all bookmarks.
+        """
+        bookmarks = []
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                bookmarks.append(block.blockNumber() + 1)
+            block = block.next()
+        return ",".join(str(x) for x in sorted(bookmarks))
+
+    def set_bookmarks(self, lines):
+        """
+        Restore bookmarks on the specified 1-based line numbers.
+        """
+        if not lines:
+            return
+        try:
+            lines_list = [int(x) for x in str(lines).split(',') if x.strip().isdigit()]
+        except:
+            return
+        doc = self.document()
+        for line in lines_list:
+            block = doc.findBlockByNumber(line - 1)
+            if block.isValid():
+                data = block.userData()
+                if not data:
+                    data = BlockUserData()
+                    block.setUserData(data)
+                data.bookmarked = True
+
+    def clear_bookmarks(self):
+        """
+        Clear all bookmarks in the current document.
+        """
+        # Check if there are any bookmarks to clear first
+        has_bookmarks = False
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                has_bookmarks = True
+                break
+            block = block.next()
+
+        if not has_bookmarks:
+            return
+
+        from vendor.Qt.QtWidgets import QMessageBox
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle('Clear Bookmarks')
+        msg_box.setText("Are you sure you want to clear all bookmarks in the current document?")
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.setFont(self.font())
+        if hasattr(self.p, 'theme_font'):
+            msg_box.setFont(self.p.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.p.theme_font)
+
+        reply = msg_box.exec_()
+        if reply != QMessageBox.Yes:
+            return
+
+        block = self.document().begin()
+        while block.isValid():
+            data = block.userData()
+            if data:
+                data.bookmarked = False
+            block = block.next()
+        # Trigger repaint on line number bar
+        if hasattr(self.parent(), 'lineNum'):
+            self.parent().lineNum.update()
+        elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
+            self.parentWidget().lineNum.update()
+
+    def next_bookmark(self):
+        """
+        Jump to the next bookmark below the current cursor position.
+        """
+        curr_line = self.textCursor().blockNumber()
+        doc = self.document()
+        block = doc.findBlockByNumber(curr_line).next()
+
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.next()
+
+        # Wrap around to the beginning
+        block = doc.begin()
+        while block.isValid() and block.blockNumber() <= curr_line:
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.next()
+
+    def prev_bookmark(self):
+        """
+        Jump to the previous bookmark above the current cursor position.
+        """
+        curr_line = self.textCursor().blockNumber()
+        doc = self.document()
+        block = doc.findBlockByNumber(curr_line).previous()
+
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.previous()
+
+        # Wrap around to the end
+        block = doc.lastBlock()
+        while block.isValid() and block.blockNumber() >= curr_line:
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                self.jump_to_block(block)
+                return
+            block = block.previous()
+
+    def jump_to_block(self, block):
+        """
+        Move the cursor to a specific block and center the view.
+        """
+        cursor = self.textCursor()
+        cursor.setPosition(block.position())
+        self.setTextCursor(cursor)
+        self.centerCursor()
+
+    def show_bookmarks_popup(self):
+        """
+        Show the BookmarkWidget popup to search and navigate bookmarks.
+        """
+        doc = self.document()
+        bookmarks = []
+        block = doc.begin()
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'bookmarked', False):
+                bookmarks.append({
+                    'line': block.blockNumber() + 1,
+                    'text': block.text()
+                })
+            block = block.next()
+
+        if not bookmarks:
+            if hasattr(self, 'messageSignal'):
+                self.messageSignal.emit("No bookmarks in this document.")
+            return
+
+        from widgets.bookmarkWidget import BookmarkWidget
+        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
+        colors = {}
+        highlighter_class = None
+        if hasattr(self, 'hgl'):
+            highlighter_class = self.hgl.__class__
+        if hasattr(self, '_highlight_color_cache'):
+            # Fetch styling info
+            from core.settings_model import SettingsModel
+            settings = SettingsModel().read_settings()
+            from widgets.pythonSyntax import design
+            theme = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+
+        popup = BookmarkWidget(
+            bookmarks,
+            parent=self.window(),
+            center_widget=self,
+            qss=qss,
+            font=self.font(),
+            colors=colors,
+            highlighter_class=highlighter_class
+        )
+
+        def on_selected(line_num):
+            b = doc.findBlockByNumber(line_num - 1)
+            if b.isValid():
+                self.jump_to_block(b)
+
+        def on_deleted(line_num):
+            self.toggle_bookmark(line_num - 1)
+            popup.remove_item_by_data(line_num)
+            if not popup.bookmarks:
+                popup.close()
+
+        popup.bookmarkSelected.connect(on_selected)
+        popup.bookmarkDeleted.connect(on_deleted)
+        popup.exec_()
+
+    def show_clipboard_popup(self):
+        """
+        Show the ClipboardWidget popup to search and paste previously copied text.
+        """
+        from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
+        ClipboardManager.init()
+
+        if not ClipboardManager._history:
+            if hasattr(self, 'messageSignal'):
+                self.messageSignal.emit("Clipboard history is empty.")
+            return
+
+        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
+        colors = {}
+        if hasattr(self, '_highlight_color_cache'):
+            from core.settings_model import SettingsModel
+            settings = SettingsModel().read_settings()
+            from widgets.pythonSyntax import design
+            theme = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+
+        popup = ClipboardWidget(
+            ClipboardManager._history,
+            parent=self.window(),
+            center_widget=self,
+            qss=qss,
+            font=self.font(),
+            colors=colors
+        )
+
+        def on_selected(text):
+            cursor = self.textCursor()
+            cursor.insertText(text)
+            self.setTextCursor(cursor)
+            from vendor.Qt.QtWidgets import QApplication
+            QApplication.clipboard().setText(text)
+
+        popup.textSelected.connect(on_selected)
+        popup.exec_()
+
+    def show_markdown_preview(self):
+
+        """
+        Instantiate the MarkdownPreviewEdit overlay to show a formatted
+        preview of the markdown content of this editor.
+        """
+        if hasattr(self, 'markdown_preview_widget') and self.markdown_preview_widget:
+            self.markdown_preview_widget.close_preview()
+            return
+        self.markdown_preview_widget = MarkdownPreviewEdit(self)
+        self.markdown_preview_widget.setMarkdown(self.toPlainText())
+        self.markdown_preview_widget.show()
+        self.markdown_preview_widget.setFocus()
+
     def keyPressEvent(self, event):
         # unsuppress autocomplete if alphanumeric or dot/underscore
         text = event.text()
@@ -408,8 +943,18 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.parseText(force=True)
             return
 
-        # Open in browser shortcut, Ctrl+B
+        # Bookmarks Finder shortcut, Ctrl+B
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
+            self.show_bookmarks_popup()
+            return
+
+        # Clipboard Manager shortcut, Ctrl+Shift+V
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_V:
+            self.show_clipboard_popup()
+            return
+
+        # Open in browser or Markdown Preview shortcut, Ctrl+Alt+B
+        elif event.modifiers() == (Qt.ControlModifier | Qt.AltModifier) and event.key() == Qt.Key_B:
             file_path = getattr(self, 'file_path', None)
             if not file_path and hasattr(self, 'parent') and self.parent():
                 file_path = getattr(self.parent(), 'file_path', None)
@@ -419,6 +964,29 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     import webbrowser
                     webbrowser.open(file_path)
                     return
+                elif ext.lower() == '.md':
+                    self.show_markdown_preview()
+                    return
+
+        # Toggle bookmark, Ctrl+F2
+        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_F2:
+            self.toggle_bookmark()
+            return
+
+        # Next bookmark, F2
+        elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_F2:
+            self.next_bookmark()
+            return
+
+        # Previous bookmark, Shift+F2
+        elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_F2:
+            self.prev_bookmark()
+            return
+
+        # Clear bookmarks, Ctrl+Shift+F2
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_F2:
+            self.clear_bookmarks()
+            return
 
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
@@ -546,6 +1114,26 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.moveSelected(False)
             if self.completer:
                 self.completer.updateCompleteList()
+            return
+        # smart home
+        elif event.key() == Qt.Key_Home and not (event.modifiers() & Qt.ControlModifier):
+            cursor = self.textCursor()
+            mode = QTextCursor.KeepAnchor if (event.modifiers() & Qt.ShiftModifier) else QTextCursor.MoveAnchor
+            block_text = cursor.block().text()
+            first_non_space = len(block_text) - len(block_text.lstrip(' \t'))
+            current_pos_in_block = cursor.positionInBlock()
+            
+            if current_pos_in_block == first_non_space:
+                cursor.setPosition(cursor.block().position(), mode)
+            else:
+                cursor.setPosition(cursor.block().position() + first_non_space, mode)
+                
+            self.setTextCursor(cursor)
+            
+            if self.completer:
+                self.completer.updateCompleteList()
+            self.setFocus()
+            self.highlight_current_line()
             return
         # close completer
         elif event.key() in escapeButtons:
@@ -1140,6 +1728,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.setPlainText(text)
         self.document().clearUndoRedoStacks()
         self.blockSignals(False)
+        self.recompute_folding_regions()
+        self.apply_folding_visibility()
 
     ########################### DROP
     def dragEnterEvent(self, event):
@@ -1257,10 +1847,32 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         finally:
             self._is_manual_multi_selecting = False
 
+    def add_cursors_to_line_ends(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursors_to_line_ends()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def add_cursor_above(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursor_above()
+        finally:
+            self._is_manual_multi_selecting = False
+
+    def add_cursor_below(self):
+        self._is_manual_multi_selecting = True
+        try:
+            self.multi_cursor_manager.add_cursor_below()
+        finally:
+            self._is_manual_multi_selecting = False
+
+
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
-
+            
         data = SettingsModel().read_settings() or {}
         if data.get('highlight_all_occurrences', True):
             cursor = self.textCursor()
@@ -1271,7 +1883,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     self._is_auto_selecting = True
                     self.select_all_occurrences()
                     self._is_auto_selecting = False
+                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                        self.p.out.highlight_word(text)
+                else:
+                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                        self.p.out.highlight_word("")
             else:
+                if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                    self.p.out.highlight_word("")
                 if self.multi_cursor_manager.has_cursors() and getattr(self.multi_cursor_manager, 'is_auto_populated', False):
                     self.multi_cursor_manager.clear()
                     self.highlight_current_line()

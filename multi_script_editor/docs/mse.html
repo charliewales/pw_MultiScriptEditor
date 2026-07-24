@@ -1,292 +1,964 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi Script Editor - Documentation</title>
+    <title>Multi Script Editor v6.4.0 Documentation — Read the Docs Style</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #1e1e1e; color: #d4d4d4; }
-        h1 { color: #569cd6; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        h2 { color: #4ec9b0; margin-top: 30px; border-bottom: 1px solid #2d2d30; padding-bottom: 5px; }
-        h3 { color: #ce9178; }
-        ul { margin-bottom: 20px; }
-        li { margin-bottom: 10px; }
-        strong { color: #9cdcfe; }
-        .shortcut { display: inline-block; background: #2d2d30; border-radius: 4px; padding: 2px 6px; font-size: 0.85em; font-family: monospace; color: #d16969; margin-left: 8px; border: 1px solid #3e3e42; }
-        .desc { display: block; margin-top: 4px; color: #a0a0a0; font-size: 0.95em; }
-        .feature-list { margin-left: 20px; }
+        :root {
+            /* Light Theme Palette */
+            --rtd-sidebar-bg: #343131;
+            --rtd-sidebar-header-bg: #2980b9;
+            --rtd-sidebar-text: #b3b3b3;
+            --rtd-sidebar-hover: #4e4a4a;
+            --rtd-sidebar-active: #242222;
+            --rtd-body-bg: #edf0f2;
+            --rtd-content-bg: #ffffff;
+            --rtd-text-color: #404040;
+            --rtd-heading-color: #2980b9;
+            --rtd-border-color: #e1e4e5;
+            --rtd-card-bg: #fafafa;
+            --rtd-code-bg: #f8f8f8;
+            --rtd-shortcut-bg: #e7e7e7;
+            --rtd-shortcut-border: #ccc;
+            --rtd-shortcut-text: #333;
+            --rtd-note-bg: #e7f2fa;
+            --rtd-note-border: #6ab0de;
+            --rtd-warning-bg: #fcf8e3;
+            --rtd-warning-border: #f0ad4e;
+            --rtd-tip-bg: #e8f5e9;
+            --rtd-tip-border: #66bb6a;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Palette (Sphinx RTD Dark) */
+            --rtd-sidebar-bg: #1c1d1f;
+            --rtd-sidebar-header-bg: #1f6feb;
+            --rtd-sidebar-text: #8b949e;
+            --rtd-sidebar-hover: #2d3139;
+            --rtd-sidebar-active: #161b22;
+            --rtd-body-bg: #0d1117;
+            --rtd-content-bg: #161b22;
+            --rtd-text-color: #c9d1d9;
+            --rtd-heading-color: #58a6ff;
+            --rtd-border-color: #30363d;
+            --rtd-card-bg: #21262d;
+            --rtd-code-bg: #1f242c;
+            --rtd-shortcut-bg: #30363d;
+            --rtd-shortcut-border: #484f58;
+            --rtd-shortcut-text: #58a6ff;
+            --rtd-note-bg: #172433;
+            --rtd-note-border: #388bfd;
+            --rtd-warning-bg: #2d2215;
+            --rtd-warning-border: #d29922;
+            --rtd-tip-bg: #132719;
+            --rtd-tip-border: #3fb950;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Lato", "proxima-nova", "Helvetica Neue", Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--rtd-text-color);
+            background-color: var(--rtd-body-bg);
+            display: flex;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Sidebar Styling (Read the Docs Classic) */
+        .wy-nav-side {
+            width: 290px;
+            background-color: var(--rtd-sidebar-bg);
+            color: var(--rtd-sidebar-text);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .wy-side-nav-search {
+            background-color: var(--rtd-sidebar-header-bg);
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .wy-side-nav-search a.project-title {
+            color: #ffffff;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .wy-side-nav-search .version-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .wy-side-nav-search input[type="text"] {
+            width: 100%;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: none;
+            outline: none;
+            font-size: 0.88rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+        }
+
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: background 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .wy-menu {
+            padding: 15px 0;
+            flex-grow: 1;
+        }
+
+        .wy-menu p.caption {
+            color: #888888;
+            font-size: 0.72rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 14px 20px 6px 20px;
+        }
+
+        .wy-menu ul {
+            list-style: none;
+        }
+
+        .wy-menu li a {
+            display: block;
+            padding: 8px 20px;
+            color: #d9d9d9;
+            text-decoration: none;
+            font-size: 0.88rem;
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .wy-menu li a:hover {
+            background-color: var(--rtd-sidebar-hover);
+            color: #ffffff;
+        }
+
+        .wy-menu li.active > a {
+            background-color: var(--rtd-sidebar-active);
+            color: #ffffff;
+            border-left-color: var(--rtd-sidebar-header-bg);
+            font-weight: bold;
+        }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none;
+            background-color: var(--rtd-sidebar-header-bg);
+            color: #fff;
+            padding: 12px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 101;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mobile-header button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        /* Main Content Container */
+        .wy-nav-content-wrap {
+            margin-left: 290px;
+            flex-grow: 1;
+            background-color: var(--rtd-content-bg);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .wy-nav-content {
+            padding: 40px 60px;
+            max-width: 1050px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Breadcrumbs */
+        .breadcrumbs {
+            list-style: none;
+            display: flex;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--rtd-border-color);
+        }
+
+        .breadcrumbs a {
+            color: var(--rtd-heading-color);
+            text-decoration: none;
+        }
+
+        /* Content Headings */
+        h1 {
+            font-size: 2.1rem;
+            color: var(--rtd-text-color);
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        h2 {
+            font-size: 1.55rem;
+            color: var(--rtd-heading-color);
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--rtd-border-color);
+            scroll-margin-top: 20px;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--rtd-text-color);
+            margin-top: 30px;
+            margin-bottom: 14px;
+            scroll-margin-top: 20px;
+        }
+
+        p {
+            margin-bottom: 16px;
+        }
+
+        /* Admonitions / Sphinx Callout Boxes */
+        .admonition {
+            margin: 22px 0;
+            padding: 16px 20px;
+            border-left: 5px solid var(--rtd-note-border);
+            background-color: var(--rtd-note-bg);
+            border-radius: 4px;
+        }
+
+        .admonition-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--rtd-heading-color);
+            text-transform: uppercase;
+            font-size: 0.82rem;
+            letter-spacing: 0.5px;
+        }
+
+        .admonition.warning {
+            border-left-color: var(--rtd-warning-border);
+            background-color: var(--rtd-warning-bg);
+        }
+        .admonition.warning .admonition-title {
+            color: var(--rtd-warning-border);
+        }
+
+        .admonition.tip {
+            border-left-color: var(--rtd-tip-border);
+            background-color: var(--rtd-tip-bg);
+        }
+        .admonition.tip .admonition-title {
+            color: var(--rtd-tip-border);
+        }
+
+        /* Action Cards Grid */
+        .action-grid {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .action-card {
+            background-color: var(--rtd-card-bg);
+            border: 1px solid var(--rtd-border-color);
+            border-radius: 4px;
+            padding: 14px 18px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .action-card:hover {
+            border-color: var(--rtd-heading-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: var(--rtd-text-color);
+            font-size: 0.98rem;
+        }
+
+        /* Sphinx RTD Keyboard Shortcuts */
+        kbd, .shortcut {
+            background-color: var(--rtd-shortcut-bg);
+            border: 1px solid var(--rtd-shortcut-border);
+            border-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            color: var(--rtd-shortcut-text);
+            display: inline-block;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.78rem;
+            line-height: 1;
+            padding: 3px 7px;
+            white-space: nowrap;
+        }
+
+        .action-desc {
+            color: var(--rtd-text-color);
+            opacity: 0.85;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .feature-list-box {
+            margin-top: 8px;
+            margin-left: 20px;
+            list-style: disc;
+        }
+
+        .feature-list-box li {
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+
+        /* General Bullet Lists */
+        ul.rtd-list {
+            margin-left: 20px;
+            margin-bottom: 20px;
+        }
+        ul.rtd-list li {
+            margin-bottom: 8px;
+        }
+
+        /* Code snippets */
+        code {
+            background-color: var(--rtd-code-bg);
+            border: 1px solid var(--rtd-border-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.88em;
+            color: var(--rtd-heading-color);
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid var(--rtd-border-color);
+            color: #888;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .mobile-header { display: flex; }
+            .wy-nav-side {
+                transform: translateX(-100%);
+            }
+            .wy-nav-side.open {
+                transform: translateX(0);
+            }
+            .wy-nav-content-wrap {
+                margin-left: 0;
+                padding-top: 50px;
+            }
+            .wy-nav-content {
+                padding: 24px 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <h1>Multi Script Editor Documentation</h1>
+    <!-- Mobile Top Navigation Bar -->
+    <header class="mobile-header">
+        <span>Multi Script Editor v6.4.0</span>
+        <button id="sidebarToggle" aria-label="Toggle Navigation">☰</button>
+    </header>
 
-    <h2>General Overview</h2>
-    <p>Multi Script Editor is an open-source, cross-platform, and cross-application code editor. It can be run as a standalone application or embedded within other software applications (Houdini, Maya, Nuke), offering the ability to edit and execute code efficiently and centrally while automatically adapting to the host application's environment. While optimized for Python, it supports syntax highlighting, file parsing, and outline navigation for a wide range of web and CGI-centric file formats.</p>
+    <!-- Sphinx Read the Docs Sidebar -->
+    <nav class="wy-nav-side" id="sidebar">
+        <div class="wy-side-nav-search">
+            <a href="#general-overview" class="project-title">Multi Script Editor</a>
+            <span class="version-badge">v6.4.0</span>
+            <input type="text" id="searchInput" placeholder="Search documentation..." onkeyup="filterDocs()">
+            <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">☀️ Light Mode</button>
+        </div>
+        <div class="wy-menu">
+            <p class="caption">Navigation</p>
+            <ul>
+                <li class="active"><a href="#general-overview">General Overview</a></li>
+                <li><a href="#key-features">Key Features</a></li>
+            </ul>
 
-    <h3>Key Features:</h3>
-    <ul>
-        <li>Preserves and loads tabs and the code within them automatically across sessions.</li>
-        <li>Interactive execution of selected code blocks, single lines, or entire scripts (for Python files).</li>
-        <li>Fully adjustable and customizable color themes for the code editor and UI.</li>
-        <li>Advanced code completion (powered by the <code>jedi</code> module) and docstring visualizers for Python.</li>
-        <li>Multi-format syntax highlighting and editing support for Python, JavaScript, HTML, YAML, Markdown, CSS, Text, Log, USD, and JSON.</li>
-        <li>Smart document structure outline and symbol parsing (supports Python classes/functions, JSON/YAML keys, and USD def/class/over declarations).</li>
-        <li>Context-aware completion for different functions, such as existing nodes and scene paths depending on the integrated host software.</li>
-        <li>Built-in syntax checking and multi-cursor editing support.</li>
-        <li>Code snippets functionality for quickly inserting predefined blocks of code.</li>
-    </ul>
+            <p class="caption">Menu Reference</p>
+            <ul>
+                <li><a href="#file">File</a></li>
+                <li><a href="#bookmarks">Bookmarks</a></li>
+                <li><a href="#edit">Edit</a></li>
+                <li><a href="#options">Options</a></li>
+                <li><a href="#run">Run</a></li>
+                <li><a href="#sessions">Sessions</a></li>
+                <li><a href="#snippets">Snippets</a></li>
+                <li><a href="#theme">Theme</a></li>
+                <li><a href="#view">View</a></li>
+                <li><a href="#help">Help</a></li>
+            </ul>
 
-    <hr>
+            <p class="caption">Customization & Advanced</p>
+            <ul>
+                <li><a href="#tab-interactions">Tab & Context Menu</a></li>
+                <li><a href="#code-theme-editor">Code Theme Editor</a></li>
+            </ul>
+        </div>
+    </nav>
 
-    <h2>Options by Menu</h2>
-    <p>Below is a detailed breakdown of the different actions and tools grouped by the menu where they are located within the application, utilizing sentence case for ease of use:</p>
+    <!-- Main Content Area -->
+    <div class="wy-nav-content-wrap">
+        <main class="wy-nav-content">
 
-    <h3>File Menu</h3>
-    <ul>
-        <li><strong>Open script</strong><span class="shortcut">CTRL + O</span>
-            <span class="desc">Opens an existing Python script file from your local filesystem, loading its contents into a new tab in the editor for editing and execution.</span></li>
-        <li><strong>Save script</strong><span class="shortcut">CTRL + S</span>
-            <span class="desc">Saves the script in the currently active tab. If the script is new and hasn't been saved yet, it will prompt for a destination file path.</span></li>
-        <li><strong>Save script as</strong><span class="shortcut">CTRL + SHIFT + S</span>
-            <span class="desc">Saves the script in the currently active tab to a new file and opens it in a new separate tab.</span></li>
-        <li><strong>Save session</strong><span class="shortcut">CTRL + ALT + S</span>
-            <span class="desc">Forces a save of the entire current session state. This includes all open tabs, their contents, and their specific order, ensuring they are automatically restored the next time the editor is launched.</span></li>
-        <li><strong>Snippets</strong>
-            <span class="desc">A sub-menu containing tools to manage custom code snippets. Built-in default snippets are protected from deletion.
-                <ul class="feature-list">
-                    <li><strong>Insert/save snippet</strong><span class="shortcut">ALT + S</span>: Opens a dialog to insert a predefined snippet at the current cursor position, or save the currently selected text as a new snippet.</li>
-                    <li><strong>Import / Export</strong>: Import snippet collections from JSON files or export them for backup.</li>
-                    <li><strong>Delete snippet</strong>: Allows removing custom snippets.</li>
+            <!-- Breadcrumbs -->
+            <ul class="breadcrumbs">
+                <li><a href="#general-overview">Docs</a> &raquo;</li>
+                <li id="breadcrumb-current">Overview</li>
+            </ul>
+
+            <!-- General Overview Section -->
+            <section id="general-overview">
+                <h1>Multi Script Editor Documentation</h1>
+                <p>Multi Script Editor is an open-source, cross-platform, and cross-application code editor. It can be run as a standalone application or embedded within host software applications (such as <strong>Houdini</strong>, <strong>Maya</strong>, and <strong>Nuke</strong>), offering the ability to edit and execute code efficiently while automatically adapting to the host application's environment. While optimized for Python, it supports syntax highlighting, file parsing, and outline navigation for a wide range of CGI and web file formats.</p>
+
+                <div class="admonition note">
+                    <div class="admonition-title">Note</div>
+                    <p>When running embedded inside DCC host applications, Multi Script Editor automatically links into the host's Python engine and environment variables, allowing live inspection and script execution directly inside your active scene session.</p>
+                </div>
+            </section>
+
+            <!-- Key Features Section -->
+            <section id="key-features">
+                <h2>Key Features</h2>
+                <ul class="rtd-list">
+                    <li><strong>Automatic Workspace Preservation:</strong> Automatically saves and restores all active tabs and code buffers across sessions.</li>
+                    <li><strong>Interactive Code Execution:</strong> Live interactive execution of selected blocks, lines, or entire scripts (exclusively for Python files).</li>
+                    <li><strong>Custom Color Themes:</strong> Fully customizable themes for syntax highlighting and the entire UI layout.</li>
+                    <li><strong>Advanced Code Completion:</strong> Powered by the <code>jedi</code> engine with real-time docstring popup visualizers.</li>
+                    <li><strong>Multi-Format Syntax Support:</strong> Highlighting and structure parsing for Python, JavaScript, HTML, YAML, Markdown, CSS, Text, Log, USD, and JSON.</li>
+                    <li><strong>Smart Outline Navigation:</strong> Tree outline parser for Python classes/functions, JSON/YAML keys, and USD <code>def</code>/<code>class</code>/<code>over</code> primitives.</li>
+                    <li><strong>Host Integration:</strong> Context-aware autocompletion for host node graphs, scene paths, and PySide/PyQt frameworks.</li>
+                    <li><strong>Multi-Cursor & Formatting:</strong> Native multi-cursor editing, bracket auto-closing, and automatic syntax checking.</li>
+                    <li><strong>Snippets Library:</strong> Predefined and custom code snippet insertion with console execution.</li>
                 </ul>
-            </span>
-        </li>
-        <li><strong>Close all tabs</strong>
-            <span class="desc">Closes all open tabs to reset your workspace, leaving only one empty tab. It prompts for confirmation to prevent accidental loss of unsaved snippets.</span></li>
-        <li><strong>Quit</strong><span class="shortcut">CTRL + Q</span>
-            <span class="desc">Closes the application safely. It ensures that the current session state is preserved before exiting.</span></li>
-    </ul>
+            </section>
 
-    <h3>Tab Context Menu (Right-Click)</h3>
-    <ul>
-        <li><strong>Duplicate Tab</strong>
-            <span class="desc">Creates a copy of the current tab with the same text.</span></li>
-        <li><strong>Rename Tab</strong><span class="shortcut">ALT + R</span>
-            <span class="desc">Renames the label of the current tab. Tab labels now display the full file name.</span></li>
-        <li><strong>Copy File Path</strong><span class="shortcut">ALT + SHIFT + C</span>
-            <span class="desc">Copies the absolute file path of the currently active tab (if it represents a saved file) to the system clipboard.</span></li>
-    </ul>
+            <!-- Menu Reference Section -->
+            <section id="menu-reference">
+                <h2>Options by Menu</h2>
+                <p>Below is the complete reference breakdown of all application actions grouped by their corresponding menu in the main window menu bar.</p>
 
-    <h3>Edit Menu</h3>
-    <ul>
-        <li><strong>Undo</strong><span class="shortcut">CTRL + Z</span>
-            <span class="desc">Reverts the last text editing action in the active script, allowing you to step backward through your recent changes.</span></li>
-        <li><strong>Redo</strong><span class="shortcut">CTRL + Y</span>
-            <span class="desc">Re-applies the last undone action, allowing you to step forward through changes you previously undid.</span></li>
-        <li><strong>Copy</strong><span class="shortcut">CTRL + C</span>
-            <span class="desc">Copies the currently selected text to the system clipboard for pasting elsewhere.</span></li>
-        <li><strong>Cut</strong><span class="shortcut">CTRL + X</span>
-            <span class="desc">Removes the currently selected text from the document and places it into the system clipboard.</span></li>
-        <li><strong>Paste</strong><span class="shortcut">CTRL + V</span>
-            <span class="desc">Inserts the current content of the system clipboard at the cursor's location.</span></li>
-        <li><strong>Add quotes</strong><span class="shortcut">ALT + Q</span>
-            <span class="desc">Wraps the currently selected text with quotation marks. Very useful for quickly converting variables or text into string literals.</span></li>
-        <li><strong>Comment</strong><span class="shortcut">ALT + C</span>
-            <span class="desc">Toggles the Python comment state (using <code>#</code>) for the current line or selected block of lines, allowing you to quickly comment out or uncomment code blocks.</span></li>
-        <li><strong>f-string</strong><span class="shortcut">ALT + F</span>
-            <span class="desc">Converts the selected text or the word under the cursor into a Python f-string literal.</span></li>
-        <li><strong>Delete line(s)</strong><span class="shortcut">CTRL + D</span>
-            <span class="desc">Immediately deletes the current line or all lines spanned by the current selection.</span></li>
-        <li><strong>Duplicate line(s)</strong><span class="shortcut">CTRL + SHIFT + D</span>
-            <span class="desc">Duplicates the current line or the selected text block, inserting it immediately below the original.</span></li>
-        <li><strong>Move line(s) up</strong><span class="shortcut">ALT + UP</span>
-            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position upwards in the document.</span></li>
-        <li><strong>Move line(s) down</strong><span class="shortcut">ALT + DOWN</span>
-            <span class="desc">Shifts the currently selected line(s) or the line at the cursor one position downwards in the document.</span></li>
-        <li><strong>Find and replace</strong><span class="shortcut">CTRL + F</span>
-            <span class="desc">Opens the search tool panel to find specific text strings and optionally replace them with new text. It supports case sensitivity and regular expressions.</span></li>
-        <li><strong>Next highlight/selection</strong><span class="shortcut">CTRL + J</span>
-            <span class="desc">Moves the focus to the next highlighted occurrence or selection.</span></li>
-        <li><strong>Previous highlight/selection</strong><span class="shortcut">CTRL + SHIFT + J</span>
-            <span class="desc">Moves the focus to the previous highlighted occurrence or selection.</span></li>
-        <li><strong>Select next occurrence</strong><span class="shortcut">CTRL + ALT + D</span>
-            <span class="desc">Finds and selects the next instance of the currently selected word (or the word under the cursor), enabling multi-cursor editing for rapid refactoring.</span></li>
-        <li><strong>Select all occurrences</strong><span class="shortcut">CTRL + SHIFT + ALT + D</span>
-            <span class="desc">Selects every instance of the current word throughout the entire document, placing a cursor at each instance for simultaneous editing.</span></li>
-        <li><strong>Go to line</strong><span class="shortcut">CTRL + G</span>
-            <span class="desc">Prompts for a line number and moves the cursor to that specific line in the editor, centering the cursor vertically in the viewport.</span></li>
-        <li><strong>Go to symbol</strong><span class="shortcut">CTRL + R</span>
-            <span class="desc">Opens a quick navigation palette to fuzzy-search and jump to symbols (functions, classes) in the current editor file. Automatically clears the outline view if syntax errors are detected.</span></li>
-        <li><strong>Tab to spaces</strong>
-            <span class="desc">Converts all tab characters in the current document to standard space characters (typically 4 spaces) to ensure PEP 8 compliance and avoid indentation errors.</span></li>
-        <li><strong>Spaces to tab</strong>
-            <span class="desc">Converts groups of 4 spaces into standard tab characters in the current document to meet format requirements.</span></li>
-        <li><strong>Trim trailing whitespace</strong><span class="shortcut">ALT + SHIFT + W</span>
-            <span class="desc">Trims trailing spaces and tab characters from the ends of all lines in the active document immediately.</span></li>
-        <li><strong>Show autocompletion</strong><span class="shortcut">CTRL + SPACE</span>
-            <span class="desc">Manually triggers the autocomplete suggestions popup list at the current cursor position.</span></li>
-        <li><strong>Highlight all occurrences</strong>
-            <span class="desc">Toggles automatic visual highlighting of all matching occurrences of the selected word throughout the active document.</span></li>
-        <li><strong>Occurrences are case sensitive</strong>
-            <span class="desc">Toggles case sensitivity for matching word occurrences highlighted in the document.</span></li>
-        <li><strong>Prefer single quotes</strong>
-            <span class="desc">Toggles quote preference to single quotes instead of double quotes when using 'Add quotes' and f-string utilities.</span></li>
-        <li><strong>Trim auto whitespace</strong>
-            <span class="desc">Toggles automatic trimming of trailing whitespace whenever you save a script.</span></li>
-        <li><strong>Render whitespace</strong><span class="shortcut">CTRL + SHIFT + W</span>
-            <span class="desc">Toggles the visibility of whitespace characters (spaces as dots, tabs as arrows) in the editor to aid in formatting and detecting trailing spaces.</span></li>
-        <li><strong>Word wrap</strong><span class="shortcut">ALT + W</span>
-            <span class="desc">Toggles automatic wrapping of long lines of code so they visually fit within the editor's width without requiring horizontal scrolling.</span></li>
-        <li><strong>Word wrap (output)</strong><span class="shortcut">CTRL + ALT + W</span>
-            <span class="desc">Toggles word wrap specifically for the output console panel, preventing horizontal scrolling for long print outputs.</span></li>
-    </ul>
+                <!-- File -->
+                <h3 id="file">File</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Open script</span><kbd>CTRL + O</kbd></div>
+                        <div class="action-desc">Opens an existing script file from your filesystem into a new editor tab.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Save script</span><kbd>CTRL + S</kbd></div>
+                        <div class="action-desc">Saves the script in the active tab. Prompts for a file path if the script is untitled.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Save script as</span><kbd>CTRL + SHIFT + S</kbd></div>
+                        <div class="action-desc">Saves the active tab to a new file location and opens it in a separate tab.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Save session</span><kbd>CTRL + ALT + S</kbd></div>
+                        <div class="action-desc">Forces an immediate save of all open tabs, layout states, bookmarks, and folding positions.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Recent files</span><kbd>CTRL + P</kbd></div>
+                        <div class="action-desc">Opens a quick-search palette to filter and reopen recently opened files.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Save output</span></div>
+                        <div class="action-desc">Sub-menu with options to export the console output:
+                            <ul class="feature-list-box">
+                                <li><strong>As...</strong>: Saves output text to a file.</li>
+                                <li><strong>To tab</strong>: Copies output text into a new code tab.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Close all tabs</span><kbd>CTRL + SHIFT + ALT + W</kbd></div>
+                        <div class="action-desc">Closes all open tabs to reset the workspace (prompts for confirmation before closing).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Quit</span><kbd>CTRL + Q</kbd></div>
+                        <div class="action-desc">Safely exits the application, saving session data automatically.</div>
+                    </div>
+                </div>
 
-    <h3>View Menu</h3>
-    <ul>
-        <li><strong>Code Outline</strong><span class="shortcut">CTRL + SHIFT + O</span>
-            <span class="desc">Toggles the visibility of the code outline sidebar. This panel provides a structural overview of the script (showing classes, methods, and functions) for rapid navigation.</span></li>
-        <li><strong>Code outline button</strong>
-            <span class="desc">Toggles the visibility of the outline toggle button in the tab bar.</span></li>
-        <li><strong>Output</strong><span class="shortcut">CTRL + K</span>
-            <span class="desc">Toggles the visibility of the output console panel.</span></li>
-        <li><strong>Output at the bottom</strong>
-            <span class="desc">Toggles the layout position of the output console, placing it at the bottom of the window when checked.</span></li>
-        <li><strong>Zoom in</strong><span class="shortcut">CTRL + +</span>
-            <span class="desc">Increases the editor font size globally.</span></li>
-        <li><strong>Zoom out</strong><span class="shortcut">CTRL + -</span>
-            <span class="desc">Decreases the editor font size globally.</span></li>
-        <li><strong>Reset zoom</strong><span class="shortcut">CTRL + 0</span>
-            <span class="desc">Resets the editor font size to the theme's default size.</span></li>
-    </ul>
+                <!-- Bookmarks -->
+                <h3 id="bookmarks">Bookmarks</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Toggle Bookmark</span><kbd>CTRL + F2</kbd></div>
+                        <div class="action-desc">Toggles a line bookmark. Displays a ribbon tag in the gutter with a hover preview.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Next Bookmark</span><kbd>F2</kbd></div>
+                        <div class="action-desc">Jumps to the next bookmark in the document, centering the cursor in the viewport.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Previous Bookmark</span><kbd>SHIFT + F2</kbd></div>
+                        <div class="action-desc">Jumps to the previous bookmark in the document, centering the cursor in the viewport.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Clear Bookmarks</span><kbd>CTRL + SHIFT + F2</kbd></div>
+                        <div class="action-desc">Removes all bookmarks from the document (prompts confirmation first).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Go to bookmark...</span><kbd>CTRL + B</kbd></div>
+                        <div class="action-desc">Opens a search popup palette to filter and jump to bookmarked lines.</div>
+                    </div>
+                </div>
 
-    <h3>Run Menu</h3>
-    <p><em>Note: Execution features (including code execution and Python helper queries like type, help, dir, and print) are exclusively supported for Python documents. They are automatically disabled and inactive when editing non-Python files (e.g. JSON, HTML, YAML, CSS).</em></p>
-    <ul>
-        <li><strong>Clear output before execution</strong><span class="shortcut">CTRL + ALT + C</span>
-            <span class="desc">When enabled, the application automatically clears the console output panel every time you run a script, keeping the output focused exclusively on the latest execution results.</span></li>
-        <li><strong>Clear output</strong><span class="shortcut">CTRL + SHIFT + C</span>
-            <span class="desc">Manually clears all text currently displayed in the output console panel.</span></li>
-        <li><strong>dir()</strong><span class="shortcut">ALT + D</span>
-            <span class="desc">Wraps the word under the cursor with the Python <code>dir()</code> function and executes it. This prints all valid attributes and methods of the selected object in the output console.</span></li>
-        <li><strong>help()</strong><span class="shortcut">ALT + H</span>
-            <span class="desc">Wraps the word under the cursor with the Python <code>help()</code> function and executes it, displaying Python's built-in documentation for that specific object or function.</span></li>
-        <li><strong>print()</strong>
-            <span class="desc">Wraps the word under the cursor in a <code>print()</code> statement, making it easy to quickly output a variable's value during debugging.</span></li>
-        <li><strong>type()</strong><span class="shortcut">ALT + T</span>
-            <span class="desc">Wraps the word under the cursor in a Python <code>type()</code> function and executes it to reveal the object's class or data type in the output.</span></li>
-        <li><strong>Echo executed command</strong><span class="shortcut">ALT + E</span>
-            <span class="desc">If enabled, prints the exact code snippet being executed into the output console before displaying its result, which is extremely helpful for providing context to output logs.</span></li>
-        <li><strong>Execute all</strong><span class="shortcut">ALT + ENTER</span>
-            <span class="desc">Runs the entire script present in the current active tab from top to bottom.</span></li>
-        <li><strong>Execute line</strong><span class="shortcut">CTRL + ALT + ENTER</span>
-            <span class="desc">Runs only the specific single line of code where the text cursor is currently positioned.</span></li>
-        <li><strong>Execute selected</strong><span class="shortcut">CTRL + ENTER</span>
-            <span class="desc">Runs only the block of code that is currently highlighted/selected by the user.</span></li>
-    </ul>
+                <!-- Edit -->
+                <h3 id="edit">Edit</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Undo / Redo</span><kbd>CTRL + Z</kbd> / <kbd>CTRL + Y</kbd></div>
+                        <div class="action-desc">Steps backward or forward through your text editing history.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Clipboard manager</span><kbd>CTRL + SHIFT + V</kbd></div>
+                        <div class="action-desc">Opens a persistent history popup displaying previously copied or cut code snippets.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Cut / Copy / Paste</span><kbd>CTRL + X</kbd> / <kbd>CTRL + C</kbd> / <kbd>CTRL + V</kbd></div>
+                        <div class="action-desc">Standard text clipboard actions.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Add quotes</span><kbd>ALT + Q</kbd></div>
+                        <div class="action-desc">Wraps the selected text with quotation marks.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Comment</span><kbd>ALT + C</kbd></div>
+                        <div class="action-desc">Toggles Python comment markers (<code>#</code>) on selected lines.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">f-string</span><kbd>ALT + F</kbd></div>
+                        <div class="action-desc">Converts selected text into a Python f-string literal.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Delete / Duplicate line(s)</span><kbd>CTRL + D</kbd> / <kbd>CTRL + SHIFT + D</kbd></div>
+                        <div class="action-desc">Deletes or duplicates current lines immediately.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Move line(s) up / down</span><kbd>ALT + UP</kbd> / <kbd>ALT + DOWN</kbd></div>
+                        <div class="action-desc">Shifts selected lines up or down within the script.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Add cursors to line ends</span><kbd>CTRL + SHIFT + I</kbd></div>
+                        <div class="action-desc">Places cursors at the ends of all selected lines for multi-cursor editing.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Add cursor above / below</span><kbd>CTRL + SHIFT + UP</kbd> / <kbd>CTRL + SHIFT + DOWN</kbd></div>
+                        <div class="action-desc">Spawns additional cursors vertically above or below current selection.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Select next / all occurrences</span><kbd>CTRL + ALT + D</kbd> / <kbd>CTRL + SHIFT + ALT + D</kbd></div>
+                        <div class="action-desc">Multi-selects matching occurrences of the selected word for instant refactoring.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Find and replace</span><kbd>CTRL + F</kbd></div>
+                        <div class="action-desc">Opens the find and replace search bar with regex and case sensitivity options.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Go to line</span><kbd>CTRL + G</kbd></div>
+                        <div class="action-desc">Opens a popup palette with line previews and syntax highlighting to jump directly to a line.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Go to symbol</span><kbd>CTRL + R</kbd></div>
+                        <div class="action-desc">Opens a quick-search palette to filter and jump to functions or classes.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Trim trailing whitespace</span><kbd>ALT + SHIFT + W</kbd></div>
+                        <div class="action-desc">Immediately removes trailing spaces and tabs from line ends across the document.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Show autocompletion</span><kbd>CTRL + SPACE</kbd></div>
+                        <div class="action-desc">Triggers the code autocompletion popup list manually.</div>
+                    </div>
+                </div>
 
-    <h3>Options Menu</h3>
-    <ul>
-        <li><strong>Always on top</strong><span class="shortcut">CTRL + ALT + T</span>
-            <span class="desc">Pins the editor window so it remains visible above all other application windows. This is particularly useful when referencing code while interacting with another application like Maya or Nuke.</span></li>
-        <li><strong>Autocomplete</strong><span class="shortcut">ALT + A</span>
-            <span class="desc">Toggles the primary autocompletion engine, providing intelligent code suggestions as you type. Font styling and size are synced directly with the editor's settings.</span></li>
-        <li><strong>Fuzzy autocomplete</strong>
-            <span class="desc">Enables a more flexible, fuzzy-matching algorithm for autocompletion, allowing you to find suggestions even if you skip characters or make minor typos.</span></li>
-        <li><strong>Show docstrings</strong>
-            <span class="desc">Toggles the display of contextual documentation (docstrings) in a popup window alongside the autocomplete suggestions, providing immediate usage information. The docstring font is synchronized with the editor, and its text is fully selectable for copying.</span></li>
-        <li><strong>Syntax check</strong>
-            <span class="desc">Toggles real-time background syntax checking. When enabled, the editor highlights Python syntax errors as you type, helping catch mistakes early.</span></li>
-        <li><strong>Auto-close delimiters</strong>
-            <span class="desc">Toggles automatic closing of brackets, braces, parentheses, and quotes as you type in the editor.</span></li>
-        <li><strong>Quick tab switching</strong>
-            <span class="desc">Toggles quick tab switching. When checked, you can press Ctrl+1 through Ctrl+9 to switch directly to tabs 1 through 9 (with temporary index numbers displayed on tab headers when holding the Ctrl key). It also enables Ctrl+Tab to cycle through open tabs via a popup list ordered by most recently used (MRU) tabs.</span></li>
-        <li><strong>Choose font...</strong>
-            <span class="desc">Opens a system font selection dialog, allowing you to change the typeface, size, and weight of the text in the code editor globally.</span></li>
-        <li><strong>Open settings folder</strong>
-            <span class="desc">Opens your operating system's file explorer directly to the directory where Multi Script Editor stores its configuration files, custom themes, user preferences, and session data.</span></li>
-        <li><strong>Theme</strong>
-            <span class="desc">A sub-menu allowing you to apply different pre-installed color themes or open the advanced Theme Editor (<strong>Edit...</strong>) to heavily customize the syntax highlighting and UI colors.</span></li>
-    </ul>
+                <!-- Options -->
+                <h3 id="options">Options</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Autocomplete</span><kbd>ALT + A</kbd></div>
+                        <div class="action-desc">Toggles automatic code autocompletion as you type.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Fuzzy autocomplete</span></div>
+                        <div class="action-desc">Enables flexible fuzzy matching for completion suggestions.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Show docstrings</span></div>
+                        <div class="action-desc">Displays contextual docstrings alongside completion suggestions.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Syntax check</span></div>
+                        <div class="action-desc">Toggles real-time background Python syntax checking.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Auto close delimiters</span></div>
+                        <div class="action-desc">Automatically pairs brackets, parentheses, and quotes as you type.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Highlight all occurrences</span></div>
+                        <div class="action-desc">Toggles visual highlighting of matching words across the editor and console output.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Quick tab switching</span></div>
+                        <div class="action-desc">Enables <code>Ctrl+1..9</code> tab jumping and <code>Ctrl+Tab</code> MRU tab popup list.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Render whitespace</span><kbd>CTRL + SHIFT + W</kbd></div>
+                        <div class="action-desc">Renders space dots and tab arrows in the editor view.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Trim auto whitespace</span></div>
+                        <div class="action-desc">Automatically trims trailing whitespace whenever a document is saved.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Word wrap</span><kbd>ALT + W</kbd></div>
+                        <div class="action-desc">Toggles automatic line wrapping in the code editor window.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Word wrap (output)</span><kbd>CTRL + ALT + W</kbd></div>
+                        <div class="action-desc">Toggles automatic line wrapping for console output logs.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Choose font...</span></div>
+                        <div class="action-desc">Opens font selection dialog to set global editor typography.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Open settings folder</span></div>
+                        <div class="action-desc">Opens local directory containing application settings, themes, and sessions.</div>
+                    </div>
+                </div>
 
-    <h3>Help Menu</h3>
-    <ul>
-        <li><strong>Quick help</strong><span class="shortcut">F1</span>
-            <span class="desc">Shows a quick reference guide overlay detailing the most common features and available host-specific environment variables.</span></li>
-        <li><strong>GitHub</strong>
-            <span class="desc">Opens the official Multi Script Editor repository on GitHub in your default web browser for checking updates, reporting issues, or contributing.</span></li>
-        <li><strong>Houdini Env Variables</strong>
-            <span class="desc">Opens external web documentation specific to Houdini's environment variables.</span></li>
-        <li><strong>Houdini hou package</strong>
-            <span class="desc">Opens external web documentation for the Houdini <code>hou</code> Python module.</span></li>
-        <li><strong>Maya Commands</strong>
-            <span class="desc">Opens external web documentation for Autodesk Maya's Python commands (<code>maya.cmds</code>).</span></li>
-        <li><strong>Nuke Dev Guide</strong>
-            <span class="desc">Opens the official Nuke Python developer guide.</span></li>
-        <li><strong>Qt for Python</strong>
-            <span class="desc">Opens official documentation for Qt for Python (PySide), which is vital when building custom UIs within the editor.</span></li>
-        <li><strong>Qt Modules</strong>
-            <span class="desc">Opens the reference documentation for individual Qt modules.</span></li>
-        <li><strong>Python documentation</strong>
-            <span class="desc">Opens the official Python documentation online for the version currently being used by the editor.</span></li>
-        <li><strong>Shortcuts</strong>
-            <span class="desc">Displays a comprehensive list of all keyboard shortcuts available in the editor to help you boost your coding productivity.</span></li>
-        <li><strong>Documentation</strong>
-            <span class="desc">Opens this documentation file (<code>mse.html</code>) within your browser.</span></li>
-        <li><strong>Help</strong>
-            <span class="desc">Shows general application help and tips.</span></li>
-        <li><strong>About</strong>
-            <span class="desc">Displays the application version, author credits, and license information.</span></li>
-    </ul>
+                <!-- Run -->
+                <h3 id="run">Run</h3>
+                <div class="admonition warning">
+                    <div class="admonition-title">Warning</div>
+                    <p>Code execution commands (including Python helpers like <code>dir()</code>, <code>help()</code>, <code>type()</code>, and <code>print()</code>) are exclusively available for Python files. They are automatically disabled when editing non-Python formats.</p>
+                </div>
 
-    <hr>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Clear output before execution</span><kbd>CTRL + ALT + C</kbd></div>
+                        <div class="action-desc">Automatically clears the output console panel whenever code is executed.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Clear output</span><kbd>CTRL + SHIFT + C</kbd></div>
+                        <div class="action-desc">Manually clears all text in the console output panel.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">dir() / help() / print() / type()</span><kbd>ALT + D</kbd> / <kbd>ALT + H</kbd> / <kbd>ALT + E</kbd> / <kbd>ALT + T</kbd></div>
+                        <div class="action-desc">Wraps the selected object/word with Python helper inspection functions and executes it immediately in console.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Echo executed command</span></div>
+                        <div class="action-desc">Prints the source code snippet in the console output before displaying execution results.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Execute selected</span><kbd>CTRL + RETURN</kbd></div>
+                        <div class="action-desc">Executes only the currently highlighted code selection (or active line if no text is selected).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Execute line</span><kbd>CTRL + SHIFT + RETURN</kbd></div>
+                        <div class="action-desc">Executes specifically the single line at current cursor position.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Execute all</span><kbd>ALT + RETURN</kbd></div>
+                        <div class="action-desc">Executes the entire script document from start to end.</div>
+                    </div>
+                </div>
 
-    <h2>Code Theme Editor</h2>
-    <p>The Code Theme Editor is an advanced tool designed to let you customize the visual experience of Multi Script Editor. It is accessed by going to <strong>Options</strong> -> <strong>Theme</strong> -> <strong>Edit...</strong>.</p>
+                <!-- Sessions -->
+                <h3 id="sessions">Sessions</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Save session...</span></div>
+                        <div class="action-desc">Saves active tabs, tab ordering, and folding states as a named session (prompts overwrite confirmation).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Restore backup...</span></div>
+                        <div class="action-desc">Restores an existing session state from a backup file.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Delete session</span></div>
+                        <div class="action-desc">Sub-menu to permanently delete saved named sessions.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">List of saved sessions</span></div>
+                        <div class="action-desc">Displays saved session list; clicking a session restores all its tabs immediately.</div>
+                    </div>
+                </div>
 
-    <h3>Key Capabilities & Features:</h3>
-    <ul>
-        <li><strong>Interactive Color Customization:</strong>
-            <span class="desc">The editor lists all customizable syntax elements (e.g., backgrounds, keywords, strings, comments, numbers, brackets, function names). Double-clicking any item opens a color picker dialog. Right-clicking an item displays a context menu allowing you to copy/paste colors or edit values directly. Newly added customizable colors include <code>line_num_text</code> (for the line number bar text) and <code>status_bar_text</code> (for the status bar text).</span>
-        </li>
-        <li><strong>Typography & Font Customization per Theme:</strong>
-            <span class="desc">You can define a custom font specifically for your theme. Clicking <strong>Choose Font...</strong> opens a dialog to select the font family, style, weight, and size. You can reset a custom font back to the application's global default by right-clicking the button and choosing <em>"Reset to default"</em>.</span>
-        </li>
-        <li><strong>Granular Interface Text Sizing:</strong>
-            <span class="desc">Customize text sizes independently for different parts of the user interface:
-                <ul class="feature-list">
-                    <li><strong>Text size:</strong> Adjusts the text size inside the code editor.</li>
-                    <li><strong>Line numbers:</strong> Adjusts the text size of the line number bar.</li>
-                    <li><strong>Menu text size:</strong> Adjusts the text size of all menus.</li>
-                    <li><strong>Tab labels:</strong> Adjusts the text size of the tab labels.</li>
-                    <li><strong>Symbols:</strong> Adjusts the text size of symbols in the symbol search/navigation helper.</li>
-                    <li><strong>Outline text size:</strong> Adjusts the text size of the code outline sidebar.</li>
-                    <li><strong>Output text size:</strong> Adjusts the text size of the console output window.</li>
-                    <li><strong>Status bar text size:</strong> Adjusts the text size inside the status bar.</li>
+                <!-- Snippets -->
+                <h3 id="snippets">Snippets</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Insert/run/save snippet</span><kbd>ALT + S</kbd></div>
+                        <div class="action-desc">Opens the snippets management dialog to insert, save, or run code snippets in console.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Import / Export</span></div>
+                        <div class="action-desc">Exports user snippet collections to JSON or imports snippet packages.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Delete snippet</span></div>
+                        <div class="action-desc">Removes user-defined custom code snippets (built-in snippets are protected).</div>
+                    </div>
+                </div>
+
+                <!-- Theme -->
+                <h3 id="theme">Theme</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Edit...</span><kbd>CTRL + SHIFT + T</kbd></div>
+                        <div class="action-desc">Opens the advanced Code Theme Editor to customize colors, font sizes, rounding, and fonts.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Randomize custom at startup</span></div>
+                        <div class="action-desc">When checked, randomly selects a saved custom theme whenever the application starts.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Theme List</span></div>
+                        <div class="action-desc">List of all installed predefined themes and custom user themes for instant switching.</div>
+                    </div>
+                </div>
+
+                <!-- View -->
+                <h3 id="view">View</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Always on top</span></div>
+                        <div class="action-desc">Pins window on top of all other host windows (e.g. Maya, Nuke, Houdini).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Code outline</span><kbd>CTRL + SHIFT + O</kbd></div>
+                        <div class="action-desc">Toggles structural code outline sidebar showing functions and classes.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Menus</span><kbd>CTRL + M</kbd></div>
+                        <div class="action-desc">Toggles menu bar visibility (shows a toolbar hamburger button when hidden).</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Toolbar</span><kbd>CTRL + ALT + T</kbd></div>
+                        <div class="action-desc">Toggles editor toolbar visibility above the tab bar.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Output</span><kbd>CTRL + K</kbd></div>
+                        <div class="action-desc">Toggles console output panel visibility.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Output at the bottom</span><kbd>CTRL + U</kbd></div>
+                        <div class="action-desc">Toggles output console position between side-by-side and bottom layout.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Fold / Unfold</span><kbd>ALT + -</kbd> / <kbd>ALT + +</kbd></div>
+                        <div class="action-desc">Folds or unfolds current code block at cursor.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Fold all / Unfold all</span><kbd>ALT + SHIFT + -</kbd> / <kbd>ALT + SHIFT + +</kbd></div>
+                        <div class="action-desc">Folds or unfolds all code blocks in document.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Zoom in / Zoom out / Reset</span><kbd>CTRL + +</kbd> / <kbd>CTRL + -</kbd> / <kbd>CTRL + 0</kbd></div>
+                        <div class="action-desc">Adjusts global text font sizing.</div>
+                    </div>
+                </div>
+
+                <!-- Help -->
+                <h3 id="help">Help</h3>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Quick help</span><kbd>F1</kbd></div>
+                        <div class="action-desc">Shows overlay detailing common features and host environment variables.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Documentation</span></div>
+                        <div class="action-desc">Opens this documentation in your browser.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">External Docs Links</span></div>
+                        <div class="action-desc">Links to GitHub repository, Python docs, Maya commands, Nuke dev guide, Houdini hou/envs, and Qt modules.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Support & About</span></div>
+                        <div class="action-desc">Links to support development and view version/license information.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Customization & Advanced Section -->
+            <section id="tab-interactions">
+                <h2>Tab & Context Menu</h2>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Middle-click tab</span></div>
+                        <div class="action-desc">Closes the tab directly under the mouse cursor.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Double-click / Rename Tab</span><kbd>ALT + R</kbd></div>
+                        <div class="action-desc">Opens inline label editor directly on tab header.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Selection to Tab</span></div>
+                        <div class="action-desc">Creates a new editor tab prepopulated with currently selected text.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Copy File Path</span><kbd>ALT + SHIFT + C</kbd></div>
+                        <div class="action-desc">Copies absolute file path of active document tab to clipboard.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code Theme Editor Section -->
+            <section id="code-theme-editor">
+                <h2>Code Theme Editor</h2>
+                <p>Access the Theme Editor via <strong>Theme &raquo; Edit...</strong> (<kbd>CTRL + SHIFT + T</kbd>). It provides comprehensive real-time customization of UI colors, syntax tokens, font families, and element text sizes.</p>
+
+                <div class="admonition tip">
+                    <div class="admonition-title">Tip</div>
+                    <p>The Theme Editor includes a real-time live preview window showing a mock menu bar, code tabs, and status bar so you can see changes immediately before saving.</p>
+                </div>
+
+                <ul class="rtd-list">
+                    <li><strong>Interactive Color Palette:</strong> Double-click color items to open color picker, or right-click to copy/paste color codes. Supports <code>line_num_text</code>, <code>status_bar_text</code>, and <code>bookmark</code> gutter ribbon colors.</li>
+                    <li><strong>Typography & Font Inheritance:</strong> Define a custom font for your theme. Configurable checkboxes allow forcing theme font on completion popups, menus, outline, symbols, status bar, and tab labels.</li>
+                    <li><strong>Granular Interface Text Sizing:</strong> Independent text sliders for editor text, line numbers, menus, tab labels, symbols popup, outline sidebar, output panel, and status bar.</li>
+                    <li><strong>Layout Customization:</strong> Adjust tab corner radius and export/import theme JSON files.</li>
                 </ul>
-            </span>
-        </li>
-        <li><strong>Theme Font Inheritance Checkboxes:</strong>
-            <span class="desc">Checkboxes allow you to decide which UI areas should inherit the custom theme font instead of using default application styles:
-                <ul class="feature-list">
-                    <li><em>Use theme font on completer</em></li>
-                    <li><em>Use theme font on menus</em></li>
-                    <li><em>Use theme font on outline</em></li>
-                    <li><em>Use theme font on symbols</em></li>
-                    <li><em>Use theme font on status bar</em></li>
-                    <li><em>Use theme font on tab labels</em></li>
-                </ul>
-            </span>
-        </li>
-        <li><strong>Custom Layout Tweaks:</strong>
-            <span class="desc">Modify the <strong>Tab radius</strong> slider to adjust the corner roundness of the editor tabs, aligning them with your preferred styling.</span>
-        </li>
-        <li><strong>Live Real-time Preview:</strong>
-            <span class="desc">A built-in interactive preview window displays a mock-up of the editor, including a Menu Bar (with File and Edit menus), active/inactive tabs containing code snippets, and a Status Bar. Any change made to colors, sizes, or fonts is rendered immediately in this preview before you commit to them.</span>
-        </li>
-        <li><strong>Theme Import and Export:</strong>
-            <span class="desc">Save new themes or delete user-defined themes. Use the <strong>Import</strong> and <strong>Export</strong> buttons to backup your custom configurations or share them across different machines and environments.</span>
-        </li>
-    </ul>
+            </section>
 
+            <!-- Footer -->
+            <footer class="footer">
+                <div>&copy; Multi Script Editor v6.4.0. Open-source cross-platform editor.</div>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- Interactive Navigation Script -->
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var btn = document.getElementById('themeToggleBtn');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                btn.innerText = '🌙 Dark Mode';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                btn.innerText = '☀️ Light Mode';
+            }
+        }
+
+        function filterDocs() {
+            var input = document.getElementById('searchInput');
+            var filter = input.value.toLowerCase();
+            var cards = document.getElementsByClassName('action-card');
+
+            for (var i = 0; i < cards.length; i++) {
+                var text = cards[i].innerText.toLowerCase();
+                if (text.indexOf(filter) > -1) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
+        // Mobile Sidebar Toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Scrollspy for active sidebar link
+        window.addEventListener('scroll', function() {
+            var sections = document.querySelectorAll('section, h3[id]');
+            var navLinks = document.querySelectorAll('.wy-menu a');
+            var fromTop = window.scrollY + 100;
+
+            sections.forEach(function(section) {
+                if (section.offsetTop <= fromTop && (section.offsetTop + section.offsetHeight) > fromTop) {
+                    var id = section.getAttribute('id');
+                    if (id) {
+                        navLinks.forEach(function(link) {
+                            link.parentElement.classList.remove('active');
+                            if (link.getAttribute('href') === '#' + id) {
+                                link.parentElement.classList.add('active');
+                                var breadcrumb = document.getElementById('breadcrumb-current');
+                                if (breadcrumb) breadcrumb.innerText = link.innerText;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

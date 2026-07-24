@@ -316,4 +316,86 @@ class MultiCursorManager:
     def _center_cursor_in_editor(self):
         self.editor.centerCursor()
 
+    def add_cursors_to_line_ends(self):
+        cursor = self.editor.textCursor()
+        if not cursor.hasSelection():
+            # If no selection, place cursor at the end of the current line
+            c = QTextCursor(cursor)
+            c.movePosition(QTextCursor.EndOfBlock)
+            self.clear()
+            self.multi_cursors = [c]
+            self.editor.setTextCursor(c)
+            self.editor.highlight_current_line()
+            return
 
+        start_pos = cursor.selectionStart()
+        end_pos = cursor.selectionEnd()
+
+        doc = self.editor.document()
+        start_block = doc.findBlock(start_pos)
+        end_block = doc.findBlock(end_pos)
+
+        # If selection ends at the start of a block, exclude it if it is not the only block
+        if end_pos == end_block.position() and end_block != start_block:
+            end_block = end_block.previous()
+
+        self.clear()
+
+        # Iterate through all blocks in the selection and add a cursor at the end of each block
+        block = start_block
+        while block.isValid():
+            c = QTextCursor(block)
+            c.movePosition(QTextCursor.EndOfBlock)
+            self.multi_cursors.append(c)
+            if block == end_block:
+                break
+            block = block.next()
+
+        self.deduplicate_and_sort_cursors()
+
+        if self.multi_cursors:
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = True
+            self.editor.setTextCursor(self.multi_cursors[-1])
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = False
+
+        self.editor.highlight_current_line()
+
+    def add_cursor_above(self):
+        if not self.multi_cursors:
+            cursor = self.editor.textCursor()
+            self.multi_cursors.append(QTextCursor(cursor))
+
+        top_cursor = min(self.multi_cursors, key=lambda c: c.blockNumber())
+        new_cursor = QTextCursor(top_cursor)
+        
+        moved = new_cursor.movePosition(QTextCursor.Up)
+
+        if moved and new_cursor.blockNumber() < top_cursor.blockNumber():
+            self.add_cursor_at(new_cursor)
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = True
+            self.editor.setTextCursor(new_cursor)
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = False
+            self.editor.highlight_current_line()
+
+    def add_cursor_below(self):
+        if not self.multi_cursors:
+            cursor = self.editor.textCursor()
+            self.multi_cursors.append(QTextCursor(cursor))
+
+        bottom_cursor = max(self.multi_cursors, key=lambda c: c.blockNumber())
+        new_cursor = QTextCursor(bottom_cursor)
+        
+        moved = new_cursor.movePosition(QTextCursor.Down)
+
+        if moved and new_cursor.blockNumber() > bottom_cursor.blockNumber():
+            self.add_cursor_at(new_cursor)
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = True
+            self.editor.setTextCursor(new_cursor)
+            if hasattr(self.editor, '_is_auto_selecting'):
+                self.editor._is_auto_selecting = False
+            self.editor.highlight_current_line()

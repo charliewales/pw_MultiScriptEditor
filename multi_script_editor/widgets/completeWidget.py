@@ -1,7 +1,6 @@
 from vendor.Qt.QtCore import Qt, QTimer
 from vendor.Qt.QtGui import QFont, QFontMetrics, QPixmap, QPainter, QColor, QIcon
 from vendor.Qt.QtWidgets import QListWidget, QListWidgetItem, QLabel, QApplication
-import os
 from . pythonSyntax import design
 import managers
 

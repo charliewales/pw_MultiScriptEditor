@@ -1,8 +1,7 @@
+import os
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument
+from vendor.Qt.QtGui import QFont, QFontMetrics, QTextCursor, QTextDocument, QColor
 from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
-
-
 from widgets.pythonSyntax import syntaxHighLighter
 from widgets.pythonSyntax import design
 from core.base_text_widget import BaseTextWidgetMixin
@@ -10,6 +9,8 @@ from core.base_text_widget import BaseTextWidgetMixin
 
 font_name = 'monospace'
 
+
+from core.settings_model import SettingsModel
 
 class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def __init__(self, theme='Multi Script Editor'):
@@ -31,7 +32,36 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         else:
             self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
+        self.setAcceptDrops(True)
         self.applyHightLighter(theme)
+        self.selectionChanged.connect(self._on_selection_changed)
+
+    def _on_selection_changed(self):
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            text = cursor.selectedText()
+            if text and '\u2029' not in text and text.strip():
+                self.highlight_word(text)
+            else:
+                self.highlight_word("")
+        else:
+            self.highlight_word("")
+
+    def highlight_word(self, word):
+        selections = []
+        data = SettingsModel().read_settings() or {}
+        if word and data.get('highlight_all_occurrences', True):
+            doc = self.document()
+            cursor = QTextCursor(doc)
+            while True:
+                cursor = doc.find(word, cursor)
+                if cursor.isNull():
+                    break
+                sel = QTextEdit.ExtraSelection()
+                sel.cursor = cursor
+                sel.format.setBackground(QColor(128, 128, 255, 180))
+                selections.append(sel)
+        self.setExtraSelections(selections)
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)
@@ -89,3 +119,32 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
         self.blockSignals(False)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            QPlainTextEdit.dragEnterEvent(self, event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            QPlainTextEdit.dragMoveEvent(self, event)
+
+    def dragLeaveEvent(self, event):
+        event.accept()
+        QPlainTextEdit.dragLeaveEvent(self, event)
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            main_window = self.window()
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if os.path.isfile(file_path):
+                        if hasattr(main_window, 'openRecentFile'):
+                            main_window.openRecentFile(file_path)
+            return
+        QPlainTextEdit.dropEvent(self, event)

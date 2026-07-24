@@ -33,7 +33,7 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         rules.append((definitions_pattern, 0, self.getStyle(self.colors['definition'], True)))
 
         # Extra
-        extras_pattern = r'\b(' + '|'.join(keywords.syntax['extras']) + r')\b'
+        extras_pattern = r'(?<!\.)\b(' + '|'.join(keywords.syntax['extras']) + r')\b'
         rules.append((extras_pattern, 0, self.getStyle(self.colors['extra'])))
 
         # Digits

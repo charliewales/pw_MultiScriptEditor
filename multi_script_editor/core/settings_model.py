@@ -153,7 +153,10 @@ class SettingsModel:
                     show_whitespace=True,
                     highlight_all_occurrences=True,
                     font={"family": "monospace", "pointSize": 12, "weight": 1, "italic": False},
-                    recent_files=[]
+                    recent_files=[],
+                    randomize_custom_at_startup=False,
+                    quick_tab_switching=True,
+                    auto_close_delimiters=True
                     )
 
 
@@ -236,3 +239,36 @@ class ThemesModel(SettingsModel):
     @staticmethod
     def get_defaults():
         return dict(colors={})
+
+
+class ClipboardModel(SettingsModel):
+    settings_filename = 'pw_scriptEditor_clipboard.json'
+    _cached_settings = None
+
+    def _get_settings_file_path(self):
+        return os.path.normpath(os.path.join(self._get_user_pref_folder(), self.settings_filename)).replace('\\','/')
+
+    def read_settings(self):
+        if ClipboardModel._cached_settings is not None:
+            return ClipboardModel._cached_settings
+        if os.path.exists(self.path) and os.path.isfile(self.path):
+            with codecs.open(self.path, "r", "utf-16") as stream:
+                try:
+                    ClipboardModel._cached_settings = json.load(stream)
+                    return ClipboardModel._cached_settings
+                except Exception:
+                    return {'history': []}
+        return {'history': []}
+
+    def write_settings(self, data):
+        ClipboardModel._cached_settings = data
+        folder = os.path.dirname(self.path)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+        with codecs.open(self.path, "w", "utf-16") as stream:
+            json.dump(data, stream, indent=4)
+
+    @staticmethod
+    def get_defaults():
+        return dict(history=[])
+

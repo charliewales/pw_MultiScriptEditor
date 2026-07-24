@@ -1,6 +1,5 @@
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent
+from vendor.Qt.QtCore import Qt, QSize, QEvent
 from vendor.Qt.QtWidgets import QDialog, QVBoxLayout, QLineEdit, QListWidget
-from vendor.Qt.QtGui import QFontMetrics
 
 class SearchPopupWidget(QDialog):
     def __init__(self, parent=None, center_widget=None, qss=None, font=None, colors=None, placeholder_text="Search..."):
@@ -74,7 +73,7 @@ class SearchPopupWidget(QDialog):
 
     def eventFilter(self, obj, event):
         if obj == self.search_le and event.type() == QEvent.KeyPress:
-            if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End, Qt.Key_Tab, Qt.Key_Backtab):
+            if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Home, Qt.Key_End, Qt.Key_Tab, Qt.Key_Backtab, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Escape):
                 self.keyPressEvent(event)
                 return True
             elif event.key() == Qt.Key_Delete and getattr(self, 'allow_delete', False):

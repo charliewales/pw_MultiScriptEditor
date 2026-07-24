@@ -73,6 +73,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd2.setEnabled(False)
         self.preview_twd.wordWrap(False)
         self.preview_twd2.wordWrap(False)
+
+        self.preview_twd.set_bookmarks([8])
+        self.preview_twd2.set_bookmarks([8])
         self.splitter.setSizes([280, 800])
         self.s = SettingsModel()
         self.t_model = ThemesModel()
@@ -196,7 +199,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 restore = settings.get('theme')
             if restore:
                 index = self.themeList_cbb.findText(restore)
-                self.themeList_cbb.setCurrentIndex(index)
+                if index >= 0:
+                    self.themeList_cbb.setCurrentIndex(index)
+                elif self.themeList_cbb.count():
+                    self.themeList_cbb.setCurrentIndex(0)
+            elif self.themeList_cbb.count():
+                self.themeList_cbb.setCurrentIndex(0)
         finally:
             self.themeList_cbb.blockSignals(False)
 
@@ -369,6 +377,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             for i in range(self.preview_tab_widget.count()):
                 w = self.preview_tab_widget.widget(i)
                 w.edit.applyPreviewStyle(colors)
+                if hasattr(w, 'lineNum'):
+                    w.lineNum.update()
 
             if colors.get('use_theme_font_on_menus', False) and font_data:
                 menu_font = QFont(font.family(), colors.get('menu_text_size', 10), font.weight(), font.italic())
@@ -392,7 +402,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
-                self.setStyleSheet(main_style)
+                if font.family():
+                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
+                if self.styleSheet() != main_style:
+                    self.setStyleSheet(main_style)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
@@ -601,9 +614,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'
-        name = QInputDialog.getText(self, 'Theme name', 'Enter Theme name', QLineEdit.Normal, text)
-        if name[1]:
-            name = name[0]
+        dlg = QInputDialog(self)
+        dlg.setWindowTitle('Theme name')
+        dlg.setLabelText('Enter Theme name')
+        dlg.setTextValue(text)
+        if hasattr(self.parent(), 'theme_font'):
+            dlg.setFont(self.parent().theme_font)
+            dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+        ok = dlg.exec_() == QInputDialog.Accepted
+        name = dlg.textValue().strip() if ok else ""
+        if name:
             if name in design.predefinedThemes:
                 name = name + ' (Custom)'
             theme_settings = self.get_theme_settings()
@@ -618,12 +638,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             else:
                 theme_settings['colors'] = {name: colors}
             self.save_theme_settings(theme_settings)
-            
+
             # If the main window caches colors we need to apply them there too
             settings = self.get_settings()
             if 'colors' in settings:
                 settings['colors'][name] = colors
-            
+
             self.fillUI(name)
             self.updateUI()
             if self.parent() and hasattr(self.parent(), 'applyTheme'):
@@ -636,6 +656,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def deleteTheme(self):
         text = self.themeList_cbb.currentText()
         if text:
+            curr_idx = self.themeList_cbb.currentIndex()
+            prev_theme = None
+            for idx in range(curr_idx - 1, -1, -1):
+                item_text = self.themeList_cbb.itemText(idx)
+                if item_text and item_text.strip():
+                    prev_theme = item_text
+                    break
+
             if self.yes_no_question('Remove current theme?'):
                 name = self.themeList_cbb.currentText()
                 theme_settings = self.get_theme_settings()
@@ -643,14 +671,21 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     if name in theme_settings['colors']:
                         del theme_settings['colors'][name]
                         self.save_theme_settings(theme_settings)
-                        
+
                         settings = self.get_settings()
                         if 'colors' in settings and name in settings['colors']:
                             del settings['colors'][name]
                             self.save_settings(settings)
-                            
-                        self.fillUI(False)
+
+                        self.fillUI(prev_theme)
                         self.updateUI()
+                        self.updateColors()
+                        if self.parent() and hasattr(self.parent(), 'applyTheme'):
+                            new_name = self.themeList_cbb.currentText()
+                            if new_name:
+                                self.parent().applyTheme(new_name)
+                        if self.parent() and hasattr(self.parent(), 'fillThemeMenu'):
+                            self.parent().fillThemeMenu()
 
     def exportTheme(self):
         name = self.themeList_cbb.currentText()
@@ -664,7 +699,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 with open(path, 'w') as f:
                     json.dump(colors, f, indent=4)
             except Exception as e:
-                QMessageBox.critical(self, "Error", "Could not export theme:\n" + str(e))
+                msg_box = QMessageBox(self)
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Error")
+                msg_box.setText("Could not export theme:\n" + str(e))
+                if hasattr(self.parent(), 'theme_font'):
+                    msg_box.setFont(self.parent().theme_font)
+                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                    for btn in msg_box.buttons():
+                        btn.setFont(self.parent().theme_font)
+                msg_box.exec_()
 
     def importTheme(self):
         path, _ = QFileDialog.getOpenFileName(self, "Import Theme", "", "JSON Files (*.json)")
@@ -677,16 +721,24 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 base_name = os.path.basename(path)
                 name, _ = os.path.splitext(base_name)
 
-                name_input = QInputDialog.getText(self, 'Theme name', 'Enter Theme name', QLineEdit.Normal, name)
-                if name_input[1]:
-                    name = name_input[0]
+                dlg = QInputDialog(self)
+                dlg.setWindowTitle('Theme name')
+                dlg.setLabelText('Enter Theme name')
+                dlg.setTextValue(name)
+                if hasattr(self.parent(), 'theme_font'):
+                    dlg.setFont(self.parent().theme_font)
+                    dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                ok = dlg.exec_() == QInputDialog.Accepted
+                name_input = dlg.textValue().strip() if ok else ""
+                if name_input:
+                    name = name_input
                     if name in design.predefinedThemes:
                         name = name + ' (Custom)'
 
                     theme_settings = self.get_theme_settings()
                     if 'colors' in theme_settings:
                         if name in theme_settings['colors']:
-                            if not self.yes_no_question('Replace exists?'):
+                            if not self.yes_no_question('Replace existing?'):
                                 return
 
                     if 'colors' in theme_settings:
@@ -695,18 +747,27 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                         theme_settings['colors'] = {name: colors}
 
                     self.save_theme_settings(theme_settings)
-                    
+
                     settings = self.get_settings()
                     if 'colors' in settings:
                         settings['colors'][name] = colors
-                        
+
                     self.fillUI(name)
                     self.updateUI()
                     self.updateColors()
                     if self.parent() and hasattr(self.parent(), 'fillThemeMenu'):
                         self.parent().fillThemeMenu()
             except Exception as e:
-                QMessageBox.critical(self, "Error", "Could not import theme:\n" + str(e))
+                msg_box = QMessageBox(self)
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Error")
+                msg_box.setText("Could not import theme:\n" + str(e))
+                if hasattr(self.parent(), 'theme_font'):
+                    msg_box.setFont(self.parent().theme_font)
+                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                    for btn in msg_box.buttons():
+                        btn.setFont(self.parent().theme_font)
+                msg_box.exec_()
 
     def updateUI(self):
         if not self.themeList_cbb.count():
@@ -763,6 +824,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
             if hasattr(self.parent(), 'theme_font'):
                 msg_box.setFont(self.parent().theme_font)
+                msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                for btn in msg_box.buttons():
+                    btn.setFont(self.parent().theme_font)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
             cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
@@ -793,8 +857,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def yes_no_question(self, question):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
+        msg_box.setWindowTitle('?')
         if hasattr(self.parent(), 'theme_font'):
             msg_box.setFont(self.parent().theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.parent().theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
         msg_box.exec_()

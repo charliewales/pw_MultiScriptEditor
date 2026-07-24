@@ -1,5 +1,8 @@
-from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase
-from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit
+import os
+import webbrowser
+from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase, QIcon
+from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QAction
+from icons import icons
 
 class BaseTextWidgetMixin:
     """
@@ -111,11 +114,28 @@ class BaseTextWidgetMixin:
             menu.setFont(main_win.menubar.font())
             menu.setStyleSheet(main_win.menubar.styleSheet())
 
-        # Check if we are editing an HTML file to add "Open in browser"
-        import os
-        import webbrowser
-        from vendor.Qt.QtWidgets import QAction
+        # Selection to tab action
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
+            sel_to_tab_action = QAction('Selection to tab', self)
+            
+            def create_selection_tab():
+                import datetime
+                time_str = datetime.datetime.now().strftime("%H:%M:%S")
+                tab_name = f"selection {time_str}"
+                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
+                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
+            
+            sel_to_tab_action.triggered.connect(create_selection_tab)
+            if menu.actions():
+                first_action = menu.actions()[0]
+                menu.insertAction(first_action, sel_to_tab_action)
+                menu.insertSeparator(first_action)
+            else:
+                menu.addAction(sel_to_tab_action)
 
+        # Check if we are editing an HTML file to add "Open in browser"
         file_path = None
         curr = self
         while curr:
@@ -132,9 +152,7 @@ class BaseTextWidgetMixin:
         if file_path and os.path.exists(file_path):
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
-                from vendor.Qt.QtGui import QIcon
-                from icons import icons
-                open_action = QAction('Open in browser    \tCtrl+B', self)
+                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
                 open_action.setIcon(QIcon(icons['open_in_browser']))
                 open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():
@@ -143,6 +161,25 @@ class BaseTextWidgetMixin:
                     menu.insertSeparator(first_action)
                 else:
                     menu.addAction(open_action)
+            elif ext.lower() == '.md':
+                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
+                if 'docs' in icons:
+                    preview_action.setIcon(QIcon(icons['docs']))
+                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
+                if menu.actions():
+                    first_action = menu.actions()[0]
+                    menu.insertAction(first_action, preview_action)
+                    menu.insertSeparator(first_action)
+                else:
+                    menu.addAction(preview_action)
+        if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
+            menu.addSeparator()
+            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            if 'menu' in icons:
+                show_menus_action.setIcon(QIcon(icons['menu']))
+            if hasattr(main_win, 'toggleMenus_act'):
+                show_menus_action.triggered.connect(main_win.toggleMenus_act.trigger)
+            menu.addAction(show_menus_action)
 
         menu.exec_(event.globalPos())
         del menu

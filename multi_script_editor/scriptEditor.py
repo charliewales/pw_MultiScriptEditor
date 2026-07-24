@@ -11,7 +11,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.3.0"
+mse_version = "6.4.0"
 
 root_path = os.path.dirname(__file__)
 vendor_path = os.path.join(root_path, 'vendor')
@@ -26,10 +26,10 @@ import vendor.Qt
 from icons import *
 from vendor.help import get_help
 
-from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
+from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal, QSize
 from vendor.Qt.QtGui import QFont, QIcon, QKeySequence, QTextCursor, QColor, QPalette
-from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip
-from widgets import about, findWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
+from vendor.Qt.QtWidgets import QAction, QApplication, QFileDialog, QFontDialog, QMainWindow, QShortcut, QStyle, QSplitter, QListWidget, QLabel, QWidget, QVBoxLayout, QInputDialog, QMessageBox, QMenu, QLineEdit, QAbstractItemView, QToolTip, QToolBar
+from widgets import about, findWidget, gotoLineWidget, outputWidget, shortcuts, tabWidget, themeEditor, symbolWidget, snippetWidget
 from widgets import scriptEditor_UIs as ui
 from core.outline_parser import OutlineParser
 from widgets.pythonSyntax import design
@@ -89,8 +89,32 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_ly.addWidget(self.outline_filter)
         self.outline_ly.addWidget(self.outline_list)
 
+        # Create container for editor toolbar and tab widget
+        self.editor_container = QWidget()
+        self.editor_container.setObjectName("editorContainer")
+        self.editor_ly = QVBoxLayout(self.editor_container)
+        self.editor_ly.setContentsMargins(0, 0, 0, 0)
+        self.editor_ly.setSpacing(0)
+
+        # Create the editor toolbar
+        self.editor_toolbar = QToolBar(self.editor_container)
+        self.editor_toolbar.setObjectName("editorToolBar")
+        self.editor_toolbar.setMovable(False)
+        self.editor_toolbar.setFloatable(False)
+        self.editor_toolbar.setIconSize(QSize(24, 24))
+
+        self.editor_ly.addWidget(self.editor_toolbar)
+        self.editor_ly.addWidget(self.tab)
+
+        # Hamburger menu button action for when menu is hidden
+        self.menu_toggle_act = QAction("Show menus", self)
+        self.menu_toggle_act.setObjectName("menu_toggle_act")
+        self.menu_toggle_act.setIcon(QIcon(icons.get('menu', '')))
+        self.menu_toggle_act.setToolTip("Show Menus")
+        self.menu_toggle_act.triggered.connect(lambda: self.toggleMenuBar(True))
+
         self.horizontal_splitter.addWidget(self.outline_panel)
-        self.horizontal_splitter.addWidget(self.tab)
+        self.horizontal_splitter.addWidget(self.editor_container)
         self.in_ly.addWidget(self.horizontal_splitter)
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)
@@ -131,6 +155,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # start
         self._exec_manager = ExecutionManager()
+        self.appContextMenu()
         self._presenter = MainPresenter(self, self._exec_manager)
         self.fillSessionsMenu()
         self.fillSnippetsMenu()
@@ -139,7 +164,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             QTimer.singleShot(100, lambda: self.tab.widget(self.tab.currentIndex()).edit.setFocus() if self.tab.widget(self.tab.currentIndex()) else None)
         self.fillThemeMenu()
         self.setWindowStyle()
-        self.appContextMenu()
         self.addArgs()
         self.updateStatusBarInfo()
 
@@ -309,9 +333,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.out.ensureCursorVisible()
 
     def showEvent(self, event):
+        super(scriptEditorClass, self).showEvent(event)
         data = self._current_settings
         if not data:
             self.saveSettings()
+        # Restore scroll positions of active tab once the window is shown
+        current_widget = self.tab.currentWidget()
+        if current_widget and hasattr(current_widget, 'edit'):
+            edit = current_widget.edit
+            if hasattr(edit, 'needs_loading_scroll_v'):
+                scroll_v = edit.needs_loading_scroll_v
+                if hasattr(edit, 'needs_loading_scroll_v'):
+                    delattr(edit, 'needs_loading_scroll_v')
+                if scroll_v > 0:
+                    edit.verticalScrollBar().setValue(scroll_v)
+                    QTimer.singleShot(50, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
+                    QTimer.singleShot(150, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
@@ -393,6 +430,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_action.setShortcut('Ctrl+Shift+T')
         edit_action.setStatusTip("Edit the current color theme")
         self.theme_menu.addAction(edit_action)
+
+        # Randomize custom theme at startup action
+        randomize_act = QAction('Randomize custom at startup', self, triggered=self.toggleRandomizeCustomAtStartup)
+        randomize_act.setCheckable(True)
+        randomize_act.setChecked(self._current_settings.get('randomize_custom_at_startup', False))
+        randomize_act.setStatusTip("If active, a random theme is chosen from the custom themes at startup")
+        self.theme_menu.addAction(randomize_act)
+        self.randomize_custom_act = randomize_act
+
         self.theme_menu.addSeparator()
         current_theme = self._current_settings.get('theme', 'Multi Script Editor')
         for t in sorted(design.predefinedThemes.keys()):
@@ -416,6 +462,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     act.setStatusTip(f"Apply theme: {t}")
                     self.theme_menu.addAction(act)
 
+    def getCustomThemes(self):
+        # Retrieve all custom themes created by the user
+        theme_settings = ThemesModel().read_settings()
+        custom_themes = []
+        if theme_settings.get('colors'):
+            for t in theme_settings.get('colors').keys():
+                if t not in design.predefinedThemes:
+                    custom_themes.append(t)
+        return sorted(custom_themes)
+
+    def toggleRandomizeCustomAtStartup(self, checked):
+        # Update settings and save when the randomize custom option is toggled
+        self._current_settings['randomize_custom_at_startup'] = checked
+        self.saveSettings()
+
     def change_global_font_size(self, increase):
         theme_name = self._current_settings.get('theme', 'Multi Script Editor')
         delta = 1 if increase else -1
@@ -434,6 +495,26 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._current_settings['font'] = disk_font.copy()
 
         self.applyTheme(theme_name)
+
+    def fold_all(self):
+        editor = self.tab.current()
+        if editor:
+            editor.fold_all()
+
+    def unfold_all(self):
+        editor = self.tab.current()
+        if editor:
+            editor.unfold_all()
+
+    def fold_current(self):
+        editor = self.tab.current()
+        if editor:
+            editor.fold_current()
+
+    def unfold_current(self):
+        editor = self.tab.current()
+        if editor:
+            editor.unfold_current()
 
     def applyTheme(self, name):
         qss = design.editorStyle(name)
@@ -465,6 +546,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         for act in self.theme_menu.actions():
             if act.isCheckable():
+                if hasattr(self, 'randomize_custom_act') and act == self.randomize_custom_act:
+                    continue
                 act.setChecked(act.text() == name)
 
         for i in range(self.tab.count()):
@@ -640,6 +723,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if hasattr(self, 'theme_font'):
             msg_box.setFont(self.theme_font)
+            msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+            for btn in msg_box.buttons():
+                btn.setFont(self.theme_font)
 
         if hasattr(msg_box, "exec"):
             return msg_box.exec()
@@ -673,8 +759,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         settings = self._presenter.settings_model.load_settings()
         return settings.get('shortcuts', {}).get(action, None)
 
-    def loadSession(self):
-        sessions = self._presenter.get_session_tabs()
+    def loadSession(self, sessions=None):
+        if sessions is None:
+            sessions = self._presenter.get_session_tabs()
         self.tab.clear()
         active_index = -1
         if sessions:
@@ -683,7 +770,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 text = s.get('text')
                 file_path = s.get('file_path')
                 is_active = s.get('active', False)
+
+                if file_path and not os.path.exists(file_path):
+                    self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
+
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
+
+                # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
+                w.needs_loading_bookmarks = s.get('bookmarks', "")
+                w.needs_loading_line = s.get('line', 1)
+                w.needs_loading_column = s.get('column', 0)
+                w.needs_loading_scroll_v = s.get('scroll_v', 0)
+                w.needs_loading_folds = s.get('folds', [])
 
                 if is_active:
                     active_index = i
@@ -693,6 +791,32 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         w.addText(text)
                         w.document().clearUndoRedoStacks()
                         w.document().setModified(False)
+                        if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
+                            if hasattr(w, 'set_folded_blocks'):
+                                w.set_folded_blocks(w.needs_loading_folds)
+                            delattr(w, 'needs_loading_folds')
+                        if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
+                            w.set_bookmarks(w.needs_loading_bookmarks)
+                            delattr(w, 'needs_loading_bookmarks')
+                        # Jump to the saved line and column!
+                        if hasattr(w, 'needs_loading_line'):
+                            line_num = w.needs_loading_line
+                            column_num = getattr(w, 'needs_loading_column', 0)
+                            if line_num > 1 or column_num > 0:
+                                block = w.document().findBlockByNumber(line_num - 1)
+                                if block.isValid():
+                                    cursor = w.textCursor()
+                                    col = min(column_num, max(0, block.length() - 1))
+                                    cursor.setPosition(block.position() + col)
+                                    w.setTextCursor(cursor)
+                                    if hasattr(w, 'highlight_current_line'):
+                                        w.highlight_current_line()
+                    if hasattr(w, 'needs_loading_line'):
+                        delattr(w, 'needs_loading_line')
+                    if hasattr(w, 'needs_loading_column'):
+                        delattr(w, 'needs_loading_column')
+                    if hasattr(w, 'needs_loading_folds'):
+                        delattr(w, 'needs_loading_folds')
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
@@ -710,9 +834,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self.tab.count() == 0:
             self.tab.addNewTab()
 
-    def saveSession(self, verbos=False):
-        if not hasattr(self, '_presenter'):
-            return
+    def _get_tabs_data(self, save_full_text=False):
         tabs = []
         index = self.tab.currentIndex()
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
@@ -722,13 +844,55 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 continue
             name = self.tab.tabText(item)
             text = self.tab.getTabText(item)
-            size = widget.edit.getFontSize()
-
+            size = 12
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'getFontSize'):
+                size = widget.edit.getFontSize()
             size = max(1, size - zoom_delta)
 
             file_path = getattr(widget, 'file_path', None)
-            tab = {'name': name, 'text': text if not file_path else "", 'active': item == index, 'size': size, 'file_path': file_path}
+            bookmarks = []
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_bookmarks'):
+                bookmarks = widget.edit.get_bookmarks()
+
+            line = 1
+            column = 0
+            scroll_v = 0
+            if hasattr(widget, 'edit'):
+                if hasattr(widget.edit, 'needs_loading_line'):
+                    line = widget.edit.needs_loading_line
+                    column = getattr(widget.edit, 'needs_loading_column', 0)
+                elif hasattr(widget.edit, 'textCursor'):
+                    line = widget.edit.textCursor().blockNumber() + 1
+                    column = widget.edit.textCursor().columnNumber()
+
+                if hasattr(widget.edit, 'needs_loading_scroll_v'):
+                    scroll_v = widget.edit.needs_loading_scroll_v
+                else:
+                    scroll_v = widget.edit.verticalScrollBar().value()
+
+            folds = []
+            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_folded_blocks'):
+                folds = widget.edit.get_folded_blocks()
+
+            tab = {
+                'name': name,
+                'text': text if (save_full_text or not file_path) else "",
+                'active': item == index,
+                'size': size,
+                'file_path': file_path,
+                'bookmarks': bookmarks,
+                'line': line,
+                'column': column,
+                'scroll_v': scroll_v,
+                'folds': folds
+            }
             tabs.append(tab)
+        return tabs
+
+    def saveSession(self, verbos=False):
+        if not hasattr(self, '_presenter'):
+            return
+        tabs = self._get_tabs_data(save_full_text=False)
         path = self._presenter.save_session(tabs)
         if verbos:
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
@@ -818,12 +982,34 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index < 0:
             return
 
-        # Get maximum line count
         edit_widget = self.tab.widget(index).edit
         max_lines = edit_widget.document().blockCount()
 
-        line_num, ok = QInputDialog.getInt(self, "Go to line", "Enter line number:", 1, 1, max_lines)
-        if ok:
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                font = QFont(edit_widget.font())
+        else:
+            font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        highlighter_class = None
+        if hasattr(edit_widget, 'hgl'):
+            highlighter_class = edit_widget.hgl.__class__
+
+        self.goto_line_widget = gotoLineWidget.GotoLineWidget(edit_widget, max_lines, self, edit_widget, qss=qss, font=font, colors=colors, highlighter_class=highlighter_class)
+
+        def _jump_to_line(line_num):
             block = edit_widget.document().findBlockByNumber(line_num - 1)
             if block.isValid():
                 cursor = edit_widget.textCursor()
@@ -831,6 +1017,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 edit_widget.setTextCursor(cursor)
                 edit_widget.centerCursor()
                 edit_widget.setFocus()
+
+        self.goto_line_widget.lineSelected.connect(_jump_to_line)
+        self.goto_line_widget.show()
+        self.goto_line_widget.search_le.setFocus()
 
     def goToSymbol(self):
         index = self.tab.currentIndex()
@@ -1001,8 +1191,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 name += ' - ' + os.path.dirname(path)
             symbols.append({'name': name, 'line': i, 'indent': 0})
 
+        def on_tab_selected(index):
+            if 0 <= index < self.tab.count():
+                self.tab.setCurrentIndex(index)
+                current_widget = self.tab.widget(index)
+                if current_widget and hasattr(current_widget, 'edit'):
+                    current_widget.edit.setFocus()
+
         self._show_generic_symbol_widget(
-            symbols, self.tab.switch_to_tab_index,
+            symbols, on_tab_selected,
             hide_search=True,
             auto_accept_on_ctrl_release=True
         )
@@ -1033,9 +1230,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     f.write(text)
                 self.addRecentFile(path[0])
                 self.tab.addNewTab(os.path.basename(path[0]), text, file_path=path[0])
-                self.out.showMessage('Saved to: %s' % path[0])
+                self.out.showMessage('Saved to: %s' % os.path.normpath(path[0]))
             except Exception as e:
-                self.out.showMessage('Error saving file: %s (%s)' % (path[0], str(e)))
+                self.out.showMessage('Error saving file: %s (%s)' % (os.path.normpath(path[0]), str(e)))
 
 
     def saveScript(self):
@@ -1053,10 +1250,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             try:
                 with open(cont.file_path, 'w') as f:
                     f.write(text)
-                self.out.showMessage('Saved to: %s' % cont.file_path)
+                self.out.showMessage('Saved to: %s' % os.path.normpath(cont.file_path))
                 cont.edit.document().setModified(False)
             except Exception as e:
-                self.out.showMessage('Error saving file: %s (%s)' % (cont.file_path, str(e)))
+                self.out.showMessage('Error saving file: %s (%s)' % (os.path.normpath(cont.file_path), str(e)))
             return
 
         # Otherwise do Save As
@@ -1073,12 +1270,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     cont.file_path = path[0]
                 self.tab.setTabText(index, os.path.basename(path[0]))
                 self.tab.setTabToolTip(index, os.path.normpath(path[0]))
-                self.out.showMessage('Saved to: %s' % path[0])
+                self.out.showMessage('Saved to: %s' % os.path.normpath(path[0]))
                 cont.edit.document().setModified(False)
                 if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
                     cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
             except:
-                self.out.showMessage('Error save file; %s' % path[0])
+                self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
     def loadScript(self):
         d = os.getenv('HOME')
@@ -1215,146 +1412,197 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(self, 's') and hasattr(self.s, 'write_settings'):
             self.s.write_settings(settings)
         self.loadSettings()
-
     def loadSettings(self):
-        data = self._current_settings
+        self._loading_settings = True
+        try:
+            data = self._current_settings
 
-        always_ontop = data.get('always_ontop', False)
-        center = data.get('center', None)
-        clear_exec = data.get('clear_execute', None)
-        echo_exec = data.get('echo_execute', None)
-        geo = data.get('geometry', None)
-        out_wrap = data.get('out_wrap', None)
-        outFontSize = data.get('outFontSize', 10)
-        splitter = data.get('splitter', [600, 400])
-        horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
-        wrap = data.get('wrap', None)
-        show_whitespace = data.get('show_whitespace', False)
-        font = data.get('font', False)
-        autocomplete = data.get('autocomplete', True)
-        fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
-        show_docstrings = data.get('show_docstrings', True)
-        trim_auto_whitespace = data.get('trim_auto_whitespace', False)
+            always_ontop = data.get('always_ontop', False)
+            center = data.get('center', None)
+            clear_exec = data.get('clear_execute', None)
+            echo_exec = data.get('echo_execute', None)
+            geo = data.get('geometry', None)
+            is_max = data.get('maximized', False)
+            out_wrap = data.get('out_wrap', None)
+            outFontSize = data.get('outFontSize', 10)
+            splitter = data.get('splitter', [400, 600])
+            horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
+            wrap = data.get('wrap', None)
+            show_whitespace = data.get('show_whitespace', False)
+            font = data.get('font', False)
+            autocomplete = data.get('autocomplete', True)
+            fuzzy_autocomplete = data.get('fuzzy_autocomplete', True)
+            show_docstrings = data.get('show_docstrings', True)
+            trim_auto_whitespace = data.get('trim_auto_whitespace', False)
 
-        if geo:
-            self.move(geo[0], geo[1])
-            self.resize(geo[2], geo[3])
-        else:
-            self.resize(1080, 1080)
-        if center:
-            x, y = center
-            geo = self.geometry()
-            geo.moveCenter(QPoint(x, y))
-            self.setGeometry(geo)
-        if splitter:
-            self.splitter.setSizes(splitter)
-        if horizontal_splitter_sizes:
-            self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
-        if out_wrap is not None:
-            self.out_wordWrap_act.setChecked(out_wrap)
-            self.out.wordWrap(out_wrap)
-        if wrap is not None:
-            self.wordWrap_act.setChecked(wrap)
-            self.tab.wordWrap(wrap)
-        if clear_exec:
-            self.clear_exec_act.setChecked(clear_exec)
-            self.show_clear_exec()
-        if echo_exec:
-            self.print_command_act.setChecked(echo_exec)
-        self.always_ontop_act.setChecked(always_ontop)
-        current_flags = self.windowFlags()
-        new_flags = current_flags
+            if geo:
+                self.move(geo[0], geo[1])
+                self.resize(geo[2], geo[3])
+            else:
+                self.resize(1080, 1080)
 
-        if always_ontop:
-            new_flags |= Qt.WindowStaysOnTopHint
-        else:
-            new_flags &= ~Qt.WindowStaysOnTopHint
+            if is_max:
+                self.showMaximized()
 
-        # PySide6 workaround to keep window controls enabled
-        new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
+            if center:
+                x, y = center
+                geo = self.geometry()
+                geo.moveCenter(QPoint(x, y))
+                self.setGeometry(geo)
 
-        if current_flags != new_flags:
-            self.setWindowFlags(new_flags)
-            if self.isVisible():
-                self.show()
-        if show_whitespace is not None:
-            self.tab.render_whitespace(show_whitespace)
-            self.out.render_whitespace(show_whitespace)
-            self.whitespace_act.setChecked(show_whitespace)
-        if font:
-            self.tab.set_start_font(font)
-            self.out.set_start_font(font)
+            output_bottom = data.get('output_bottom', False)
+            self.outputBottom_act.setChecked(output_bottom)
+            self.toggleOutputBottom(output_bottom)
 
-            outline_font = QFont(self.out.font())
-            if outline_font.pointSize() > 0:
-                outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
-            elif outline_font.pixelSize() > 0:
-                outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
-            self.outline_list.setFont(outline_font)
-            self.current_outline_font = outline_font
-            self.outline_filter.setFont(outline_font)
-            for i in range(self.outline_list.count()):
-                self.outline_list.item(i).setFont(outline_font)
-        self.autocomplete_act.setChecked(autocomplete)
-        self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
-        self.show_docstrings_act.setChecked(show_docstrings)
-        self.trimAutoWhitespace_act.setChecked(trim_auto_whitespace)
+            if splitter:
+                if all(s > 0 for s in splitter):
+                    self._last_splitter_sizes = splitter
+                    self.splitter.setSizes(splitter)
+                else:
+                    default_sizes = self.getDefaultSplitterSizes()
+                    self._last_splitter_sizes = default_sizes
+                    self.splitter.setSizes(default_sizes)
+            else:
+                default_sizes = self.getDefaultSplitterSizes()
+                self._last_splitter_sizes = default_sizes
+                self.splitter.setSizes(default_sizes)
 
-        f = self.out.font()
-        f.setPointSize(outFontSize)
-        self.out.setFont(f)
+            if horizontal_splitter_sizes:
+                self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
+            if out_wrap is not None:
+                self.out_wordWrap_act.setChecked(out_wrap)
+                self.out.wordWrap(out_wrap)
+            if wrap is not None:
+                self.wordWrap_act.setChecked(wrap)
+                self.tab.wordWrap(wrap)
+            if clear_exec:
+                self.clear_exec_act.setChecked(clear_exec)
+                self.show_clear_exec()
+            if echo_exec:
+                self.print_command_act.setChecked(echo_exec)
+            self.always_ontop_act.setChecked(always_ontop)
+            current_flags = self.windowFlags()
+            new_flags = current_flags
 
-        show_outline = data.get('show_outline', False)
-        self.showOutline_act.setChecked(show_outline)
-        self.toggleOutline(show_outline)
+            if always_ontop:
+                new_flags |= Qt.WindowStaysOnTopHint
+            else:
+                new_flags &= ~Qt.WindowStaysOnTopHint
 
-        show_outline_button = data.get('show_outline_button', True)
-        self.showOutlineButton_act.setChecked(show_outline_button)
-        self.toggleOutlineButton(show_outline_button)
+            # PySide6 workaround to keep window controls enabled
+            new_flags |= Qt.WindowCloseButtonHint | Qt.WindowMinMaxButtonsHint
 
-        show_output = data.get('show_output', True)
-        self.showOutput_act.setChecked(show_output)
-        self.toggleOutput(show_output)
+            if current_flags != new_flags:
+                self.setWindowFlags(new_flags)
+                if self.isVisible():
+                    self.show()
+            if show_whitespace is not None:
+                self.tab.render_whitespace(show_whitespace)
+                self.out.render_whitespace(show_whitespace)
+                self.whitespace_act.setChecked(show_whitespace)
+            if font:
+                self.tab.set_start_font(font)
+                self.out.set_start_font(font)
 
-        syntax_check = data.get('syntax_check', True)
-        self.syntaxCheck_act.setChecked(syntax_check)
-        self.toggleSyntaxCheck(syntax_check)
+                outline_font = QFont(self.out.font())
+                if outline_font.pointSize() > 0:
+                    outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
+                elif outline_font.pixelSize() > 0:
+                    outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
+                self.outline_list.setFont(outline_font)
+                self.current_outline_font = outline_font
+                self.outline_filter.setFont(outline_font)
+                for i in range(self.outline_list.count()):
+                    self.outline_list.item(i).setFont(outline_font)
+            self.autocomplete_act.setChecked(autocomplete)
+            self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
+            self.show_docstrings_act.setChecked(show_docstrings)
+            self.trimAutoWhitespace_act.setChecked(trim_auto_whitespace)
 
-        highlight_all = data.get('highlight_all_occurrences', True)
-        self.highlightAllOccurrences_act.setChecked(highlight_all)
+            f = self.out.font()
+            f.setPointSize(outFontSize)
+            self.out.setFont(f)
 
-        occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
-        self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
+            show_outline = data.get('show_outline', False)
+            self.showOutline_act.setChecked(show_outline)
+            self.toggleOutline(show_outline)
 
-        prefer_single_quotes = data.get('prefer_single_quotes', False)
-        self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
+            show_outline_button = data.get('show_outline_button', True)
+            self.showOutlineButton_act.setChecked(show_outline_button)
+            self.toggleOutlineButton(show_outline_button)
 
-        output_bottom = data.get('output_bottom', False)
-        self.outputBottom_act.setChecked(output_bottom)
-        self.toggleOutputBottom(output_bottom)
+            show_output = data.get('show_output', True)
+            self.showOutput_act.setChecked(show_output)
+            self.toggleOutput(show_output)
 
-        quick_tab_switching = data.get('quick_tab_switching', True)
-        self.quickTabSwitching_act.setChecked(quick_tab_switching)
+            show_menus = data.get('show_menus', True)
+            self.toggleMenus_act.setChecked(show_menus)
+            self.toggleMenuBar(show_menus)
 
-        auto_close_delimiters = data.get('auto_close_delimiters', True)
-        self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
+            show_toolbar = data.get('show_toolbar', True)
+            self.toggleEditorToolbar_act.blockSignals(True)
+            self.toggleEditorToolbar_act.setChecked(show_toolbar)
+            self.toggleEditorToolbar_act.blockSignals(False)
+            self.editor_toolbar.setVisible(show_toolbar)
 
-        self.updateRecentFilesMenu()
+            syntax_check = data.get('syntax_check', True)
+            self.syntaxCheck_act.setChecked(syntax_check)
+            self.toggleSyntaxCheck(syntax_check)
 
-        theme = data.get('theme', 'Multi Script Editor')
-        if theme == 'default':
-            theme = 'Multi Script Editor'
+            highlight_all = data.get('highlight_all_occurrences', True)
+            self.highlightAllOccurrences_act.setChecked(highlight_all)
+
+            occurrences_case_sensitive = data.get('occurrences_case_sensitive', False)
+            self.occurrencesCaseSensitive_act.setChecked(occurrences_case_sensitive)
+
+            prefer_single_quotes = data.get('prefer_single_quotes', False)
+            self.preferSingleQuotes_act.setChecked(prefer_single_quotes)
+
+            quick_tab_switching = data.get('quick_tab_switching', True)
+            self.quickTabSwitching_act.setChecked(quick_tab_switching)
+
+            show_status_tips = data.get('show_status_tips', True)
+            self.showStatusTips_act.setChecked(show_status_tips)
+            self.toggleStatusTips(show_status_tips)
+
+            auto_close_delimiters = data.get('auto_close_delimiters', True)
+            self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
+
+            if hasattr(self, 'randomize_custom_act'):
+                self.randomize_custom_act.setChecked(data.get('randomize_custom_at_startup', False))
+
+            self.updateRecentFilesMenu()
+
+            theme = data.get('theme', 'Multi Script Editor')
+            if data.get('randomize_custom_at_startup', False) and not getattr(self, '_theme_randomized', False):
+                self._theme_randomized = True
+                custom_themes = self.getCustomThemes()
+                if custom_themes:
+                    import random
+                    theme = random.choice(custom_themes)
+                    data['theme'] = theme
+            if theme == 'default':
+                theme = 'Multi Script Editor'
             self._current_settings['theme'] = theme
-        self.applyTheme(theme)
+            self.applyTheme(theme)
+        finally:
+            self._loading_settings = False
 
     def saveSettings(self):
+        if getattr(self, '_loading_settings', False):
+            return
         settings = self._current_settings
-        geo = self.geometry()
-        sGeo = [geo.x(), geo.y(), geo.width(), geo.height()]
+        geo = self.normalGeometry() if hasattr(self, 'normalGeometry') else self.geometry()
+        frame_offset_x = self.geometry().x() - self.x()
+        frame_offset_y = self.geometry().y() - self.y()
+        sGeo = [geo.x() - frame_offset_x, geo.y() - frame_offset_y, geo.width(), geo.height()]
         center = [geo.center().x(), geo.center().y()]
+        is_max = self.isMaximized()
         out_pt = self.out.getFontSize()
         size = max(8, out_pt)
         split_sizes = self.splitter.sizes()
+        if not self.showOutput_act.isChecked() or any(s == 0 for s in split_sizes):
+            split_sizes = getattr(self, '_last_splitter_sizes', self.getDefaultSplitterSizes())
         horizontal_split_sizes = self.horizontal_splitter.sizes()
         if horizontal_split_sizes[0] == 0:
             horizontal_split_sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
@@ -1364,20 +1612,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         word_wrap = self.wordWrap_act.isChecked()
         always_ontop = self.always_ontop_act.isChecked()
         show_whitespace = self.whitespace_act.isChecked()
+
         show_outline = self.showOutline_act.isChecked()
         show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
+        show_menus = self.toggleMenus_act.isChecked()
+        show_toolbar = self.toggleEditorToolbar_act.isChecked()
         syntax_check = self.syntaxCheck_act.isChecked()
         highlight_all = self.highlightAllOccurrences_act.isChecked()
         occurrences_case_sensitive = self.occurrencesCaseSensitive_act.isChecked()
         prefer_single_quotes = self.preferSingleQuotes_act.isChecked()
         output_bottom = self.outputBottom_act.isChecked()
         quick_tab_switching = self.quickTabSwitching_act.isChecked()
+        show_status_tips = self.showStatusTips_act.isChecked()
         auto_close_delimiters = self.autoCloseDelimiters_act.isChecked()
         autocomplete = self.autocomplete_act.isChecked()
         fuzzy_autocomplete = self.fuzzy_autocomplete_act.isChecked()
         show_docstrings = self.show_docstrings_act.isChecked()
         trim_auto_whitespace = self.trimAutoWhitespace_act.isChecked()
+        randomize_custom = self.randomize_custom_act.isChecked() if hasattr(self, 'randomize_custom_act') else False
 
         current_theme_name = settings.get('theme', 'Multi Script Editor')
         theme_colors = design.getColors(current_theme_name)
@@ -1403,6 +1656,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         data = dict(
             geometry=sGeo,
+            maximized=is_max,
             center=center,
             outFontSize=size,
             splitter=split_sizes,
@@ -1417,17 +1671,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_outline=show_outline,
             show_outline_button=show_outline_button,
             show_output=show_output,
+            show_menus=show_menus,
+            show_toolbar=show_toolbar,
             syntax_check=syntax_check,
             highlight_all_occurrences=highlight_all,
             occurrences_case_sensitive=occurrences_case_sensitive,
             prefer_single_quotes=prefer_single_quotes,
             output_bottom=output_bottom,
             quick_tab_switching=quick_tab_switching,
+            show_status_tips=show_status_tips,
             auto_close_delimiters=auto_close_delimiters,
             autocomplete=autocomplete,
             fuzzy_autocomplete=fuzzy_autocomplete,
             show_docstrings=show_docstrings,
             trim_auto_whitespace=trim_auto_whitespace,
+            randomize_custom_at_startup=randomize_custom,
         )
         settings.update(data)
         if 'colors' in settings:
@@ -1575,11 +1833,39 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
             self.tab.toggleOutline_btn.setVisible(state)
 
+    def getDefaultSplitterSizes(self):
+        bottom = self.outputBottom_act.isChecked()
+        return [600, 400] if bottom else [400, 600]
+
     def toggleOutput(self, state=None):
         if state is None:
             state = self.showOutput_act.isChecked()
         self.showOutput_act.setChecked(state)
+        if not state:
+            sizes = self.splitter.sizes()
+            if all(s > 0 for s in sizes):
+                self._last_splitter_sizes = sizes
         self.verticalLayoutWidget.setVisible(state)
+        if state:
+            sizes = getattr(self, '_last_splitter_sizes', self.getDefaultSplitterSizes())
+            if any(s == 0 for s in sizes):
+                sizes = self.getDefaultSplitterSizes()
+            self.splitter.setSizes(sizes)
+
+    def toggleMenuBar(self, state=None):
+        if state is None:
+            state = self.toggleMenus_act.isChecked()
+        self.menubar.setVisible(state)
+        self.toggleMenus_act.setChecked(state)
+
+        # Dynamic toolbar menu button insertion/removal
+        if hasattr(self, 'editor_toolbar') and hasattr(self, 'menu_toggle_act'):
+            if not state:
+                # Add to toolbar if not already present
+                if self.menu_toggle_act not in self.editor_toolbar.actions():
+                    self.editor_toolbar.addAction(self.menu_toggle_act)
+            else:
+                self.editor_toolbar.removeAction(self.menu_toggle_act)
 
     def toggleOutputBottom(self, state=None):
         if state is None:
@@ -1594,25 +1880,53 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         if sum(sizes) > 0:
             self.splitter.setSizes(sizes[::-1])
+        if hasattr(self, '_last_splitter_sizes') and self._last_splitter_sizes:
+            self._last_splitter_sizes = self._last_splitter_sizes[::-1]
+
+    def saveOutputAs(self):
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save output as", "", "Python Files (*.py);;All Files (*)")
+        if file_path:
+            text = self.out.toPlainText()
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(text)
+            except Exception as e:
+                self.messageSignal.emit(f"Failed to save output: {str(e)}")
+            else:
+                self.messageSignal.emit(f"Output saved to {file_path}")
+
+    def saveOutputToTab(self):
+        import time
+        current_time = time.strftime("%H:%M:%S")
+        tab_name = f"output {current_time}"
+        text = self.out.toPlainText()
+        self.tab.addNewTab(tab_name, text)
 
     def toggleQuickTabSwitching(self, state=None):
-        if state is None:
-            state = self.quickTabSwitching_act.isChecked()
+        state = self.quickTabSwitching_act.isChecked()
         self._current_settings['quick_tab_switching'] = state
         self.saveSettings()
         if not state:
             self.tab._ctrl_pressed = False
             self.tab.show_tab_numbers(False)
 
+    def toggleStatusTips(self, state=None):
+        state = self.showStatusTips_act.isChecked()
+        self._show_status_tips = state
+        self._current_settings['show_status_tips'] = state
+        self.saveSettings()
+        if not state:
+            self.statusBar().clearMessage()
+
     def toggleAutoCloseDelimiters(self, state=None):
-        if state is None:
-            state = self.autoCloseDelimiters_act.isChecked()
+        state = self.autoCloseDelimiters_act.isChecked()
         self._current_settings['auto_close_delimiters'] = state
         self.saveSettings()
 
     def toggleSyntaxCheck(self, state=None):
-        if state is None:
-            state = self.syntaxCheck_act.isChecked()
+        state = self.syntaxCheck_act.isChecked()
+        self._current_settings['syntax_check'] = state
+        self.saveSettings()
 
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
@@ -1623,8 +1937,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.statusBar().clearMessage()
 
     def toggleHighlightAllOccurrences(self, state=None):
-        if state is None:
-            state = self.highlightAllOccurrences_act.isChecked()
+        state = self.highlightAllOccurrences_act.isChecked()
         self._current_settings['highlight_all_occurrences'] = state
         self.saveSettings()
         for i in range(self.tab.count()):
@@ -1638,8 +1951,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         w.edit.highlight_current_line()
 
     def toggleOccurrencesCaseSensitive(self, state=None):
-        if state is None:
-            state = self.occurrencesCaseSensitive_act.isChecked()
+        state = self.occurrencesCaseSensitive_act.isChecked()
         self._current_settings['occurrences_case_sensitive'] = state
         self.saveSettings()
         for i in range(self.tab.count()):
@@ -1649,8 +1961,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     w.edit.auto_select_all_occurrences()
 
     def togglePreferSingleQuotes(self, state=None):
-        if state is None:
-            state = self.preferSingleQuotes_act.isChecked()
+        state = self.preferSingleQuotes_act.isChecked()
         self._current_settings['prefer_single_quotes'] = state
         self.saveSettings()
 
@@ -1719,19 +2030,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             item.setHidden(text not in item.text().lower())
 
     def autoSave(self):
-        tabs = []
-        index = self.tab.currentIndex()
-        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
-        for item in range(self.tab.count()):
-            name = self.tab.tabText(item)
-            text = self.tab.getTabText(item)
-            widget = self.tab.widget(item)
-            size = widget.edit.getFontSize()
-
-            size = max(1, size - zoom_delta)
-
-            tab = {'name': name, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
-            tabs.append(tab)
+        if not hasattr(self, '_presenter'):
+            return
+        tabs = self._get_tabs_data(save_full_text=True)
         self._presenter.save_backup(tabs)
 
     def fillSessionsMenu(self):
@@ -1751,7 +2052,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             restore_backup_act.setEnabled(False)
         self.sessions_menu.addAction(restore_backup_act)
 
-        self.delete_session_menu = QMenu("Delete session", self)
+        self.delete_session_menu = QMenu("Delete session", self.sessions_menu)
+        self.delete_session_menu.setFont(self.sessions_menu.font())
+        self.delete_session_menu.setStyleSheet(self.sessions_menu.styleSheet())
         self.delete_session_menu.setIcon(QIcon(icons["clear"]))
         self.delete_session_menu.menuAction().setStatusTip("Delete a saved session")
         self.sessions_menu.addMenu(self.delete_session_menu)
@@ -1763,35 +2066,48 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for name in names:
                 act = QAction(name, self)
                 act.setStatusTip(f"Load session: {name}")
+                act.setIcon(QIcon(icons['saved_session']))
                 act.triggered.connect(lambda checked=False, n=name: self.loadNamedSession(n))
                 self.sessions_menu.addAction(act)
 
                 del_act = QAction(name, self)
                 del_act.setStatusTip(f"Delete session: {name}")
+                del_act.setIcon(QIcon(icons['saved_session']))
                 del_act.triggered.connect(lambda checked=False, n=name: self.deleteNamedSession(n))
                 self.delete_session_menu.addAction(del_act)
         else:
             no_sessions_act = QAction("No saved sessions", self)
+            no_sessions_act.setIcon(QIcon(icons['saved_session']))
             no_sessions_act.setEnabled(False)
             self.sessions_menu.addAction(no_sessions_act)
 
             no_del_act = QAction("No saved sessions", self)
+            no_del_act.setIcon(QIcon(icons['saved_session']))
             no_del_act.setEnabled(False)
             self.delete_session_menu.addAction(no_del_act)
 
     def saveNamedSession(self):
-        name, ok = QInputDialog.getText(self, "Save Named Session", "Enter session name:")
+        dlg = QInputDialog(self)
+        dlg.setWindowTitle("Save Named Session")
+        dlg.setLabelText("Enter session name:")
+        if hasattr(self, 'theme_font'):
+            dlg.setFont(self.theme_font)
+            dlg.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+        ok = dlg.exec_() == QInputDialog.Accepted
+        name = dlg.textValue()
         if ok and name.strip():
             name = name.strip()
-            tabs = []
-            index = self.tab.currentIndex()
-            for item in range(self.tab.count()):
-                name_tab = self.tab.tabText(item)
-                text = self.tab.getTabText(item)
-                widget = self.tab.widget(item)
-                size = widget.edit.getFontSize()
-                tab = {'name': name_tab, 'text': text, 'active': item == index, 'size': size, 'file_path': getattr(widget, 'file_path', None)}
-                tabs.append(tab)
+            existing_sessions = self._presenter.get_named_sessions()
+            if name in existing_sessions:
+                res = self.show_question_msg(
+                    "Overwrite Session",
+                    "A session with the name '{0}' already exists. Do you want to overwrite it?".format(name),
+                    QMessageBox.Yes | QMessageBox.No
+                )
+                if res != QMessageBox.Yes:
+                    return
+
+            tabs = self._get_tabs_data(save_full_text=True)
             self._presenter.save_named_session(name, tabs)
             self.out.showMessage(">>> Named session '{0}' saved successfully.".format(name))
             self.fillSessionsMenu()
@@ -1804,15 +2120,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         )
         if res == QMessageBox.Yes:
             sessions = self._presenter.get_named_session_tabs(name)
-            self.tab.clear()
-            if sessions:
-                for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text'), file_path=s.get('file_path'))
-                    if s.get('active'):
-                        self.tab.setCurrentIndex(i)
-                    w.setFontSize(s.get('size', None))
-            if self.tab.count() == 0:
-                self.tab.addNewTab()
+            self.loadSession(sessions)
             self.out.showMessage(">>> Loaded named session '{0}'.".format(name))
 
     def deleteNamedSession(self, name):
@@ -1830,14 +2138,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if self._presenter.backup_exists():
             sessions = self._presenter.get_backup_tabs()
             if sessions:
-                self.tab.clear()
-                active = 0
-                for i, s in enumerate(sessions):
-                    w = self.tab.addNewTab(s.get('name', 'tab'), s.get('text', ''), file_path=s.get('file_path'))
-                    if s.get('active'):
-                        active = i
-                    w.setFontSize(s.get('size', None))
-                self.tab.setCurrentIndex(active)
+                self.loadSession(sessions)
                 self.out.showMessage("Crash backup restored successfully.")
             else:
                 self.out.showMessage("Crash backup is empty or invalid.")
@@ -1910,11 +2211,29 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     data = json.load(stream)
                 imported_snippets = data.get("snippets", {})
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not read the file:\n{e}")
+                msg_box = QMessageBox(self)
+                msg_box.setIcon(QMessageBox.Critical)
+                msg_box.setWindowTitle("Error")
+                msg_box.setText(f"Could not read the file:\n{e}")
+                if hasattr(self, 'theme_font'):
+                    msg_box.setFont(self.theme_font)
+                    msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+                    for btn in msg_box.buttons():
+                        btn.setFont(self.theme_font)
+                msg_box.exec_()
                 return
 
         if not imported_snippets:
-            QMessageBox.information(self, "Import Snippets", "No snippets found in the selected file.")
+            msg_box = QMessageBox(self)
+            msg_box.setIcon(QMessageBox.Information)
+            msg_box.setWindowTitle("Import Snippets")
+            msg_box.setText("No snippets found in the selected file.")
+            if hasattr(self, 'theme_font'):
+                msg_box.setFont(self.theme_font)
+                msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+                for btn in msg_box.buttons():
+                    btn.setFont(self.theme_font)
+            msg_box.exec_()
             return
 
         current_snippets = self._get_snippets()
@@ -1958,7 +2277,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         import_act.triggered.connect(self.importSnippets)
         self.snippets_menu.addAction(import_act)
 
-        self.delete_snippet_menu = QMenu("Delete snippet", self)
+        self.delete_snippet_menu = QMenu("Delete snippet", self.snippets_menu)
+        self.delete_snippet_menu.setFont(self.snippets_menu.font())
+        self.delete_snippet_menu.setStyleSheet(self.snippets_menu.styleSheet())
         self.delete_snippet_menu.setIcon(QIcon(icons["clear"]))
         self.delete_snippet_menu.menuAction().setStatusTip("Delete a saved snippet")
         self.snippets_menu.addMenu(self.delete_snippet_menu)
@@ -1981,25 +2302,30 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
                 act = QAction(name, self)
                 act.setStatusTip(f"Insert snippet: {name}")
+                act.setIcon(QIcon(icons['saved_snippet']))
                 act.triggered.connect(lambda checked=False, n=name: self._insert_snippet_text(snippets[n]))
                 self.snippets_menu.addAction(act)
 
                 if name not in defaults:
                     del_act = QAction(name, self)
                     del_act.setStatusTip(f"Delete snippet: {name}")
+                    del_act.setIcon(QIcon(icons['saved_snippet']))
                     del_act.triggered.connect(lambda checked=False, n=name: self.deleteSnippet(n))
                     self.delete_snippet_menu.addAction(del_act)
 
             if not has_user_snippets:
                 no_del_act = QAction("No saved snippets", self)
+                no_del_act.setIcon(QIcon(icons['saved_snippet']))
                 no_del_act.setEnabled(False)
                 self.delete_snippet_menu.addAction(no_del_act)
         else:
             no_snippets_act = QAction("No saved snippets", self)
+            no_snippets_act.setIcon(QIcon(icons['saved_snippet']))
             no_snippets_act.setEnabled(False)
             self.snippets_menu.addAction(no_snippets_act)
 
             no_del_act = QAction("No saved snippets", self)
+            no_del_act.setIcon(QIcon(icons['saved_snippet']))
             no_del_act.setEnabled(False)
             self.delete_snippet_menu.addAction(no_del_act)
 
@@ -2098,6 +2424,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.deleteSnippet(name)
 
         self.snippet_widget.snippetSelected.connect(self._insert_snippet_text)
+        self.snippet_widget.snippetExecuted.connect(self._execute_snippet_text)
         self.snippet_widget.snippetDeleted.connect(do_delete)
         if hasattr(self.snippet_widget, 'exec'):
             self.snippet_widget.exec()
@@ -2112,6 +2439,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         cursor = edit_widget.textCursor()
         cursor.insertText(text + "\n")
         edit_widget.setFocus()
+
+    def _execute_snippet_text(self, text):
+        if self.print_command_act.isChecked():
+            text += '\n# Execute Snippet'
+        if text:
+            self.execute_command_requested.emit(text, self.print_command_act.isChecked(), self.clear_exec_act.isChecked())
 
     def deleteSnippet(self, name):
         res = self.show_question_msg(
@@ -2133,6 +2466,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 else:
                     self.out.showMessage(">>> Deleted snippet '{0}'.".format(name))
                 self.fillSnippetsMenu()
+
+    def event(self, e):
+        from vendor.Qt.QtCore import QEvent
+        if e.type() == QEvent.StatusTip:
+            if not getattr(self, '_show_status_tips', True):
+                return True
+        return super(scriptEditorClass, self).event(e)
 
 try:
     from PySide2.QtCore import QTextCodec
