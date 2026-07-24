@@ -33,7 +33,7 @@ class PluginManager(object):
             sys.modules['plugins.plugin_base'] = sys.modules[base_module_name]
             sys.modules['plugin_base'] = sys.modules[base_module_name]
 
-    def load_plugins(self):
+    def load_plugins(self, quiet=False, *args):
         """
         Discover and load all plugins from both built-in and user settings directories.
         """
@@ -44,7 +44,7 @@ class PluginManager(object):
 
         # 1. Load built-in plugins (from the installation folder)
         plugins_dir = os.path.dirname(os.path.abspath(__file__))
-        self._load_plugins_from_directory(plugins_dir, is_user=False)
+        self._load_plugins_from_directory(plugins_dir, is_user=False, quiet=quiet)
 
         # 2. Load user plugins (from mse_settings/plugins)
         try:
@@ -52,7 +52,7 @@ class PluginManager(object):
             user_pref_dir = SettingsModel()._get_user_pref_folder()
             user_plugins_dir = os.path.join(user_pref_dir, "plugins")
             if os.path.exists(user_plugins_dir):
-                self._load_plugins_from_directory(user_plugins_dir, is_user=True)
+                self._load_plugins_from_directory(user_plugins_dir, is_user=True, quiet=quiet)
         except Exception as e:
             self.editor.out.showMessage(
                 f"Error loading user plugins from settings: {e}\n"
@@ -61,7 +61,7 @@ class PluginManager(object):
 
         self.finalize_menu()
 
-    def _load_plugins_from_directory(self, directory, is_user=False):
+    def _load_plugins_from_directory(self, directory, is_user=False, quiet=False):
         """
         Scan a directory (and its subdirectories) for plugin files and import/register them.
         """
@@ -114,9 +114,10 @@ class PluginManager(object):
                                 # Use a unique key to prevent clashes
                                 key = f"{plugin_inst.name} (User)" if is_user else plugin_inst.name
                                 self.plugins[key] = plugin_inst
-
-                                prefix = "[User] " if is_user else ""
-                                self.editor.out.showMessage(f"Plugin loaded: {prefix}{plugin_inst.name} (v{plugin_inst.version})")
+                                
+                                if not quiet:
+                                    prefix = "[User] " if is_user else ""
+                                    self.editor.out.showMessage(f"Plugin loaded: {prefix}{plugin_inst.name} (v{plugin_inst.version})")
                             except Exception as register_err:
                                 self.editor.out.showMessage(
                                     f"Error registering plugin '{name}' from '{module_name}': {register_err}\n"

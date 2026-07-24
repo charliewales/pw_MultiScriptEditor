@@ -203,7 +203,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # Initialize and load plugins
         self.plugin_manager = PluginManager(self)
-        self.plugin_manager.load_plugins()
+        self.plugin_manager.load_plugins(quiet=True)
 
     def setupStatusBarWidgets(self):
         self.lbl_msg = QLabel("")
