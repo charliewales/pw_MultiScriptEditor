@@ -22,7 +22,7 @@ class ScriptEditorUIBuilder:
         editor.load_act.setShortcut("Ctrl+O")
         editor.diffTool_act.triggered.connect(editor.openDiffDialog)
         editor.diffTool_act.setIcon(QIcon(icons['git_diff']))
-        editor.diffTool_act.setShortcut("Ctrl+Shift+C")
+        editor.diffTool_act.setShortcut("Ctrl+Alt+Shift+C")
         editor.save_act.triggered.connect(editor.saveScript)
         editor.save_act.setIcon(QIcon(icons['save']))
         editor.save_act.setShortcut("Ctrl+S")
@@ -354,7 +354,7 @@ class ScriptEditorUIBuilder:
         QShortcut(QKeySequence('Ctrl+Shift+Enter'), editor, editor.executeLine)
 
         editor.clearHistory_act.triggered.connect(editor.clearHistory)
-        editor.clearHistory_act.setShortcut('Ctrl+Alt+Shift+C')
+        editor.clearHistory_act.setShortcut('Ctrl+Shift+C')
 
         QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
 
