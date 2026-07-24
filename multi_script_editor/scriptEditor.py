@@ -296,9 +296,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 '.md': 'Markdown',
                 '.css': 'CSS',
                 '.txt': 'Plain Text',
-                '.json': 'JSON'
+                '.json': 'JSON',
+                '.ini': 'INI',
+                '.xml': 'XML',
+                '.sh': 'Shell',
+                '.bat': 'Batch'
             }
-            lang = lang_map.get(ext, 'Python')
+            lang = lang_map.get(ext, 'Plain Text')
 
             if os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
                 git_info = GitManager.get_file_status(file_path)
@@ -323,10 +327,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.runLinter()
 
         # Toggle execution UI based on language
-        is_python = (lang == 'Python')
+        can_execute = (lang == 'Python')
         for act in (self.execAll_act, self.execLine_act, self.execSel_act, self.clearHistory_act, self.clear_exec_act):
             if hasattr(self, act.objectName()):
-                act.setEnabled(is_python)
+                act.setEnabled(can_execute)
 
         has_file_path = bool(file_path and os.path.exists(file_path))
         if hasattr(self, 'diffTool_act'):
