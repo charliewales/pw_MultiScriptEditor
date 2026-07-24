@@ -39,7 +39,10 @@ from widgets.main_window_builder import ScriptEditorUIBuilder
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from style.links import links
 from plugins.plugin_manager import PluginManager
-
+from docs.constants import HELP_TEXT
+import random
+import time
+from vendor.Qt.QtCore import QEvent
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)
@@ -329,11 +332,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.saveSession()
 
     def mse_help(self):
-        src = os.path.join(os.path.dirname(__file__), 'helpText.txt')
-        if os.path.exists(src):
-            txt = open(src).read() % self.ver
-        else:
-            txt = '<h3>File not found: helpText.txt</h3><br>'
+        txt = HELP_TEXT % self.ver
         self.out.appendHtml(txt)
         self.out.moveCursor(QTextCursor.End)
         self.out.ensureCursorVisible()
@@ -1588,7 +1587,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self._theme_randomized = True
                 custom_themes = self.getCustomThemes()
                 if custom_themes:
-                    import random
                     theme = random.choice(custom_themes)
                     data['theme'] = theme
             if theme == 'default':
@@ -1906,7 +1904,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.messageSignal.emit(f"Output saved to {file_path}")
 
     def saveOutputToTab(self):
-        import time
         current_time = time.strftime("%H:%M:%S")
         tab_name = f"output {current_time}"
         text = self.out.toPlainText()
@@ -2478,7 +2475,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.fillSnippetsMenu()
 
     def event(self, e):
-        from vendor.Qt.QtCore import QEvent
         if e.type() == QEvent.StatusTip:
             if not getattr(self, '_show_status_tips', True):
                 return True
