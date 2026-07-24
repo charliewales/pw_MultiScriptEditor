@@ -11,7 +11,7 @@ if not os.environ.get("QT_PREFERRED_BINDING"):
 # Disable High Dpi Scaling in PySide6
 os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
 
-mse_version = "6.4.0"
+mse_version = "6.5.0"
 
 root_path = os.path.dirname(__file__)
 vendor_path = os.path.join(root_path, 'vendor')
@@ -38,6 +38,7 @@ from widgets.outline_utils import HtmlDelegate, create_symbol_item
 from widgets.main_window_builder import ScriptEditorUIBuilder
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from style.links import links
+from plugins.plugin_manager import PluginManager
 
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
@@ -167,6 +168,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.applyTheme(current_theme)
         self.addArgs()
         self.updateStatusBarInfo()
+
+        # Initialize and load plugins
+        self.plugin_manager = PluginManager(self)
+        self.plugin_manager.load_plugins()
 
     def setupStatusBarWidgets(self):
         self.lbl_msg = QLabel("")
@@ -401,6 +406,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not self.checkUnsavedChanges():
             event.ignore()
             return
+
+        # Unload plugins to clean up resources and UI
+        if hasattr(self, 'plugin_manager'):
+            self.plugin_manager.unload_plugins()
 
         self.saveSession()
         self.saveSettings()
