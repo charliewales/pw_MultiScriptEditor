@@ -2,7 +2,7 @@ import os
 import shutil
 
 from icons import icons
-from vendor.Qt.QtCore import QDir, QModelIndex, QSortFilterProxyModel, Qt, Signal, QUrl
+from vendor.Qt.QtCore import QDir, QItemSelectionModel, QModelIndex, QSortFilterProxyModel, Qt, Signal, QTimer, QUrl
 from vendor.Qt.QtGui import QColor, QDesktopServices, QIcon
 from vendor.Qt.QtWidgets import (
     QAction,
@@ -261,39 +261,48 @@ class ExplorerWidget(QWidget):
         self.bookmarks = get_default_bookmarks()
         self._current_root = root_path or os.getcwd()
 
+        self._is_initialized = False
         self._setup_ui()
         self._setup_connections()
-        self.set_root_path(self._current_root)
+        self.path_filter_input.setText(self._current_root)
+
+    def showEvent(self, event):
+        super(ExplorerWidget, self).showEvent(event)
+        if not self._is_initialized:
+            self.set_root_path(self._current_root)
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(4)
 
+        # Top Bar Layout
+        self.top_layout = QHBoxLayout()
+        self.top_layout.setContentsMargins(0, 0, 0, 0)
+        self.top_layout.setSpacing(2)
+
         # Top Bar: QLineEdit for filter & direct path navigation
         self.path_filter_input = QLineEdit()
         self.path_filter_input.setObjectName("explorerPathFilterInput")
         self.path_filter_input.setPlaceholderText("Enter path...")
+        self.path_filter_input.setClearButtonEnabled(True)
 
-        # Control Buttons on top right
-        self.controls_layout = QHBoxLayout()
-        self.controls_layout.setContentsMargins(0, 0, 0, 0)
-        self.controls_layout.setSpacing(2)
+        self.top_layout.addWidget(self.path_filter_input)
 
         self.up_btn = QToolButton()
-        self.up_btn.setToolTip("Up to Parent Directory")
+        self.up_btn.setToolTip("Up to parent directory")
         self.up_btn.setStatusTip("Navigate up to the parent directory")
         self.up_btn.setIcon(QIcon(icons.get("up", "")))
 
         self.sync_tab_btn = QToolButton()
-        self.sync_tab_btn.setToolTip("Set Root to Current Tab Directory")
+        self.sync_tab_btn.setToolTip("Set root to current tab directory")
         self.sync_tab_btn.setStatusTip("Set the explorer root path to match the currently active tab")
         self.sync_tab_btn.setIcon(QIcon(icons.get("view_file", icons.get("open", ""))))
 
         self.auto_sync_tab_btn = QToolButton()
         self.auto_sync_tab_btn.setCheckable(True)
         self.auto_sync_tab_btn.setChecked(False)
-        self.auto_sync_tab_btn.setToolTip("Toggle: Auto-Sync Explorer Root on Tab Change")
+        self.auto_sync_tab_btn.setToolTip("Toggle: auto-sync explorer root on tab change")
         self.auto_sync_tab_btn.setStatusTip("Automatically set the explorer root path when switching tabs")
         self.auto_sync_tab_btn.setIcon(QIcon(icons.get("file_recent", icons.get("open", ""))))
 
@@ -301,16 +310,16 @@ class ExplorerWidget(QWidget):
         self.filter_supported_btn.setCheckable(True)
         self.filter_supported_btn.setChecked(True)
         self.filter_supported_btn.setIcon(QIcon(icons.get("filter_files", "")))
-        self.filter_supported_btn.setToolTip("Toggle: Show all files (Checked = Supported files only, Unchecked = All files)")
+        self.filter_supported_btn.setToolTip("Toggle: show all files (checked = supported files only, unchecked = all files)")
         self.filter_supported_btn.setStatusTip("Toggle whether to show all files or only supported scripts/files")
 
         self.add_bookmark_btn = QToolButton()
-        self.add_bookmark_btn.setToolTip("Bookmark Current Directory")
+        self.add_bookmark_btn.setToolTip("Bookmark current directory")
         self.add_bookmark_btn.setStatusTip("Add the current directory to your explorer bookmarks")
         self.add_bookmark_btn.setIcon(QIcon(icons.get("bookmark_toggle", "")))
 
         self.bookmarks_menu_btn = QToolButton()
-        self.bookmarks_menu_btn.setToolTip("Show Saved Directory Favorites")
+        self.bookmarks_menu_btn.setToolTip("Show saved directory favorites")
         self.bookmarks_menu_btn.setStatusTip("Show a menu of your bookmarked directories")
         self.bookmarks_menu_btn.setIcon(QIcon(icons.get("bookmark_prev", icons.get("bookmark_toggle", ""))))
 
@@ -319,21 +328,19 @@ class ExplorerWidget(QWidget):
         self.bookmarks_menu_btn.setPopupMode(QToolButton.InstantPopup)
 
         self.refresh_btn = QToolButton()
-        self.refresh_btn.setToolTip("Refresh Directory")
+        self.refresh_btn.setToolTip("Refresh directory")
         self.refresh_btn.setStatusTip("Refresh the file explorer view")
         self.refresh_btn.setIcon(QIcon(icons.get("reload_plugins", icons.get("clear", ""))))
 
-        self.controls_layout.addWidget(self.up_btn)
-        self.controls_layout.addWidget(self.sync_tab_btn)
-        self.controls_layout.addWidget(self.auto_sync_tab_btn)
-        self.controls_layout.addWidget(self.filter_supported_btn)
-        self.controls_layout.addWidget(self.add_bookmark_btn)
-        self.controls_layout.addWidget(self.bookmarks_menu_btn)
-        self.controls_layout.addWidget(self.refresh_btn)
-        self.controls_layout.addStretch()
+        self.top_layout.addWidget(self.up_btn)
+        self.top_layout.addWidget(self.sync_tab_btn)
+        self.top_layout.addWidget(self.auto_sync_tab_btn)
+        self.top_layout.addWidget(self.filter_supported_btn)
+        self.top_layout.addWidget(self.add_bookmark_btn)
+        self.top_layout.addWidget(self.bookmarks_menu_btn)
+        self.top_layout.addWidget(self.refresh_btn)
 
-        main_layout.addLayout(self.controls_layout)
-        main_layout.addWidget(self.path_filter_input)
+        main_layout.addLayout(self.top_layout)
 
         # Tree View & File System Model
         self.fs_model = QFileSystemModel()
@@ -352,6 +359,9 @@ class ExplorerWidget(QWidget):
         self.tree_view.setSortingEnabled(True)
         self.tree_view.setDragEnabled(True)
         self.tree_view.setDragDropMode(QAbstractItemView.DragOnly)
+        self.tree_view.setToolTip(
+            "- Return/Enter/Middle Click: set root folder\n- Backspace: go to parent folder"
+        )
         self.proxy_model.sort(0, Qt.AscendingOrder)
 
         # Hide extra columns (size, type, date modified) to keep explorer compact
@@ -393,6 +403,7 @@ class ExplorerWidget(QWidget):
 
         path = os.path.abspath(path)
         self._current_root = path
+        self._is_initialized = True
 
         self.path_filter_input.setText(path)
 
@@ -410,6 +421,9 @@ class ExplorerWidget(QWidget):
             proxy_index = self.proxy_model.mapFromSource(source_index)
             if proxy_index.isValid():
                 self.tree_view.setRootIndex(proxy_index)
+            if getattr(self, '_pending_select_file', None):
+                self._select_and_highlight_file(self._pending_select_file)
+                self._pending_select_file = None
 
     def get_current_root(self):
         return self._current_root
@@ -441,12 +455,31 @@ class ExplorerWidget(QWidget):
             # If not a disk path, revert to current root
             self.path_filter_input.setText(self._current_root)
 
+    def select_file(self, filepath):
+        if not filepath or not os.path.exists(filepath):
+            return
+        filepath = os.path.abspath(filepath)
+        dirpath = os.path.dirname(filepath) if os.path.isfile(filepath) else filepath
+        self._pending_select_file = filepath if os.path.isfile(filepath) else None
+
+        self.set_root_path(dirpath)
+        self._select_and_highlight_file(filepath)
+        QTimer.singleShot(50, lambda: self._select_and_highlight_file(filepath))
+        QTimer.singleShot(200, lambda: self._select_and_highlight_file(filepath))
+
     def _select_and_highlight_file(self, filepath):
+        if not filepath or not os.path.exists(filepath):
+            return
         source_index = self.fs_model.index(filepath)
         if source_index.isValid():
             proxy_index = self.proxy_model.mapFromSource(source_index)
             if proxy_index.isValid():
                 self.tree_view.setCurrentIndex(proxy_index)
+                if self.tree_view.selectionModel():
+                    self.tree_view.selectionModel().select(
+                        proxy_index,
+                        QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
+                    )
                 self.tree_view.scrollTo(proxy_index)
 
     def navigate_up(self):
@@ -524,13 +557,13 @@ class ExplorerWidget(QWidget):
         if sorted_bookmarks:
             self.bookmarks_menu.addSeparator()
 
-        add_act = QAction("Bookmark Current Directory", self.bookmarks_menu)
+        add_act = QAction("Bookmark current directory", self.bookmarks_menu)
         add_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
         add_act.triggered.connect(self.add_current_to_bookmarks)
         self.bookmarks_menu.addAction(add_act)
 
         if sorted_bookmarks:
-            remove_menu = QMenu("Remove Favorite...", self.bookmarks_menu)
+            remove_menu = QMenu("Remove favorite...", self.bookmarks_menu)
             remove_menu.setIcon(QIcon(icons.get("clear", "")))
             for path in sorted_bookmarks:
                 r_act = QAction(f"{os.path.basename(path) or path}", remove_menu)

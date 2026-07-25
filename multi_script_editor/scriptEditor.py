@@ -27,12 +27,10 @@ from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
 from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
-from docs.constants import HELP_TEXT
 from icons import *
 from plugins.plugin_manager import PluginManager
 from presenters.main_presenter import MainPresenter
 from style.links import links
-from vendor.help import get_help
 from vendor.Qt.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
 from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import (
@@ -58,25 +56,15 @@ from vendor.Qt.QtWidgets import (
     QWidget,
 )
 from widgets import (
-    about,
     explorerWidget,
-    findWidget,
-    gotoLineWidget,
     outputWidget,
-    pluginWidget,
-    shortcuts,
-    snippetWidget,
-    symbolWidget,
     tabWidget,
-    themeEditor,
 )
 from widgets import scriptEditor_UIs as ui
 from widgets.main_window_builder import ScriptEditorUIBuilder
 from widgets.outline_utils import HtmlDelegate, create_symbol_item
 from widgets.pythonSyntax import design
-from widgets.diff_dialog import CompareWidget
 from core.git_manager import GitManager
-from widgets.git_popup import GitPopupWidget
 
 SUPPORTED_FILE_TYPES = {
     'Bash': ['.sh'],
@@ -444,6 +432,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.saveSession()
 
     def mse_help(self):
+        from docs.constants import HELP_TEXT
         txt = HELP_TEXT % self.ver
         self.out.appendHtml(txt)
         self.out.moveCursor(QTextCursor.End)
@@ -884,79 +873,83 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         return settings.get('shortcuts', {}).get(action, None)
 
     def loadSession(self, sessions=None):
-        if sessions is None:
-            sessions = self._presenter.get_session_tabs()
-        self.tab.clear()
-        active_index = -1
-        if sessions:
-            self.tab.blockSignals(True)
-            for i, s in enumerate(sessions):
-                text = s.get('text')
-                file_path = s.get('file_path')
-                is_active = s.get('active', False)
+        self.setUpdatesEnabled(False)
+        try:
+            if sessions is None:
+                sessions = self._presenter.get_session_tabs()
+            self.tab.clear()
+            active_index = -1
+            if sessions:
+                self.tab.blockSignals(True)
+                for i, s in enumerate(sessions):
+                    text = s.get('text')
+                    file_path = s.get('file_path')
+                    is_active = s.get('active', False)
 
-                if file_path and not os.path.exists(file_path):
-                    self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
+                    if file_path and not os.path.exists(file_path):
+                        self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
 
-                w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
+                    w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
 
-                # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
-                w.needs_loading_bookmarks = s.get('bookmarks', "")
-                w.needs_loading_line = s.get('line', 1)
-                w.needs_loading_column = s.get('column', 0)
-                w.needs_loading_scroll_v = s.get('scroll_v', 0)
-                w.needs_loading_folds = s.get('folds', [])
+                    # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
+                    w.needs_loading_bookmarks = s.get('bookmarks', "")
+                    w.needs_loading_line = s.get('line', 1)
+                    w.needs_loading_column = s.get('column', 0)
+                    w.needs_loading_scroll_v = s.get('scroll_v', 0)
+                    w.needs_loading_folds = s.get('folds', [])
 
-                if is_active:
-                    active_index = i
-                    if file_path and os.path.exists(file_path):
-                        text = read_file_text(file_path)
-                    if text:
-                        w.addText(text)
-                        w.document().clearUndoRedoStacks()
-                        w.document().setModified(False)
-                        if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
-                            if hasattr(w, 'set_folded_blocks'):
-                                w.set_folded_blocks(w.needs_loading_folds)
-                            delattr(w, 'needs_loading_folds')
-                        if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
-                            w.set_bookmarks(w.needs_loading_bookmarks)
-                            delattr(w, 'needs_loading_bookmarks')
-                        # Jump to the saved line and column!
+                    if is_active:
+                        active_index = i
+                        if file_path and os.path.exists(file_path):
+                            text = read_file_text(file_path)
+                        if text:
+                            w.addText(text)
+                            w.document().clearUndoRedoStacks()
+                            w.document().setModified(False)
+                            if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
+                                if hasattr(w, 'set_folded_blocks'):
+                                    w.set_folded_blocks(w.needs_loading_folds)
+                                delattr(w, 'needs_loading_folds')
+                            if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
+                                w.set_bookmarks(w.needs_loading_bookmarks)
+                                delattr(w, 'needs_loading_bookmarks')
+                            # Jump to the saved line and column!
+                            if hasattr(w, 'needs_loading_line'):
+                                line_num = w.needs_loading_line
+                                column_num = getattr(w, 'needs_loading_column', 0)
+                                if line_num > 1 or column_num > 0:
+                                    block = w.document().findBlockByNumber(line_num - 1)
+                                    if block.isValid():
+                                        cursor = w.textCursor()
+                                        col = min(column_num, max(0, block.length() - 1))
+                                        cursor.setPosition(block.position() + col)
+                                        w.setTextCursor(cursor)
+                                        if hasattr(w, 'highlight_current_line'):
+                                            w.highlight_current_line()
                         if hasattr(w, 'needs_loading_line'):
-                            line_num = w.needs_loading_line
-                            column_num = getattr(w, 'needs_loading_column', 0)
-                            if line_num > 1 or column_num > 0:
-                                block = w.document().findBlockByNumber(line_num - 1)
-                                if block.isValid():
-                                    cursor = w.textCursor()
-                                    col = min(column_num, max(0, block.length() - 1))
-                                    cursor.setPosition(block.position() + col)
-                                    w.setTextCursor(cursor)
-                                    if hasattr(w, 'highlight_current_line'):
-                                        w.highlight_current_line()
-                    if hasattr(w, 'needs_loading_line'):
-                        delattr(w, 'needs_loading_line')
-                    if hasattr(w, 'needs_loading_column'):
-                        delattr(w, 'needs_loading_column')
-                    if hasattr(w, 'needs_loading_folds'):
-                        delattr(w, 'needs_loading_folds')
-                else:
-                    w.needs_loading_file = file_path
-                    w.needs_loading_text = text
+                            delattr(w, 'needs_loading_line')
+                        if hasattr(w, 'needs_loading_column'):
+                            delattr(w, 'needs_loading_column')
+                        if hasattr(w, 'needs_loading_folds'):
+                            delattr(w, 'needs_loading_folds')
+                    else:
+                        w.needs_loading_file = file_path
+                        w.needs_loading_text = text
 
-                if s.get('size'):
-                    # w is the edit widget from addNewTab
-                    if hasattr(w, 'setFontSize'):
-                        w.setFontSize(s.get('size'))
+                    if s.get('size'):
+                        # w is the edit widget from addNewTab
+                        if hasattr(w, 'setFontSize'):
+                            w.setFontSize(s.get('size'))
 
-            self.tab.blockSignals(False)
-            if active_index != -1:
-                self.tab.setCurrentIndex(active_index)
-                if hasattr(self.tab, 'onTabChanged'):
-                    self.tab.onTabChanged(active_index)
-        if self.tab.count() == 0:
-            self.tab.addNewTab()
+                self.tab.blockSignals(False)
+                if active_index != -1:
+                    self.tab.setCurrentIndex(active_index)
+                    if hasattr(self.tab, 'onTabChanged'):
+                        self.tab.onTabChanged(active_index)
+            if self.tab.count() == 0:
+                self.tab.addNewTab()
+        finally:
+            self.setUpdatesEnabled(True)
 
     def _get_tabs_data(self, save_full_text=False):
         tabs = []
@@ -1069,6 +1062,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.tab.widget(i).edit.duplicate()
 
     def get_word_help(self):
+        from vendor.help import get_help
         i = self.tab.currentIndex()
         text = self.tab.widget(i).edit.get_current_word()
         get_help(text)
@@ -1102,6 +1096,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 w.edit.parseText(force=True)
 
     def gotoLine(self):
+        from widgets import gotoLineWidget
         index = self.tab.currentIndex()
         if index < 0:
             return
@@ -1145,9 +1140,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.goto_line_widget.lineSelected.connect(_jump_to_line)
         self.goto_line_widget.show()
         self.goto_line_widget.search_le.setFocus()
-
     def goToSymbol(self):
+        from widgets import symbolWidget
         index = self.tab.currentIndex()
+
         if index < 0:
             return
 
@@ -1197,6 +1193,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.symbol_widget.search_le.setFocus()
 
     def _show_generic_symbol_widget(self, symbols, callback, hide_search=False, placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False, delete_callback=None):
+        from widgets import symbolWidget
         theme_name = self._current_settings.get('theme', 'Dark')
         qss = design.editorStyle(theme_name)
         colors = design.getColors(theme_name)
@@ -1406,6 +1403,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
     def openDiffDialog(self):
+        from widgets.diff_dialog import CompareWidget
         idx = self.tab.currentIndex()
         if idx < 0:
             return
@@ -1438,6 +1436,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             popup.exec_()
 
     def openGitPopup(self):
+        from widgets.git_popup import GitPopupWidget
         if not getattr(self, '_version_control_enabled', True):
             self.showStatusMessage("Version Control (GIT) is disabled in options.")
             return
@@ -1498,7 +1497,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index >= 0:
             w = self.tab.widget(index)
             if hasattr(w, 'file_path') and w.file_path and os.path.exists(w.file_path):
-                self.explorer_widget.set_root_path(os.path.dirname(w.file_path))
+                self.explorer_widget.select_file(w.file_path)
 
     def loadScript(self, file_path=None):
         if file_path and isinstance(file_path, str) and os.path.exists(file_path):
@@ -1965,6 +1964,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage('>>> Not created!')
 
     def openThemeEditor(self):
+        from widgets import themeEditor
         self.dial = themeEditor.themeEditorClass(self, self.tab.desk)
         getattr(self.dial, 'exec', self.dial.exec_)()
         self.fillThemeMenu()
@@ -1991,6 +1991,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         webbrowser.open('file://' + doc_path.replace('\\', '/'))
 
     def about(self):
+        from widgets import about
         dial = about.aboutClass(self)
         if hasattr(dial, 'exec'):
             dial.exec()
@@ -1998,6 +1999,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             dial.exec_()
 
     def shortcuts(self):
+        from widgets import shortcuts
         dial = shortcuts.shortcutsClass(self)
         if hasattr(dial, 'exec'):
             dial.exec()
@@ -2005,6 +2007,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             dial.exec_()
 
     def findWidget(self):
+        from widgets import findWidget
         focus_widget = QApplication.focusWidget()
         target = 'input'
 
@@ -2502,6 +2505,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.insertSnippet()
 
     def handlePluginShortcut(self):
+        from widgets import pluginWidget
         if not hasattr(self, 'plugin_manager') or not self.plugin_manager.plugins:
             self.out.showMessage(">>> No plugins loaded.")
             return
@@ -2715,9 +2719,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             no_del_act.setIcon(QIcon(icons['saved_snippet']))
             no_del_act.setEnabled(False)
             self.delete_snippet_menu.addAction(no_del_act)
-
     def saveSnippet(self):
+        from widgets import snippetWidget
         index = self.tab.currentIndex()
+
         if index < 0:
             return
 
@@ -2772,6 +2777,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.snippet_widget.exec_()
 
     def insertSnippet(self):
+        from widgets import snippetWidget
         snippets = self._get_snippets()
 
         if not snippets:

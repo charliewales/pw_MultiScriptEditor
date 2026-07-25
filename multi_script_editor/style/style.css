@@ -663,7 +663,7 @@ QListWidget#outlineList
     border: 1px solid rgb[border];
 }
 
-QLineEdit#outlineFilter
+QLineEdit#outlineFilter, QLineEdit#explorerPathFilterInput
 {
     background-color: rgb[outline_background];
     color: rgb[tab_selected_text];
