@@ -219,22 +219,21 @@ class ExplorerTreeView(QTreeView):
 
     def keyPressEvent(self, event):
         key = event.key()
-        current_index = self.currentIndex()
 
         if key in (Qt.Key_Return, Qt.Key_Enter):
-            if current_index.isValid():
+            selected_indexes = [idx for idx in self.selectedIndexes() if idx.column() == 0]
+            if selected_indexes:
                 model = self.model()
-                source_index = model.mapToSource(current_index) if hasattr(model, 'mapToSource') else current_index
-                fs_model = model.sourceModel() if hasattr(model, 'sourceModel') else model
-                path = fs_model.filePath(source_index)
-                if os.path.isfile(path):
-                    self.file_open_requested.emit(path)
-                    event.accept()
-                    return
-                elif os.path.isdir(path):
-                    self.directory_set_root_requested.emit(path)
-                    event.accept()
-                    return
+                source_model = model.sourceModel() if hasattr(model, 'sourceModel') else model
+                for idx in selected_indexes:
+                    source_index = model.mapToSource(idx) if hasattr(model, 'mapToSource') else idx
+                    path = source_model.filePath(source_index)
+                    if os.path.isfile(path):
+                        self.file_open_requested.emit(path)
+                    elif len(selected_indexes) == 1 and os.path.isdir(path):
+                        self.directory_set_root_requested.emit(path)
+                event.accept()
+                return
 
         elif key == Qt.Key_Backspace:
             self.navigate_parent_requested.emit()
@@ -278,16 +277,14 @@ class ExplorerWidget(QWidget):
 
         # Top Bar Layout
         self.top_layout = QHBoxLayout()
-        self.top_layout.setContentsMargins(0, 0, 0, 0)
+        self.top_layout.setContentsMargins(0, 3, 0, 0)
         self.top_layout.setSpacing(2)
 
         # Top Bar: QLineEdit for filter & direct path navigation
         self.path_filter_input = QLineEdit()
         self.path_filter_input.setObjectName("explorerPathFilterInput")
         self.path_filter_input.setPlaceholderText("Enter path...")
-        self.path_filter_input.setClearButtonEnabled(True)
 
-        self.top_layout.addWidget(self.path_filter_input)
 
         self.up_btn = QToolButton()
         self.up_btn.setToolTip("Up to parent directory")
@@ -338,8 +335,10 @@ class ExplorerWidget(QWidget):
         self.top_layout.addWidget(self.filter_supported_btn)
         self.top_layout.addWidget(self.add_bookmark_btn)
         self.top_layout.addWidget(self.bookmarks_menu_btn)
+        self.top_layout.addStretch()
         self.top_layout.addWidget(self.refresh_btn)
 
+        main_layout.addWidget(self.path_filter_input)
         main_layout.addLayout(self.top_layout)
 
         # Tree View & File System Model
@@ -353,7 +352,7 @@ class ExplorerWidget(QWidget):
         self.tree_view.setObjectName("explorerTreeView")
         self.tree_view.setModel(self.proxy_model)
         self.tree_view.setHeaderHidden(True)
-        self.tree_view.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tree_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.tree_view.setAnimated(True)
         self.tree_view.setSortingEnabled(True)
@@ -572,12 +571,21 @@ class ExplorerWidget(QWidget):
             self.bookmarks_menu.addMenu(remove_menu)
 
     def _show_context_menu(self, position):
-        proxy_index = self.tree_view.indexAt(position)
-        source_index = self.proxy_model.mapToSource(proxy_index) if proxy_index.isValid() else QModelIndex()
+        selected_indexes = [idx for idx in self.tree_view.selectedIndexes() if idx.column() == 0]
+        click_proxy_index = self.tree_view.indexAt(position)
 
-        target_path = self.fs_model.filePath(source_index) if source_index.isValid() else self._current_root
-        if not target_path:
-            target_path = self._current_root
+        if click_proxy_index.isValid() and click_proxy_index not in selected_indexes:
+            selected_indexes = [click_proxy_index]
+
+        selected_paths = []
+        for idx in selected_indexes:
+            src_idx = self.proxy_model.mapToSource(idx)
+            p = self.fs_model.filePath(src_idx)
+            if p:
+                selected_paths.append(p)
+
+        if not selected_paths:
+            selected_paths = [self._current_root]
 
         menu = QMenu(self)
         menu.setFont(self.font())
@@ -593,71 +601,97 @@ class ExplorerWidget(QWidget):
 
         menu.hovered.connect(on_hover)
 
-        if os.path.isfile(target_path):
-            open_act = QAction("Open in editor [MMB]", menu)
-            open_act.setStatusTip("Open this file in a new tab (Middle Mouse Button)")
-            open_act.setIcon(QIcon(icons.get("open", "")))
-            open_act.triggered.connect(lambda: self.file_selected.emit(target_path))
-            menu.addAction(open_act)
-        elif os.path.isdir(target_path):
-            set_root_act = QAction("Set as explorer root [MMB]", menu)
-            set_root_act.setStatusTip("Navigate into this folder (Middle Mouse Button)")
-            set_root_act.setIcon(QIcon(icons.get("open", "")))
-            set_root_act.triggered.connect(lambda: self.set_root_path(target_path))
-            menu.addAction(set_root_act)
+        if len(selected_paths) > 1:
+            files_to_open = [p for p in selected_paths if os.path.isfile(p)]
+            if files_to_open:
+                open_all_act = QAction(f"Open selected files ({len(files_to_open)})", menu)
+                open_all_act.setStatusTip("Open all selected files in tabs")
+                open_all_act.setIcon(QIcon(icons.get("open", "")))
+                open_all_act.triggered.connect(lambda: [self.file_selected.emit(p) for p in files_to_open])
+                menu.addAction(open_all_act)
 
-            bookmark_act = QAction("Add to favorites/bookmarks", menu)
-            bookmark_act.setStatusTip("Bookmark this folder")
-            bookmark_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
-            bookmark_act.triggered.connect(lambda: self.add_path_to_bookmarks(target_path))
-            menu.addAction(bookmark_act)
+            copy_all_paths_act = QAction("Copy selected full paths", menu)
+            copy_all_paths_act.setStatusTip("Copy all selected paths to clipboard")
+            copy_all_paths_act.setIcon(QIcon(icons.get("copy", "")))
+            copy_all_paths_act.triggered.connect(lambda: QApplication.clipboard().setText("\n".join(selected_paths)))
+            menu.addAction(copy_all_paths_act)
 
-        menu.addSeparator()
-
-        open_os_act = QAction("Reveal in file explorer", menu)
-        open_os_act.setStatusTip("Open in system file manager")
-        open_os_act.setIcon(QIcon(icons.get("file_recent", "")))
-        open_os_act.triggered.connect(lambda: self._open_in_os_explorer(target_path))
-        menu.addAction(open_os_act)
-
-        copy_path_act = QAction("Copy full path", menu)
-        copy_path_act.setStatusTip("Copy the absolute file path to clipboard")
-        copy_path_act.setIcon(QIcon(icons.get("copy", "")))
-        copy_path_act.triggered.connect(lambda: QApplication.clipboard().setText(target_path))
-        menu.addAction(copy_path_act)
-
-        menu.addSeparator()
-
-        target_dir = target_path if os.path.isdir(target_path) else os.path.dirname(target_path)
-
-        new_file_act = QAction("New file...", menu)
-        new_file_act.setStatusTip("Create a new file in this directory")
-        if "new_file" in icons:
-            new_file_act.setIcon(QIcon(icons["new_file"]))
-        new_file_act.triggered.connect(lambda: self._create_new_file(target_dir))
-        menu.addAction(new_file_act)
-
-        new_folder_act = QAction("New folder...", menu)
-        new_folder_act.setStatusTip("Create a new folder in this directory")
-        if "new_folder" in icons:
-            new_folder_act.setIcon(QIcon(icons["new_folder"]))
-        new_folder_act.triggered.connect(lambda: self._create_new_folder(target_dir))
-        menu.addAction(new_folder_act)
-
-        if source_index.isValid():
             menu.addSeparator()
 
-            rename_act = QAction("Rename...", menu)
-            rename_act.setStatusTip("Rename this file or folder")
-            rename_act.setIcon(QIcon(icons.get("rename_file", "")))
-            rename_act.triggered.connect(lambda: self._rename_path(target_path))
-            menu.addAction(rename_act)
+            delete_all_act = QAction(f"Delete selected ({len(selected_paths)})", menu)
+            delete_all_act.setStatusTip("Delete selected files and folders")
+            delete_all_act.setIcon(QIcon(icons.get("delete_file", "")))
+            delete_all_act.triggered.connect(lambda: [self._delete_path(p) for p in selected_paths])
+            menu.addAction(delete_all_act)
+        else:
+            target_path = selected_paths[0]
+            source_index = self.proxy_model.mapToSource(self.tree_view.indexAt(position)) if click_proxy_index.isValid() else QModelIndex()
 
-            delete_act = QAction("Delete", menu)
-            delete_act.setStatusTip("Move this file or folder to trash")
-            delete_act.setIcon(QIcon(icons.get("delete_file", "")))
-            delete_act.triggered.connect(lambda: self._delete_path(target_path))
-            menu.addAction(delete_act)
+            if os.path.isfile(target_path):
+                open_act = QAction("Open in editor [MMB]", menu)
+                open_act.setStatusTip("Open this file in a new tab (Middle Mouse Button)")
+                open_act.setIcon(QIcon(icons.get("open", "")))
+                open_act.triggered.connect(lambda: self.file_selected.emit(target_path))
+                menu.addAction(open_act)
+            elif os.path.isdir(target_path):
+                set_root_act = QAction("Set as explorer root [MMB]", menu)
+                set_root_act.setStatusTip("Navigate into this folder (Middle Mouse Button)")
+                set_root_act.setIcon(QIcon(icons.get("open", "")))
+                set_root_act.triggered.connect(lambda: self.set_root_path(target_path))
+                menu.addAction(set_root_act)
+
+                bookmark_act = QAction("Add to favorites/bookmarks", menu)
+                bookmark_act.setStatusTip("Bookmark this folder")
+                bookmark_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
+                bookmark_act.triggered.connect(lambda: self.add_path_to_bookmarks(target_path))
+                menu.addAction(bookmark_act)
+
+            menu.addSeparator()
+
+            open_os_act = QAction("Reveal in file explorer", menu)
+            open_os_act.setStatusTip("Open in system file manager")
+            open_os_act.setIcon(QIcon(icons.get("file_recent", "")))
+            open_os_act.triggered.connect(lambda: self._open_in_os_explorer(target_path))
+            menu.addAction(open_os_act)
+
+            copy_path_act = QAction("Copy full path", menu)
+            copy_path_act.setStatusTip("Copy the absolute file path to clipboard")
+            copy_path_act.setIcon(QIcon(icons.get("copy", "")))
+            copy_path_act.triggered.connect(lambda: QApplication.clipboard().setText(target_path))
+            menu.addAction(copy_path_act)
+
+            menu.addSeparator()
+
+            target_dir = target_path if os.path.isdir(target_path) else os.path.dirname(target_path)
+
+            new_file_act = QAction("New file...", menu)
+            new_file_act.setStatusTip("Create a new file in this directory")
+            if "new_file" in icons:
+                new_file_act.setIcon(QIcon(icons["new_file"]))
+            new_file_act.triggered.connect(lambda: self._create_new_file(target_dir))
+            menu.addAction(new_file_act)
+
+            new_folder_act = QAction("New folder...", menu)
+            new_folder_act.setStatusTip("Create a new folder in this directory")
+            if "new_folder" in icons:
+                new_folder_act.setIcon(QIcon(icons["new_folder"]))
+            new_folder_act.triggered.connect(lambda: self._create_new_folder(target_dir))
+            menu.addAction(new_folder_act)
+
+            if source_index.isValid():
+                menu.addSeparator()
+
+                rename_act = QAction("Rename...", menu)
+                rename_act.setStatusTip("Rename this file or folder")
+                rename_act.setIcon(QIcon(icons.get("rename_file", "")))
+                rename_act.triggered.connect(lambda: self._rename_path(target_path))
+                menu.addAction(rename_act)
+
+                delete_act = QAction("Delete", menu)
+                delete_act.setStatusTip("Move this file or folder to trash")
+                delete_act.setIcon(QIcon(icons.get("delete_file", "")))
+                delete_act.triggered.connect(lambda: self._delete_path(target_path))
+                menu.addAction(delete_act)
 
         menu.exec_(self.tree_view.viewport().mapToGlobal(position))
 
@@ -668,8 +702,49 @@ class ExplorerWidget(QWidget):
             path = os.path.dirname(path)
         QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
+    def _apply_dialog_font(self, dlg):
+        font = getattr(self, "_current_font", self.font())
+        if font:
+            dlg.setFont(font)
+            family = font.family()
+            size = font.pointSize()
+            dlg.setStyleSheet(f"* {{ font-family: '{family}'; font-size: {size}pt; }}")
+            for btn in dlg.findChildren(QPushButton):
+                btn.setFont(font)
+            for lbl in dlg.findChildren(QLabel):
+                lbl.setFont(font)
+            for le in dlg.findChildren(QLineEdit):
+                le.setFont(font)
+
+    def _get_input_text(self, title, label, text=""):
+        dlg = QInputDialog(self)
+        dlg.setWindowTitle(title)
+        dlg.setLabelText(label)
+        dlg.setTextValue(text)
+        self._apply_dialog_font(dlg)
+        ok = (dlg.exec_() if hasattr(dlg, 'exec_') else dlg.exec()) == QInputDialog.Accepted
+        return dlg.textValue(), ok
+
+    def _show_question_dialog(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, default_button=QMessageBox.No):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(text)
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setStandardButtons(buttons)
+        msg_box.setDefaultButton(default_button)
+        self._apply_dialog_font(msg_box)
+        return msg_box.exec_() if hasattr(msg_box, 'exec_') else msg_box.exec()
+
+    def _show_warning_dialog(self, title, text):
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(text)
+        msg_box.setIcon(QMessageBox.Warning)
+        self._apply_dialog_font(msg_box)
+        return msg_box.exec_() if hasattr(msg_box, 'exec_') else msg_box.exec()
+
     def _create_new_file(self, target_dir):
-        filename, ok = QInputDialog.getText(self, "New File", "Enter file name:")
+        filename, ok = self._get_input_text("New File", "Enter file name:")
         if ok and filename.strip():
             filepath = os.path.join(target_dir, filename.strip())
             if not os.path.exists(filepath):
@@ -679,10 +754,10 @@ class ExplorerWidget(QWidget):
                     self.refresh_tree()
                     self.file_selected.emit(filepath)
                 except Exception as e:
-                    QMessageBox.warning(self, "Error", f"Failed to create file: {e}")
+                    self._show_warning_dialog("Error", f"Failed to create file: {e}")
 
     def _create_new_folder(self, target_dir):
-        foldername, ok = QInputDialog.getText(self, "New Folder", "Enter folder name:")
+        foldername, ok = self._get_input_text("New Folder", "Enter folder name:")
         if ok and foldername.strip():
             folderpath = os.path.join(target_dir, foldername.strip())
             if not os.path.exists(folderpath):
@@ -690,23 +765,22 @@ class ExplorerWidget(QWidget):
                     os.makedirs(folderpath)
                     self.refresh_tree()
                 except Exception as e:
-                    QMessageBox.warning(self, "Error", f"Failed to create folder: {e}")
+                    self._show_warning_dialog("Error", f"Failed to create folder: {e}")
 
     def _rename_path(self, old_path):
         old_name = os.path.basename(old_path)
-        new_name, ok = QInputDialog.getText(self, "Rename", "Enter new name:", text=old_name)
+        new_name, ok = self._get_input_text("Rename", "Enter new name:", text=old_name)
         if ok and new_name.strip() and new_name.strip() != old_name:
             new_path = os.path.join(os.path.dirname(old_path), new_name.strip())
             try:
                 os.rename(old_path, new_path)
                 self.refresh_tree()
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to rename: {e}")
+                self._show_warning_dialog("Error", f"Failed to rename: {e}")
 
     def _delete_path(self, target_path):
         name = os.path.basename(target_path)
-        reply = QMessageBox.question(
-            self,
+        reply = self._show_question_dialog(
             "Delete Confirmation",
             f"Are you sure you want to delete '{name}'?",
             QMessageBox.Yes | QMessageBox.No,
@@ -720,7 +794,7 @@ class ExplorerWidget(QWidget):
                     os.remove(target_path)
                 self.refresh_tree()
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Failed to delete: {e}")
+                self._show_warning_dialog("Error", f"Failed to delete: {e}")
 
     def apply_theme(self, colors=None, font=None):
         if not colors:
@@ -778,6 +852,7 @@ class ExplorerWidget(QWidget):
         # self.setStyleSheet(qss)
 
         if font:
+            self._current_font = font
             self.setFont(font)
             self.tree_view.setFont(font)
             self.path_filter_input.setFont(font)

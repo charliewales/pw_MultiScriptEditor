@@ -834,11 +834,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         msg_box.setStandardButtons(buttons)
         msg_box.setDefaultButton(defaultButton)
 
-        if hasattr(self, 'theme_font'):
-            msg_box.setFont(self.theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.theme_font)
+        font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
+        if font:
+            msg_box.setFont(font)
+            family = font.family()
+            size = font.pointSize()
+            msg_box.setStyleSheet(f"* {{ font-family: '{family}'; font-size: {size}pt; }}")
+            for btn in msg_box.findChildren(QPushButton):
+                btn.setFont(font)
+            for lbl in msg_box.findChildren(QLabel):
+                lbl.setFont(font)
 
         if hasattr(msg_box, "exec"):
             return msg_box.exec()

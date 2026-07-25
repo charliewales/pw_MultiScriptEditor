@@ -150,7 +150,10 @@ class tabWidgetClass(QTabWidget):
 
         quick_tab_switching = True
         if hasattr(self.p, 'quickTabSwitching_act'):
-            quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+            try:
+                quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+            except RuntimeError:
+                quick_tab_switching = False
 
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Control and not self._ctrl_pressed:
