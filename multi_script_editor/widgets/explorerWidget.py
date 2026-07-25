@@ -524,7 +524,7 @@ class ExplorerWidget(QWidget):
         if sorted_bookmarks:
             self.bookmarks_menu.addSeparator()
 
-        add_act = QAction("★ Bookmark Current Directory", self.bookmarks_menu)
+        add_act = QAction("Bookmark Current Directory", self.bookmarks_menu)
         add_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
         add_act.triggered.connect(self.add_current_to_bookmarks)
         self.bookmarks_menu.addAction(add_act)
@@ -557,7 +557,7 @@ class ExplorerWidget(QWidget):
                         main_window.statusBar().showMessage(action.statusTip())
                 else:
                     main_window.statusBar().clearMessage()
-                    
+
         menu.hovered.connect(on_hover)
 
         if os.path.isfile(target_path):
