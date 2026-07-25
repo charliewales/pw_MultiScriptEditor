@@ -130,6 +130,52 @@ class BaseTextWidgetMixin:
             else:
                 break
 
+        # Selection to tab action
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
+            sel_to_tab_action = QAction('Selection to tab', self)
+
+            def create_selection_tab():
+                import datetime
+                time_str = datetime.datetime.now().strftime("%H:%M:%S")
+                tab_name = f"selection {time_str}"
+                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
+                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
+
+            sel_to_tab_action.triggered.connect(create_selection_tab)
+            if menu.actions():
+                first_action = menu.actions()[0]
+                menu.insertAction(first_action, sel_to_tab_action)
+                menu.insertSeparator(first_action)
+            else:
+                menu.addAction(sel_to_tab_action)
+
+        # File type specific actions (Markdown Preview / Open in browser) - Available regardless of text selection
+        if file_path:
+            _, ext = os.path.splitext(file_path)
+            if ext.lower() in ['.html', '.htm']:
+                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
+                open_action.setIcon(QIcon(icons['open_in_browser']))
+                open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
+                if menu.actions():
+                    first_action = menu.actions()[0]
+                    menu.insertAction(first_action, open_action)
+                    menu.insertSeparator(first_action)
+                else:
+                    menu.addAction(open_action)
+            elif ext.lower() == '.md':
+                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
+                if 'docs' in icons:
+                    preview_action.setIcon(QIcon(icons['docs']))
+                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
+                if menu.actions():
+                    first_action = menu.actions()[0]
+                    menu.insertAction(first_action, preview_action)
+                    menu.insertSeparator(first_action)
+                else:
+                    menu.addAction(preview_action)
+
         # Place Git menu at the very top if file is inside a Git repository and version control is enabled
         if file_path and os.path.exists(file_path) and getattr(main_win, '_version_control_enabled', True):
             from core.git_manager import GitManager
@@ -159,50 +205,6 @@ class BaseTextWidgetMixin:
                     menu.insertSeparator(first_act)
                 else:
                     menu.addMenu(git_menu)
-
-        # Selection to tab action
-        cursor = self.textCursor()
-        if cursor.hasSelection():
-            selected_text = cursor.selectedText().replace('\u2029', '\n')
-            sel_to_tab_action = QAction('Selection to tab', self)
-            
-            def create_selection_tab():
-                import datetime
-                time_str = datetime.datetime.now().strftime("%H:%M:%S")
-                tab_name = f"selection {time_str}"
-                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
-                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
-            
-            sel_to_tab_action.triggered.connect(create_selection_tab)
-            if menu.actions():
-                first_action = menu.actions()[0]
-                menu.insertAction(first_action, sel_to_tab_action)
-                menu.insertSeparator(first_action)
-            else:
-                menu.addAction(sel_to_tab_action)
-
-            _, ext = os.path.splitext(file_path)
-            if ext.lower() in ['.html', '.htm']:
-                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
-                open_action.setIcon(QIcon(icons['open_in_browser']))
-                open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
-                if menu.actions():
-                    first_action = menu.actions()[0]
-                    menu.insertAction(first_action, open_action)
-                    menu.insertSeparator(first_action)
-                else:
-                    menu.addAction(open_action)
-            elif ext.lower() == '.md':
-                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
-                if 'docs' in icons:
-                    preview_action.setIcon(QIcon(icons['docs']))
-                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
-                if menu.actions():
-                    first_action = menu.actions()[0]
-                    menu.insertAction(first_action, preview_action)
-                    menu.insertSeparator(first_action)
-                else:
-                    menu.addAction(preview_action)
         if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
             menu.addSeparator()
             show_menus_action = QAction('Show menus\tCtrl+M', self)
