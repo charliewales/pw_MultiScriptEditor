@@ -745,7 +745,7 @@ class tabWidgetClass(QTabWidget):
                 "Discard Changes",
                 f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.",
                 QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                QMessageBox.Yes
             )
         else:
             msg_box = QMessageBox(self)
@@ -753,7 +753,12 @@ class tabWidgetClass(QTabWidget):
             msg_box.setText(f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.")
             msg_box.setIcon(QMessageBox.Question)
             msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            msg_box.setDefaultButton(QMessageBox.No)
+            btn = msg_box.button(QMessageBox.Yes)
+            if btn:
+                msg_box.setDefaultButton(btn)
+                btn.setFocus()
+            else:
+                msg_box.setDefaultButton(QMessageBox.Yes)
             font = getattr(self.p, 'theme_font', getattr(self.p, 'current_outline_font', self.font()))
             if font:
                 msg_box.setFont(font)
@@ -929,6 +934,7 @@ class tabWidgetClass(QTabWidget):
         widget = self.widget(index)
         text = self.getCurrentText(index)
         old_path = getattr(widget, 'file_path', None) if widget else None
+        target_index = index + 1
 
         if old_path:
             dir_name = os.path.dirname(old_path)
@@ -945,7 +951,7 @@ class tabWidgetClass(QTabWidget):
                 with open(new_path, 'w') as f:
                     f.write(text or '')
                 new_tab_name = os.path.basename(new_path)
-                self.addNewTab(new_tab_name, text, file_path=new_path)
+                self.addNewTab(new_tab_name, text, file_path=new_path, insert_index=target_index)
                 norm_new_path = os.path.normpath(new_path)
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Duplicated file saved to: %s' % norm_new_path)
@@ -955,12 +961,10 @@ class tabWidgetClass(QTabWidget):
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Error duplicating file: %s' % str(e))
                 name = self.tabText(index) + " (copy)"
-                self.addNewTab(name, text)
+                self.addNewTab(name, text, insert_index=target_index)
         else:
             name = self.tabText(index) + " (copy)"
-            self.addNewTab(name, text)
-
-        self.setCurrentIndex(self.count() - 1)
+            self.addNewTab(name, text, insert_index=target_index)
 
     def finishRename(self, commit=True):
         edit = getattr(self, '_rename_edit', None)
@@ -1066,7 +1070,7 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
-    def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True):
+    def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True, insert_index=None):
         # Ensure name is a string and handle PySide6 signal boolean parameter
         if isinstance(name, bool) or name is None:
             name = 'New Tab'
@@ -1088,7 +1092,18 @@ class tabWidgetClass(QTabWidget):
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         if hasattr(self.p, 'showStatusMessage'):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
-        self.addTab(cont, name)
+
+        if insert_index is None:
+            curr = self.currentIndex()
+            if curr >= 0:
+                insert_index = curr + 1
+
+        if insert_index is not None and 0 <= insert_index <= self.count():
+            self.insertTab(insert_index, cont, name)
+        else:
+            self.addTab(cont, name)
+
+        new_index = self.indexOf(cont)
 
         colors = {}
         if hasattr(self.p, '_presenter'):
@@ -1096,14 +1111,14 @@ class tabWidgetClass(QTabWidget):
             colors = design.getColors(theme_name)
 
         btn = TabCloseButton(colors=colors)
-        btn.set_selected(self.count() - 1 == self.currentIndex())
+        btn.set_selected(new_index == self.currentIndex())
         btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
-        self.tabBar().setTabButton(self.count() - 1, QTabBar.RightSide, btn)
+        self.tabBar().setTabButton(new_index, QTabBar.RightSide, btn)
         cont._custom_close_btn = btn
 
         if file_path:
-            self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
-            self.update_tab_git_status(self.count() - 1)
+            self.setTabToolTip(new_index, os.path.normpath(file_path))
+            self.update_tab_git_status(new_index)
 
         if hasattr(self.p, 'updateStatusBarInfo'):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
@@ -1113,7 +1128,7 @@ class tabWidgetClass(QTabWidget):
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:
-            self.setCurrentIndex(self.count()-1)
+            self.setCurrentIndex(new_index)
 
         # Apply settings from presenter instead of trying to find actions in MainWindow
         if hasattr(self.p, '_presenter'):

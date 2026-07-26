@@ -533,7 +533,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                         self.out.showMessage(os.path.splitext(f)[-1])
                         self.out.showMessage('Open File: ' + f)
                         text = read_file_text(f)
-                        self.tab.addNewTab(os.path.basename(f), text, file_path=f)
+                        self.tab.addNewTab(os.path.basename(f), text, file_path=f, insert_index=self.tab.count())
 
     def fillThemeMenu(self):
         self.theme_menu.clear()
@@ -833,7 +833,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         msg_box.setText(text)
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setStandardButtons(buttons)
-        msg_box.setDefaultButton(defaultButton)
+        if isinstance(defaultButton, QPushButton):
+            msg_box.setDefaultButton(defaultButton)
+            defaultButton.setFocus()
+        else:
+            btn = msg_box.button(defaultButton)
+            if btn:
+                msg_box.setDefaultButton(btn)
+                btn.setFocus()
+            else:
+                msg_box.setDefaultButton(defaultButton)
 
         font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
         if font:
@@ -895,7 +904,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     if file_path and not os.path.exists(file_path):
                         self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
 
-                    w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False)
+                    w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False, insert_index=self.tab.count())
 
                     # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
                     w.needs_loading_bookmarks = s.get('bookmarks', "")
@@ -1581,7 +1590,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def openRecentFile(self, path):
         if os.path.exists(path):
             text = read_file_text(path)
-            self.tab.addNewTab(os.path.basename(path), text, file_path=path)
+            curr_idx = self.tab.currentIndex()
+            insert_idx = curr_idx + 1 if curr_idx >= 0 else None
+            self.tab.addNewTab(os.path.basename(path), text, file_path=path, insert_index=insert_idx)
             self.addRecentFile(path)
         else:
             reply = self.show_question_msg(
@@ -2252,7 +2263,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         current_time = time.strftime("%H:%M:%S")
         tab_name = f"output {current_time}"
         text = self.out.toPlainText()
-        self.tab.addNewTab(tab_name, text)
+        curr_idx = self.tab.currentIndex()
+        insert_idx = curr_idx + 1 if curr_idx >= 0 else None
+        self.tab.addNewTab(tab_name, text, insert_index=insert_idx)
 
     def toggleQuickTabSwitching(self, state=None):
         state = self.quickTabSwitching_act.isChecked()
