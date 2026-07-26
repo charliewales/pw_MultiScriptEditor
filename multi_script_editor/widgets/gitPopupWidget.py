@@ -8,6 +8,16 @@ from widgets.searchPopupWidget import SearchPopupWidget
 from core.git_manager import GitManager
 
 
+def to_color_str(color_val, default="#d4d4d4"):
+    if not color_val:
+        return default
+    if isinstance(color_val, (list, tuple)) and len(color_val) >= 3:
+        return "#{:02x}{:02x}{:02x}".format(color_val[0], color_val[1], color_val[2])
+    if hasattr(color_val, "name"):
+        return color_val.name()
+    return str(color_val)
+
+
 class GitPopupWidget(SearchPopupWidget):
     """
     Floating search popup widget displaying Git actions for the active file tab (Ctrl+Shift+G).
@@ -144,8 +154,8 @@ class GitPopupWidget(SearchPopupWidget):
         filter_text = filter_text.lower()
 
         c = self.colors or {}
-        text_color = c.get("text", "#d4d4d4")
-        sub_color = c.get("comment", "#808080")
+        text_color = to_color_str(c.get("tab_selected_text", c.get("text")), "#d4d4d4")
+        sub_color = to_color_str(c.get("comment"), "#808080")
 
         first_selectable_row = -1
 
