@@ -46,6 +46,7 @@ from vendor.Qt.QtWidgets import (
     QMainWindow,
     QMenu,
     QMessageBox,
+    QPushButton,
     QShortcut,
     QSplitter,
     QStyle,
