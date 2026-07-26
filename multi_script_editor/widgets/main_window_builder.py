@@ -421,6 +421,8 @@ class ScriptEditorUIBuilder:
 
         # Version Control (Git) setup
         editor.versionControl_act.setChecked(True)
+        editor.versionControl_act.setShortcut('Ctrl+Alt+G')
+        editor.versionControl_act.setShortcutContext(Qt.WindowShortcut)
         editor.versionControl_act.triggered.connect(editor.toggleVersionControl)
 
         editor.outline_timer = QTimer(editor)

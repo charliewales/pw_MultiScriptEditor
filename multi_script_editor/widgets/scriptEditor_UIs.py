@@ -484,6 +484,7 @@ class Ui_scriptEditor(object):
         self.trimWhitespace_act.setShortcut(QApplication.translate("scriptEditor", "Alt+Shift+W", None))
         self.trimAutoWhitespace_act.setText(QApplication.translate("scriptEditor", "Trim auto whitespace", None))
         self.versionControl_act.setText(QApplication.translate("scriptEditor", "Version control (GIT)", None))
+        self.versionControl_act.setShortcut(QApplication.translate("scriptEditor", "Ctrl+Alt+G", None))
         self.toggleMenus_act.setText(QApplication.translate("scriptEditor", "Menus", None))
         self.toggleMenus_act.setShortcut(QApplication.translate("scriptEditor", "Ctrl+M", None))
         self.toggleEditorToolbar_act.setText(QApplication.translate("scriptEditor", "Toolbar", None))

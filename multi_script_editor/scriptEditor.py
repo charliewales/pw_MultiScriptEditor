@@ -2290,6 +2290,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.saveSettings()
         # Force update status info to hide or show git status
         self.updateStatusBarInfo()
+        # Refresh all tabs Git status badges
+        if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
+            self.tab.update_all_tabs_git_status()
 
     def toggleAutoCloseDelimiters(self, state=None):
         state = self.autoCloseDelimiters_act.isChecked()

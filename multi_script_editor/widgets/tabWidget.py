@@ -818,6 +818,10 @@ class tabWidgetClass(QTabWidget):
         if btn and hasattr(btn, 'set_git_status_code'):
             btn.set_git_status_code(git_code)
 
+    def update_all_tabs_git_status(self):
+        for i in range(self.count()):
+            self.update_tab_git_status(i)
+
     def build_compare_menu(self, compare_menu, index):
         if index < 0 or index >= self.count():
             return
