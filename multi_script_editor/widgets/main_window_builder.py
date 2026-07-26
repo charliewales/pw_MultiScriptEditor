@@ -152,6 +152,13 @@ class ScriptEditorUIBuilder:
         editor.find_act.setShortcutContext(Qt.WindowShortcut)
         editor.find_act.setIcon(QIcon(icons['replace']))
 
+        editor.gitAction_act.triggered.connect(editor.openGitPopup)
+        # Ctrl+Shift+G is set in retranslateUi but setting it here for context explicitly
+        editor.gitAction_act.setShortcut('Ctrl+Shift+G')
+        editor.gitAction_act.setShortcutContext(Qt.WindowShortcut)
+        if 'github' in icons:
+            editor.gitAction_act.setIcon(QIcon(icons['github']))
+
         editor.gotoLine_act.triggered.connect(editor.gotoLine)
         editor.gotoLine_act.setShortcut('Ctrl+G')
         editor.gotoLine_act.setShortcutContext(Qt.WindowShortcut)
@@ -548,6 +555,7 @@ class ScriptEditorUIBuilder:
             editor.fold_act: "Fold the current code block",
             editor.fold_all_act: "Fold all code blocks",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
+            editor.gitAction_act: "Perform Git actions or show Git context menu",
             editor.gotoLine_act: "Go to a specific line in the editor",
             editor.goToSymbol_act: "Go to a symbol in the editor",
             editor.help_act: "Execute help() on the selected text",
