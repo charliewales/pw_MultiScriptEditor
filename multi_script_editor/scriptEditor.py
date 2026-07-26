@@ -1780,9 +1780,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.showOutline_act.setChecked(show_outline)
                 self.toggleOutline(show_outline)
 
-            show_outline_button = data.get('show_outline_button', True)
-            self.showOutlineButton_act.setChecked(show_outline_button)
-            self.toggleOutlineButton(show_outline_button)
 
             show_output = data.get('show_output', True)
             self.showOutput_act.setChecked(show_output)
@@ -1875,7 +1872,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         explorer_current_path = self.explorer_widget.get_current_root() if hasattr(self, 'explorer_widget') else ""
         explorer_auto_sync = self.explorer_widget.auto_sync_tab_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None) else False
         explorer_filter_supported = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else True
-        show_outline_button = self.showOutlineButton_act.isChecked()
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
         show_toolbar = self.toggleEditorToolbar_act.isChecked()
@@ -1936,7 +1932,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             explorer_current_path=explorer_current_path,
             explorer_auto_sync=explorer_auto_sync,
             explorer_filter_supported=explorer_filter_supported,
-            show_outline_button=show_outline_button,
             show_output=show_output,
             show_menus=show_menus,
             show_toolbar=show_toolbar,
@@ -2093,6 +2088,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.showExplorer_act.setChecked(False)
                 self.showOutline_act.setChecked(True)
                 self._updateOutlineNow()
+        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleExplorer_btn'):
+            self.tab.toggleExplorer_btn.blockSignals(True)
+            self.tab.toggleExplorer_btn.setChecked(self.showExplorer_act.isChecked())
+            self.tab.toggleExplorer_btn.blockSignals(False)
 
     def toggleExplorer(self, state=None):
         if not hasattr(self, 'sidebar_tab_widget'):
@@ -2130,6 +2129,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if self.horizontal_splitter.sizes()[0] != 0:
                     self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
                 self.horizontal_splitter.setSizes([0, 800])
+
+        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleExplorer_btn'):
+            self.tab.toggleExplorer_btn.blockSignals(True)
+            self.tab.toggleExplorer_btn.setChecked(self.showExplorer_act.isChecked())
+            self.tab.toggleExplorer_btn.blockSignals(False)
 
     def toggleOutline(self, state=None):
         if not hasattr(self, 'sidebar_tab_widget'):
@@ -2170,15 +2174,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     self._last_horizontal_splitter_sizes = self.horizontal_splitter.sizes()
                 self.horizontal_splitter.setSizes([0, 800])
 
-        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
-            self.tab.toggleOutline_btn.blockSignals(True)
-            self.tab.toggleOutline_btn.setChecked(self.showOutline_act.isChecked())
-            self.tab.toggleOutline_btn.blockSignals(False)
-
-    def toggleOutlineButton(self, state):
-        self.showOutlineButton_act.setChecked(state)
-        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleOutline_btn'):
-            self.tab.toggleOutline_btn.setVisible(state)
+        if hasattr(self, 'tab') and hasattr(self.tab, 'toggleExplorer_btn'):
+            self.tab.toggleExplorer_btn.blockSignals(True)
+            self.tab.toggleExplorer_btn.setChecked(self.showExplorer_act.isChecked())
+            self.tab.toggleExplorer_btn.blockSignals(False)
 
     def getDefaultSplitterSizes(self):
         bottom = self.outputBottom_act.isChecked()

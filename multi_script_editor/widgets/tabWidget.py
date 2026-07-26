@@ -70,15 +70,15 @@ class tabWidgetClass(QTabWidget):
         self.corner_layout.setContentsMargins(0, 0, 10, 0)
         self.corner_layout.setSpacing(2)
 
-        self.toggleOutline_btn = QPushButton(self.corner_widget)
-        self.toggleOutline_btn.setMaximumWidth(30)
-        self.toggleOutline_btn.setCursor(Qt.ArrowCursor)
-        self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
-        self.toggleOutline_btn.setIconSize(QSize(24, 24))
-        self.toggleOutline_btn.setToolTip("Toggle Code Outline (Ctrl+Shift+O)")
-        self.toggleOutline_btn.setStatusTip("Show or hide the code outline panel")
-        self.toggleOutline_btn.setCheckable(True)
-        self.toggleOutline_btn.toggled.connect(self.toggle_outline)
+        self.toggleExplorer_btn = QPushButton(self.corner_widget)
+        self.toggleExplorer_btn.setMaximumWidth(30)
+        self.toggleExplorer_btn.setCursor(Qt.ArrowCursor)
+        self.toggleExplorer_btn.setIcon(QIcon(icons.get('explorer_panel', icons.get('open', ''))))
+        self.toggleExplorer_btn.setIconSize(QSize(24, 24))
+        self.toggleExplorer_btn.setToolTip("Toggle Explorer (Ctrl+E)")
+        self.toggleExplorer_btn.setStatusTip("Show or hide the file explorer panel")
+        self.toggleExplorer_btn.setCheckable(True)
+        self.toggleExplorer_btn.toggled.connect(self.toggle_explorer)
 
         newTabButton = QPushButton(self.corner_widget)
         newTabButton.setMaximumWidth(30)
@@ -90,7 +90,7 @@ class tabWidgetClass(QTabWidget):
         newTabButton.setStatusTip("Open a new empty editor tab")
         newTabButton.setShortcut('Ctrl+T')
 
-        self.corner_layout.addWidget(self.toggleOutline_btn)
+        self.corner_layout.addWidget(self.toggleExplorer_btn)
         self.corner_layout.addWidget(newTabButton)
         self.setCornerWidget(self.corner_widget, Qt.TopLeftCorner)
 
@@ -246,9 +246,9 @@ class tabWidgetClass(QTabWidget):
                         self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
                         tab_widget._original_close_button.show()
 
-    def toggle_outline(self, state):
-        if hasattr(self.p, 'toggleOutline'):
-            self.p.toggleOutline(state)
+    def toggle_explorer(self, state):
+        if hasattr(self.p, 'toggleExplorer'):
+            self.p.toggleExplorer(state)
 
     def onTabChanged(self, index):
         self.hideAllCompleters()

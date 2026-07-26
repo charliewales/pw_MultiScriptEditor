@@ -367,13 +367,11 @@ class ScriptEditorUIBuilder:
         editor.showExplorer_act.setShortcut("Ctrl+E")
         editor.showExplorer_act.setShortcutContext(Qt.WindowShortcut)
         editor.showExplorer_act.triggered.connect(editor.toggleExplorer)
-        editor.showExplorer_act.setIcon(QIcon(icons.get("explorer_panel", icons.get("open", ""))))
 
         # Outline toggle setup
         editor.showOutline_act.setShortcut("Ctrl+Shift+O")
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
-        editor.showOutlineButton_act.triggered.connect(editor.toggleOutlineButton)
 
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
@@ -599,7 +597,6 @@ class ScriptEditorUIBuilder:
             editor.showAutocomplete_act: "Show code autocompletion",
             editor.showExplorer_act: "Show or hide the file explorer panel",
             editor.showOutline_act: "Show or hide the code outline panel",
-            editor.showOutlineButton_act: "Show or hide the code outline button in the status bar",
             editor.showOutput_act: "Show or hide the output panel",
             editor.showStatusTips_act: "Toggle visibility of status bar tips",
             editor.spacesToTabs_act: "Convert spaces to tabs in the current script",
