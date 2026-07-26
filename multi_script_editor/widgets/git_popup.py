@@ -69,6 +69,50 @@ class GitPopupWidget(SearchPopupWidget):
             }
         )
 
+
+        # Commit File
+        self.actions_data.append(
+            {
+                "title": "Commit File...",
+                "icon": icons.get("git_commit"),
+                "callback": lambda: self.tab_widget.git_commit_dialog(self.file_path) if self.tab_widget else None,
+            }
+        )
+
+        # Copy Path Relative to Repo
+        rel_path = status_info.get("relative_path", "")
+        if rel_path:
+            self.actions_data.append(
+                {
+                    "title": "Copy Path Relative to Repo",
+                    "icon": icons.get("copy"),
+                    "callback": lambda rp=rel_path: QApplication.clipboard().setText(
+                        rp
+                    ),
+                }
+            )
+
+        # Discard Changes
+        if status_info.get("is_modified"):
+            self.actions_data.append(
+                {
+                    "title": "Discard Changes...",
+                    "icon": icons.get("git_discard"),
+                    "callback": lambda: self.tab_widget.git_discard_changes(self.tab_index, self.file_path)
+                    if self.tab_widget
+                    else None,
+                }
+            )
+
+        # File History / Log
+        self.actions_data.append(
+            {
+                "title": "File History / Log...",
+                "icon": icons.get("git_history"),
+                "callback": lambda: self.tab_widget.git_history_dialog(self.file_path) if self.tab_widget else None,
+            }
+        )
+
         # Git Diff vs HEAD
         self.actions_data.append(
             {
@@ -96,46 +140,6 @@ class GitPopupWidget(SearchPopupWidget):
                 }
             )
 
-        # Commit File
-        self.actions_data.append(
-            {
-                "title": "Commit File...",
-                "icon": icons.get("git_commit"),
-                "callback": lambda: self.tab_widget.git_commit_dialog(self.file_path) if self.tab_widget else None,
-            }
-        )
-
-        # Discard Changes
-        if status_info.get("is_modified"):
-            self.actions_data.append(
-                {
-                    "title": "Discard Changes...",
-                    "icon": icons.get("git_discard"),
-                    "callback": lambda: self.tab_widget.git_discard_changes(self.tab_index, self.file_path)
-                    if self.tab_widget
-                    else None,
-                }
-            )
-
-        # File History / Log
-        self.actions_data.append(
-            {
-                "title": "File History / Log...",
-                "icon": icons.get("git_history"),
-                "callback": lambda: self.tab_widget.git_history_dialog(self.file_path) if self.tab_widget else None,
-            }
-        )
-
-        # Copy Path Relative to Repo
-        rel_path = status_info.get("relative_path", "")
-        if rel_path:
-            self.actions_data.append(
-                {
-                    "title": "Copy Path Relative to Repo",
-                    "icon": icons.get("copy"),
-                    "callback": lambda rp=rel_path: QApplication.clipboard().setText(rp),
-                }
-            )
 
     def populate_list(self, filter_text):
         self.list_widget.clear()

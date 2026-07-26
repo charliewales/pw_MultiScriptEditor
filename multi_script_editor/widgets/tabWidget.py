@@ -660,6 +660,19 @@ class tabWidgetClass(QTabWidget):
             branch_act.setIcon(QIcon(icons['git_branch']))
         git_menu.addSeparator()
 
+        commit_act = git_menu.addAction("Commit File...")
+        commit_act.setStatusTip("Commit this file")
+        if 'git_commit' in icons:
+            commit_act.setIcon(QIcon(icons['git_commit']))
+        commit_act.triggered.connect(lambda checked=False, fp=file_path: self.git_commit_dialog(fp))
+
+        if status_info.get('is_modified'):
+            discard_act = git_menu.addAction("Discard Changes...")
+            discard_act.setStatusTip("Discard local changes to this file")
+            if 'git_discard' in icons:
+                discard_act.setIcon(QIcon(icons['git_discard']))
+            discard_act.triggered.connect(lambda checked=False, idx=index, fp=file_path: self.git_discard_changes(idx, fp))
+
         diff_act = git_menu.addAction("Git Diff (vs HEAD)")
         diff_act.setStatusTip("Compare current file with HEAD revision")
         if 'git_diff' in icons:
@@ -679,26 +692,7 @@ class tabWidgetClass(QTabWidget):
                 stage_act.setIcon(QIcon(icons['git_stage']))
             stage_act.triggered.connect(lambda checked=False, fp=file_path: self.git_stage(fp))
 
-        commit_act = git_menu.addAction("Commit File...")
-        commit_act.setStatusTip("Commit this file")
-        if 'git_commit' in icons:
-            commit_act.setIcon(QIcon(icons['git_commit']))
-        commit_act.triggered.connect(lambda checked=False, fp=file_path: self.git_commit_dialog(fp))
-
-        if status_info.get('is_modified'):
-            discard_act = git_menu.addAction("Discard Changes...")
-            discard_act.setStatusTip("Discard local changes to this file")
-            if 'git_discard' in icons:
-                discard_act.setIcon(QIcon(icons['git_discard']))
-            discard_act.triggered.connect(lambda checked=False, idx=index, fp=file_path: self.git_discard_changes(idx, fp))
-
         git_menu.addSeparator()
-
-        log_act = git_menu.addAction("File History / Log...")
-        log_act.setStatusTip("View file history and commits")
-        if 'git_history' in icons:
-            log_act.setIcon(QIcon(icons['git_history']))
-        log_act.triggered.connect(lambda checked=False, fp=file_path: self.git_history_dialog(fp))
 
         rel_path = status_info.get('relative_path', '')
         if rel_path:
@@ -707,6 +701,13 @@ class tabWidgetClass(QTabWidget):
             if 'copy' in icons:
                 copy_rel_act.setIcon(QIcon(icons['copy']))
             copy_rel_act.triggered.connect(lambda checked=False, rp=rel_path: QApplication.clipboard().setText(rp))
+
+        log_act = git_menu.addAction("File History / Log...")
+        log_act.setStatusTip("View file history and commits")
+        if 'git_history' in icons:
+            log_act.setIcon(QIcon(icons['git_history']))
+        log_act.triggered.connect(lambda checked=False, fp=file_path: self.git_history_dialog(fp))
+
 
     def run_git_diff(self, file_path):
         head_path = GitManager.get_head_file_temp_path(file_path)
