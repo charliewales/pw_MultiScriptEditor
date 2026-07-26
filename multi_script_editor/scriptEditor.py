@@ -226,6 +226,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.tab.currentChanged.connect(self.statusBar().clearMessage)
         self.tab.currentChanged.connect(self.updateStatusBarInfo)
+        self.tab.currentChanged.connect(self.updateGitStatusBarInfo)
         self.tab.currentChanged.connect(self._on_tab_changed_sync_explorer)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
 
@@ -264,6 +265,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.status_bar_timer = QTimer(self)
         self.status_bar_timer.setSingleShot(True)
         self.status_bar_timer.timeout.connect(self._updateStatusBarInfo)
+
+    def changeEvent(self, event):
+        if event.type() == QEvent.ActivationChange and self.isActiveWindow():
+            self.refresh_git_status()
+        super(scriptEditorClass, self).changeEvent(event)
+
+    def refresh_git_status(self):
+        if getattr(self, '_version_control_enabled', True):
+            self.updateGitStatusBarInfo()
+            if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
+                self.tab.update_all_tabs_git_status()
+        else:
+            self.lbl_git.setVisible(False)
+            if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
+                self.tab.update_all_tabs_git_status()
 
     def showStatusMessage(self, msg):
         self.lbl_msg.setText(msg)
@@ -307,7 +323,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         total_lines = w.edit.document().blockCount()
         self.lbl_lines.setText(f"{total_lines} lines")
 
-        # Language & Git status
+        # Language
         file_path = getattr(w, 'file_path', None)
         if file_path:
             ext = os.path.splitext(file_path)[1].lower()
@@ -328,24 +344,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 '.bat': 'Batch'
             }
             lang = lang_map.get(ext, 'Plain Text')
-
-            if os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
-                git_info = GitManager.get_file_status(file_path)
-                if git_info.get('in_repo'):
-                    branch = git_info.get('branch', 'HEAD')
-                    status_code = git_info.get('status_code', 'CLEAN')
-                    self.lbl_git.setText(f"Git: {branch} [{status_code}]")
-                    self.lbl_git.setToolTip(
-                        f"Repo: {git_info.get('repo_root')}\nBranch: {branch}\nStatus: {git_info.get('status_text')}"
-                    )
-                    self.lbl_git.setVisible(True)
-                else:
-                    self.lbl_git.setVisible(False)
-            else:
-                self.lbl_git.setVisible(False)
         else:
             lang = 'Python'
-            self.lbl_git.setVisible(False)
 
         self.lbl_lang.setText(lang)
         if lang == 'Python' and hasattr(w.edit, 'runLinter'):
@@ -360,6 +360,32 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         has_file_path = bool(file_path and os.path.exists(file_path))
         if hasattr(self, 'diffTool_act'):
             self.diffTool_act.setEnabled(has_file_path)
+
+    def updateGitStatusBarInfo(self):
+        idx = self.tab.currentIndex()
+        if idx < 0:
+            self.lbl_git.setVisible(False)
+            return
+
+        w = self.tab.widget(idx)
+        if not w:
+            return
+
+        file_path = getattr(w, 'file_path', None)
+        if file_path and os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
+            git_info = GitManager.get_file_status(file_path)
+            if git_info.get('in_repo'):
+                branch = git_info.get('branch', 'HEAD')
+                status_code = git_info.get('status_code', 'CLEAN')
+                self.lbl_git.setText(f"Git: {branch} [{status_code}]")
+                self.lbl_git.setToolTip(
+                    f"Repo: {git_info.get('repo_root')}\nBranch: {branch}\nStatus: {git_info.get('status_text')}"
+                )
+                self.lbl_git.setVisible(True)
+            else:
+                self.lbl_git.setVisible(False)
+        else:
+            self.lbl_git.setVisible(False)
 
     def render_whitespace(self, state):
         wrap_state = self.wordWrap_act.isChecked()
@@ -2289,7 +2315,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._current_settings['version_control'] = state
         self.saveSettings()
         # Force update status info to hide or show git status
-        self.updateStatusBarInfo()
+        self.updateGitStatusBarInfo()
         # Refresh all tabs Git status badges
         if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
             self.tab.update_all_tabs_git_status()
