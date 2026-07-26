@@ -19,6 +19,28 @@ from core.git_manager import GitManager
 from core.diff_manager import DiffManager
 
 
+def show_themed_msg_box(parent, title, text, icon=QMessageBox.Information):
+    msg_box = QMessageBox(parent)
+    msg_box.setWindowTitle(title)
+    msg_box.setText(text)
+    msg_box.setIcon(icon)
+
+    p = parent.parent() if hasattr(parent, 'parent') and callable(parent.parent) and parent.parent() else parent
+    font = getattr(p, 'theme_font', getattr(p, 'font', None))
+    if callable(font):
+        font = font()
+
+    if font:
+        msg_box.setFont(font)
+        family = font.family()
+        size = font.pointSize()
+        msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
+        for w in msg_box.findChildren(QWidget):
+            w.setFont(font)
+
+    return msg_box.exec_()
+
+
 class GitCommitDialog(QDialog):
     """
     Dialog for reviewing file status and entering a commit message to commit the tab's file.
@@ -87,24 +109,25 @@ class GitCommitDialog(QDialog):
         if head_path and os.path.exists(head_path):
             DiffManager.run_diff(head_path, self.file_path, parent=self.parent())
         else:
-            QMessageBox.information(
+            show_themed_msg_box(
                 self,
                 "Git Diff",
-                "No previous HEAD revision found for this file (file might be untracked or new)."
+                "No previous HEAD revision found for this file (file might be untracked or new).",
+                QMessageBox.Information
             )
 
     def do_commit(self):
         message = self.msg_edit.toPlainText().strip()
         if not message:
-            QMessageBox.warning(self, "Commit Warning", "Please enter a commit message.")
+            show_themed_msg_box(self, "Commit Warning", "Please enter a commit message.", QMessageBox.Warning)
             return
 
         success, msg = GitManager.commit_file(self.file_path, message)
         if success:
-            QMessageBox.information(self, "Commit Successful", f"File committed successfully!\n\n{msg}")
+            show_themed_msg_box(self, "Commit Successful", f"File committed successfully!\n\n{msg}", QMessageBox.Information)
             self.accept()
         else:
-            QMessageBox.critical(self, "Commit Failed", f"Could not commit file:\n{msg}")
+            show_themed_msg_box(self, "Commit Failed", f"Could not commit file:\n{msg}", QMessageBox.Critical)
 
 
 class GitHistoryDialog(QDialog):
@@ -178,7 +201,7 @@ class GitHistoryDialog(QDialog):
     def compare_selected_revision(self):
         selected_rows = self.table.selectedItems()
         if not selected_rows:
-            QMessageBox.information(self, "Git History", "Please select a commit to compare.")
+            show_themed_msg_box(self, "Git History", "Please select a commit to compare.", QMessageBox.Information)
             return
 
         row = self.table.currentRow()
@@ -189,8 +212,9 @@ class GitHistoryDialog(QDialog):
         if commit_temp_path and os.path.exists(commit_temp_path):
             DiffManager.run_diff(commit_temp_path, self.file_path, parent=self.parent())
         else:
-            QMessageBox.warning(
+            show_themed_msg_box(
                 self,
                 "Git History Error",
-                f"Could not retrieve file content at commit {short_hash}."
+                f"Could not retrieve file content at commit {short_hash}.",
+                QMessageBox.Warning
             )

@@ -840,9 +840,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             msg_box.setFont(font)
             family = font.family()
             size = font.pointSize()
-            msg_box.setStyleSheet(f"* {{ font-family: '{family}'; font-size: {size}pt; }}")
-            for btn in msg_box.findChildren(QPushButton):
-                btn.setFont(font)
+            msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
+            for w in msg_box.findChildren(QWidget):
+                w.setFont(font)
             for lbl in msg_box.findChildren(QLabel):
                 lbl.setFont(font)
 

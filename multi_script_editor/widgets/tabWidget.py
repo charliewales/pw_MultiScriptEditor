@@ -13,6 +13,7 @@ from vendor.Qt.QtGui import (
     QPixmap,
     QTextCursor,
 )
+
 from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
@@ -616,13 +617,30 @@ class tabWidgetClass(QTabWidget):
         dlg.exec_()
 
     def git_discard_changes(self, index, file_path):
-        reply = QMessageBox.question(
-            self,
-            "Discard Changes",
-            f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
+        if hasattr(self.p, 'show_question_msg'):
+            reply = self.p.show_question_msg(
+                "Discard Changes",
+                f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+        else:
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Discard Changes")
+            msg_box.setText(f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.")
+            msg_box.setIcon(QMessageBox.Question)
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.No)
+            font = getattr(self.p, 'theme_font', getattr(self.p, 'current_outline_font', self.font()))
+            if font:
+                msg_box.setFont(font)
+                family = font.family()
+                size = font.pointSize()
+                msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
+                for w in msg_box.findChildren(QWidget):
+                    w.setFont(font)
+            reply = msg_box.exec_()
+
         if reply == QMessageBox.Yes:
             success, msg = GitManager.discard_changes(file_path)
             if success:
