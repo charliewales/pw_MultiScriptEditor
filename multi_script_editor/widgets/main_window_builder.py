@@ -667,7 +667,6 @@ class ScriptEditorUIBuilder:
 
 
             # File Actions
-            tb.addAction(editor.showExplorer_act)
             tb.addAction(editor.load_act)
             tb.addAction(editor.saveOutputAs_act)
             tb.addAction(editor.saveOutputToTab_act)
