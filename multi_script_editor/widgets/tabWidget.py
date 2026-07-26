@@ -29,13 +29,13 @@ from vendor.Qt.QtWidgets import (
     QWidget,
     QFileDialog,
 )
-from widgets import inputWidget, numBarWidget
-from widgets.pythonSyntax import design
 from core.file_utils import read_file_text
 from core.git_manager import GitManager
 from core.diff_manager import DiffManager
+from icons import icons
+from widgets import inputWidget, numBarWidget
 from widgets.git_dialogs import GitCommitDialog, GitHistoryDialog
-from widgets.pythonSyntax.design import defaultColors
+from widgets.pythonSyntax import design
 
 
 class TabCloseButton(QPushButton):
@@ -59,7 +59,6 @@ class TabCloseButton(QPushButton):
 
     def _load_icons(self):
         try:
-            from icons import icons
             p1 = icons.get('close_tab')
             p2 = icons.get('close_tab_grey')
             if p1 and os.path.exists(p1):
@@ -1300,7 +1299,7 @@ class tabWidgetClass(QTabWidget):
 
     def apply_tab_style(self, colors=None):
         if not colors:
-            colors = defaultColors
+            colors = design.defaultColors
 
         self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
 
