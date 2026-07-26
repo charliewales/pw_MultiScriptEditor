@@ -177,7 +177,7 @@ class BaseTextWidgetMixin:
                     menu.addAction(preview_action)
 
         # Place Git menu at the very top if file is inside a Git repository and version control is enabled
-        if file_path and os.path.exists(file_path) and getattr(main_win, '_version_control_enabled', True):
+        if file_path and os.path.exists(file_path) and getattr(main_win, '_version_control_enabled', False):
             from core.git_manager import GitManager
             if GitManager.is_in_repo(file_path):
                 from vendor.Qt.QtWidgets import QMenu

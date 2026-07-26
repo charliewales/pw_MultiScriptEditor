@@ -272,7 +272,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).changeEvent(event)
 
     def refresh_git_status(self):
-        if getattr(self, '_version_control_enabled', True):
+        if getattr(self, '_version_control_enabled', False):
             self.updateGitStatusBarInfo()
             if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
                 self.tab.update_all_tabs_git_status()
@@ -372,7 +372,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             return
 
         file_path = getattr(w, 'file_path', None)
-        if file_path and os.path.exists(file_path) and getattr(self, '_version_control_enabled', True):
+        if file_path and os.path.exists(file_path) and getattr(self, '_version_control_enabled', False):
             git_info = GitManager.get_file_status(file_path)
             if git_info.get('in_repo'):
                 branch = git_info.get('branch', 'HEAD')
@@ -1478,7 +1478,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def openGitPopup(self):
         from widgets.gitPopupWidget import GitPopupWidget
-        if not getattr(self, '_version_control_enabled', True):
+        if not getattr(self, '_version_control_enabled', False):
             self.showStatusMessage("Version Control (GIT) is disabled in options.")
             return
 
@@ -1717,7 +1717,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.move(geo[0], geo[1])
                 self.resize(geo[2], geo[3])
             else:
-                self.resize(1080, 1080)
+                self.resize(1090, 1080)
 
             if is_max:
                 self.showMaximized()
@@ -1859,7 +1859,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.showStatusTips_act.setChecked(show_status_tips)
             self.toggleStatusTips(show_status_tips)
 
-            version_control = data.get('version_control', True)
+            version_control = data.get('version_control', False)
             self.versionControl_act.setChecked(version_control)
             self.toggleVersionControl(version_control)
 

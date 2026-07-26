@@ -549,7 +549,7 @@ class tabWidgetClass(QTabWidget):
             menu.setStyleSheet(self.p.menubar.styleSheet())
 
         # Git menu (if file exists in git repo and version control is enabled)
-        if has_file and getattr(self.p, '_version_control_enabled', True):
+        if has_file and getattr(self.p, '_version_control_enabled', False):
             file_path = getattr(widget, 'file_path', None)
             if file_path and os.path.exists(file_path):
                 if GitManager.is_in_repo(file_path):
@@ -806,7 +806,7 @@ class tabWidgetClass(QTabWidget):
             return
 
         norm_path = os.path.normpath(file_path)
-        if not getattr(self.p, '_version_control_enabled', True):
+        if not getattr(self.p, '_version_control_enabled', False):
             self.setTabToolTip(index, norm_path)
             if btn and hasattr(btn, 'set_git_status_code'):
                 btn.set_git_status_code("")
