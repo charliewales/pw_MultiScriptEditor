@@ -1469,14 +1469,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         qss = design.editorStyle(theme_name)
         colors = design.getColors(theme_name)
 
-        if colors.get('use_theme_font_on_symbols', True) and edit_widget:
+        if colors.get('use_theme_font_on_symbols', True):
             font_data = colors.get('font')
             if font_data:
                 font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
+            elif edit_widget:
                 font = QFont(edit_widget.font())
+            else:
+                font = QApplication.font("QListWidget")
         else:
             font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
 
         popup = GitPopupWidget(
             parent=self,

@@ -153,12 +153,14 @@ class GitPopupWidget(SearchPopupWidget):
 
             if is_header or filter_text in title.lower():
                 item = QListWidgetItem()
+                if self._font:
+                    item.setFont(self._font)
                 item.setFlags(Qt.NoItemFlags if is_header else (Qt.ItemIsEnabled | Qt.ItemIsSelectable))
 
                 if is_header:
-                    html = f'<div style="color: {sub_color}; font-style: italic;"><b>{title}</b></div>'
+                    html = f'<div style="color: {sub_color}; font-style: italic;">{title}</div>'
                 else:
-                    html = f'<div style="color: {text_color};"><b>{title}</b></div>'
+                    html = f'<div style="color: {text_color};">{title}</div>'
 
                 item.setText(html)
                 if act.get("icon"):

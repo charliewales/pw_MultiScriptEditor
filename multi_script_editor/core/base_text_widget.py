@@ -188,8 +188,8 @@ class BaseTextWidgetMixin:
                 elif menu.font():
                     git_menu.setFont(menu.font())
                     git_menu.setStyleSheet(menu.styleSheet())
-                if 'github' in icons:
-                    git_menu.setIcon(QIcon(icons['github']))
+                if 'git' in icons:
+                    git_menu.setIcon(QIcon(icons['git']))
                 tab_widget = getattr(main_win, 'tab', None)
                 if tab_widget and hasattr(tab_widget, 'build_git_menu'):
                     tab_idx = tab_widget.indexOf(curr) if hasattr(tab_widget, 'indexOf') else -1

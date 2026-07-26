@@ -429,8 +429,8 @@ class tabWidgetClass(QTabWidget):
                     elif menu.font():
                         git_menu.setFont(menu.font())
                         git_menu.setStyleSheet(menu.styleSheet())
-                    if 'github' in icons:
-                        git_menu.setIcon(QIcon(icons['github']))
+                    if 'git' in icons:
+                        git_menu.setIcon(QIcon(icons['git']))
                     git_menu.hovered.connect(on_hover)
                     self.build_git_menu(git_menu, index)
                     menu.addSeparator()

@@ -28,9 +28,7 @@ addEndBracket = True
 indentLen = 4
 minimumFontSize = 8
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
-# font_name = 'monospace'
 font_name = 'Consolas'
-# font_name = 'Lucida Console'
 
 
 class BlockUserData(QTextBlockUserData):
@@ -852,12 +850,26 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             theme = settings.get('theme', 'Multi Script Editor')
             colors = design.getColors(theme)
 
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                popup_font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                popup_font = QFont(self.font())
+        else:
+            popup_font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            popup_font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            popup_font.setPointSize(max(1, int(popup_font.pointSize() * 0.9)))
+
         popup = BookmarkWidget(
             bookmarks,
             parent=self.window(),
             center_widget=self,
             qss=qss,
-            font=self.font(),
+            font=popup_font,
             colors=colors,
             highlighter_class=highlighter_class
         )
@@ -897,12 +909,26 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             theme = settings.get('theme', 'Multi Script Editor')
             colors = design.getColors(theme)
 
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                popup_font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            else:
+                popup_font = QFont(self.font())
+        else:
+            popup_font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            popup_font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            popup_font.setPointSize(max(1, int(popup_font.pointSize() * 0.9)))
+
         popup = ClipboardWidget(
             ClipboardManager._history,
             parent=self.window(),
             center_widget=self,
             qss=qss,
-            font=self.font(),
+            font=popup_font,
             colors=colors
         )
 

@@ -156,8 +156,8 @@ class ScriptEditorUIBuilder:
         # Ctrl+Shift+G is set in retranslateUi but setting it here for context explicitly
         editor.gitAction_act.setShortcut('Ctrl+Shift+G')
         editor.gitAction_act.setShortcutContext(Qt.WindowShortcut)
-        if 'github' in icons:
-            editor.gitAction_act.setIcon(QIcon(icons['github']))
+        if 'git' in icons:
+            editor.gitAction_act.setIcon(QIcon(icons['git']))
 
         editor.gotoLine_act.triggered.connect(editor.gotoLine)
         editor.gotoLine_act.setShortcut('Ctrl+G')
@@ -178,11 +178,6 @@ class ScriptEditorUIBuilder:
         open_tabs_sc.setContext(Qt.ApplicationShortcut)
         open_tabs_sc.activated.connect(editor.showOpenTabs)
         editor._open_tabs_sc = open_tabs_sc
-
-        git_popup_sc = QShortcut(QKeySequence('Ctrl+Shift+G'), editor)
-        git_popup_sc.setContext(Qt.ApplicationShortcut)
-        git_popup_sc.activated.connect(editor.openGitPopup)
-        editor._git_popup_sc = git_popup_sc
 
         editor.tabToSpaces_act.setIcon(QIcon(icons['tabs_to_spaces']))
 
