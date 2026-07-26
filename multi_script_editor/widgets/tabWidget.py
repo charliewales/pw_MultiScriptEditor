@@ -38,6 +38,130 @@ from widgets.git_dialogs import GitCommitDialog, GitHistoryDialog
 from widgets.pythonSyntax.design import defaultColors
 
 
+class TabCloseButton(QPushButton):
+    """
+    Custom close button for editor tabs.
+    Displays Git status code (e.g. 'M', 'U', 'A') when in Git repo and modified,
+    dirty circle dot when unsaved, and close icon ('x') on hover.
+    """
+    def __init__(self, parent=None, colors=None):
+        super(TabCloseButton, self).__init__(parent)
+        self.setObjectName("CustomCloseBtn")
+        self.setFixedSize(20, 20)
+        self.setMouseTracking(True)
+        self._git_status_code = ""
+        self._is_dirty = False
+        self._is_selected = False
+        self._colors = colors or {}
+        self._close_icon = None
+        self._close_icon_grey = None
+        self._load_icons()
+
+    def _load_icons(self):
+        try:
+            from icons import icons
+            p1 = icons.get('close_tab')
+            p2 = icons.get('close_tab_grey')
+            if p1 and os.path.exists(p1):
+                self._close_icon = QIcon(p1)
+            if p2 and os.path.exists(p2):
+                self._close_icon_grey = QIcon(p2)
+        except Exception:
+            pass
+
+    def set_git_status_code(self, status_code):
+        if self._git_status_code != status_code:
+            self._git_status_code = status_code
+            self.update()
+
+    def set_dirty(self, state):
+        if self._is_dirty != state:
+            self._is_dirty = state
+            self.update()
+
+    def set_selected(self, state):
+        if self._is_selected != state:
+            self._is_selected = state
+            self.update()
+
+    def enterEvent(self, event):
+        super(TabCloseButton, self).enterEvent(event)
+        self.update()
+
+    def leaveEvent(self, event):
+        super(TabCloseButton, self).leaveEvent(event)
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        is_hovered = self.underMouse()
+        has_git = bool(self._git_status_code and self._git_status_code != 'CLEAN')
+
+        if is_hovered:
+            bg_color = QColor(*self._colors.get('background', [60, 60, 60])) if isinstance(self._colors.get('background'), list) else QColor(60, 60, 60)
+            if bg_color.isValid():
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(bg_color)
+                painter.drawRoundedRect(self.rect(), 3, 3)
+
+            icon = self._close_icon or self._close_icon_grey
+            if icon and not icon.isNull():
+                icon.paint(painter, self.rect())
+            else:
+                painter.setPen(QColor(200, 200, 200))
+                font = painter.font()
+                font.setBold(True)
+                font.setPointSize(10)
+                painter.setFont(font)
+                painter.drawText(self.rect(), Qt.AlignCenter, "×")
+        elif has_git:
+            code = self._git_status_code
+            if 'U' in code or 'A' in code:
+                text_color = QColor('#73c991')
+            elif 'M' in code or 'S' in code:
+                text_color = QColor('#e2c08d')
+            elif 'D' in code:
+                text_color = QColor('#e06c75')
+            else:
+                text_color = QColor('#888888')
+
+            painter.setPen(text_color)
+            font = painter.font()
+            font.setBold(True)
+            font.setPointSize(9)
+            painter.setFont(font)
+            painter.drawText(self.rect(), Qt.AlignCenter, code)
+        elif self._is_dirty:
+            window_color = self._colors.get('window', [160, 160, 160])
+            if isinstance(window_color, list):
+                painter.setBrush(QColor(*window_color))
+            else:
+                painter.setBrush(QColor(160, 160, 160))
+            painter.setPen(Qt.NoPen)
+            r = min(self.width(), self.height()) / 4.0
+            cx = self.width() / 2.0
+            cy = self.height() / 2.0
+            painter.drawEllipse(QRectF(cx - r, cy - r, r * 2.0, r * 2.0))
+        else:
+            if self._is_selected:
+                icon = self._close_icon or self._close_icon_grey
+            else:
+                icon = self._close_icon_grey or self._close_icon
+
+            if icon and not icon.isNull():
+                icon.paint(painter, self.rect())
+            else:
+                painter.setPen(QColor(150, 150, 150) if not self._is_selected else QColor(220, 220, 220))
+                font = painter.font()
+                font.setBold(True)
+                font.setPointSize(10)
+                painter.setFont(font)
+                painter.drawText(self.rect(), Qt.AlignCenter, "×")
+        painter.end()
+
+
 class tabWidgetClass(QTabWidget):
     # Signals to decouple from MainWindow
     tab_closed = Signal(int)
@@ -661,21 +785,33 @@ class tabWidgetClass(QTabWidget):
             return
         widget = self.widget(index)
         file_path = getattr(widget, 'file_path', None)
+        btn = getattr(widget, '_custom_close_btn', None)
+
         if not file_path or not os.path.exists(file_path):
+            if btn and hasattr(btn, 'set_git_status_code'):
+                btn.set_git_status_code("")
             return
 
         norm_path = os.path.normpath(file_path)
         if not getattr(self.p, '_version_control_enabled', True):
             self.setTabToolTip(index, norm_path)
+            if btn and hasattr(btn, 'set_git_status_code'):
+                btn.set_git_status_code("")
             return
 
         status_info = GitManager.get_file_status(file_path)
-        norm_path = os.path.normpath(file_path)
+        git_code = ""
         if status_info.get('in_repo'):
             tooltip = f"{norm_path}\nGit: {status_info['branch']} [{status_info['status_text']}]"
+            git_code = status_info.get('status_code', '')
+            if git_code == 'CLEAN':
+                git_code = ''
         else:
             tooltip = norm_path
+
         self.setTabToolTip(index, tooltip)
+        if btn and hasattr(btn, 'set_git_status_code'):
+            btn.set_git_status_code(git_code)
 
     def build_compare_menu(self, compare_menu, index):
         if index < 0 or index >= self.count():
@@ -954,18 +1090,20 @@ class tabWidgetClass(QTabWidget):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
         self.addTab(cont, name)
 
-        btn = QPushButton()
-        btn.setObjectName("CustomCloseBtn")
-        btn.setFixedSize(20, 20)
-        # btn.setCursor(Qt.ArrowCursor)
-        btn.setProperty('isDirty', False)
-        btn.setProperty('isSelected', self.count() - 1 == self.currentIndex())
+        colors = {}
+        if hasattr(self.p, '_presenter'):
+            theme_name = self.p._presenter.settings_model.read_settings().get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme_name)
+
+        btn = TabCloseButton(colors=colors)
+        btn.set_selected(self.count() - 1 == self.currentIndex())
         btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
         self.tabBar().setTabButton(self.count() - 1, QTabBar.RightSide, btn)
         cont._custom_close_btn = btn
 
         if file_path:
             self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
+            self.update_tab_git_status(self.count() - 1)
 
         if hasattr(self.p, 'updateStatusBarInfo'):
             cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
@@ -1095,18 +1233,22 @@ class tabWidgetClass(QTabWidget):
             if hasattr(cont, '_custom_close_btn'):
                 btn = cont._custom_close_btn
                 is_sel = (i == self.currentIndex())
-                btn.setProperty('isSelected', is_sel)
-                btn.style().unpolish(btn)
-                btn.style().polish(btn)
+                if hasattr(btn, 'set_selected'):
+                    btn.set_selected(is_sel)
+                else:
+                    btn.setProperty('isSelected', is_sel)
+                    btn.style().unpolish(btn)
+                    btn.style().polish(btn)
 
     def mark_tab_dirty(self, container, state):
         if not hasattr(container, '_custom_close_btn'):
             return
 
-        if not hasattr(container, 'file_path') or not container.file_path:
+        btn = container._custom_close_btn
+        if hasattr(btn, 'set_dirty'):
+            btn.set_dirty(state)
             return
 
-        btn = container._custom_close_btn
         btn.setProperty('isDirty', state)
 
         if state:

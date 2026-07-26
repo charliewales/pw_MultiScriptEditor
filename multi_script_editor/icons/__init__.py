@@ -9,6 +9,7 @@ icons = dict(
     line=os.path.join(root, "exec_line.png"),
     clear=os.path.join(root, "clear.png"),
     close_tab=os.path.join(root, "close_tab.png"),
+    close_tab_grey=os.path.join(root, "close_tab_grey.png"),
     help=os.path.join(root, "help.png"),
     donate=os.path.join(root, "donate.png"),
     maya=os.path.join(root, "maya.png"),
