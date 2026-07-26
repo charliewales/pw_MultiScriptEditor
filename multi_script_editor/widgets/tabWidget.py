@@ -68,6 +68,10 @@ class TabCloseButton(QPushButton):
         except Exception:
             pass
 
+    def set_colors(self, colors):
+        self._colors = colors or {}
+        self.update()
+
     def set_git_status_code(self, status_code):
         if self._git_status_code != status_code:
             self._git_status_code = status_code
@@ -133,11 +137,15 @@ class TabCloseButton(QPushButton):
             painter.setFont(font)
             painter.drawText(self.rect(), Qt.AlignCenter, code)
         elif self._is_dirty:
-            window_color = self._colors.get('window', [160, 160, 160])
-            if isinstance(window_color, list):
-                painter.setBrush(QColor(*window_color))
+            dirty_color = self._colors.get('tab_selected_text', self._colors.get('window', [200, 200, 200]))
+            if isinstance(dirty_color, (list, tuple)):
+                painter.setBrush(QColor(*dirty_color))
+            elif isinstance(dirty_color, QColor):
+                painter.setBrush(dirty_color)
+            elif isinstance(dirty_color, str):
+                painter.setBrush(QColor(dirty_color))
             else:
-                painter.setBrush(QColor(160, 160, 160))
+                painter.setBrush(QColor(200, 200, 200))
             painter.setPen(Qt.NoPen)
             r = min(self.width(), self.height()) / 4.0
             cx = self.width() / 2.0
@@ -1275,13 +1283,20 @@ class tabWidgetClass(QTabWidget):
             if hasattr(self.p, '_presenter'):
                 theme_name = self.p._presenter.settings_model.read_settings().get('theme', theme_name)
             colors = design.getColors(theme_name)
-            window_color = colors.get('window', [160, 160, 160])
+            dirty_color = colors.get('tab_selected_text', colors.get('window', [200, 200, 200]))
 
             pixmap = QPixmap(btn.size())
             pixmap.fill(Qt.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setBrush(QColor(*window_color))
+            if isinstance(dirty_color, (list, tuple)):
+                painter.setBrush(QColor(*dirty_color))
+            elif isinstance(dirty_color, QColor):
+                painter.setBrush(dirty_color)
+            elif isinstance(dirty_color, str):
+                painter.setBrush(QColor(dirty_color))
+            else:
+                painter.setBrush(QColor(200, 200, 200))
             painter.setPen(Qt.NoPen)
 
             r = min(pixmap.width(), pixmap.height()) / 4.0
@@ -1303,6 +1318,11 @@ class tabWidgetClass(QTabWidget):
             colors = design.defaultColors
 
         self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
+
+        for i in range(self.count()):
+            cont = self.widget(i)
+            if hasattr(cont, '_custom_close_btn') and hasattr(cont._custom_close_btn, 'set_colors'):
+                cont._custom_close_btn.set_colors(colors)
 
         tab_text_size = colors.get('tab_text_size', None)
         if tab_text_size is not None:
