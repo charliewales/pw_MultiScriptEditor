@@ -621,6 +621,7 @@ class ScriptEditorUIBuilder:
             editor.wordWrap_act: "Toggle word wrap in the editor",
             editor.zoom_in_act: "Zoom in the editor font size",
             editor.zoom_out_act: "Zoom out the editor font size",
+            editor.diffTool_act: "Compare with...",
         }
 
         # Insert Bookmarks menu after File menu
@@ -670,6 +671,7 @@ class ScriptEditorUIBuilder:
 
             # File Actions
             tb.addAction(editor.load_act)
+            tb.addAction(editor.diffTool_act)
             tb.addAction(editor.saveOutputAs_act)
             tb.addAction(editor.saveOutputToTab_act)
             tb.addAction(editor.closeAllTabs_act)
