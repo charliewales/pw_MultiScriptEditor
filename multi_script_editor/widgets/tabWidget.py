@@ -18,7 +18,6 @@ from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QMenu,
