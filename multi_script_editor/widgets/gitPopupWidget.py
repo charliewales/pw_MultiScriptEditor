@@ -69,7 +69,6 @@ class GitPopupWidget(SearchPopupWidget):
             }
         )
 
-
         # Commit File
         self.actions_data.append(
             {
@@ -139,7 +138,6 @@ class GitPopupWidget(SearchPopupWidget):
                     "callback": lambda: self.tab_widget.git_stage(self.file_path) if self.tab_widget else None,
                 }
             )
-
 
     def populate_list(self, filter_text):
         self.list_widget.clear()

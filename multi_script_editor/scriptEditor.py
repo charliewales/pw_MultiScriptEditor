@@ -1451,7 +1451,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             popup.exec_()
 
     def openGitPopup(self):
-        from widgets.git_popup import GitPopupWidget
+        from widgets.gitPopupWidget import GitPopupWidget
         if not getattr(self, '_version_control_enabled', True):
             self.showStatusMessage("Version Control (GIT) is disabled in options.")
             return
