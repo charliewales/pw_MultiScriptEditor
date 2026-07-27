@@ -278,7 +278,7 @@ class ExplorerWidget(QWidget):
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(4)
+        main_layout.setSpacing(2)
 
         # Top Bar Layout
         self.top_layout = QHBoxLayout()
@@ -346,7 +346,6 @@ class ExplorerWidget(QWidget):
         self.top_layout.addWidget(self.filter_supported_btn)
         self.top_layout.addWidget(self.add_bookmark_btn)
         self.top_layout.addWidget(self.bookmarks_menu_btn)
-        # self.top_layout.addStretch()
         # self.top_layout.addWidget(self.refresh_btn)
 
         # Path filter input layout with margins matching Outline filter
@@ -357,7 +356,6 @@ class ExplorerWidget(QWidget):
         path_layout.addLayout(self.top_layout)
 
         main_layout.addLayout(path_layout)
-        main_layout.addLayout(self.top_layout)
 
         # Tree View & File System Model
         self.fs_model = QFileSystemModel()

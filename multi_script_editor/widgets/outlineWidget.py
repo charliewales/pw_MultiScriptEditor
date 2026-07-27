@@ -39,7 +39,7 @@ class OutlineWidget(QWidget):
     def _setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(4)
+        layout.setSpacing(2)
 
         # Header bar with search input and toolbar buttons
         header_layout = QHBoxLayout()
