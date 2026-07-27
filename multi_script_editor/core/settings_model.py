@@ -157,6 +157,7 @@ class SettingsModel:
                     highlight_all_occurrences=True,
                     font={"family": "monospace", "pointSize": 12, "weight": 1, "italic": False},
                     recent_files=[],
+                    recent_commands=[],
                     randomize_custom_at_startup=False,
                     quick_tab_switching=True,
                     auto_close_delimiters=True,
