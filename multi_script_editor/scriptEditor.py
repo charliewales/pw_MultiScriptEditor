@@ -58,6 +58,7 @@ from vendor.Qt.QtWidgets import (
 )
 from widgets import (
     explorerWidget,
+    outlineWidget,
     outputWidget,
     tabWidget,
 )
@@ -130,26 +131,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.outline_panel.setObjectName("outlinePanel")
         self.outline_ly = QVBoxLayout(self.outline_panel)
         self.outline_ly.setContentsMargins(0, 0, 0, 0)
-        self.outline_ly.setSpacing(4)
-        self.outline_list = QListWidget()
-        self.outline_list.setObjectName("outlineList")
-        self.outline_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.outline_list.setFocusPolicy(Qt.NoFocus)
-        self.outline_list.setItemDelegate(HtmlDelegate(self.outline_list))
-        self.outline_list.itemClicked.connect(self.outlineItemClicked)
+        self.outline_ly.setSpacing(0)
 
-        self.outline_filter = QLineEdit()
-        self.outline_filter.setObjectName("outlineFilter")
-        self.outline_filter.setPlaceholderText("Filter outline...")
-        self.outline_filter.setClearButtonEnabled(True)
-        self.outline_filter.textChanged.connect(self.filterOutline)
-
-        esc_shortcut = QShortcut(QKeySequence("Esc"), self.outline_filter)
-        esc_shortcut.setContext(Qt.WidgetShortcut)
-        esc_shortcut.activated.connect(self.outline_filter.clear)
-
-        self.outline_ly.addWidget(self.outline_filter)
-        self.outline_ly.addWidget(self.outline_list)
+        self.outline_widget = outlineWidget.OutlineWidget(self)
+        self.outline_widget.symbolSelected.connect(self._on_outline_symbol_selected)
+        self.outline_ly.addWidget(self.outline_widget)
 
         # Create container for editor toolbar and tab widget
         self.editor_container = QWidget()
@@ -222,12 +208,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         # Tab current change triggers outline refresh
         self.tab.currentChanged.connect(self.updateOutline)
 
+        if hasattr(self, 'explorer_widget'):
+            self.explorer_widget.options_changed.connect(self.saveSettings)
+        if hasattr(self, 'outline_widget'):
+            self.outline_widget.options_changed.connect(self.saveSettings)
+
         self.setupStatusBarWidgets()
 
         self.tab.currentChanged.connect(self.statusBar().clearMessage)
         self.tab.currentChanged.connect(self.updateStatusBarInfo)
         self.tab.currentChanged.connect(self.updateGitStatusBarInfo)
         self.tab.currentChanged.connect(self._on_tab_changed_sync_explorer)
+        self.tab.currentChanged.connect(self._on_tab_changed_sync_outline)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
 
         # start
@@ -777,14 +769,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 outline_font.setPointSize(secondary_default)
 
-            self.outline_list.setFont(outline_font)
+            if hasattr(self, 'outline_widget'):
+                self.outline_widget.set_font(outline_font)
             self.current_outline_font = outline_font
-            self.outline_filter.setFont(outline_font)
-            for i in range(self.outline_list.count()):
-                self.outline_list.item(i).setFont(outline_font)
 
             if hasattr(self, 'explorer_widget'):
                 self.explorer_widget.apply_theme(colors, outline_font)
+
+            if hasattr(self, 'sidebar_tab_widget'):
+                self.sidebar_tab_widget.setFont(outline_font)
+                self.sidebar_tab_widget.tabBar().setFont(outline_font)
+                family = outline_font.family()
+                pt_size = outline_font.pointSize()
+                size_css = f"font-size: {pt_size}pt;" if pt_size > 0 else ""
+                self.sidebar_tab_widget.setStyleSheet(
+                    f"QTabBar::tab {{ font-family: '{family}'; {size_css} }}"
+                )
 
             if colors.get('use_theme_font_on_menus', False):
                 menu_font = QFont(base_font)
@@ -842,13 +842,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             # Sync workaround for PySide2: set palette explicitly so it doesn't default to black
             fg = colors.get('tab_text')
-            if fg:
+            if fg and hasattr(self, 'outline_widget'):
                 color = QColor(*fg) if isinstance(fg, (list, tuple)) else QColor(fg)
-                pal = self.outline_filter.palette()
+                pal = self.outline_widget.filter_le.palette()
                 pal.setColor(QPalette.Text, color)
                 if hasattr(QPalette, 'PlaceholderText'):
                     pal.setColor(QPalette.PlaceholderText, color)
-                self.outline_filter.setPalette(pal)
+                self.outline_widget.filter_le.setPalette(pal)
 
             if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
@@ -1828,11 +1828,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     outline_font.setPointSize(max(1, int(outline_font.pointSize() * 0.8)))
                 elif outline_font.pixelSize() > 0:
                     outline_font.setPixelSize(max(1, int(outline_font.pixelSize() * 0.8)))
-                self.outline_list.setFont(outline_font)
+                if hasattr(self, 'outline_widget'):
+                    self.outline_widget.set_font(outline_font)
                 self.current_outline_font = outline_font
-                self.outline_filter.setFont(outline_font)
-                for i in range(self.outline_list.count()):
-                    self.outline_list.item(i).setFont(outline_font)
             self.autocomplete_act.setChecked(autocomplete)
             self.fuzzy_autocomplete_act.setChecked(fuzzy_autocomplete)
             self.show_docstrings_act.setChecked(show_docstrings)
@@ -1856,6 +1854,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     filter_supported = data.get('explorer_filter_supported', data.get('explorer_show_all_files', True))
                     self.explorer_widget.filter_supported_btn.setChecked(filter_supported)
                     self.explorer_widget.proxy_model.setFilterSupportedOnly(filter_supported)
+
+            if hasattr(self, 'outline_widget'):
+                if hasattr(self.outline_widget, 'sort_btn'):
+                    self.outline_widget.sort_btn.setChecked(data.get('outline_sort_alphabetical', False))
+                if hasattr(self.outline_widget, 'sync_btn'):
+                    self.outline_widget.sync_btn.setChecked(data.get('outline_follow_cursor', True))
 
             show_explorer = data.get('show_explorer', False)
             if show_explorer:
@@ -1957,6 +1961,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         explorer_current_path = self.explorer_widget.get_current_root() if hasattr(self, 'explorer_widget') else ""
         explorer_auto_sync = self.explorer_widget.auto_sync_tab_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None) else False
         explorer_filter_supported = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else True
+        outline_sort_alphabetical = self.outline_widget._sort_alphabetical if hasattr(self, 'outline_widget') else False
+        outline_follow_cursor = self.outline_widget._follow_cursor if hasattr(self, 'outline_widget') else True
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
         show_toolbar = self.toggleEditorToolbar_act.isChecked()
@@ -2017,6 +2023,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             explorer_current_path=explorer_current_path,
             explorer_auto_sync=explorer_auto_sync,
             explorer_filter_supported=explorer_filter_supported,
+            outline_sort_alphabetical=outline_sort_alphabetical,
+            outline_follow_cursor=outline_follow_cursor,
             show_output=show_output,
             show_menus=show_menus,
             show_toolbar=show_toolbar,
@@ -2431,46 +2439,55 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
              ext = os.path.splitext(w.file_path)[1].lower()
 
         if hasattr(edit, 'syntax_errors') and edit.syntax_errors:
-            self.outline_list.clear()
+            if hasattr(self, 'outline_widget'):
+                self.outline_widget.set_symbols([])
             return
 
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
-        self.outline_list.clear()
-        if not symbols:
+        if not hasattr(self, 'outline_widget'):
             return
-
-        self.outline_list.clear()
 
         theme_colors = None
         if hasattr(self, '_current_settings'):
             theme_name = self._current_settings.get('theme', 'Dark')
             theme_colors = design.getColors(theme_name)
 
-        font = getattr(self, 'current_outline_font', self.outline_list.font())
+        font = getattr(self, 'current_outline_font', None)
+        self.outline_widget.set_symbols(symbols, theme_colors, font, ext=ext)
 
-        for sym in symbols:
-            item = create_symbol_item(sym, theme_colors, font, ext=ext)
-            self.outline_list.addItem(item)
-
-    def outlineItemClicked(self, item):
-        line = item.data(Qt.UserRole)
+    def _on_outline_symbol_selected(self, line):
         if line:
             edit = self.tab.current()
-            cursor = edit.textCursor()
+            if not edit:
+                return
             block = edit.document().findBlockByNumber(line - 1)
-            cursor.setPosition(block.position())
-            edit.setTextCursor(cursor)
-            edit.centerCursor()
-            edit.highlight_current_line()
-            edit.setFocus()
+            if block.isValid():
+                cursor = edit.textCursor()
+                cursor.setPosition(block.position())
+                edit.setTextCursor(cursor)
+                edit.centerCursor()
+                edit.highlight_current_line()
+                edit.setFocus()
+
+    def _on_editor_cursor_changed(self):
+        if hasattr(self, 'outline_widget') and self.outline_widget.is_follow_cursor_enabled():
+            edit = self.tab.current()
+            if edit:
+                line_num = edit.textCursor().blockNumber() + 1
+                self.outline_widget.highlight_symbol_at_line(line_num)
+
+    def _on_tab_changed_sync_outline(self, index):
+        self.updateOutline()
+        edit = self.tab.current()
+        if edit and not getattr(edit, '_outline_cursor_connected', False):
+            edit.cursorPositionChanged.connect(self._on_editor_cursor_changed)
+            edit._outline_cursor_connected = True
 
     def filterOutline(self, text):
-        text = text.lower()
-        for i in range(self.outline_list.count()):
-            item = self.outline_list.item(i)
-            item.setHidden(text not in item.text().lower())
+        if hasattr(self, 'outline_widget'):
+            self.outline_widget.filter_le.setText(text)
 
     def autoSave(self):
         if not hasattr(self, '_presenter'):

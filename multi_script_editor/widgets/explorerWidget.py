@@ -252,6 +252,7 @@ class ExplorerWidget(QWidget):
     folder_changed = Signal(str)
     bookmarks_changed = Signal(list)
     sync_to_current_tab_requested = Signal()
+    options_changed = Signal()
 
     def __init__(self, parent=None, root_path=None):
         super(ExplorerWidget, self).__init__(parent)
@@ -378,7 +379,10 @@ class ExplorerWidget(QWidget):
         self.up_btn.clicked.connect(self.navigate_up)
         self.sync_tab_btn.clicked.connect(self.sync_to_current_tab_requested.emit)
         self.auto_sync_tab_btn.toggled.connect(self._on_auto_sync_toggled)
+        self.auto_sync_tab_btn.toggled.connect(lambda state: self.options_changed.emit())
         self.filter_supported_btn.toggled.connect(self.proxy_model.setFilterSupportedOnly)
+        self.filter_supported_btn.toggled.connect(lambda state: self.options_changed.emit())
+        self.bookmarks_changed.connect(lambda b: self.options_changed.emit())
         self.add_bookmark_btn.clicked.connect(self.add_current_to_bookmarks)
         self.refresh_btn.clicked.connect(self.refresh_tree)
 
@@ -402,6 +406,8 @@ class ExplorerWidget(QWidget):
 
         path = os.path.abspath(path)
         self._current_root = path
+        if getattr(self, '_is_initialized', False):
+            self.options_changed.emit()
         self._is_initialized = True
 
         self.path_filter_input.setText(path)

@@ -1,3 +1,4 @@
+from core.outline_parser import OutlineParser
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics
 from widgets.outline_utils import HtmlDelegate, create_symbol_item
@@ -11,7 +12,10 @@ class SymbolWidget(SearchPopupWidget):
     def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False):
         super(SymbolWidget, self).__init__(parent, center_widget, qss, font, colors, placeholder_text=placeholder_text)
 
-        self.symbols = symbols
+        if any('children' in s for s in symbols):
+            self.symbols = OutlineParser.flatten_symbols(symbols)
+        else:
+            self.symbols = symbols
         self.ext = ext
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
         self.allow_delete = allow_delete

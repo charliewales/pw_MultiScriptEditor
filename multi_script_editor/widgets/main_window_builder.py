@@ -2,6 +2,7 @@ import sys
 from functools import partial
 
 import managers
+import vendor.Qt
 from icons import icons
 from vendor.Qt.QtCore import QSize, Qt, QTimer
 from vendor.Qt.QtGui import QIcon, QKeySequence
@@ -81,7 +82,6 @@ class ScriptEditorUIBuilder:
         editor.nuke_dev_guide_act.triggered.connect(lambda: editor.openLink('nuke_dev_guide'))
         editor.nuke_dev_guide_act.setIcon(QIcon(icons['nuke']))
 
-        import vendor.Qt
         editor.qt_docs_act.triggered.connect(
             lambda: editor.openLink(f"qt{'6' if vendor.Qt.IsPySide6 else '5'}_docs")
         )

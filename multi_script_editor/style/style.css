@@ -656,11 +656,29 @@ SymbolWidget QListWidget::item:hover {
     color: rgb[completer_text];
 }
 
-QListWidget#outlineList
+QListWidget#outlineList,
+QTreeWidget#outlineTree
 {
     background-color: rgb[outline_background];
     color: rgb[default];
     border: 1px solid rgb[border];
+}
+
+QTreeWidget#outlineTree::item
+{
+    padding: 2px 0px;
+    border: none;
+}
+
+QTreeWidget#outlineTree::item:hover
+{
+    background-color: rgb[highlight_line];
+}
+
+QTreeWidget#outlineTree::item:selected
+{
+    background-color: rgb[highlight_line];
+    color: rgb[tab_selected_text];
 }
 
 QLineEdit#outlineFilter, QLineEdit#explorerPathFilterInput
