@@ -2377,6 +2377,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._version_control_enabled = state
         self._current_settings['version_control'] = state
         self.saveSettings()
+        # Clear or update status message if needed
+        if state:
+            if self.lbl_msg.text() == "Version Control (GIT) is disabled in options.":
+                self.showStatusMessage("")
+        else:
+            self.showStatusMessage("Version Control (GIT) is disabled in options.")
         # Force update status info to hide or show git status
         self.updateGitStatusBarInfo()
         # Refresh all tabs Git status badges
