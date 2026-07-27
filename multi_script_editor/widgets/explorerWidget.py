@@ -353,7 +353,13 @@ class ExplorerWidget(QWidget):
         self.top_layout.addStretch()
         self.top_layout.addWidget(self.refresh_btn)
 
-        main_layout.addWidget(self.path_filter_input)
+        # Path filter input layout with margins matching Outline filter
+        path_layout = QHBoxLayout()
+        path_layout.setContentsMargins(0, 2, 0, 0)
+        path_layout.setSpacing(0)
+        path_layout.addWidget(self.path_filter_input)
+
+        main_layout.addLayout(path_layout)
         main_layout.addLayout(self.top_layout)
 
         # Tree View & File System Model
@@ -840,8 +846,7 @@ class ExplorerWidget(QWidget):
                 background-color: {bg_color};
                 color: {text_color};
                 border: 1px solid {border_color};
-                border-radius: 3px;
-                padding: 3px 5px;
+                padding: 2px;
             }}
             QTreeView#explorerTreeView {{
                 background-color: {bg_color};
