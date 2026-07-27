@@ -31,7 +31,7 @@ class OutlineWidget(QWidget):
         self._theme_colors = None
         self._font = None
         self._ext = '.py'
-        self._follow_cursor = True
+        self._follow_cursor = False
         self._sort_alphabetical = False
 
         self._setup_ui()
@@ -83,7 +83,7 @@ class OutlineWidget(QWidget):
         self.sync_btn = QToolButton()
         self.sync_btn.setIcon(QIcon(icons.get("bookmark_toggle", icons.get("goto_line", ""))))
         self.sync_btn.setCheckable(True)
-        self.sync_btn.setChecked(True)
+        self.sync_btn.setChecked(False)
         self.sync_btn.setToolTip("Follow Cursor")
         self.sync_btn.setStatusTip("Toggle auto-highlighting active symbol based on editor line")
         self.sync_btn.setIconSize(QSize(20, 20))

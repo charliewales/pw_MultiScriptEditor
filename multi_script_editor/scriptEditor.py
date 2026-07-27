@@ -1745,7 +1745,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             out_wrap = data.get('out_wrap', None)
             outFontSize = data.get('outFontSize', 10)
             splitter = data.get('splitter', [400, 600])
-            horizontal_splitter_sizes = data.get('horizontal_splitter', [200, 600])
+            horizontal_splitter_sizes = data.get('horizontal_splitter', [280, 520])
             wrap = data.get('wrap', None)
             show_whitespace = data.get('show_whitespace', False)
             font = data.get('font', False)
@@ -1787,6 +1787,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.splitter.setSizes(default_sizes)
 
             if horizontal_splitter_sizes:
+                if horizontal_splitter_sizes[0] > 0 and horizontal_splitter_sizes[0] < 280:
+                    horizontal_splitter_sizes[0] = 280
                 self._last_horizontal_splitter_sizes = horizontal_splitter_sizes
             if out_wrap is not None:
                 self.out_wordWrap_act.setChecked(out_wrap)
@@ -1859,7 +1861,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if hasattr(self.outline_widget, 'sort_btn'):
                     self.outline_widget.sort_btn.setChecked(data.get('outline_sort_alphabetical', False))
                 if hasattr(self.outline_widget, 'sync_btn'):
-                    self.outline_widget.sync_btn.setChecked(data.get('outline_follow_cursor', True))
+                    self.outline_widget.sync_btn.setChecked(data.get('outline_follow_cursor', False))
 
             show_explorer = data.get('show_explorer', False)
             if show_explorer:
@@ -1947,7 +1949,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             split_sizes = getattr(self, '_last_splitter_sizes', self.getDefaultSplitterSizes())
         horizontal_split_sizes = self.horizontal_splitter.sizes()
         if horizontal_split_sizes[0] == 0:
-            horizontal_split_sizes = getattr(self, '_last_horizontal_splitter_sizes', [200, 600])
+            horizontal_split_sizes = getattr(self, '_last_horizontal_splitter_sizes', [280, 520])
         out_word_wrap = self.out_wordWrap_act.isChecked()
         clear_execute = self.clear_exec_act.isChecked()
         echo_execute = self.print_command_act.isChecked()
@@ -1962,7 +1964,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         explorer_auto_sync = self.explorer_widget.auto_sync_tab_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None) else False
         explorer_filter_supported = self.explorer_widget.filter_supported_btn.isChecked() if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'filter_supported_btn', None) else True
         outline_sort_alphabetical = self.outline_widget._sort_alphabetical if hasattr(self, 'outline_widget') else False
-        outline_follow_cursor = self.outline_widget._follow_cursor if hasattr(self, 'outline_widget') else True
+        outline_follow_cursor = self.outline_widget._follow_cursor if hasattr(self, 'outline_widget') else False
         show_output = self.showOutput_act.isChecked()
         show_menus = self.toggleMenus_act.isChecked()
         show_toolbar = self.toggleEditorToolbar_act.isChecked()
@@ -2197,9 +2199,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if is_collapsed or not is_current_tab:
                 self.sidebar_tab_widget.setCurrentIndex(0)
-                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
-                if restore_sizes[0] == 0:
-                    restore_sizes = [250, 550]
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [280, 520])
+                if not restore_sizes or restore_sizes[0] < 280:
+                    restore_sizes = [280, 520]
                 self.horizontal_splitter.setSizes(restore_sizes)
                 self.showExplorer_act.setChecked(True)
                 self.showOutline_act.setChecked(False)
@@ -2213,9 +2215,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.showExplorer_act.setChecked(state)
             if state:
                 self.sidebar_tab_widget.setCurrentIndex(0)
-                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
-                if restore_sizes[0] == 0:
-                    restore_sizes = [250, 550]
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [280, 520])
+                if not restore_sizes or restore_sizes[0] < 280:
+                    restore_sizes = [280, 520]
                 self.horizontal_splitter.setSizes(restore_sizes)
                 self.showOutline_act.setChecked(False)
             else:
@@ -2239,9 +2241,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             if is_collapsed or not is_current_tab:
                 self.sidebar_tab_widget.setCurrentIndex(1)
-                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
-                if restore_sizes[0] == 0:
-                    restore_sizes = [250, 550]
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [280, 520])
+                if not restore_sizes or restore_sizes[0] < 280:
+                    restore_sizes = [280, 520]
                 self.horizontal_splitter.setSizes(restore_sizes)
                 self.showOutline_act.setChecked(True)
                 self.showExplorer_act.setChecked(False)
@@ -2256,9 +2258,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.showOutline_act.setChecked(state)
             if state:
                 self.sidebar_tab_widget.setCurrentIndex(1)
-                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [250, 550])
-                if restore_sizes[0] == 0:
-                    restore_sizes = [250, 550]
+                restore_sizes = getattr(self, '_last_horizontal_splitter_sizes', [280, 520])
+                if not restore_sizes or restore_sizes[0] < 280:
+                    restore_sizes = [280, 520]
                 self.horizontal_splitter.setSizes(restore_sizes)
                 self.showExplorer_act.setChecked(False)
                 self._updateOutlineNow()
