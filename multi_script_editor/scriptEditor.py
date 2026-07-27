@@ -926,83 +926,80 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         return settings.get('shortcuts', {}).get(action, None)
 
     def loadSession(self, sessions=None):
-        self.setUpdatesEnabled(False)
-        try:
-            if sessions is None:
-                sessions = self._presenter.get_session_tabs()
-            self.tab.clear()
-            active_index = -1
-            if sessions:
-                self.tab.blockSignals(True)
-                for i, s in enumerate(sessions):
-                    text = s.get('text')
-                    file_path = s.get('file_path')
-                    is_active = s.get('active', False)
+        if sessions is None:
+            sessions = self._presenter.get_session_tabs()
+        self.tab.clear()
+        active_index = -1
+        if sessions:
+            self.tab.blockSignals(True)
+            for i, s in enumerate(sessions):
+                text = s.get('text')
+                file_path = s.get('file_path')
+                is_active = s.get('active', False)
 
-                    if file_path and not os.path.exists(file_path):
-                        self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
+                if file_path and not os.path.exists(file_path):
+                    self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
 
-                    w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False, insert_index=self.tab.count())
+                w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False, insert_index=self.tab.count())
 
-                    # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
-                    w.needs_loading_bookmarks = s.get('bookmarks', "")
-                    w.needs_loading_line = s.get('line', 1)
-                    w.needs_loading_column = s.get('column', 0)
-                    w.needs_loading_scroll_v = s.get('scroll_v', 0)
-                    w.needs_loading_folds = s.get('folds', [])
+                # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
+                w.needs_loading_bookmarks = s.get('bookmarks', "")
+                w.needs_loading_line = s.get('line', 1)
+                w.needs_loading_column = s.get('column', 0)
+                w.needs_loading_scroll_v = s.get('scroll_v', 0)
+                w.needs_loading_folds = s.get('folds', [])
 
-                    if is_active:
-                        active_index = i
-                        if file_path and os.path.exists(file_path):
-                            text = read_file_text(file_path)
-                        if text:
-                            w.addText(text)
-                            w.document().clearUndoRedoStacks()
-                            w.document().setModified(False)
-                            if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
-                                if hasattr(w, 'set_folded_blocks'):
-                                    w.set_folded_blocks(w.needs_loading_folds)
-                                delattr(w, 'needs_loading_folds')
-                            if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
-                                w.set_bookmarks(w.needs_loading_bookmarks)
-                                delattr(w, 'needs_loading_bookmarks')
-                            # Jump to the saved line and column!
-                            if hasattr(w, 'needs_loading_line'):
-                                line_num = w.needs_loading_line
-                                column_num = getattr(w, 'needs_loading_column', 0)
-                                if line_num > 1 or column_num > 0:
-                                    block = w.document().findBlockByNumber(line_num - 1)
-                                    if block.isValid():
-                                        cursor = w.textCursor()
-                                        col = min(column_num, max(0, block.length() - 1))
-                                        cursor.setPosition(block.position() + col)
-                                        w.setTextCursor(cursor)
-                                        if hasattr(w, 'highlight_current_line'):
-                                            w.highlight_current_line()
-                        if hasattr(w, 'needs_loading_line'):
-                            delattr(w, 'needs_loading_line')
-                        if hasattr(w, 'needs_loading_column'):
-                            delattr(w, 'needs_loading_column')
-                        if hasattr(w, 'needs_loading_folds'):
+                if is_active:
+                    active_index = i
+                    if file_path and os.path.exists(file_path):
+                        text = read_file_text(file_path)
+                    if text:
+                        w.addText(text)
+                        w.document().clearUndoRedoStacks()
+                        w.document().setModified(False)
+                        if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
+                            if hasattr(w, 'set_folded_blocks'):
+                                w.set_folded_blocks(w.needs_loading_folds)
                             delattr(w, 'needs_loading_folds')
-                    else:
-                        w.needs_loading_file = file_path
-                        w.needs_loading_text = text
+                        if hasattr(w, 'set_bookmarks') and w.needs_loading_bookmarks:
+                            w.set_bookmarks(w.needs_loading_bookmarks)
+                            delattr(w, 'needs_loading_bookmarks')
+                        # Jump to the saved line and column!
+                        if hasattr(w, 'needs_loading_line'):
+                            line_num = w.needs_loading_line
+                            column_num = getattr(w, 'needs_loading_column', 0)
+                            if line_num > 1 or column_num > 0:
+                                block = w.document().findBlockByNumber(line_num - 1)
+                                if block.isValid():
+                                    cursor = w.textCursor()
+                                    col = min(column_num, max(0, block.length() - 1))
+                                    cursor.setPosition(block.position() + col)
+                                    w.setTextCursor(cursor)
+                                    if hasattr(w, 'highlight_current_line'):
+                                        w.highlight_current_line()
+                    if hasattr(w, 'needs_loading_line'):
+                        delattr(w, 'needs_loading_line')
+                    if hasattr(w, 'needs_loading_column'):
+                        delattr(w, 'needs_loading_column')
+                    if hasattr(w, 'needs_loading_folds'):
+                        delattr(w, 'needs_loading_folds')
+                else:
+                    w.needs_loading_file = file_path
+                    w.needs_loading_text = text
 
-                    if s.get('size'):
-                        # w is the edit widget from addNewTab
-                        if hasattr(w, 'setFontSize'):
-                            w.setFontSize(s.get('size'))
+                if s.get('size'):
+                    # w is the edit widget from addNewTab
+                    if hasattr(w, 'setFontSize'):
+                        w.setFontSize(s.get('size'))
 
-                self.tab.blockSignals(False)
-                if active_index != -1:
-                    self.tab.setCurrentIndex(active_index)
-                    if hasattr(self.tab, 'onTabChanged'):
-                        self.tab.onTabChanged(active_index)
-            if self.tab.count() == 0:
-                self.tab.addNewTab()
-        finally:
-            self.setUpdatesEnabled(True)
+            self.tab.blockSignals(False)
+            if active_index != -1:
+                self.tab.setCurrentIndex(active_index)
+                if hasattr(self.tab, 'onTabChanged'):
+                    self.tab.onTabChanged(active_index)
+
+        if self.tab.count() == 0:
+            self.tab.addNewTab()
 
     def _get_tabs_data(self, save_full_text=False):
         tabs = []
