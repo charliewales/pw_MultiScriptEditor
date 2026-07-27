@@ -1928,7 +1928,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             auto_close_delimiters = data.get('auto_close_delimiters', True)
             self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
-            show_breadcrumbs = data.get('show_breadcrumbs', True)
+            show_breadcrumbs = data.get('show_breadcrumbs', False)
             self.showBreadcrumbs_act.setChecked(show_breadcrumbs)
             for i in range(self.tab.count()):
                 container = self.tab.widget(i)

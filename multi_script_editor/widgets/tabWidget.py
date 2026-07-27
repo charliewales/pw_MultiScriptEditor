@@ -1536,6 +1536,10 @@ class EditorTabContainer(QWidget):
         self.breadcrumbs = BreadcrumbBar(self)
         self.breadcrumbs.symbolSelected.connect(self._on_breadcrumb_symbol_selected)
         self.breadcrumbs.fileSelected.connect(self._on_breadcrumb_file_selected)
+        show_b = False
+        if hasattr(parent, 'showBreadcrumbs_act'):
+            show_b = parent.showBreadcrumbs_act.isChecked()
+        self.breadcrumbs.setVisible(show_b)
         vbox.addWidget(self.breadcrumbs)
 
         editor_hbox = QHBoxLayout()
