@@ -2,16 +2,24 @@ import os
 import shutil
 
 from icons import icons
-from vendor.Qt.QtCore import QDir, QItemSelectionModel, QModelIndex, QSortFilterProxyModel, Qt, Signal, QTimer, QUrl
+from vendor.Qt.QtCore import (
+    QDir,
+    QItemSelectionModel,
+    QModelIndex,
+    QSortFilterProxyModel,
+    Qt,
+    Signal,
+    QTimer,
+    QUrl,
+    QSize,
+)
 from vendor.Qt.QtGui import QColor, QDesktopServices, QIcon
 from vendor.Qt.QtWidgets import (
     QAction,
     QAbstractItemView,
     QApplication,
-    QFileDialog,
     QFileSystemModel,
     QHBoxLayout,
-    QHeaderView,
     QInputDialog,
     QLabel,
     QLineEdit,
@@ -278,7 +286,7 @@ class ExplorerWidget(QWidget):
 
         # Top Bar Layout
         self.top_layout = QHBoxLayout()
-        self.top_layout.setContentsMargins(0, 3, 0, 0)
+        self.top_layout.setContentsMargins(0, 2, 0, 0)
         self.top_layout.setSpacing(2)
 
         # Top Bar: QLineEdit for filter & direct path navigation
@@ -293,11 +301,13 @@ class ExplorerWidget(QWidget):
         self.up_btn.setIcon(QIcon(icons.get("up", "")))
 
         self.sync_tab_btn = QToolButton()
+        self.sync_tab_btn.setIconSize(QSize(24, 24))
         self.sync_tab_btn.setToolTip("Set root to current tab directory")
         self.sync_tab_btn.setStatusTip("Set the explorer root path to match the currently active tab")
         self.sync_tab_btn.setIcon(QIcon(icons.get("view_file", icons.get("open", ""))))
 
         self.auto_sync_tab_btn = QToolButton()
+        self.auto_sync_tab_btn.setIconSize(QSize(24, 24))
         self.auto_sync_tab_btn.setCheckable(True)
         self.auto_sync_tab_btn.setChecked(False)
         self.auto_sync_tab_btn.setToolTip("Toggle: auto-sync explorer root on tab change")
@@ -305,6 +315,7 @@ class ExplorerWidget(QWidget):
         self.auto_sync_tab_btn.setIcon(QIcon(icons.get("file_recent", icons.get("open", ""))))
 
         self.filter_supported_btn = QToolButton()
+        self.filter_supported_btn.setIconSize(QSize(24, 24))
         self.filter_supported_btn.setCheckable(True)
         self.filter_supported_btn.setChecked(True)
         self.filter_supported_btn.setIcon(QIcon(icons.get("filter_files", "")))
@@ -312,11 +323,13 @@ class ExplorerWidget(QWidget):
         self.filter_supported_btn.setStatusTip("Toggle whether to show all files or only supported scripts/files")
 
         self.add_bookmark_btn = QToolButton()
+        self.add_bookmark_btn.setIconSize(QSize(24, 24))
         self.add_bookmark_btn.setToolTip("Bookmark current directory")
         self.add_bookmark_btn.setStatusTip("Add the current directory to your explorer bookmarks")
         self.add_bookmark_btn.setIcon(QIcon(icons.get("bookmark_toggle", "")))
 
         self.bookmarks_menu_btn = QToolButton()
+        self.bookmarks_menu_btn.setIconSize(QSize(24, 24))
         self.bookmarks_menu_btn.setToolTip("Show saved directory favorites")
         self.bookmarks_menu_btn.setStatusTip("Show a menu of your bookmarked directories")
         self.bookmarks_menu_btn.setIcon(QIcon(icons.get("bookmark_prev", icons.get("bookmark_toggle", ""))))
@@ -326,6 +339,7 @@ class ExplorerWidget(QWidget):
         self.bookmarks_menu_btn.setPopupMode(QToolButton.InstantPopup)
 
         self.refresh_btn = QToolButton()
+        self.refresh_btn.setIconSize(QSize(24, 24))
         self.refresh_btn.setToolTip("Refresh directory")
         self.refresh_btn.setStatusTip("Refresh the file explorer view")
         self.refresh_btn.setIcon(QIcon(icons.get("reload_plugins", icons.get("clear", ""))))

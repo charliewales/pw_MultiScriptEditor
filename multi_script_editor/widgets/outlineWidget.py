@@ -43,7 +43,7 @@ class OutlineWidget(QWidget):
 
         # Header bar with search input and toolbar buttons
         header_layout = QHBoxLayout()
-        header_layout.setContentsMargins(0, 3, 0, 0)
+        header_layout.setContentsMargins(0, 2, 0, 0)
         header_layout.setSpacing(2)
 
         self.filter_le = QLineEdit()
@@ -62,14 +62,14 @@ class OutlineWidget(QWidget):
         self.collapse_btn.setIcon(QIcon(icons.get("fold_all", icons.get("fold", ""))))
         self.collapse_btn.setToolTip("Collapse All")
         self.collapse_btn.setStatusTip("Collapse all items in the symbol outline tree")
-        self.collapse_btn.setIconSize(QSize(20, 20))
+        self.collapse_btn.setIconSize(QSize(24, 24))
         self.collapse_btn.clicked.connect(self.collapse_all)
 
         self.expand_btn = QToolButton()
         self.expand_btn.setIcon(QIcon(icons.get("unfold_all", icons.get("unfold", ""))))
         self.expand_btn.setToolTip("Expand All")
         self.expand_btn.setStatusTip("Expand all items in the symbol outline tree")
-        self.expand_btn.setIconSize(QSize(20, 20))
+        self.expand_btn.setIconSize(QSize(24, 24))
         self.expand_btn.clicked.connect(self.expand_all)
 
         self.sort_btn = QToolButton()
@@ -77,7 +77,7 @@ class OutlineWidget(QWidget):
         self.sort_btn.setCheckable(True)
         self.sort_btn.setToolTip("Sort Alphabetically")
         self.sort_btn.setStatusTip("Toggle sorting symbols alphabetically or by line number")
-        self.sort_btn.setIconSize(QSize(20, 20))
+        self.sort_btn.setIconSize(QSize(24, 24))
         self.sort_btn.toggled.connect(self._on_sort_toggled)
 
         self.sync_btn = QToolButton()
@@ -86,7 +86,7 @@ class OutlineWidget(QWidget):
         self.sync_btn.setChecked(False)
         self.sync_btn.setToolTip("Follow Cursor")
         self.sync_btn.setStatusTip("Toggle auto-highlighting active symbol based on editor line")
-        self.sync_btn.setIconSize(QSize(20, 20))
+        self.sync_btn.setIconSize(QSize(24, 24))
         self.sync_btn.toggled.connect(self._on_sync_toggled)
 
         header_layout.addWidget(self.filter_le, 1)
