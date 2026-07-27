@@ -381,6 +381,11 @@ class ScriptEditorUIBuilder:
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
 
+        # Breadcrumbs toggle setup
+        editor.showBreadcrumbs_act.setShortcut("Ctrl+Shift+B")
+        editor.showBreadcrumbs_act.setShortcutContext(Qt.WindowShortcut)
+        editor.showBreadcrumbs_act.triggered.connect(editor.toggleBreadcrumbs)
+
         # Syntax Check toggle setup
         editor.syntaxCheck_act.triggered.connect(editor.toggleSyntaxCheck)
 
@@ -609,6 +614,7 @@ class ScriptEditorUIBuilder:
             editor.showAutocomplete_act: "Show code autocompletion",
             editor.showExplorer_act: "Show or hide the file explorer panel",
             editor.showOutline_act: "Show or hide the code outline panel",
+            editor.showBreadcrumbs_act: "Show or hide the breadcrumbs bar at the top of the editor",
             editor.showOutput_act: "Show or hide the output panel",
             editor.showStatusTips_act: "Toggle visibility of status bar tips",
             editor.spacesToTabs_act: "Convert spaces to tabs in the current script",

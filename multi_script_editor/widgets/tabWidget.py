@@ -26,6 +26,7 @@ from vendor.Qt.QtWidgets import (
     QShortcut,
     QTabBar,
     QTabWidget,
+    QVBoxLayout,
     QWidget,
     QFileDialog,
 )
@@ -34,6 +35,7 @@ from core.git_manager import GitManager
 from core.diff_manager import DiffManager
 from icons import icons
 from widgets import inputWidget, numBarWidget
+from widgets.breadcrumbsWidget import BreadcrumbBar
 from widgets.git_dialogs import GitCommitDialog, GitHistoryDialog
 from widgets.pythonSyntax import design
 
@@ -1524,23 +1526,73 @@ class EditorTabContainer(QWidget):
     def __init__(self, text, parent, desk, file_path=None):
         super(EditorTabContainer, self).__init__()
         self.file_path = file_path
-        hbox = QHBoxLayout(self)
-        hbox.setSpacing(0)
-        hbox.setContentsMargins(0, 2, 0, 0)
-        # input widget
+        self.setMinimumWidth(0)
+
+        vbox = QVBoxLayout(self)
+        vbox.setSpacing(0)
+        vbox.setContentsMargins(0, 0, 0, 0)
+
+        # Breadcrumbs Bar
+        self.breadcrumbs = BreadcrumbBar(self)
+        self.breadcrumbs.symbolSelected.connect(self._on_breadcrumb_symbol_selected)
+        self.breadcrumbs.fileSelected.connect(self._on_breadcrumb_file_selected)
+        vbox.addWidget(self.breadcrumbs)
+
+        editor_hbox = QHBoxLayout()
+        editor_hbox.setSpacing(0)
+        editor_hbox.setContentsMargins(0, 2, 0, 0)
+
+        # Input widget
         self.edit = inputWidget.inputClass(parent, desk)
         if text:
             self.edit.addText(text)
             self.edit.document().clearUndoRedoStacks()
             self.edit.document().setModified(False)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
-        self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
-        self.edit.inputSignal.connect(lambda :self.lineNum.update())
-        self.edit.document().blockCountChanged.connect(lambda :self.lineNum.update())
-        self.edit.cursorPositionChanged.connect(lambda :self.lineNum.update())
+        self.edit.verticalScrollBar().valueChanged.connect(lambda: self.lineNum.update())
+        self.edit.inputSignal.connect(lambda: self.lineNum.update())
+        self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
+        self.edit.cursorPositionChanged.connect(lambda: self.lineNum.update())
+        self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
 
-        hbox.addWidget(self.lineNum)
-        hbox.addWidget(self.edit)
+        editor_hbox.addWidget(self.lineNum)
+        editor_hbox.addWidget(self.edit)
+
+        vbox.addLayout(editor_hbox)
+
+    def _on_cursor_changed_update_breadcrumbs(self):
+        line_num = self.edit.textCursor().blockNumber() + 1
+        self.breadcrumbs.set_cursor_line(line_num)
+
+    def _on_breadcrumb_symbol_selected(self, line):
+        if line:
+            block = self.edit.document().findBlockByNumber(line - 1)
+            if block.isValid():
+                cursor = self.edit.textCursor()
+                cursor.setPosition(block.position())
+                self.edit.setTextCursor(cursor)
+                self.edit.centerCursor()
+                self.edit.highlight_current_line()
+                self.edit.setFocus()
+
+    def _on_breadcrumb_file_selected(self, file_path):
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        parent = getattr(self.edit, 'p', None)
+        if not parent:
+            return
+
+        if hasattr(parent, 'tab'):
+            tab_widget = parent.tab
+            for i in range(tab_widget.count()):
+                container = tab_widget.widget(i)
+                if container and getattr(container, 'file_path', None) == file_path:
+                    tab_widget.setCurrentIndex(i)
+                    return
+
+        if hasattr(parent, 'openRecentFile'):
+            parent.openRecentFile(file_path)
 
 
 if __name__ == '__main__':

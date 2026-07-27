@@ -685,6 +685,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.applyHightLighter(name)
             w.edit.completer.setStyleSheet(qss)
             w.edit.setStyleSheet(qss)
+            if hasattr(w, 'breadcrumbs'):
+                w.breadcrumbs.apply_theme(colors, getattr(self, 'current_outline_font', None))
 
         font_data = colors.get('font')
         if not font_data:
@@ -773,6 +775,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if hasattr(self, 'outline_widget'):
                 self.outline_widget.set_font(outline_font)
             self.current_outline_font = outline_font
+            for i in range(self.tab.count()):
+                w = self.tab.widget(i)
+                if hasattr(w, 'breadcrumbs'):
+                    w.breadcrumbs.apply_theme(colors, outline_font)
 
             if hasattr(self, 'explorer_widget'):
                 self.explorer_widget.apply_theme(colors, outline_font)
@@ -1922,6 +1928,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             auto_close_delimiters = data.get('auto_close_delimiters', True)
             self.autoCloseDelimiters_act.setChecked(auto_close_delimiters)
 
+            show_breadcrumbs = data.get('show_breadcrumbs', True)
+            self.showBreadcrumbs_act.setChecked(show_breadcrumbs)
+            for i in range(self.tab.count()):
+                container = self.tab.widget(i)
+                if container and hasattr(container, 'breadcrumbs'):
+                    container.breadcrumbs.setVisible(show_breadcrumbs)
+
             if hasattr(self, 'randomize_custom_act'):
                 self.randomize_custom_act.setChecked(data.get('randomize_custom_at_startup', False))
 
@@ -2053,6 +2066,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             show_docstrings=show_docstrings,
             trim_auto_whitespace=trim_auto_whitespace,
             randomize_custom_at_startup=randomize_custom,
+            show_breadcrumbs=self.showBreadcrumbs_act.isChecked(),
         )
         settings.update(data)
         if 'colors' in settings:
@@ -2433,17 +2447,35 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._current_settings['prefer_single_quotes'] = state
         self.saveSettings()
 
+    def toggleBreadcrumbs(self, state=None):
+        if state is None:
+            state = self.showBreadcrumbs_act.isChecked()
+        self.showBreadcrumbs_act.setChecked(state)
+        self._current_settings['show_breadcrumbs'] = state
+        self.saveSettings()
+
+        for i in range(self.tab.count()):
+            container = self.tab.widget(i)
+            if container and hasattr(container, 'breadcrumbs'):
+                container.breadcrumbs.setVisible(state)
+
+        if state:
+            self._updateOutlineNow()
+
+    def _is_symbol_parsing_needed(self):
+        outline_active = hasattr(self, 'showOutline_act') and self.showOutline_act.isChecked() and (
+            not hasattr(self, 'horizontal_splitter') or self.horizontal_splitter.sizes()[0] != 0
+        )
+        breadcrumbs_active = hasattr(self, 'showBreadcrumbs_act') and self.showBreadcrumbs_act.isChecked()
+        return outline_active or breadcrumbs_active
+
     def updateOutline(self):
-        if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
-            return
-        if hasattr(self, 'horizontal_splitter') and self.horizontal_splitter.sizes()[0] == 0:
+        if not self._is_symbol_parsing_needed():
             return
         self.outline_timer.start(500)
 
     def _updateOutlineNow(self):
-        if not hasattr(self, 'showOutline_act') or not self.showOutline_act.isChecked():
-            return
-        if hasattr(self, 'horizontal_splitter') and self.horizontal_splitter.sizes()[0] == 0:
+        if not self._is_symbol_parsing_needed():
             return
         edit = self.tab.current()
         if not edit:
@@ -2463,16 +2495,25 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
-        if not hasattr(self, 'outline_widget'):
-            return
-
         theme_colors = None
         if hasattr(self, '_current_settings'):
             theme_name = self._current_settings.get('theme', 'Dark')
             theme_colors = design.getColors(theme_name)
 
         font = getattr(self, 'current_outline_font', None)
-        self.outline_widget.set_symbols(symbols, theme_colors, font, ext=ext)
+        if hasattr(self, 'outline_widget'):
+            self.outline_widget.set_symbols(symbols, theme_colors, font, ext=ext)
+
+        current_container = self.tab.widget(self.tab.currentIndex())
+        if current_container and hasattr(current_container, 'breadcrumbs'):
+            file_path = getattr(current_container, 'file_path', None)
+            fallback_name = self.tab.tabText(self.tab.currentIndex())
+            current_container.breadcrumbs.apply_theme(theme_colors, font)
+            current_container.breadcrumbs.set_symbols(symbols, file_path=file_path, fallback_name=fallback_name, ext=ext)
+            edit = getattr(current_container, 'edit', None)
+            if edit:
+                line_num = edit.textCursor().blockNumber() + 1
+                current_container.breadcrumbs.set_cursor_line(line_num)
 
     def _on_outline_symbol_selected(self, line):
         if line:
