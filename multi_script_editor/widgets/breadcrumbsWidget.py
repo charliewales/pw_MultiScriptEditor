@@ -2,7 +2,6 @@ import os
 
 from icons import icons
 from vendor.Qt.QtCore import QFileInfo, QSize, Qt, Signal
-from vendor.Qt.QtGui import QColor, QFont, QIcon
 from vendor.Qt.QtWidgets import (
     QAction,
     QFileIconProvider,
@@ -42,7 +41,7 @@ def get_file_icon(file_path=None):
     return provider.icon(QFileIconProvider.File)
 
 
-def clean_symbol_name(name, sym_type):
+def clean_symbol_name(name):
     """
     Strips 'class ', 'def ', 'async def ', etc. prefixes for clean breadcrumb display.
     """
@@ -144,12 +143,10 @@ class BreadcrumbItemWidget(QToolButton):
         self._siblings = siblings or []
         self._theme_colors = theme_colors or {}
 
-        if self._node_type in ["dir", "file"]:
-            self.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        else:
-            self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
         self.setAutoRaise(True)
+        self.setFixedHeight(24)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         if font:
@@ -157,17 +154,16 @@ class BreadcrumbItemWidget(QToolButton):
 
         self.setText(title)
 
+        self.setPopupMode(QToolButton.InstantPopup)
+
         if self._node_type == "dir":
-            self.setPopupMode(QToolButton.InstantPopup)
             self.setStatusTip("Browse folder {0}".format(title))
             self._setup_lazy_menu(font)
 
         elif self._node_type == "file":
-            self.setPopupMode(QToolButton.MenuButtonPopup if self._siblings else QToolButton.InstantPopup)
             self.setStatusTip("File {0}".format(title))
             self.clicked.connect(self._on_file_clicked)
-            if self._siblings:
-                self._setup_lazy_menu(font)
+            self._setup_lazy_menu(font)
 
         else:
             # Code Symbol Node
@@ -175,13 +171,11 @@ class BreadcrumbItemWidget(QToolButton):
             line = sym_data.get('line', 1)
             sym_type = sym_data.get('type', 'function')
 
-            self.setPopupMode(QToolButton.MenuButtonPopup if self._siblings else QToolButton.InstantPopup)
             self.setStatusTip("Jump to {0} (Line {1})".format(title, line))
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
             self.setIconSize(QSize(16, 16))
             self.clicked.connect(self._on_symbol_clicked)
-            if self._siblings:
-                self._setup_lazy_menu(font)
+            self._setup_lazy_menu(font)
 
     def _setup_lazy_menu(self, font):
         menu = QMenu(self)
@@ -213,7 +207,7 @@ class BreadcrumbItemWidget(QToolButton):
                 s_name = sym.get('name', '')
                 s_type = sym.get('type', 'function')
                 s_line = sym.get('line', 1)
-                c_name = clean_symbol_name(s_name, s_type)
+                c_name = clean_symbol_name(s_name)
 
                 act = QAction(get_symbol_type_icon(s_type, self._theme_colors), c_name, menu)
                 act.setStatusTip("Navigate to {0} (Line {1})".format(c_name, s_line))
@@ -226,17 +220,18 @@ class BreadcrumbItemWidget(QToolButton):
         fg = self._theme_colors.get('tab_selected_text', self._theme_colors.get('text', (220, 220, 220)))
         sel_bg = self._theme_colors.get('tab_selected_bg', (60, 60, 60))
         sel_fg = self._theme_colors.get('tab_selected_text', (255, 255, 255))
+        sel_hl = self._theme_colors.get('highlight_line', (128, 128, 128))
 
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg[:3]) if isinstance(bg, (list, tuple)) else "#232323"
         fg_hex = "#{:02x}{:02x}{:02x}".format(*fg[:3]) if isinstance(fg, (list, tuple)) else "#dcdcdc"
         sel_bg_hex = "#{:02x}{:02x}{:02x}".format(*sel_bg[:3]) if isinstance(sel_bg, (list, tuple)) else "#3c3c3c"
         sel_fg_hex = "#{:02x}{:02x}{:02x}".format(*sel_fg[:3]) if isinstance(sel_fg, (list, tuple)) else "#ffffff"
+        sel_hl_hex = "#{:02x}{:02x}{:02x}".format(*sel_hl[:3]) if isinstance(sel_hl, (list, tuple)) else "#ffffff"
 
         style = """
             QMenu {{
                 background-color: {0};
                 color: {1};
-                border: 1px solid #444;
                 padding: 4px;
             }}
             QMenu::item {{
@@ -244,10 +239,10 @@ class BreadcrumbItemWidget(QToolButton):
                 border-radius: 2px;
             }}
             QMenu::item:selected {{
-                background-color: {2};
+                background-color: {4};
                 color: {3};
             }}
-        """.format(bg_hex, fg_hex, sel_bg_hex, sel_fg_hex)
+        """.format(bg_hex, fg_hex, sel_bg_hex, sel_fg_hex, sel_hl_hex)
         menu.setStyleSheet(style)
 
     def _on_file_clicked(self):
@@ -279,10 +274,11 @@ class BreadcrumbBar(QScrollArea):
 
         self._container = QWidget(self)
         self._container.setObjectName("breadcrumbContainer")
+        self._container.setFixedHeight(26)
 
         self.layout = QHBoxLayout(self._container)
-        self.layout.setContentsMargins(6, 1, 6, 1)
-        self.layout.setSpacing(2)
+        self.layout.setContentsMargins(4, 0, 4, 0)
+        self.layout.setSpacing(0)
         self.layout.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         self.setWidget(self._container)
@@ -347,21 +343,23 @@ class BreadcrumbBar(QScrollArea):
                 color: {2};
                 background: transparent;
                 border: none;
-                padding: 1px 3px;
+                padding: 1px 0px;
                 border-radius: 3px;
             }}
             QToolButton#breadcrumbItem:hover {{
                 background-color: rgba(255, 255, 255, 0.12);
             }}
-            QToolButton#breadcrumbItem::menu-button {{
-                border: none;
-                background: transparent;
-                padding-left: 1px;
-                padding-right: 1px;
+            QToolButton#breadcrumbItem::menu-indicator {{
+                image: none;
+                width: 0px;
+                height: 0px;
             }}
-            QToolButton#breadcrumbItem::menu-button:hover {{
-                background-color: rgba(255, 255, 255, 0.2);
-                border-radius: 2px;
+            QToolButton#breadcrumbItem::menu-button {{
+                image: none;
+                border: none;
+                width: 0px;
+                padding: 0px;
+                margin: 0px;
             }}
             QLabel {{
                 color: {1};
@@ -475,7 +473,7 @@ class BreadcrumbBar(QScrollArea):
 
             raw_title = sym_data.get('name', '')
             sym_type = sym_data.get('type', 'function')
-            clean_title = clean_symbol_name(raw_title, sym_type)
+            clean_title = clean_symbol_name(raw_title)
 
             item_btn = BreadcrumbItemWidget(
                 title=clean_title,
