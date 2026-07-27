@@ -261,12 +261,12 @@ class ScriptEditorUIBuilder:
         editor.unfold_act.setIcon(QIcon(icons['unfold']))
 
         editor.fold_all_act.triggered.connect(editor.fold_all)
-        editor.fold_all_act.setShortcut('Alt+Shift+-')
+        editor.fold_all_act.setShortcut('Ctrl+Alt+-')
         editor.fold_all_act.setShortcutContext(Qt.WindowShortcut)
         editor.fold_all_act.setIcon(QIcon(icons['fold_all']))
 
         editor.unfold_all_act.triggered.connect(editor.unfold_all)
-        editor.unfold_all_act.setShortcut('Alt+Shift++')
+        editor.unfold_all_act.setShortcut('Ctrl+Alt++')
         editor.unfold_all_act.setShortcutContext(Qt.WindowShortcut)
         editor.unfold_all_act.setIcon(QIcon(icons['unfold_all']))
 
@@ -372,17 +372,17 @@ class ScriptEditorUIBuilder:
         # Create status bar
         editor.statusBar()
         # Explorer toggle setup
-        editor.showExplorer_act.setShortcut("Ctrl+E")
+        editor.showExplorer_act.setShortcut("Ctrl+Alt+E")
         editor.showExplorer_act.setShortcutContext(Qt.WindowShortcut)
         editor.showExplorer_act.triggered.connect(editor.toggleExplorer)
 
         # Outline toggle setup
-        editor.showOutline_act.setShortcut("Ctrl+Shift+O")
+        editor.showOutline_act.setShortcut("Ctrl+Alt+O")
         editor.showOutline_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutline_act.triggered.connect(editor.toggleOutline)
 
         # Breadcrumbs toggle setup
-        editor.showBreadcrumbs_act.setShortcut("Ctrl+Shift+B")
+        editor.showBreadcrumbs_act.setShortcut("Ctrl+Alt+B")
         editor.showBreadcrumbs_act.setShortcutContext(Qt.WindowShortcut)
         editor.showBreadcrumbs_act.triggered.connect(editor.toggleBreadcrumbs)
 
@@ -394,13 +394,13 @@ class ScriptEditorUIBuilder:
         editor.preferSingleQuotes_act.triggered.connect(editor.togglePreferSingleQuotes)
 
         # Output Bottom toggle setup
-        editor.outputBottom_act.setShortcut("Ctrl+U")
+        editor.outputBottom_act.setShortcut("Ctrl+Alt+U")
         editor.outputBottom_act.setShortcutContext(Qt.WindowShortcut)
         editor.outputBottom_act.triggered.connect(editor.toggleOutputBottom)
         editor.addAction(editor.outputBottom_act)
 
         # Output toggle setup
-        editor.showOutput_act.setShortcut("Ctrl+K")
+        editor.showOutput_act.setShortcut("Ctrl+Alt+K")
         editor.showOutput_act.setShortcutContext(Qt.WindowShortcut)
         editor.showOutput_act.triggered.connect(editor.toggleOutput)
         editor.addAction(editor.showOutput_act)

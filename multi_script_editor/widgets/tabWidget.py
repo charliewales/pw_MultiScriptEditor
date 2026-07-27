@@ -646,7 +646,7 @@ class tabWidgetClass(QTabWidget):
 
         if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
             menu.addSeparator()
-            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            show_menus_action = QAction("Show menus\tCtrl+Alt+M", self)
             if 'menu' in icons:
                 show_menus_action.setIcon(QIcon(icons['menu']))
             if hasattr(self.p, 'toggleMenus_act'):

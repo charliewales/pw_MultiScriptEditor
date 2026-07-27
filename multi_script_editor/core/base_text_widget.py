@@ -207,7 +207,7 @@ class BaseTextWidgetMixin:
                     menu.addMenu(git_menu)
         if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
             menu.addSeparator()
-            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            show_menus_action = QAction("Show menus\tCtrl+Alt+M", self)
             if 'menu' in icons:
                 show_menus_action.setIcon(QIcon(icons['menu']))
             if hasattr(main_win, 'toggleMenus_act'):
