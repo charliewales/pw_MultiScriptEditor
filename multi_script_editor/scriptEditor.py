@@ -170,6 +170,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.sidebar_tab_widget = QTabWidget()
         self.sidebar_tab_widget.setObjectName("sidebarTabWidget")
         self.sidebar_tab_widget.setTabPosition(QTabWidget.North)
+        self.sidebar_tab_widget.setIconSize(QSize(14, 14))
         self.sidebar_tab_widget.addTab(self.explorer_widget, QIcon(icons.get("explorer_panel", icons.get("open", ""))), "Explorer")
         self.sidebar_tab_widget.addTab(self.outline_panel, QIcon(icons.get("outline", "")), "Outline")
         self.sidebar_tab_widget.currentChanged.connect(self._on_sidebar_tab_changed)
@@ -777,10 +778,21 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.explorer_widget.apply_theme(colors, outline_font)
 
             if hasattr(self, 'sidebar_tab_widget'):
-                self.sidebar_tab_widget.setFont(outline_font)
-                self.sidebar_tab_widget.tabBar().setFont(outline_font)
-                family = outline_font.family()
-                pt_size = outline_font.pointSize()
+                if colors.get('use_theme_font_on_tabs', True):
+                    sidebar_tab_font = QFont(base_font)
+                else:
+                    sidebar_tab_font = QApplication.font("QTabBar")
+                if 'tab_text_size' in colors:
+                    sidebar_tab_font.setPointSize(max(1, int(colors['tab_text_size'])))
+                elif 'textsize' in colors:
+                    sidebar_tab_font.setPointSize(max(1, int(colors['textsize'])))
+                else:
+                    sidebar_tab_font.setPointSize(secondary_default)
+
+                self.sidebar_tab_widget.setFont(sidebar_tab_font)
+                self.sidebar_tab_widget.tabBar().setFont(sidebar_tab_font)
+                family = sidebar_tab_font.family()
+                pt_size = sidebar_tab_font.pointSize()
                 size_css = f"font-size: {pt_size}pt;" if pt_size > 0 else ""
                 self.sidebar_tab_widget.setStyleSheet(
                     f"QTabBar::tab {{ font-family: '{family}'; {size_css} }}"

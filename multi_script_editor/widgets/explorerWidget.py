@@ -40,12 +40,8 @@ FILE_TYPE_COLORS = {
     ".xml": "#d19a66", ".ini": "#d19a66", ".toml": "#d19a66", ".csv": "#d19a66",
     # Docs / Text
     ".md": "#98c379", ".txt": "#98c379", ".rst": "#98c379", ".log": "#abb2bf",
-    # C / C++ / Rust / Go
-    # ".c": "#c678dd", ".cpp": "#c678dd", ".h": "#c678dd", ".hpp": "#c678dd",
-    # ".rs": "#d19a66", ".go": "#00add8",
     # Web
     ".html": "#e06c75", ".htm": "#e06c75", ".css": "#56b6c2", ".js": "#e5c07b",
-    # ".jsx": "#61afef", ".tsx": "#61afef",
     # Shell / Scripts / Batch
     ".sh": "#98c379", ".bat": "#98c379", ".cmd": "#98c379", ".ps1": "#98c379",
     # USD
@@ -350,14 +346,15 @@ class ExplorerWidget(QWidget):
         self.top_layout.addWidget(self.filter_supported_btn)
         self.top_layout.addWidget(self.add_bookmark_btn)
         self.top_layout.addWidget(self.bookmarks_menu_btn)
-        self.top_layout.addStretch()
-        self.top_layout.addWidget(self.refresh_btn)
+        # self.top_layout.addStretch()
+        # self.top_layout.addWidget(self.refresh_btn)
 
         # Path filter input layout with margins matching Outline filter
         path_layout = QHBoxLayout()
         path_layout.setContentsMargins(0, 2, 0, 0)
         path_layout.setSpacing(0)
         path_layout.addWidget(self.path_filter_input)
+        path_layout.addLayout(self.top_layout)
 
         main_layout.addLayout(path_layout)
         main_layout.addLayout(self.top_layout)
@@ -814,10 +811,28 @@ class ExplorerWidget(QWidget):
         )
         if reply == QMessageBox.Yes:
             try:
+                norm_target = os.path.normcase(os.path.abspath(target_path))
                 if os.path.isdir(target_path):
                     shutil.rmtree(target_path)
                 else:
                     os.remove(target_path)
+
+                editor = getattr(self, 'editor', None)
+                if not editor and hasattr(self, 'parent'):
+                    editor = self.parent()
+                tab_widget = getattr(editor, 'tab', None)
+                if tab_widget:
+                    for i in range(tab_widget.count() - 1, -1, -1):
+                        w = tab_widget.widget(i)
+                        fp = getattr(w, 'file_path', None)
+                        if fp:
+                            norm_fp = os.path.normcase(os.path.abspath(fp))
+                            if norm_fp == norm_target or norm_fp.startswith(norm_target + os.sep):
+                                w.file_path = None
+                                if hasattr(w, 'edit') and hasattr(w.edit, 'document'):
+                                    w.edit.document().setModified(False)
+                                tab_widget.closeTab(i)
+
                 self.refresh_tree()
             except Exception as e:
                 self._show_warning_dialog("Error", f"Failed to delete: {e}")
@@ -836,45 +851,6 @@ class ExplorerWidget(QWidget):
         sel_bg = rgb2hex(colors.get("selection_background", (60, 80, 110)))
         sel_text = rgb2hex(colors.get("selection", (255, 255, 255)))
         border_color = rgb2hex(colors.get("border", (60, 60, 60)))
-
-        qss = f"""
-            QWidget#explorerWidget {{
-                background-color: {bg_color};
-                color: {text_color};
-            }}
-            QLineEdit#explorerPathFilterInput {{
-                background-color: {bg_color};
-                color: {text_color};
-                border: 1px solid {border_color};
-                padding: 2px;
-            }}
-            QTreeView#explorerTreeView {{
-                background-color: {bg_color};
-                color: {text_color};
-                border: 1px solid {border_color};
-            }}
-            QTreeView#explorerTreeView::item:selected {{
-                background-color: {sel_bg};
-                color: {sel_text};
-            }}
-            QTreeView#explorerTreeView::item:hover {{
-                background-color: {sel_bg};
-            }}
-            QToolButton {{
-                background-color: transparent;
-                color: {text_color};
-                border: 1px solid {border_color};
-                border-radius: 3px;
-                padding: 2px;
-            }}
-            QToolButton:hover {{
-                background-color: {sel_bg};
-            }}
-            QToolButton::menu-indicator {{
-                image: none;
-            }}
-        """
-        # self.setStyleSheet(qss)
 
         if font:
             self._current_font = font

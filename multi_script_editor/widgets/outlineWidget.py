@@ -100,7 +100,6 @@ class OutlineWidget(QWidget):
         self.tree_widget.setObjectName("outlineTree")
         self.tree_widget.setHeaderHidden(True)
         self.tree_widget.setIconSize(QSize(18, 18))
-        self.tree_widget.setAnimated(True)
         self.tree_widget.setIndentation(14)
         self.tree_widget.setFocusPolicy(Qt.NoFocus)
         self.tree_widget.setItemDelegate(HtmlDelegate(self.tree_widget))

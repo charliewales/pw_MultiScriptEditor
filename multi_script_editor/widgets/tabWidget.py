@@ -917,12 +917,7 @@ class tabWidgetClass(QTabWidget):
                 widget.file_path = None
                 if hasattr(widget, 'edit') and hasattr(widget.edit, 'document'):
                     widget.edit.document().setModified(False)
-                widget_to_remove = self.widget(index)
-                self.removeTab(index)
-                if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
-                    self._mru_tabs.remove(widget_to_remove)
-                if self.count() == 0:
-                    self.addNewTab()
+                self.closeTab(index)
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Deleted file: %s' % os.path.normpath(file_path))
                 elif hasattr(self.p, 'showStatusMessage'):
@@ -1531,7 +1526,7 @@ class EditorTabContainer(QWidget):
         self.file_path = file_path
         hbox = QHBoxLayout(self)
         hbox.setSpacing(0)
-        hbox.setContentsMargins(0,0,0,0)
+        hbox.setContentsMargins(0, 2, 0, 0)
         # input widget
         self.edit = inputWidget.inputClass(parent, desk)
         if text:
