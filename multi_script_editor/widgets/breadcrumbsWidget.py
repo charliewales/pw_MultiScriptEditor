@@ -173,7 +173,7 @@ class BreadcrumbItemWidget(QToolButton):
 
             self.setStatusTip("Jump to {0} (Line {1})".format(title, line))
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
-            self.setIconSize(QSize(16, 16))
+            self.setIconSize(QSize(18, 18))
             self.clicked.connect(self._on_symbol_clicked)
             self._setup_lazy_menu(font)
 
@@ -325,10 +325,12 @@ class BreadcrumbBar(QScrollArea):
         bg = self._theme_colors.get('window', self._theme_colors.get('tab_bg', (50, 50, 50)))
         fg = self._theme_colors.get('tab_selected_text', self._theme_colors.get('text', (220, 220, 220)))
         border = self._theme_colors.get('line_number_fg', (70, 70, 70))
+        highlight = self._theme_colors.get('highlight_line', (70, 70, 70))
 
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg[:3]) if isinstance(bg, (list, tuple)) else "#323232"
         fg_hex = "#{:02x}{:02x}{:02x}".format(*fg[:3]) if isinstance(fg, (list, tuple)) else "#c8c8c8"
         border_hex = "#{:02x}{:02x}{:02x}".format(*border[:3]) if isinstance(border, (list, tuple)) else "#464646"
+        highlight_hex = "#{:02x}{:02x}{:02x}".format(*highlight[:3]) if isinstance(highlight, (list, tuple)) else "#464646"
 
         style = """
             QScrollArea#breadcrumbBar {{
@@ -362,10 +364,10 @@ class BreadcrumbBar(QScrollArea):
                 margin: 0px;
             }}
             QLabel {{
-                color: {1};
+                color: {3};
                 font-weight: bold;
             }}
-        """.format(bg_hex, border_hex, fg_hex)
+        """.format(bg_hex, border_hex, fg_hex, highlight_hex)
         self.setStyleSheet(style)
         self.rebuild_breadcrumbs()
 
@@ -472,7 +474,6 @@ class BreadcrumbBar(QScrollArea):
             self.layout.addWidget(sep)
 
             raw_title = sym_data.get('name', '')
-            sym_type = sym_data.get('type', 'function')
             clean_title = clean_symbol_name(raw_title)
 
             item_btn = BreadcrumbItemWidget(
