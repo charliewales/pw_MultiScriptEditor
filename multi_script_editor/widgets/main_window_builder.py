@@ -152,6 +152,12 @@ class ScriptEditorUIBuilder:
         editor.find_act.setShortcutContext(Qt.WindowShortcut)
         editor.find_act.setIcon(QIcon(icons['replace']))
 
+        editor.commandPalette_act.triggered.connect(editor.openCommandPalette)
+        editor.commandPalette_act.setShortcut('Ctrl+Shift+P')
+        editor.commandPalette_act.setShortcutContext(Qt.WindowShortcut)
+        if 'shortcut' in icons:
+            editor.commandPalette_act.setIcon(QIcon(icons['shortcut']))
+
         editor.gitAction_act.triggered.connect(editor.openGitPopup)
         # Ctrl+Shift+G is set in retranslateUi but setting it here for context explicitly
         editor.gitAction_act.setShortcut('Ctrl+Shift+G')
@@ -534,6 +540,7 @@ class ScriptEditorUIBuilder:
             editor.clearHistory_act: "Clear the output panel history",
             editor.clipboardManager_act: "Show the clipboard history manager",
             editor.closeAllTabs_act: "Close all open script tabs",
+            editor.commandPalette_act: "Open Command Palette for quick search of editor actions (Ctrl+Shift+P)",
             editor.comment_cat: "Toggle comment on the current line or selection",
             editor.copy_act: "Copy the selected text to clipboard",
             editor.cut_act: "Cut the selected text to clipboard",

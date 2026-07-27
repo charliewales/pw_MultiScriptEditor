@@ -1535,6 +1535,47 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             popup.exec_()
 
+    def openCommandPalette(self):
+        from widgets.commandPaletteWidget import CommandPaletteWidget
+
+        idx = self.tab.currentIndex()
+        current_widget = self.tab.widget(idx) if idx >= 0 else None
+        edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
+        center_w = edit_widget if edit_widget else self
+
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
+            elif edit_widget:
+                font = QFont(edit_widget.font())
+            else:
+                font = QApplication.font("QListWidget")
+        else:
+            font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        popup = CommandPaletteWidget(
+            parent=self,
+            center_widget=center_w,
+            qss=qss,
+            font=font,
+            colors=colors,
+            editor=self,
+        )
+        if hasattr(popup, 'exec'):
+            popup.exec()
+        else:
+            popup.exec_()
+
     def _on_tab_changed_sync_explorer(self, index):
         if hasattr(self, 'explorer_widget') and getattr(self.explorer_widget, 'auto_sync_tab_btn', None):
             if self.explorer_widget.auto_sync_tab_btn.isChecked():

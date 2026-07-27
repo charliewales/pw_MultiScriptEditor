@@ -494,6 +494,8 @@ class tabWidgetClass(QTabWidget):
             self.finishRename(commit=False)
         removed = False
         widget_to_remove = self.widget(i)
+        target_index = i - 1 if i > 0 else 0
+
         if self.tabNeedsSaving(i):
             if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
                 self.removeTab(i)
@@ -507,6 +509,13 @@ class tabWidgetClass(QTabWidget):
                 self._mru_tabs.remove(widget_to_remove)
             if self.count() == 0:
                 self.addNewTab()
+            else:
+                target_index = min(target_index, self.count() - 1)
+                self.setCurrentIndex(target_index)
+
+            current_widget = self.currentWidget()
+            if current_widget and hasattr(current_widget, 'edit'):
+                current_widget.edit.setFocus()
 
     def closeOtherTabs(self, keep_index=None):
         if keep_index is None or isinstance(keep_index, bool):
