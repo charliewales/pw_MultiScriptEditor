@@ -9,19 +9,19 @@ main = __import__('__main__')
 import managers
 from managers.completeWidget import contextCompleterClass
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtWidgets import QAction, QMenu, QWidget
+from vendor.Qt.QtWidgets import QAction, QMenu
 
 path = os.path.join(os.path.dirname(__file__), 'houdini')
 
 ns = main.__dict__
 for mod in [os.path.splitext(x)[0] for x in os.listdir(path)]:
-    if not mod in ns:
+    if mod not in ns:
         try:
             exec('import {0}'.format(mod), ns)
-        except:
+        except Exception:
             pass
 
-if not path in sys.path:
+if path not in sys.path:
     sys.path.insert(0, path)
 
 from multi_script_editor import scriptEditor
@@ -118,8 +118,8 @@ def completer(line, ns):
                 auto = [x for x in nodes if x.lower().startswith(name.lower())]
             else:
                 auto = nodes
-            l = len(name)
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            prefix_len = len(name)
+            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
     # absolute path
     p = r"(?<=['\"]{1})(/[\w/]*)$"
     m = re.search(p, line)
@@ -233,7 +233,7 @@ class houdiniMenuClass(QMenu):
         if Def:
             sections = Def.sections()
             for s in sections:
-                if not sections[s].name() in default:
+                if sections[s].name() not in default:
                     res[s] = sections[s]
         pySop = hou.parm(node.path() + '/python')
         if pySop:

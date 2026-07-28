@@ -93,18 +93,18 @@ def completer(line, ns):
         name = m.group(1)
         if name:
             auto = [x for x in nodes if x.lower().startswith(name.lower())]
-            l = len(name)
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            prefix_len = len(name)
+            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
     # exists nodes
     p = r"PyNode\(['\"](\w*)$"
     m = re.search(p, line)
     if m:
         name = m.group(1)
         existsNodes = sorted(cmds.ls())
-        l = len(name)
+        prefix_len = len(name)
         if name:
             auto = [x for x in existsNodes if x.lower().startswith(name.lower())]
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
         else:
             return [contextCompleterClass(x, x, True) for x in existsNodes], None
     return None, None
@@ -156,7 +156,7 @@ def wrapDroppedText(namespace, text, event):
                     else:
                         syntax.append(node)
                 return '\n'.join(syntax)
-            except:
+            except Exception:
                 pass
     return text
 

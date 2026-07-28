@@ -27,7 +27,7 @@ from vendor.Qt.QtWidgets import (
 )
 
 p = os.path.dirname(__file__).replace('\\','/')
-if not p in sys.path:
+if p not in sys.path:
     sys.path.insert(0, p)
 
 from multi_script_editor import scriptEditor
@@ -43,7 +43,6 @@ qNuke = getMainWindow()
 
 def show(panel=False):
     if panel:
-        import multi_script_editor.scriptEditor
         nukescripts.panels.registerWidgetAsPanel("multi_script_editor.scriptEditor.scriptEditorClass", "Multi Script Editor", "pw_multi_script_editor")
     else:
         showWindow()
@@ -78,12 +77,12 @@ def completer(line, ns):
     m = re.search(p1, line)
     if m:
         name = m.group(1)
-        l = len(name)
+        prefix_len = len(name)
         if name:
             auto = [x for x in nuke_nodes if x.lower().startswith(name.lower())]
         else:
             auto = nuke_nodes
-        return [contextCompleterClass(x, x[l:], True) for x in auto], None
+        return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
 
     # p2 = r"nuke\.allNodes\(.*(filter=)*['\"](\w*)$"
     funcs = ['allNodes', 'selectedNodes']
@@ -92,12 +91,12 @@ def completer(line, ns):
         m = re.search(p2, line)# or re.search(p2, line)
         if m:
             name = m.group(2)
-            l = len(name)
+            prefix_len = len(name)
             if name:
                 auto = [x for x in nuke_nodes if x.lower().startswith(name.lower())]
             else:
                 auto = nuke_nodes
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
 
     # exists nodes
     p3 = r"nuke\.toNode\(\w*['\"](\w*)$"
@@ -110,8 +109,8 @@ def completer(line, ns):
             result = [x for x in nodes if x.lower().startswith(name.lower())]
         else:
             result = nodes
-        l = len(name)
-        return [contextCompleterClass(x, x[l:], True) for x in result], None
+        prefix_len = len(name)
+        return [contextCompleterClass(x, x[prefix_len:], True) for x in result], None
     # node knobs
     p4 = r"(\w+)\[['\"]{1}(\w*)$"
     m = re.search(p4, line)
@@ -126,8 +125,8 @@ def completer(line, ns):
                     result = [x for x in names if x.lower().startswith(name.lower())]
                 else:
                     result = names
-                l = len(name)
-                return [contextCompleterClass(x, x[l:], True) for x in result if x], None
+                prefix_len = len(name)
+                return [contextCompleterClass(x, x[prefix_len:], True) for x in result if x], None
             # nuke.tprint(ns[node])
     return None, None
 
@@ -206,8 +205,8 @@ class nukeContextMenu(QMenu):
         text = QApplication.clipboard().text()
         nodes = []
         if text:
-            for l in text.split('\n'):
-                res = re.findall(r'name \w+$', l)
+            for line in text.split('\n'):
+                res = re.findall(r'name \w+$', line)
                 if res:
                     name = res[0].split()[1]
                     nodes.append(name)
