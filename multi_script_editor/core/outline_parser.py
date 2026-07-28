@@ -4,10 +4,11 @@ import re
 
 class OutlineParser:
     @staticmethod
-    def parse(code, ext='.py'):
+    def parse(code, ext='.py', tree=None):
         if ext == '.py':
             try:
-                tree = ast.parse(code)
+                if tree is None:
+                    tree = ast.parse(code)
                 symbols = OutlineParser._parse_ast(tree)
                 if symbols:
                     return symbols

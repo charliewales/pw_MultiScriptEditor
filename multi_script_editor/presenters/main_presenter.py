@@ -68,7 +68,12 @@ class MainPresenter:
         """
         Parses the code for the outline view and updates the UI.
         """
-        symbols = OutlineParser.parse(code, ext)
+        tree = (
+            self.linter_provider.syntax_tree_for(code)
+            if ext == '.py'
+            else None
+        )
+        symbols = OutlineParser.parse(code, ext, tree=tree)
         self.view.set_outline_symbols(symbols, ext)
 
     def handle_execute_command(self, command, echo_command=False, clear_history=False):
