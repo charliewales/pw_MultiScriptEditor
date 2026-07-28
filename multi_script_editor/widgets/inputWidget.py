@@ -133,6 +133,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.folding_timer.setSingleShot(True)
         self.folding_timer.timeout.connect(self.on_folding_timer_timeout)
         self.recompute_folding_regions()
+        self.document().contentsChange.connect(
+            self._on_folding_contents_change
+        )
 
         # Initialize Clipboard Manager
         from widgets.clipboardWidget import ClipboardManager
@@ -145,25 +148,67 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             pass
         else:
             self.autocomplete_timer.start(200)
-        self.folding_timer.start(200)
+
+    @staticmethod
+    def _folding_signature(text):
+        content = text.lstrip()
+        if not content:
+            return None
+        return len(text) - len(content)
+
+    def _on_folding_contents_change(
+        self,
+        position,
+        _chars_removed,
+        chars_added,
+    ):
+        signatures = getattr(self, '_folding_signatures', ())
+        doc = self.document()
+        if doc.blockCount() != len(signatures):
+            self.folding_timer.start(200)
+            return
+
+        start_block = doc.findBlock(position)
+        end_position = min(
+            position + max(chars_added, 1),
+            doc.characterCount() - 1,
+        )
+        end_block = doc.findBlock(end_position)
+        block = start_block
+        while block.isValid():
+            if (
+                self._folding_signature(block.text())
+                != signatures[block.blockNumber()]
+            ):
+                self.folding_timer.start(200)
+                return
+            if block == end_block:
+                break
+            block = block.next()
 
     def recompute_folding_regions(self):
         doc = self.document()
         block_count = doc.blockCount()
+        folding_timer = getattr(self, 'folding_timer', None)
+        if folding_timer is not None:
+            folding_timer.stop()
 
         # 1. Determine indentation of each block
         indents = []
         empty_lines = []
+        signatures = []
         last_indent = 0
         visibility_update_needed = False
         block = doc.firstBlock()
         while block.isValid():
             text = block.text()
-            if not text.strip():
+            signature = self._folding_signature(text)
+            signatures.append(signature)
+            if signature is None:
                 indents.append(last_indent)
                 empty_lines.append(True)
             else:
-                leading = len(text) - len(text.lstrip())
+                leading = signature
                 indents.append(leading)
                 empty_lines.append(False)
                 last_indent = leading
@@ -210,6 +255,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         self.folding_regions = folding_regions
         self._folding_region_starts = list(folding_regions)
+        self._folding_signatures = signatures
         self._folding_visibility_update_needed = visibility_update_needed
 
     def _fold_region_for_line(self, line_number):
@@ -1186,8 +1232,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 return
         # decrease indent
         elif event.key() == Qt.Key_Backtab:
-            self.selectBlocks()
-            self.moveSelected(False)
+            if self.textCursor().hasSelection():
+                self.selectBlocks()
+                self.moveSelected(False)
+            else:
+                self._outdent_current_line()
             if self.completer:
                 self.completer.updateCompleteList()
             return
@@ -1556,6 +1605,40 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             cursor.setPosition(new_end)
             cursor.setPosition(block_start, QTextCursor.KeepAnchor)
         self.setTextCursor(cursor)
+        self.update()
+
+    def _outdent_current_line(self):
+        cursor = self.textCursor()
+        block = cursor.block()
+        text = block.text()
+        new_text = self.removeTabs(text)
+        if new_text == text:
+            return
+
+        column = cursor.positionInBlock()
+        old_content = text.lstrip(' \t')
+        new_content = new_text.lstrip(' \t')
+        old_indent_length = len(text) - len(old_content)
+        new_indent_length = len(new_text) - len(new_content)
+        if column >= old_indent_length:
+            new_column = new_indent_length + column - old_indent_length
+        else:
+            visual_column = len(text[:column].expandtabs(indentLen))
+            new_column = min(
+                new_indent_length,
+                max(0, visual_column - indentLen),
+            )
+
+        edit_cursor = QTextCursor(block)
+        edit_cursor.movePosition(
+            QTextCursor.EndOfBlock,
+            QTextCursor.KeepAnchor,
+        )
+        edit_cursor.beginEditBlock()
+        edit_cursor.insertText(new_text)
+        edit_cursor.endEditBlock()
+        edit_cursor.setPosition(block.position() + new_column)
+        self.setTextCursor(edit_cursor)
         self.update()
 
     def addQuotesSelected(self, prefer_single_quotes=False):
