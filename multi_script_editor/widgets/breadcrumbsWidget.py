@@ -311,7 +311,7 @@ class BreadcrumbBar(QScrollArea):
             self._container.setFont(font)
         self.rebuild_breadcrumbs()
 
-    def apply_theme(self, theme_colors, font=None):
+    def apply_theme(self, theme_colors, font=None, rebuild=True):
         if theme_colors:
             self._theme_colors = theme_colors
         if font:
@@ -364,7 +364,8 @@ class BreadcrumbBar(QScrollArea):
             }}
         """.format(bg_hex, fg_hex, highlight_hex)
         self.setStyleSheet(style)
-        self.rebuild_breadcrumbs()
+        if rebuild:
+            self.rebuild_breadcrumbs()
 
     def set_symbols(self, symbols, file_path=None, fallback_name="Untitled", ext=".py"):
         self._raw_symbols = symbols or []
@@ -377,6 +378,44 @@ class BreadcrumbBar(QScrollArea):
         if self._current_line != line_num:
             self._current_line = line_num
             self.rebuild_breadcrumbs()
+
+    def set_outline_context(
+        self,
+        symbols,
+        file_path=None,
+        fallback_name="Untitled",
+        ext=".py",
+        theme_colors=None,
+        font=None,
+        line_num=1,
+    ):
+        symbols = symbols or []
+        fallback_name = fallback_name or "Untitled"
+        effective_theme = theme_colors or self._theme_colors
+        effective_font = font or self._font
+        if (
+            symbols == self._raw_symbols
+            and file_path == self._file_path
+            and fallback_name == self._fallback_name
+            and ext == self._ext
+            and effective_theme == self._theme_colors
+            and effective_font == self._font
+            and line_num == self._current_line
+        ):
+            return
+
+        if (
+            effective_theme != self._theme_colors
+            or effective_font != self._font
+        ):
+            self.apply_theme(theme_colors, font, rebuild=False)
+
+        self._raw_symbols = symbols
+        self._file_path = file_path
+        self._fallback_name = fallback_name
+        self._ext = ext
+        self._current_line = line_num
+        self.rebuild_breadcrumbs()
 
     def _find_active_chain(self, symbols, line_num):
         chain = []

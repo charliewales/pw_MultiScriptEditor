@@ -82,11 +82,10 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._highlight_word_cache = cache_key
 
     def showMessage(self, msg):
-        self.moveCursor(QTextCursor.End)
-        cursor = self.textCursor()
+        cursor = QTextCursor(self.document())
+        cursor.movePosition(QTextCursor.End)
         cursor.insertText(str(msg)+'\n')
         self.setTextCursor(cursor)
-        self.moveCursor(QTextCursor.End)
         self.ensureCursorVisible()
 
     def search(self, text=None, case_sensitive=False):

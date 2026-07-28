@@ -2424,12 +2424,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if current_container and hasattr(current_container, 'breadcrumbs'):
             file_path = getattr(current_container, 'file_path', None)
             fallback_name = self.tab.tabText(self.tab.currentIndex())
-            current_container.breadcrumbs.apply_theme(theme_colors, font)
-            current_container.breadcrumbs.set_symbols(symbols, file_path=file_path, fallback_name=fallback_name, ext=ext)
             edit = getattr(current_container, 'edit', None)
-            if edit:
-                line_num = edit.textCursor().blockNumber() + 1
-                current_container.breadcrumbs.set_cursor_line(line_num)
+            line_num = edit.textCursor().blockNumber() + 1 if edit else 1
+            current_container.breadcrumbs.set_outline_context(
+                symbols,
+                file_path=file_path,
+                fallback_name=fallback_name,
+                ext=ext,
+                theme_colors=theme_colors,
+                font=font,
+                line_num=line_num,
+            )
 
     def _on_outline_symbol_selected(self, line):
         if line:

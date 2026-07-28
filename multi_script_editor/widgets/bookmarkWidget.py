@@ -8,7 +8,12 @@ from widgets.outline_utils import HtmlDelegate, rgb_to_hex
 from widgets.searchPopupWidget import SearchPopupWidget
 
 
-def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_class=None):
+def create_bookmark_item(
+    bookmark,
+    theme_colors=None,
+    font=None,
+    highlighter_class=None,
+):
     """
     Creates and formats a QListWidgetItem for a given bookmark,
     displaying the line number and the syntax-highlighted line preview.
@@ -135,6 +140,7 @@ class BookmarkWidget(SearchPopupWidget):
         self.bookmarks = bookmarks
         self.allow_delete = True
         self.highlighter_class = highlighter_class
+        self._items_by_line = {}
 
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
@@ -153,13 +159,23 @@ class BookmarkWidget(SearchPopupWidget):
         self.populate_list("")
 
     def populate_list(self, filter_text):
-        self.list_widget.clear()
+        while self.list_widget.count():
+            self.list_widget.takeItem(0)
         filter_text = filter_text.lower()
 
         for b in self.bookmarks:
             label = f"{b['line']}: {b['text']}"
             if filter_text in label.lower():
-                item = create_bookmark_item(b, self.colors, self._font, self.highlighter_class)
+                line = b.get('line')
+                item = self._items_by_line.get(line)
+                if item is None:
+                    item = create_bookmark_item(
+                        b,
+                        self.colors,
+                        self._font,
+                        self.highlighter_class,
+                    )
+                    self._items_by_line[line] = item
                 self.list_widget.addItem(item)
 
         if self.list_widget.count() > 0:
@@ -189,3 +205,4 @@ class BookmarkWidget(SearchPopupWidget):
             if b.get('line') == data_val:
                 self.bookmarks.pop(i)
                 break
+        self._items_by_line.pop(data_val, None)

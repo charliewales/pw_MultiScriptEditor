@@ -155,6 +155,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         indents = []
         empty_lines = []
         last_indent = 0
+        visibility_update_needed = False
         block = doc.firstBlock()
         while block.isValid():
             text = block.text()
@@ -167,6 +168,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 empty_lines.append(False)
                 last_indent = leading
 
+            data = block.userData()
+            visibility_update_needed = (
+                visibility_update_needed
+                or not block.isVisible()
+                or bool(data and getattr(data, 'folded', False))
+            )
             block = block.next()
 
         # 2. Find folding regions
@@ -203,6 +210,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         self.folding_regions = folding_regions
         self._folding_region_starts = list(folding_regions)
+        self._folding_visibility_update_needed = visibility_update_needed
 
     def _fold_region_for_line(self, line_number):
         starts = self._folding_region_starts
@@ -398,7 +406,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def on_folding_timer_timeout(self):
         self.recompute_folding_regions()
-        self.apply_folding_visibility()
+        if self._folding_visibility_update_needed:
+            self.apply_folding_visibility()
 
     def set_start_font(self, font_d=None):
         if not font_d:

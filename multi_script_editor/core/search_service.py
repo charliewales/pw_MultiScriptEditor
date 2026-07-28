@@ -53,21 +53,39 @@ class SearchService:
     def replace_all(self, find_text, rep_text, case_sensitive=False):
         if not find_text:
             return
-            
-        cursor = self.editor.textCursor()
-        cursor.beginEditBlock()
-        
-        # Start from beginning
-        cursor.movePosition(QTextCursor.Start)
-        self.editor.setTextCursor(cursor)
-        
-        options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
-        
-        while self.editor.find(find_text, options):
-            self.editor.textCursor().insertText(rep_text)
-            
-        cursor.endEditBlock()
-        
+
+        document = self.editor.document()
+        options = (
+            QTextDocument.FindCaseSensitively
+            if case_sensitive
+            else QTextDocument.FindFlags()
+        )
+        edit_cursor = QTextCursor(document)
+        search_cursor = QTextCursor(document)
+        last_cursor = None
+
+        edit_cursor.beginEditBlock()
+        try:
+            while True:
+                found_cursor = document.find(
+                    find_text,
+                    search_cursor,
+                    options,
+                )
+                if found_cursor.isNull():
+                    break
+                found_cursor.insertText(rep_text)
+                search_cursor = found_cursor
+                last_cursor = QTextCursor(found_cursor)
+        finally:
+            edit_cursor.endEditBlock()
+
+        if last_cursor is not None:
+            self.editor.setTextCursor(last_cursor)
+
+        self._match_cache_key = None
+        self._match_cache = None
+
         # Trigger autocomplete update if present
         if hasattr(self.editor, 'completer') and self.editor.completer:
             self.editor.completer.updateCompleteList()

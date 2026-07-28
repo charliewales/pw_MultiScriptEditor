@@ -119,7 +119,17 @@ class OutlineWidget(QWidget):
         """
         Populates the tree with hierarchical code symbols.
         """
-        self._raw_symbols = symbols or []
+        symbols = symbols or []
+        effective_font = font or self._font
+        if (
+            symbols == self._raw_symbols
+            and theme_colors == self._theme_colors
+            and effective_font == self._font
+            and ext == self._ext
+        ):
+            return
+
+        self._raw_symbols = symbols
         self._theme_colors = theme_colors
         if font:
             self._font = font

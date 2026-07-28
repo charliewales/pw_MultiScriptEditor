@@ -31,6 +31,8 @@ class CommandPaletteWidget(SearchPopupWidget):
         self.editor = editor
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
         self.actions_data = []
+        self._items_by_action_id = {}
+        self._searchable_by_action_id = {}
 
         if self.editor:
             self.load_commands()
@@ -41,7 +43,7 @@ class CommandPaletteWidget(SearchPopupWidget):
             cat = act.get("category", "")
             title = act.get("title", "")
             sc = act.get("shortcut", "")
-            full_str = f"{cat}: {title}   {sc}"
+            full_str = f"{cat}: {title}    {sc}"
             w = fm.horizontalAdvance(full_str) if hasattr(fm, "horizontalAdvance") else fm.width(full_str)
             w += 60
             if w > max_text_width:
@@ -55,7 +57,10 @@ class CommandPaletteWidget(SearchPopupWidget):
         Recursively extracts actions exclusively from allowed menus:
         Bookmarks, Edit, Options, Plugins, Run, Snippets, View.
         """
+        self.list_widget.clear()
         self.actions_data = []
+        self._items_by_action_id.clear()
+        self._searchable_by_action_id.clear()
         visited_actions = set()
 
         ALLOWED_MENUS = {"bookmarks", "edit", "options", "plugins", "run", "snippets", "view"}
@@ -163,16 +168,76 @@ class CommandPaletteWidget(SearchPopupWidget):
         if recent_items:
             self.actions_data = recent_items + [{"is_separator": True}] + self.actions_data
 
-    def populate_list(self, filter_text):
-        self.list_widget.clear()
-        filter_text = filter_text.lower().strip()
-
+    def _create_item(self, act):
         c = self.colors or {}
         text_color = color_to_str(c.get("tab_selected_text", c.get("text")), "#d4d4d4")
         cat_color = color_to_str(c.get("keyword", c.get("blue")), "#569cd6")
         sub_color = color_to_str(c.get("comment"), "#808080")
         sep_color = color_to_str(c.get("comment"), "#555555")
 
+        item = QListWidgetItem()
+        if act.get("is_separator"):
+            item.setFlags(Qt.NoItemFlags)
+            item.setText(
+                f'<table width="100%" cellpadding="0" cellspacing="0">'
+                f'<tr><td style="border-bottom: 1px solid {sep_color}; height: 1px; '
+                f'font-size: 1px; line-height: 1px;">&nbsp;</td></tr>'
+                f'</table>'
+            )
+        else:
+            if self._font:
+                item.setFont(self._font)
+
+            cat = act.get("category", "")
+            orig_cat = act.get("orig_category", "")
+            title = act.get("title", "")
+            sc = act.get("shortcut", "")
+            shortcut_html = (
+                f'<span style="color: {sub_color}; white-space: nowrap;">'
+                f'&nbsp;&nbsp;&nbsp;&nbsp;{sc}</span>'
+                if sc
+                else ""
+            )
+            display_cat = f"{cat} ({orig_cat})" if orig_cat else cat
+
+            item.setText(
+                f'<table width="100%" cellpadding="0" cellspacing="0">'
+                f'<tr>'
+                f'<td><span style="color: {cat_color}; font-weight: bold;">{display_cat}: </span>'
+                f'<span style="color: {text_color};">{title}</span></td>'
+                f'<td align="right">{shortcut_html}</td>'
+                f'</tr>'
+                f'</table>'
+            )
+
+        item.setData(Qt.UserRole, act)
+        return item
+
+    def _item_for_action(self, act):
+        action_id = id(act)
+        item = self._items_by_action_id.get(action_id)
+        if item is None:
+            item = self._create_item(act)
+            self._items_by_action_id[action_id] = item
+        return item
+
+    def _searchable_text(self, act):
+        action_id = id(act)
+        searchable = self._searchable_by_action_id.get(action_id)
+        if searchable is None:
+            searchable = "{} {} {}".format(
+                act.get("category", ""),
+                act.get("orig_category", ""),
+                act.get("title", ""),
+            ).lower()
+            self._searchable_by_action_id[action_id] = searchable
+        return searchable
+
+    def populate_list(self, filter_text):
+        while self.list_widget.count():
+            self.list_widget.takeItem(0)
+
+        filter_text = filter_text.lower().strip()
         first_selectable_row = -1
         has_matching_recent = False
 
@@ -180,48 +245,15 @@ class CommandPaletteWidget(SearchPopupWidget):
             if act.get("is_separator"):
                 # Only add separator if there are matching recent items before it
                 if has_matching_recent:
-                    sep_item = QListWidgetItem()
-                    sep_item.setFlags(Qt.NoItemFlags)
-                    html = (
-                        f'<table width="100%" cellpadding="0" cellspacing="0">'
-                        f'<tr><td style="border-bottom: 1px solid {sep_color}; height: 1px; font-size: 1px; line-height: 1px;">&nbsp;</td></tr>'
-                        f'</table>'
-                    )
-                    sep_item.setText(html)
-                    sep_item.setData(Qt.UserRole, act)
-                    self.list_widget.addItem(sep_item)
+                    self.list_widget.addItem(self._item_for_action(act))
                 continue
 
             cat = act.get("category", "")
-            orig_cat = act.get("orig_category", "")
-            title = act.get("title", "")
-            sc = act.get("shortcut", "")
-            full_searchable = f"{cat} {orig_cat} {title}".lower()
-
-            if not filter_text or filter_text in full_searchable:
+            if not filter_text or filter_text in self._searchable_text(act):
                 if cat == "Recent":
                     has_matching_recent = True
 
-                item = QListWidgetItem()
-                if self._font:
-                    item.setFont(self._font)
-
-                shortcut_html = f'<span style="color: {sub_color}; float: right;">{sc}</span>' if sc else ''
-                display_cat = f"{cat} ({orig_cat})" if orig_cat else cat
-
-                html = (
-                    f'<table width="100%" cellpadding="0" cellspacing="0">'
-                    f'<tr>'
-                    f'<td><span style="color: {cat_color}; font-weight: bold;">{display_cat}: </span>'
-                    f'<span style="color: {text_color};">{title}</span></td>'
-                    f'<td align="right">{shortcut_html}</td>'
-                    f'</tr>'
-                    f'</table>'
-                )
-
-                item.setText(html)
-                item.setData(Qt.UserRole, act)
-                self.list_widget.addItem(item)
+                self.list_widget.addItem(self._item_for_action(act))
 
                 if first_selectable_row == -1:
                     first_selectable_row = self.list_widget.count() - 1

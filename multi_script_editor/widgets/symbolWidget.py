@@ -19,6 +19,7 @@ class SymbolWidget(SearchPopupWidget):
         self.ext = ext
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
         self.allow_delete = allow_delete
+        self._items_by_symbol_id = {}
         
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
@@ -41,13 +42,24 @@ class SymbolWidget(SearchPopupWidget):
         self.populate_list("")
 
     def populate_list(self, filter_text):
-        self.list_widget.clear()
+        while self.list_widget.count():
+            self.list_widget.takeItem(0)
+
         filter_text = filter_text.lower()
 
         for sym in self.symbols:
             name = sym.get('name', '')
             if filter_text in name.lower():
-                item = create_symbol_item(sym, self.colors, self._font, ext=self.ext)
+                symbol_id = id(sym)
+                item = self._items_by_symbol_id.get(symbol_id)
+                if item is None:
+                    item = create_symbol_item(
+                        sym,
+                        self.colors,
+                        self._font,
+                        ext=self.ext,
+                    )
+                    self._items_by_symbol_id[symbol_id] = item
                 self.list_widget.addItem(item)
 
         if self.list_widget.count() > 0:
@@ -82,5 +94,6 @@ class SymbolWidget(SearchPopupWidget):
                 break
         for i, sym in enumerate(self.symbols):
             if sym.get('line') == data_val:
+                self._items_by_symbol_id.pop(id(sym), None)
                 self.symbols.pop(i)
                 break
