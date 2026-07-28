@@ -102,6 +102,32 @@ def build_file_dialog_filter():
 
 FILE_DIALOG_FILTER_STRING = build_file_dialog_filter()
 
+_STATUS_UPDATE_CURSOR = 1
+_STATUS_UPDATE_DOCUMENT = 2
+_STATUS_UPDATE_CONTEXT = 4
+_STATUS_UPDATE_ALL = (
+    _STATUS_UPDATE_CURSOR
+    | _STATUS_UPDATE_DOCUMENT
+    | _STATUS_UPDATE_CONTEXT
+)
+
+_LANGUAGE_BY_EXTENSION = {
+    '.py': 'Python',
+    '.js': 'JavaScript',
+    '.html': 'HTML',
+    '.htm': 'HTML',
+    '.yaml': 'YAML',
+    '.yml': 'YAML',
+    '.md': 'Markdown',
+    '.css': 'CSS',
+    '.txt': 'Plain Text',
+    '.json': 'JSON',
+    '.ini': 'INI',
+    '.xml': 'XML',
+    '.sh': 'Shell',
+    '.bat': 'Batch',
+}
+
 
 class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     execute_command_requested = Signal(str, bool, bool)
@@ -258,6 +284,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.status_bar_timer = QTimer(self)
         self.status_bar_timer.setSingleShot(True)
         self.status_bar_timer.timeout.connect(self._updateStatusBarInfo)
+        self._pending_status_bar_updates = 0
 
     def changeEvent(self, event):
         if event.type() == QEvent.ActivationChange and self.isActiveWindow():
@@ -277,13 +304,30 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def showStatusMessage(self, msg):
         self.lbl_msg.setText(msg)
 
-    def updateStatusBarInfo(self, *args):
+    def _schedule_status_bar_update(self, updates):
+        self._pending_status_bar_updates = (
+            getattr(self, '_pending_status_bar_updates', 0)
+            | updates
+        )
         self.status_bar_timer.start(50)
 
+    def updateStatusBarInfo(self, *args):
+        self._schedule_status_bar_update(_STATUS_UPDATE_ALL)
+
+    def updateCursorStatusBarInfo(self, *args):
+        self._schedule_status_bar_update(_STATUS_UPDATE_CURSOR)
+
+    def updateDocumentStatusBarInfo(self, *args):
+        self._schedule_status_bar_update(
+            _STATUS_UPDATE_CURSOR | _STATUS_UPDATE_DOCUMENT
+        )
+
     def _updateStatusBarInfo(self):
-        # Word Wrap
-        wrap_state = "ON" if self.wordWrap_act.isChecked() else "OFF"
-        self.lbl_wrap.setText(f"Wrap: {wrap_state}")
+        updates = (
+            getattr(self, '_pending_status_bar_updates', 0)
+            or _STATUS_UPDATE_ALL
+        )
+        self._pending_status_bar_updates = 0
 
         idx = self.tab.currentIndex()
         if idx < 0:
@@ -298,59 +342,66 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not w or not hasattr(w, 'edit'):
             return
 
-        # Cursor and Lines
-        cursor = w.edit.textCursor()
-        line = cursor.blockNumber() + 1
-        col = cursor.columnNumber() + 1
-        self.lbl_cursor.setText(f"Ln {line}, Col {col}")
+        if updates & _STATUS_UPDATE_CURSOR:
+            cursor = w.edit.textCursor()
+            line = cursor.blockNumber() + 1
+            col = cursor.columnNumber() + 1
+            self.lbl_cursor.setText(f"Ln {line}, Col {col}")
 
-        if hasattr(w.edit, 'multi_cursor_manager') and w.edit.multi_cursor_manager.has_cursors():
-            count = len(w.edit.multi_cursor_manager.multi_cursors)
-            if getattr(w.edit.multi_cursor_manager, 'is_auto_populated', False):
-                self.lbl_msg.setText(f"{count} occurrences")
+            multi_cursor = getattr(
+                w.edit,
+                'multi_cursor_manager',
+                None,
+            )
+            if multi_cursor and multi_cursor.has_cursors():
+                count = len(multi_cursor.multi_cursors)
+                if getattr(multi_cursor, 'is_auto_populated', False):
+                    self.lbl_msg.setText(f"{count} occurrences")
+                else:
+                    self.lbl_msg.setText(
+                        f"{count} occurrences selected"
+                    )
             else:
-                self.lbl_msg.setText(f"{count} occurrences selected")
-        else:
-            self.lbl_msg.setText("")
+                self.lbl_msg.setText("")
 
-        total_lines = w.edit.document().blockCount()
-        self.lbl_lines.setText(f"{total_lines} lines")
+        if updates & _STATUS_UPDATE_DOCUMENT:
+            total_lines = w.edit.document().blockCount()
+            self.lbl_lines.setText(f"{total_lines} lines")
 
-        # Language
-        file_path = getattr(w, 'file_path', None)
-        if file_path:
-            ext = os.path.splitext(file_path)[1].lower()
-            lang_map = {
-                '.py': 'Python',
-                '.js': 'JavaScript',
-                '.html': 'HTML',
-                '.htm': 'HTML',
-                '.yaml': 'YAML',
-                '.yml': 'YAML',
-                '.md': 'Markdown',
-                '.css': 'CSS',
-                '.txt': 'Plain Text',
-                '.json': 'JSON',
-                '.ini': 'INI',
-                '.xml': 'XML',
-                '.sh': 'Shell',
-                '.bat': 'Batch'
-            }
-            lang = lang_map.get(ext, 'Plain Text')
-        else:
-            lang = 'Python'
+        if updates & _STATUS_UPDATE_CONTEXT:
+            wrap_state = (
+                "ON" if self.wordWrap_act.isChecked() else "OFF"
+            )
+            self.lbl_wrap.setText(f"Wrap: {wrap_state}")
 
-        self.lbl_lang.setText(lang)
+            file_path = getattr(w, 'file_path', None)
+            if file_path:
+                ext = os.path.splitext(file_path)[1].lower()
+                lang = _LANGUAGE_BY_EXTENSION.get(
+                    ext,
+                    'Plain Text',
+                )
+            else:
+                lang = 'Python'
 
-        # Toggle execution UI based on language
-        can_execute = (lang == 'Python')
-        for act in (self.execAll_act, self.execLine_act, self.execSel_act, self.clearHistory_act, self.clear_exec_act):
-            if hasattr(self, act.objectName()):
-                act.setEnabled(can_execute)
+            self.lbl_lang.setText(lang)
 
-        has_file_path = bool(file_path and os.path.exists(file_path))
-        if hasattr(self, 'diffTool_act'):
-            self.diffTool_act.setEnabled(has_file_path)
+            can_execute = (lang == 'Python')
+            for act in (
+                self.execAll_act,
+                self.execLine_act,
+                self.execSel_act,
+                self.clearHistory_act,
+                self.clear_exec_act,
+            ):
+                if hasattr(self, act.objectName()):
+                    act.setEnabled(can_execute)
+
+            has_file_path = bool(
+                file_path and os.path.exists(file_path)
+            )
+            if hasattr(self, 'diffTool_act'):
+                self.diffTool_act.setEnabled(has_file_path)
 
     def updateGitStatusBarInfo(self):
         idx = self.tab.currentIndex()

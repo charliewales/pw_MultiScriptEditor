@@ -1255,8 +1255,20 @@ class tabWidgetClass(QTabWidget):
             self.update_tab_git_status(new_index)
 
         if hasattr(self.p, 'updateStatusBarInfo'):
-            cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
-            cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
+            cursor_status_update = getattr(
+                self.p,
+                'updateCursorStatusBarInfo',
+                self.p.updateStatusBarInfo,
+            )
+            document_status_update = getattr(
+                self.p,
+                'updateDocumentStatusBarInfo',
+                self.p.updateStatusBarInfo,
+            )
+            cont.edit.cursorPositionChanged.connect(
+                cursor_status_update
+            )
+            cont.edit.textChanged.connect(document_status_update)
 
         cont.edit.document().modificationChanged.connect(lambda state, c=cont: self.mark_tab_dirty(c, state))
         cont.edit.moveCursor(QTextCursor.Start)
