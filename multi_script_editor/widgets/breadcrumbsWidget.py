@@ -489,31 +489,19 @@ class BreadcrumbBar(QScrollArea):
                 )
                 item_btn.fileSelected.connect(self.fileSelected.emit)
                 self.layout.addWidget(item_btn)
-        else:
-            # Unsaved / New Tab fallback
-            item_btn = BreadcrumbItemWidget(
-                title=self._fallback_name,
-                node_type="file",
-                path_or_data=None,
-                siblings=None,
-                theme_colors=self._theme_colors,
-                font=self._font,
-                parent=self
-            )
-            item_btn.fileSelected.connect(self.fileSelected.emit)
-            self.layout.addWidget(item_btn)
-            first = False
 
         # Build active symbol chain
         chain = self._find_active_chain(self._raw_symbols, self._current_line)
         self._active_chain_key = self._chain_key(chain)
 
         for sym_data, siblings in chain:
-            sep = QLabel(">", self)
-            sep.setStatusTip("Breadcrumb separator")
-            if self._font:
-                sep.setFont(self._font)
-            self.layout.addWidget(sep)
+            if not first:
+                sep = QLabel(">", self)
+                sep.setStatusTip("Breadcrumb separator")
+                if self._font:
+                    sep.setFont(self._font)
+                self.layout.addWidget(sep)
+            first = False
 
             raw_title = sym_data.get('name', '')
             clean_title = clean_symbol_name(raw_title)
