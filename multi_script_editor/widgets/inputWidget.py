@@ -17,7 +17,7 @@ from vendor.Qt.QtGui import (
     QTextCursor,
     QTextFormat,
 )
-from vendor.Qt.QtWidgets import QApplication, QPlainTextEdit, QTextEdit
+from vendor.Qt.QtWidgets import QApplication, QMessageBox, QPlainTextEdit, QTextEdit
 from widgets import completeWidget
 from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
 from widgets.markdown_preview import MarkdownPreviewEdit
@@ -658,17 +658,24 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             elif hasattr(self, 'parentWidget') and hasattr(self.parentWidget(), 'lineNum'):
                 self.parentWidget().lineNum.update()
 
+    def _iter_blocks(self):
+        block = self.document().begin()
+        while block.isValid():
+            yield block
+            block = block.next()
+
+    def _is_bookmarked_block(self, block):
+        data = block.userData()
+        return data and getattr(data, 'bookmarked', False)
+
     def get_bookmarks(self):
         """
         Returns a comma-separated string of 1-based line numbers of all bookmarks.
         """
         bookmarks = []
-        block = self.document().begin()
-        while block.isValid():
-            data = block.userData()
-            if data and getattr(data, 'bookmarked', False):
+        for block in self._iter_blocks():
+            if self._is_bookmarked_block(block):
                 bookmarks.append(block.blockNumber() + 1)
-            block = block.next()
         return ",".join(str(x) for x in sorted(bookmarks))
 
     def set_bookmarks(self, lines):
@@ -695,20 +702,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Clear all bookmarks in the current document.
         """
-        # Check if there are any bookmarks to clear first
-        has_bookmarks = False
-        block = self.document().begin()
-        while block.isValid():
-            data = block.userData()
-            if data and getattr(data, 'bookmarked', False):
-                has_bookmarks = True
-                break
-            block = block.next()
-
-        if not has_bookmarks:
+        if not any(self._is_bookmarked_block(block) for block in self._iter_blocks()):
             return
 
-        from vendor.Qt.QtWidgets import QMessageBox
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle('Clear Bookmarks')
         msg_box.setText("Are you sure you want to clear all bookmarks in the current document?")
@@ -726,12 +722,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if reply != QMessageBox.Yes:
             return
 
-        block = self.document().begin()
-        while block.isValid():
+        for block in self._iter_blocks():
             data = block.userData()
             if data:
                 data.bookmarked = False
-            block = block.next()
         # Trigger repaint on line number bar
         if hasattr(self.parent(), 'lineNum'):
             self.parent().lineNum.update()
@@ -799,17 +793,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Show the BookmarkWidget popup to search and navigate bookmarks.
         """
-        doc = self.document()
         bookmarks = []
-        block = doc.begin()
-        while block.isValid():
-            data = block.userData()
-            if data and getattr(data, 'bookmarked', False):
+        for block in self._iter_blocks():
+            if self._is_bookmarked_block(block):
                 bookmarks.append({
                     'line': block.blockNumber() + 1,
                     'text': block.text()
                 })
-            block = block.next()
 
         if not bookmarks:
             if hasattr(self, 'messageSignal'):
@@ -853,6 +843,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             colors=colors,
             highlighter_class=highlighter_class
         )
+
+        doc = self.document()
 
         def on_selected(line_num):
             b = doc.findBlockByNumber(line_num - 1)
