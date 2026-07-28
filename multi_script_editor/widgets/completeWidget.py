@@ -66,7 +66,7 @@ class completeMenuClass(QListWidget):
         try:
             if hasattr(self.e, 'p') and hasattr(self.e.p, 'show_docstrings_act'):
                 show_docstrings = self.e.p.show_docstrings_act.isChecked()
-        except:
+        except Exception:
             pass
 
         if show_docstrings:

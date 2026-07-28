@@ -7,7 +7,6 @@ from vendor.Qt.QtWidgets import (
     QShortcut,
     QToolButton,
     QTreeWidget,
-    QTreeWidgetItem,
     QVBoxLayout,
     QWidget,
 )

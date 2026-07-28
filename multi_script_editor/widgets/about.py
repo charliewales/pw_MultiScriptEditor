@@ -1,5 +1,3 @@
-import os
-
 import icons
 from docs.constants import TESTED_TEXT
 from vendor.Qt.QtCore import QSize, Qt

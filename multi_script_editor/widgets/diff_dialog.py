@@ -12,7 +12,6 @@ from vendor.Qt.QtWidgets import (
     QDialogButtonBox,
     QListWidgetItem
 )
-from core.settings_model import SettingsModel
 from core.diff_manager import DiffManager
 from widgets.searchPopupWidget import SearchPopupWidget
 from icons import icons

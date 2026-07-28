@@ -1,15 +1,13 @@
 import os
 
 from core.base_text_widget import BaseTextWidgetMixin
+from core.settings_model import SettingsModel
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
 from widgets.pythonSyntax import design, syntaxHighLighter
 
 font_name = 'monospace'
-
-
-from core.settings_model import SettingsModel
 
 
 class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
