@@ -21,7 +21,7 @@ class lineNumberBarClass(QWidget):
             screen_resolution = desktop.screenGeometry()
         else:
             screen_resolution = QGuiApplication.primaryScreen().geometry()
-        width, height = screen_resolution.width(), screen_resolution.height()
+        width = screen_resolution.width()
 
         self.font_size_mult = 1.0
         if width > 2560:
@@ -36,10 +36,6 @@ class lineNumberBarClass(QWidget):
     def enterEvent(self, event):
         self.update()
         QWidget.enterEvent(self, event)
-
-    def leaveEvent(self, event):
-        self.update()
-        QWidget.leaveEvent(self, event)
 
     def update(self, *args):
         '''
@@ -114,9 +110,6 @@ class lineNumberBarClass(QWidget):
                     font.setPixelSize(max(1, int(px_size * 0.8)))
         
         # update fm for paint
-        font_metrics = QFontMetrics(font)
-        
-        offset = font_metrics.ascent() + font_metrics.descent() * 0.7
         color = painter.pen().color()
         if hasattr(self.edit, '_line_num_text_cache') and self.edit._line_num_text_cache:
             color = QColor.fromRgb(*self.edit._line_num_text_cache)
@@ -124,8 +117,6 @@ class lineNumberBarClass(QWidget):
         painter.setPen(color)
         align = Qt.AlignRight | Qt.AlignVCenter
         is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
-        
-        is_hovered = self.underMouse()
         
         vp_offset = 0
         if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():

@@ -3,7 +3,7 @@ from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics, QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
 from widgets.searchPopupWidget import SearchPopupWidget
-from widgets.outline_utils import HtmlDelegate
+from widgets.outline_utils import HtmlDelegate, rgb_to_hex
 from icons import icons
 
 MAX_ENTRIES = 30
@@ -112,13 +112,8 @@ class ClipboardWidget(SearchPopupWidget):
         self.list_widget.clear()
         filter_text = filter_text.lower()
 
-        def rgb2hex(rgb):
-            if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
-                return "#ffffff"
-            return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
-
-        c_line = rgb2hex(self.colors.get('methods', (120, 190, 205))) if self.colors else "#78becd"
-        c_text = rgb2hex(self.colors.get('default', (210, 210, 210))) if self.colors else "#d2d2d2"
+        c_line = rgb_to_hex(self.colors.get('methods', (120, 190, 205))) if self.colors else "#78becd"
+        c_text = rgb_to_hex(self.colors.get('default', (210, 210, 210))) if self.colors else "#d2d2d2"
 
         for idx, text in enumerate(self.history):
             preview = text.replace('\n', ' ↵ ').replace('\r', '').strip()

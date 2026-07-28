@@ -4,7 +4,7 @@ from icons import icons
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics, QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
-from widgets.outline_utils import HtmlDelegate
+from widgets.outline_utils import HtmlDelegate, rgb_to_hex
 from widgets.searchPopupWidget import SearchPopupWidget
 
 
@@ -25,13 +25,8 @@ def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_cla
     if not theme_colors:
         theme_colors = {}
 
-    def rgb2hex(rgb):
-        if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
-            return "#ffffff"
-        return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
-
-    c_line = rgb2hex(theme_colors.get('methods', (120, 190, 205)))
-    c_text = rgb2hex(theme_colors.get('default', theme_colors.get("tab_selected_text", (210, 210, 210))))
+    c_line = rgb_to_hex(theme_colors.get('methods', (120, 190, 205)))
+    c_text = rgb_to_hex(theme_colors.get('default', theme_colors.get("tab_selected_text", (210, 210, 210))))
 
     if highlighter_class:
         from vendor.Qt.QtGui import QTextDocument

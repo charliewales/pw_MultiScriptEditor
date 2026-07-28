@@ -9,6 +9,22 @@ from vendor.Qt.QtWidgets import (
 )
 
 
+def rgb_to_hex(rgb, default="#ffffff"):
+    if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
+        return default
+    return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
+
+
+def color_to_str(color_val, default="#d4d4d4"):
+    if not color_val:
+        return default
+    if isinstance(color_val, (list, tuple)) and len(color_val) >= 3:
+        return rgb_to_hex(color_val, default)
+    if hasattr(color_val, "name"):
+        return color_val.name()
+    return str(color_val)
+
+
 class HtmlDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         options = option
@@ -121,17 +137,12 @@ def format_html_symbol_name(name, sym_type, theme_colors=None, ext='.py'):
     if not theme_colors:
         theme_colors = {}
 
-    def rgb2hex(rgb):
-        if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
-            return "#ffffff"
-        return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
-
-    c_def = rgb2hex(theme_colors.get('definition', (255, 160, 250)))
-    c_meth = rgb2hex(theme_colors.get('methods', (120, 190, 205)))
-    c_kw = rgb2hex(theme_colors.get('keywords', (65, 255, 130)))
-    c_str = rgb2hex(theme_colors.get('string', (128, 255, 128)))
-    c_text = rgb2hex(theme_colors.get("tab_selected_text", (200, 200, 200)))
-    c_num = rgb2hex(theme_colors.get("numbers", (220, 140, 100)))
+    c_def = rgb_to_hex(theme_colors.get('definition', (255, 160, 250)))
+    c_meth = rgb_to_hex(theme_colors.get('methods', (120, 190, 205)))
+    c_kw = rgb_to_hex(theme_colors.get('keywords', (65, 255, 130)))
+    c_str = rgb_to_hex(theme_colors.get('string', (128, 255, 128)))
+    c_text = rgb_to_hex(theme_colors.get("tab_selected_text", (200, 200, 200)))
+    c_num = rgb_to_hex(theme_colors.get("numbers", (220, 140, 100)))
 
     # Strip prefixes like class, async def, def, etc.
     clean_name = name

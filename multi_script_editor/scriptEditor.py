@@ -1147,6 +1147,44 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if hasattr(w, 'edit'):
                 w.edit.parseText(force=True)
 
+    def _popup_style_args(self, edit_widget=None, apply_symbols_size=True):
+        theme_name = self._current_settings.get('theme', 'Dark')
+        qss = design.editorStyle(theme_name)
+        colors = design.getColors(theme_name)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                font = QFont(
+                    font_data.get('family', ''),
+                    font_data.get('pointSize', 10),
+                    font_data.get('weight', -1),
+                    font_data.get('italic', False),
+                )
+            elif edit_widget:
+                font = QFont(edit_widget.font())
+            else:
+                font = QApplication.font("QListWidget")
+        else:
+            font = QApplication.font("QListWidget")
+
+        if apply_symbols_size:
+            if 'symbols_text_size' in colors:
+                font.setPointSize(max(1, int(colors['symbols_text_size'])))
+            else:
+                font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+
+        return qss, colors, font
+
+    def _jump_editor_to_line(self, edit_widget, line_num):
+        block = edit_widget.document().findBlockByNumber(line_num - 1)
+        if block.isValid():
+            cursor = edit_widget.textCursor()
+            cursor.setPosition(block.position())
+            edit_widget.setTextCursor(cursor)
+            edit_widget.centerCursor()
+            edit_widget.setFocus()
+
     def gotoLine(self):
         from widgets import gotoLineWidget
         index = self.tab.currentIndex()
@@ -1156,23 +1194,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget = self.tab.widget(index).edit
         max_lines = edit_widget.document().blockCount()
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         highlighter_class = None
         if hasattr(edit_widget, 'hgl'):
@@ -1180,16 +1202,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         self.goto_line_widget = gotoLineWidget.GotoLineWidget(edit_widget, max_lines, self, edit_widget, qss=qss, font=font, colors=colors, highlighter_class=highlighter_class)
 
-        def _jump_to_line(line_num):
-            block = edit_widget.document().findBlockByNumber(line_num - 1)
-            if block.isValid():
-                cursor = edit_widget.textCursor()
-                cursor.setPosition(block.position())
-                edit_widget.setTextCursor(cursor)
-                edit_widget.centerCursor()
-                edit_widget.setFocus()
-
-        self.goto_line_widget.lineSelected.connect(_jump_to_line)
+        self.goto_line_widget.lineSelected.connect(lambda line_num: self._jump_editor_to_line(edit_widget, line_num))
         self.goto_line_widget.show()
         self.goto_line_widget.search_le.setFocus()
     def goToSymbol(self):
@@ -1211,62 +1224,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not symbols:
             return
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         self.symbol_widget = symbolWidget.SymbolWidget(symbols, self, edit_widget, qss=qss, font=font, colors=colors, ext=ext)
 
-        def _jump_to_line(line_num):
-            block = edit_widget.document().findBlockByNumber(line_num - 1)
-            if block.isValid():
-                cursor = edit_widget.textCursor()
-                cursor.setPosition(block.position())
-                edit_widget.setTextCursor(cursor)
-                edit_widget.centerCursor()
-                edit_widget.setFocus()
-
-        self.symbol_widget.symbolSelected.connect(_jump_to_line)
+        self.symbol_widget.symbolSelected.connect(lambda line_num: self._jump_editor_to_line(edit_widget, line_num))
         self.symbol_widget.show()
         self.symbol_widget.search_le.setFocus()
 
     def _show_generic_symbol_widget(self, symbols, callback, hide_search=False, placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False, delete_callback=None):
         from widgets import symbolWidget
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                current_edit = self.tab.current()
-                if current_edit:
-                    font = QFont(current_edit.font())
-                else:
-                    font = QApplication.font("QListWidget")
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(self.tab.current())
 
         center_widget = self.tab.current() or self.out
         self.generic_symbol_widget = symbolWidget.SymbolWidget(
@@ -1468,18 +1436,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
         center_w = edit_widget if edit_widget else self
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True) and edit_widget:
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
+        qss, colors, font = self._popup_style_args(edit_widget, apply_symbols_size=False)
 
         popup = CompareWidget(self.tab, idx, parent=self, center_widget=center_w, qss=qss, font=font, colors=colors)
         if hasattr(popup, 'exec'):
@@ -1511,25 +1468,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
         center_w = edit_widget if edit_widget else self
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            elif edit_widget:
-                font = QFont(edit_widget.font())
-            else:
-                font = QApplication.font("QListWidget")
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         popup = GitPopupWidget(
             parent=self,
@@ -1554,25 +1493,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit_widget = getattr(current_widget, 'edit', None) if current_widget else None
         center_w = edit_widget if edit_widget else self
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            elif edit_widget:
-                font = QFont(edit_widget.font())
-            else:
-                font = QApplication.font("QListWidget")
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         popup = CommandPaletteWidget(
             parent=self,
@@ -2676,29 +2597,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> No plugins loaded.")
             return
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
         index = self.tab.currentIndex()
         if index < 0:
             return
 
         edit_widget = self.tab.widget(index).edit
 
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         self.plugin_widget = pluginWidget.PluginWidget(self.plugin_manager.plugins, self, edit_widget, qss=qss, font=font, colors=colors)
 
@@ -2904,23 +2809,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         snippets = self._get_snippets()
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors, mode="save")
 
@@ -2950,30 +2839,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.out.showMessage(">>> No snippets saved yet.")
             return
 
-        theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
-
         index = self.tab.currentIndex()
         if index < 0:
             return
 
         edit_widget = self.tab.widget(index).edit
 
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                font = QFont(edit_widget.font())
-        else:
-            font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            font.setPointSize(max(1, int(font.pointSize() * 0.9)))
-
+        qss, colors, font = self._popup_style_args(edit_widget)
 
         self.snippet_widget = snippetWidget.SnippetWidget(snippets, self, edit_widget, qss=qss, font=font, colors=colors)
 

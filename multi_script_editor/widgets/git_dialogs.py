@@ -5,15 +5,14 @@ from vendor.Qt.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QTextEdit,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QHeaderView,
     QMessageBox,
-    QSplitter,
-    QGroupBox
+    QGroupBox,
+    QWidget,
 )
 from core.git_manager import GitManager
 from core.diff_manager import DiffManager

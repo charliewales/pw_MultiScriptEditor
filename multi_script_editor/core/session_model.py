@@ -14,25 +14,32 @@ class SessionModel(object):
     def __init__(self):
         self.path = os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), sessionFilename))
         if not os.path.exists(self.path):
-            folder = os.path.dirname(self.path)
-            if folder and not os.path.exists(folder):
-                os.makedirs(folder)
-            with codecs.open(self.path, "w", "utf-16") as stream:
-                json.dump([], stream, indent=4)
+            self._write_json(self.path, [])
 
-    def readSession(self):
-        if os.path.exists(self.path):
-            with codecs.open(self.path, "r", "utf-16") as stream:
+    def _read_json(self, path, fallback=None):
+        if fallback is None:
+            fallback = []
+        if os.path.exists(path):
+            with codecs.open(path, "r", "utf-16") as stream:
                 try:
                     return json.load(stream)
-                except:
-                    return []
-        return []
+                except Exception:
+                    return fallback
+        return fallback
+
+    def _write_json(self, path, data):
+        folder = os.path.dirname(path)
+        if folder and not os.path.exists(folder):
+            os.makedirs(folder)
+        with codecs.open(path, "w", "utf-16") as stream:
+            json.dump(data, stream, indent=4)
+        return path
+
+    def readSession(self):
+        return self._read_json(self.path)
 
     def writeSession(self, data):
-        with codecs.open(self.path, "w", "utf-16") as stream:
-            json.dump(data, stream, indent=4)
-        return self.path
+        return self._write_json(self.path, data)
 
     # BACKUP METHODS (Auto-save)
     def getBackupPath(self):
@@ -40,19 +47,10 @@ class SessionModel(object):
 
     def writeBackup(self, data):
         path = self.getBackupPath()
-        with codecs.open(path, "w", "utf-16") as stream:
-            json.dump(data, stream, indent=4)
-        return path
+        return self._write_json(path, data)
 
     def readBackup(self):
-        path = self.getBackupPath()
-        if os.path.exists(path):
-            with codecs.open(path, "r", "utf-16") as stream:
-                try:
-                    return json.load(stream)
-                except:
-                    return []
-        return []
+        return self._read_json(self.getBackupPath())
 
     def backupExists(self):
         return os.path.exists(self.getBackupPath())
@@ -62,7 +60,7 @@ class SessionModel(object):
         if os.path.exists(path):
             try:
                 os.remove(path)
-            except:
+            except OSError:
                 pass
 
     # NAMED SESSIONS METHODS
@@ -71,7 +69,7 @@ class SessionModel(object):
         if not os.path.exists(folder):
             try:
                 os.makedirs(folder)
-            except:
+            except OSError:
                 pass
         return folder
 
@@ -87,20 +85,12 @@ class SessionModel(object):
     def writeNamedSession(self, name, data):
         folder = self.getSessionsFolder()
         path = os.path.join(folder, "{0}.json".format(name))
-        with codecs.open(path, "w", "utf-16") as stream:
-            json.dump(data, stream, indent=4)
-        return path
+        return self._write_json(path, data)
 
     def readNamedSession(self, name):
         folder = self.getSessionsFolder()
         path = os.path.join(folder, "{0}.json".format(name))
-        if os.path.exists(path):
-            with codecs.open(path, "r", "utf-16") as stream:
-                try:
-                    return json.load(stream)
-                except:
-                    return []
-        return []
+        return self._read_json(path)
 
     def deleteNamedSession(self, name):
         folder = self.getSessionsFolder()
@@ -108,5 +98,5 @@ class SessionModel(object):
         if os.path.exists(path):
             try:
                 os.remove(path)
-            except:
+            except OSError:
                 pass

@@ -1,18 +1,8 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFontMetrics, QIcon
+from vendor.Qt.QtGui import QFontMetrics
 from vendor.Qt.QtWidgets import QAction, QListWidgetItem, QMenu
-from widgets.outline_utils import HtmlDelegate
+from widgets.outline_utils import HtmlDelegate, color_to_str
 from widgets.searchPopupWidget import SearchPopupWidget
-
-
-def to_color_str(color_val, default="#d4d4d4"):
-    if not color_val:
-        return default
-    if isinstance(color_val, (list, tuple)) and len(color_val) >= 3:
-        return "#{:02x}{:02x}{:02x}".format(color_val[0], color_val[1], color_val[2])
-    if hasattr(color_val, "name"):
-        return color_val.name()
-    return str(color_val)
 
 
 class CommandPaletteWidget(SearchPopupWidget):
@@ -178,10 +168,10 @@ class CommandPaletteWidget(SearchPopupWidget):
         filter_text = filter_text.lower().strip()
 
         c = self.colors or {}
-        text_color = to_color_str(c.get("tab_selected_text", c.get("text")), "#d4d4d4")
-        cat_color = to_color_str(c.get("keyword", c.get("blue")), "#569cd6")
-        sub_color = to_color_str(c.get("comment"), "#808080")
-        sep_color = to_color_str(c.get("comment"), "#555555")
+        text_color = color_to_str(c.get("tab_selected_text", c.get("text")), "#d4d4d4")
+        cat_color = color_to_str(c.get("keyword", c.get("blue")), "#569cd6")
+        sub_color = color_to_str(c.get("comment"), "#808080")
+        sep_color = color_to_str(c.get("comment"), "#555555")
 
         first_selectable_row = -1
         has_matching_recent = False
