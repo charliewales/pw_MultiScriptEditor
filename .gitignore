@@ -8,3 +8,8 @@ _tmp
 .history/
 .agents/
 scratch/
+.gitnexus/
+AGENTS.md
+CLAUDE.md
+.claude/
+tests/

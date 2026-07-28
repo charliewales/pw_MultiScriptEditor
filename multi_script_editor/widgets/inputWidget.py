@@ -1,5 +1,6 @@
 import os
 import re
+from bisect import bisect_right
 
 import managers
 from core.base_text_widget import BaseTextWidgetMixin
@@ -13,6 +14,7 @@ from vendor.Qt.QtGui import (
     QFontDatabase,
     QFontMetrics,
     QGuiApplication,
+    QKeySequence,
     QTextBlockUserData,
     QTextCursor,
     QTextFormat,
@@ -29,6 +31,11 @@ indentLen = 4
 minimumFontSize = 8
 escapeButtons = [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Left, Qt.Key_Right, Qt.Key_Home, Qt.Key_End, Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Delete, Qt.Key_Insert, Qt.Key_Escape]
 font_name = 'Consolas'
+
+QUOTED_TEXT_PATTERN = re.compile(
+    r"('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\"|"
+    r"'(?:[^\\']|\\.)*?'|\"(?:[^\\\"]|\\.)*?\")"
+)
 
 
 class BlockUserData(QTextBlockUserData):
@@ -89,6 +96,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.setAcceptDrops(True)
         self.fs = 12
         self.completer = completeWidget.completeMenuClass(parent, self)
+        self._highlight_color_cache = None
+        self._last_highlight_cursor_state = None
+        self._last_highlight_multi_selections = None
         self.data = SettingsModel().read_settings()
         self.applyHightLighter(self.data.get('theme'))
         self.set_start_font()
@@ -105,8 +115,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._lint_timer.setSingleShot(True)
         self._lint_timer.timeout.connect(self.runLinter)
 
-        self.multi_cursors = []
-        self._highlight_color_cache = None
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
         self.cursorPositionChanged.connect(self.ensure_current_line_visible)
@@ -116,8 +124,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         # Flag to prevent recursion
         self._is_auto_selecting = False
         self._is_undo_redo = False
+        self._line_move_history = []
+        self.document().undoAvailable.connect(self._on_undo_availability_changed)
 
         self.folding_regions = {}
+        self._folding_region_starts = []
         self.folding_timer = QTimer(self)
         self.folding_timer.setSingleShot(True)
         self.folding_timer.timeout.connect(self.on_folding_timer_timeout)
@@ -141,71 +152,97 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         block_count = doc.blockCount()
 
         # 1. Determine indentation of each block
-        indents = {}
+        indents = []
+        empty_lines = []
         last_indent = 0
-        for i in range(block_count):
-            block = doc.findBlockByNumber(i)
+        block = doc.firstBlock()
+        while block.isValid():
             text = block.text()
             if not text.strip():
-                indents[i] = last_indent
+                indents.append(last_indent)
+                empty_lines.append(True)
             else:
                 leading = len(text) - len(text.lstrip())
-                indents[i] = leading
+                indents.append(leading)
+                empty_lines.append(False)
                 last_indent = leading
 
+            block = block.next()
+
         # 2. Find folding regions
+        next_lower_or_equal = [block_count] * block_count
+        stack = []
+        for i in range(block_count - 1, -1, -1):
+            indent_current = indents[i]
+            while stack and indents[stack[-1]] > indent_current:
+                stack.pop()
+            if stack:
+                next_lower_or_equal[i] = stack[-1]
+            stack.append(i)
+
         folding_regions = {}
         for i in range(block_count - 1):
             indent_current = indents[i]
             next_idx = i + 1
-            if next_idx < block_count:
-                indent_next = indents[next_idx]
-                if indent_next > indent_current:
-                    # Line i is a folding start
-                    end_idx = block_count - 1
-                    for j in range(i + 2, block_count):
-                        if indents[j] <= indent_current:
-                            end_idx = j - 1
-                            break
+            indent_next = indents[next_idx]
+            if indent_next <= indent_current:
+                continue
 
-                    # Leave up to 2 trailing empty lines unfolded
-                    empty_count = 0
-                    while end_idx > i + 1 and empty_count < 2:
-                        block_at_end = doc.findBlockByNumber(end_idx)
-                        if block_at_end.isValid() and not block_at_end.text().strip():
-                            end_idx -= 1
-                            empty_count += 1
-                        else:
-                            break
+            end_idx = next_lower_or_equal[i] - 1
 
-                    folding_regions[i] = (i + 1, end_idx)
+            # Leave up to 2 trailing empty lines unfolded
+            empty_count = 0
+            while end_idx > i + 1 and empty_count < 2:
+                if empty_lines[end_idx]:
+                    end_idx -= 1
+                    empty_count += 1
+                else:
+                    break
+
+            folding_regions[i] = (i + 1, end_idx)
 
         self.folding_regions = folding_regions
+        self._folding_region_starts = list(folding_regions)
+
+    def _fold_region_for_line(self, line_number):
+        starts = self._folding_region_starts
+        index = bisect_right(starts, line_number) - 1
+        while index >= 0:
+            region_start = starts[index]
+            _, region_end = self.folding_regions[region_start]
+            if line_number <= region_end:
+                return region_start
+            index -= 1
+        return -1
 
     def apply_folding_visibility(self):
         self.setUpdatesEnabled(False)
         try:
             doc = self.document()
-            block_count = doc.blockCount()
             hide_until = -1
+            visibility_changed = False
+            block_num = 0
+            block = doc.firstBlock()
 
-            for i in range(block_count):
-                block = doc.findBlockByNumber(i)
-                if not block.isValid():
-                    continue
-
-                should_be_visible = (i > hide_until)
+            while block.isValid():
+                should_be_visible = block_num > hide_until
                 if block.isVisible() != should_be_visible:
                     block.setVisible(should_be_visible)
+                    visibility_changed = True
 
-                if should_be_visible and i in self.folding_regions:
+                region = self.folding_regions.get(block_num)
+                if should_be_visible and region:
                     data = block.userData()
                     if data and getattr(data, 'folded', False):
-                        start_idx, end_idx = self.folding_regions[i]
+                        _, end_idx = region
                         if end_idx > hide_until:
                             hide_until = end_idx
 
-            self.document().markContentsDirty(0, self.document().characterCount())
+                block = block.next()
+                block_num += 1
+
+            if visibility_changed:
+                doc.markContentsDirty(0, doc.characterCount())
         finally:
             self.setUpdatesEnabled(True)
             self.viewport().update()
@@ -251,14 +288,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def fold_current(self):
         cursor = self.textCursor()
         curr_block_num = cursor.blockNumber()
-
-        target_block_num = -1
-        for i in range(curr_block_num, -1, -1):
-            if i in self.folding_regions:
-                start_idx, end_idx = self.folding_regions[i]
-                if i <= curr_block_num <= end_idx:
-                    target_block_num = i
-                    break
+        target_block_num = self._fold_region_for_line(curr_block_num)
 
         if target_block_num != -1:
             doc = self.document()
@@ -274,14 +304,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def unfold_current(self):
         cursor = self.textCursor()
         curr_block_num = cursor.blockNumber()
-
-        target_block_num = -1
-        for i in range(curr_block_num, -1, -1):
-            if i in self.folding_regions:
-                start_idx, end_idx = self.folding_regions[i]
-                if i <= curr_block_num <= end_idx:
-                    target_block_num = i
-                    break
+        target_block_num = self._fold_region_for_line(curr_block_num)
 
         if target_block_num != -1:
             doc = self.document()
@@ -308,28 +331,29 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         if recursive and block_num in self.folding_regions:
             start_idx, end_idx = self.folding_regions[block_num]
-            for i in range(start_idx, end_idx + 1):
-                if i in self.folding_regions:
-                    child_block = doc.findBlockByNumber(i)
-                    if child_block.isValid():
-                        child_data = child_block.userData()
-                        if not child_data:
-                            child_data = BlockUserData()
-                            child_block.setUserData(child_data)
-                        child_data.folded = new_state
+            first = bisect_right(self._folding_region_starts, start_idx - 1)
+            last = bisect_right(self._folding_region_starts, end_idx)
+            for child_idx in self._folding_region_starts[first:last]:
+                child_block = doc.findBlockByNumber(child_idx)
+                if child_block.isValid():
+                    child_data = child_block.userData()
+                    if not child_data:
+                        child_data = BlockUserData()
+                        child_block.setUserData(child_data)
+                    child_data.folded = new_state
 
         self.apply_folding_visibility()
 
     def get_folded_blocks(self):
         folded = []
-        doc = self.document()
-        block_count = doc.blockCount()
-        for i in range(block_count):
-            block = doc.findBlockByNumber(i)
-            if block.isValid():
-                data = block.userData()
-                if data and getattr(data, 'folded', False):
-                    folded.append(i)
+        block = self.document().firstBlock()
+        block_number = 0
+        while block.isValid():
+            data = block.userData()
+            if data and getattr(data, 'folded', False):
+                folded.append(block_number)
+            block = block.next()
+            block_number += 1
         return ",".join(str(x) for x in folded)
 
     def set_folded_blocks(self, folded_data):
@@ -521,6 +545,15 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.blockSignals(False)
         self.highlight_current_line()
 
+    def _current_file_extension(self):
+        file_path = getattr(self, 'file_path', None)
+        if not file_path:
+            parent = self.parent()
+            file_path = getattr(parent, 'file_path', None)
+        if file_path:
+            return os.path.splitext(file_path)[1].lower()
+        return '.py'
+
     def parseText(self, force=False):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
@@ -536,36 +569,43 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 self.completer.hide()
                 self._lint_timer.start(500)
                 return
-            text = self.toPlainText()
-            self.moveCompleter()
-            if text or force:
-                tc = self.textCursor()
-                pos = tc.position()
+            tc = self.textCursor()
+            pos = tc.position()
+            pos_in_block = tc.positionInBlock()
+            block_text = tc.block().text()
+            should_complete = force or (
+                pos > 0
+                and pos_in_block > 0
+                and re.match('[a-zA-Z0-9_.]', block_text[pos_in_block - 1])
+            )
 
-                # Check if we should autocomplete
-                if force or (pos > 0 and re.match('[a-zA-Z0-9_.]', text[pos-1])):
-                    bl = tc.blockNumber() + 1
-                    col = tc.columnNumber()
-                    namespace = self.p.namespace if hasattr(self.p, 'namespace') else None
-                    use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
+            if should_complete:
+                if hasattr(self.p, '_presenter') and self._current_file_extension() != '.py':
+                    self.completer.updateCompleteList([])
+                    self._lint_timer.start(500)
+                    return
+                text = self.toPlainText()
+                self.moveCompleter()
+                bl = tc.blockNumber() + 1
+                col = tc.columnNumber()
+                namespace = self.p.namespace if hasattr(self.p, 'namespace') else None
+                use_fuzzy = self.p.fuzzy_autocomplete_act.isChecked() if hasattr(self.p, 'fuzzy_autocomplete_act') else True
 
-                    try:
-                        if hasattr(self.p, '_presenter'):
-                            comps = self.p._presenter.request_autocomplete(
-                                text=text,
-                                line=bl,
-                                column=col,
-                                namespace=namespace,
-                                fuzzy=use_fuzzy,
-                                context=managers.context
-                            )
-                            self.completer.updateCompleteList(comps)
-                        else:
-                            self.completer.updateCompleteList()
-                    except Exception as e:
-                        print(e)
+                try:
+                    if hasattr(self.p, '_presenter'):
+                        comps = self.p._presenter.request_autocomplete(
+                            text=text,
+                            line=bl,
+                            column=col,
+                            namespace=namespace,
+                            fuzzy=use_fuzzy,
+                            context=managers.context
+                        )
+                        self.completer.updateCompleteList(comps)
+                    else:
                         self.completer.updateCompleteList()
-                else:
+                except Exception as e:
+                    print(e)
                     self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
@@ -577,8 +617,20 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if hasattr(main_win, 'syntaxCheck_act'):
             check_syntax = main_win.syntaxCheck_act.isChecked()
 
+        if not check_syntax:
+            self.syntax_errors = {}
+            if hasattr(self.p, 'show_syntax_errors'):
+                self.p.show_syntax_errors({})
+            return
+
+        if hasattr(self.p, '_presenter') and self._current_file_extension() != '.py':
+            self.syntax_errors = {}
+            if hasattr(self.p, 'show_syntax_errors'):
+                self.p.show_syntax_errors({})
+            return
+
         code = self.toPlainText()
-        if check_syntax and code.strip():
+        if code.strip():
             # Delegate linting to the presenter
             if hasattr(self.p, '_presenter'):
                 self.p._presenter.request_lint(code)
@@ -614,10 +666,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.completer.move(pt)
 
     def charBeforeCursor(self, cursor):
-        pos = cursor.position()
-        if pos:
-            text = self.toPlainText()
-            return text[pos-1]
+        if cursor.position() == 0:
+            return None
+
+        position_in_block = cursor.positionInBlock()
+        if position_in_block == 0:
+            return '\n'
+        return cursor.block().text()[position_in_block - 1]
 
     def getCurrentIndent(self):
         cursor = self.textCursor()
@@ -939,6 +994,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
         self.inputSignal.emit()
 
+        if event.matches(QKeySequence.Undo):
+            self.undo()
+            return
+        if event.matches(QKeySequence.Redo):
+            self.redo()
+            return
+
         # for tab cycling
         tabWidget = self.parent().parent().parent()
         current_tab_index = tabWidget.currentIndex()
@@ -1219,49 +1281,175 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         block = self.document().findBlockByNumber(line)
         if block.isValid():
             return block.position()
-        return len(self.toPlainText())
+        return self.document().characterCount() - 1
+
+    def _capture_block_state(self, block):
+        data = block.userData()
+        if data is None:
+            return None
+        return (
+            getattr(data, 'folded', False),
+            getattr(data, 'bookmarked', False),
+        )
+
+    def _restore_block_states(self, first_block_number, states):
+        block = self.document().findBlockByNumber(first_block_number)
+        for state in states:
+            if not block.isValid():
+                break
+            block.setUserData(None)
+            if state is not None:
+                data = BlockUserData()
+                data.folded, data.bookmarked = state
+                block.setUserData(data)
+            block = block.next()
+
+    def _restore_cursor_state(self, state):
+        anchor, position = state
+        max_position = self.document().characterCount() - 1
+        cursor = self.textCursor()
+        cursor.setPosition(min(anchor, max_position))
+        cursor.setPosition(
+            min(position, max_position),
+            QTextCursor.KeepAnchor,
+        )
+        self.setTextCursor(cursor)
+
+    def _capture_scroll_state(self):
+        return (
+            self.verticalScrollBar().value(),
+            self.horizontalScrollBar().value(),
+        )
+
+    def _restore_scroll_state(self, state):
+        vertical, horizontal = state
+        self.verticalScrollBar().setValue(vertical)
+        self.horizontalScrollBar().setValue(horizontal)
+
+    def _record_line_move(self, before_cursor, after_cursor, first_block,
+                          before_states, after_states):
+        if not hasattr(self, '_line_move_history'):
+            self._line_move_history = []
+        self._line_move_history.append({
+            'undo_steps': self.document().availableUndoSteps(),
+            'redo_steps': None,
+            'before_cursor': before_cursor,
+            'after_cursor': after_cursor,
+            'first_block': first_block,
+            'before_states': before_states,
+            'after_states': after_states,
+            'undone': False,
+        })
+
+    def _line_move_for_undo(self):
+        undo_steps = self.document().availableUndoSteps()
+        for entry in reversed(getattr(self, '_line_move_history', [])):
+            if not entry['undone'] and entry['undo_steps'] == undo_steps:
+                return entry
+        return None
+
+    def _line_move_for_redo(self):
+        redo_steps = self.document().availableRedoSteps()
+        for entry in getattr(self, '_line_move_history', []):
+            if entry['undone'] and entry['redo_steps'] == redo_steps:
+                return entry
+        return None
+
+    def _on_undo_availability_changed(self, available):
+        if not available and not getattr(self, '_is_undo_redo', False):
+            self._line_move_history = []
 
     def move_selected_lines(self, direction):
         start_line, end_line = self.selected_line_range()
-        text = self.toPlainText()
-        lines = text.split('\n')
+        document = self.document()
+        start_block = document.findBlockByNumber(start_line)
+        end_block = document.findBlockByNumber(end_line)
+
         if direction < 0:
-            if start_line <= 0:
+            adjacent_block = start_block.previous()
+            if not adjacent_block.isValid():
+                self._skip_autocomplete_once = False
                 return
-            moving = lines[start_line:end_line + 1]
-            lines[start_line:end_line + 1] = []
-            insert_at = start_line - 1
-            lines[insert_at:insert_at] = moving
+            affected_start = adjacent_block
+            affected_end = end_block
         else:
-            if end_line >= len(lines) - 1:
+            adjacent_block = end_block.next()
+            if not adjacent_block.isValid():
+                self._skip_autocomplete_once = False
                 return
-            moving = lines[start_line:end_line + 1]
-            lines[start_line:end_line + 1] = []
-            insert_at = start_line + 1
-            lines[insert_at:insert_at] = moving
+
+            affected_start = start_block
+            affected_end = adjacent_block
+
+        block_items = []
+        block = affected_start
+        while block.isValid():
+            block_items.append((block.text(), self._capture_block_state(block)))
+            if block == affected_end:
+                break
+            block = block.next()
+
+        after_affected = affected_end.next()
+        has_trailing_block = after_affected.isValid()
+        trailing_states = (
+            [self._capture_block_state(after_affected)]
+            if has_trailing_block
+            else []
+        )
+        before_states = [
+            state for _, state in block_items
+        ] + trailing_states
+
+        if direction < 0:
+            block_items = block_items[1:] + block_items[:1]
+        else:
+            block_items = block_items[-1:] + block_items[:-1]
+        after_states = [
+            state for _, state in block_items
+        ] + trailing_states
 
         # Save cursor details relative to their blocks to restore position and selection correctly
         cursor = self.textCursor()
         anchor = cursor.anchor()
         position = cursor.position()
+        before_cursor = (anchor, position)
 
-        anchor_block = self.document().findBlock(anchor)
+        anchor_block = document.findBlock(anchor)
         anchor_col = anchor - anchor_block.position()
         anchor_block_num = anchor_block.blockNumber()
 
-        pos_block = self.document().findBlock(position)
+        pos_block = document.findBlock(position)
         pos_col = position - pos_block.position()
         pos_block_num = pos_block.blockNumber()
 
-        cursor.beginEditBlock()
-        cursor.select(QTextCursor.Document)
-        cursor.insertText('\n'.join(lines))
-        cursor.endEditBlock()
+        affected_start_number = affected_start.blockNumber()
+        replacement_start = affected_start.position()
+        replacement_end = (
+            after_affected.position()
+            if has_trailing_block
+            else document.characterCount() - 1
+        )
+        replacement = '\n'.join(
+            text for text, _ in block_items
+        ) + ('\n' if has_trailing_block else '')
+
+        edit_cursor = QTextCursor(document)
+        edit_cursor.beginEditBlock()
+        try:
+            edit_cursor.setPosition(replacement_start)
+            edit_cursor.setPosition(replacement_end, QTextCursor.KeepAnchor)
+            edit_cursor.insertText(replacement)
+            self._restore_block_states(
+                affected_start_number,
+                after_states,
+            )
+        finally:
+            edit_cursor.endEditBlock()
 
         # Reconstruct cursor with original selection and column position shifted by direction
         new_cursor = self.textCursor()
-        new_anchor_block = self.document().findBlockByNumber(anchor_block_num + direction)
-        new_pos_block = self.document().findBlockByNumber(pos_block_num + direction)
+        new_anchor_block = document.findBlockByNumber(anchor_block_num + direction)
+        new_pos_block = document.findBlockByNumber(pos_block_num + direction)
 
         if new_anchor_block.isValid() and new_pos_block.isValid():
             new_anchor = new_anchor_block.position() + anchor_col
@@ -1270,15 +1458,17 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             new_cursor.setPosition(new_pos, QTextCursor.KeepAnchor)
             self.setTextCursor(new_cursor)
 
-        self.highlight_current_line()
+        after_cursor = self.textCursor()
+        self._record_line_move(
+            before_cursor,
+            (after_cursor.anchor(), after_cursor.position()),
+            affected_start_number,
+            before_states,
+            after_states,
+        )
 
     def highlight_current_line(self):
-        selections = []
-
-        # set background color of current line
         cursor = self.textCursor()
-        selection = QTextEdit.ExtraSelection()
-        selection.format.setProperty(QTextFormat.FullWidthSelection, True)
 
         if getattr(self, '_highlight_color_cache', None) is None:
             data = SettingsModel().read_settings() or {}
@@ -1286,36 +1476,68 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
 
-        selection.format.setBackground(QColor.fromRgb(*self._highlight_color_cache))  # set the background color
+        multi_selections = self.multi_cursor_manager.get_extra_selections()
+        cursor_state = (
+            cursor.position(),
+            cursor.anchor(),
+            self._highlight_color_cache,
+        )
+        if (
+            cursor_state == getattr(
+                self,
+                '_last_highlight_cursor_state',
+                None,
+            )
+            and multi_selections is getattr(
+                self,
+                '_last_highlight_multi_selections',
+                None,
+            )
+        ):
+            return
+
+        selection = QTextEdit.ExtraSelection()
+        selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+        selection.format.setBackground(
+            QColor.fromRgb(*self._highlight_color_cache)
+        )
         selection.cursor = cursor
-        selections.append(selection)
-
-        # Draw multi-cursors
-        selections.extend(self.multi_cursor_manager.get_extra_selections())
-
+        selections = [selection]
+        selections.extend(multi_selections)
         self.setExtraSelections(selections)
+        self._last_highlight_cursor_state = cursor_state
+        self._last_highlight_multi_selections = multi_selections
 
     def moveSelected(self, inc):
         cursor = self.textCursor()
-        if cursor.hasSelection():
-            self.document().documentLayout().blockSignals(True)
-            self.selectBlocks()
-            start = cursor.selectionStart()
-            text = cursor.selection().toPlainText()
-            cursor.removeSelectedText()
-            if inc:
-                newText = self.addTabs(text)
-            else:
-                newText = self.removeTabs(text)
-            cursor.beginEditBlock()
-            cursor.insertText(newText)
-            cursor.endEditBlock()
-            newEnd = cursor.position()
-            cursor.setPosition(start)
-            cursor.setPosition(newEnd, QTextCursor.KeepAnchor)
-            self.document().documentLayout().blockSignals(False)
-            self.setTextCursor(cursor)
-            self.update()
+        if not cursor.hasSelection():
+            return
+
+        position = cursor.position()
+        start = cursor.selectionStart()
+        end = cursor.selectionEnd()
+
+        cursor.setPosition(start)
+        cursor.movePosition(QTextCursor.StartOfLine)
+        block_start = cursor.position()
+        cursor.setPosition(end, QTextCursor.KeepAnchor)
+        cursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
+        text = cursor.selection().toPlainText()
+        new_text = self.addTabs(text) if inc else self.removeTabs(text)
+
+        cursor.beginEditBlock()
+        cursor.insertText(new_text)
+        cursor.endEditBlock()
+
+        new_end = block_start + len(new_text)
+        if position == end:
+            cursor.setPosition(block_start)
+            cursor.setPosition(new_end, QTextCursor.KeepAnchor)
+        else:
+            cursor.setPosition(new_end)
+            cursor.setPosition(block_start, QTextCursor.KeepAnchor)
+        self.setTextCursor(cursor)
+        self.update()
 
     def addQuotesSelected(self, prefer_single_quotes=False):
         cursor = self.textCursor()
@@ -1373,20 +1595,32 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 self.update()
             return
 
-        text = self.toPlainText()
-        pos = cursor.position()
-        pattern = r"('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\"|'(?:[^\\']|\\.)*?'|\"(?:[^\\\"]|\\.)*?\")"
-
-        best_match = None
-        for match in re.finditer(pattern, text):
-            start, end = match.span()
-            if start <= pos <= end:
-                if match.group(1).startswith("'''") or match.group(1).startswith('"""'):
-                    inner_start, inner_end = start + 3, end - 3
-                else:
-                    inner_start, inner_end = start + 1, end - 1
-                best_match = (inner_start, inner_end)
-                break
+        block = cursor.block()
+        best_match = self._quoted_inner_range(
+            block.text(),
+            cursor.positionInBlock(),
+            block.position(),
+        )
+        previous_block = block.previous()
+        multiline_state = block.userState() in (1, 2)
+        if previous_block.isValid():
+            multiline_state = (
+                multiline_state
+                or previous_block.userState() in (1, 2)
+            )
+        block_text = block.text()
+        if (
+            best_match is None
+            and (
+                multiline_state
+                or "'''" in block_text
+                or '"""' in block_text
+            )
+        ):
+            best_match = self._quoted_inner_range(
+                self.toPlainText(),
+                cursor.position(),
+            )
 
         if best_match:
             inner_start, inner_end = best_match
@@ -1403,6 +1637,18 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.document().documentLayout().blockSignals(False)
             self.setTextCursor(cursor)
             self.update()
+
+    @staticmethod
+    def _quoted_inner_range(text, position, offset=0):
+        for match in QUOTED_TEXT_PATTERN.finditer(text):
+            start, end = match.span()
+            if start <= position <= end:
+                if match.group(1).startswith("'''") or match.group(1).startswith('"""'):
+                    inner_start, inner_end = start + 3, end - 3
+                else:
+                    inner_start, inner_end = start + 1, end - 1
+                return offset + inner_start, offset + inner_end
+        return None
 
     def fStringSelected(self, prefer_single_quotes=False):
         cursor = self.textCursor()
@@ -1434,8 +1680,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def commentSelected(self):
         cursor = self.textCursor()
-        self.document().documentLayout().blockSignals(True)
-        self.selectBlocks()
         pos = cursor.position()
         start = cursor.selectionStart()
         end = cursor.selectionEnd()
@@ -1447,28 +1691,35 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         cursor.setPosition(end,QTextCursor.KeepAnchor)
         cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
         text = cursor.selection().toPlainText()
-        self.document().documentLayout().blockSignals(False)
 
-        new_text, offset, shifts = self.addRemoveComments(text)
+        new_text, _offset, shifts = self.addRemoveComments(text)
+        lines = text.split('\n')
+        new_lines = new_text.split('\n')
+        old_line_starts = [0]
+        new_line_starts = [0]
+        for i in range(len(lines) - 1):
+            old_line_starts.append(
+                old_line_starts[-1] + len(lines[i]) + 1
+            )
+            new_line_starts.append(
+                new_line_starts[-1] + len(new_lines[i]) + 1
+            )
 
         def map_pos(p):
             rel_p = p - block_start
-            lines = text.split('\n')
-            new_lines = new_text.split('\n')
-            current_old_len = 0
-            current_new_len = 0
-            for i, line in enumerate(lines):
-                line_len = len(line) + 1 # +1 for \n
-                new_line_len = len(new_lines[i]) + 1 if i < len(new_lines) else line_len
-                if rel_p < current_old_len + line_len:
-                    offset_in_line = rel_p - current_old_len
-                    idx, shift = shifts[i]
-                    if idx != -1 and offset_in_line > idx:
-                        offset_in_line = max(idx, offset_in_line + shift)
-                    return block_start + current_new_len + offset_in_line
-                current_old_len += line_len
-                current_new_len += new_line_len
-            return block_start + current_new_len
+            line_index = min(
+                bisect_right(old_line_starts, rel_p) - 1,
+                len(lines) - 1,
+            )
+            offset_in_line = rel_p - old_line_starts[line_index]
+            idx, shift = shifts[line_index]
+            if idx != -1 and offset_in_line > idx:
+                offset_in_line = max(idx, offset_in_line + shift)
+            return (
+                block_start
+                + new_line_starts[line_index]
+                + offset_in_line
+            )
 
         new_start = map_pos(start)
         new_end = map_pos(end)
@@ -1695,16 +1946,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.highlight_current_line()
 
     def removeTabs(self, text):
-        lines = text.split('\n')
-        new = []
-        pat = re.compile("^ .*")
-        for line in lines:
-            line = line.replace('\t', ' '*indentLen)
-            for _ in range(4):
-                if pat.match(line):
-                    line = line[1:]
-            new.append(line)
-        return '\n'.join(new)
+        new_lines = []
+        for line in text.split('\n'):
+            content = line.lstrip(' \t')
+            leading_length = len(line) - len(content)
+            indentation = line[:leading_length].expandtabs(indentLen)
+            new_lines.append(indentation[indentLen:] + content)
+        return '\n'.join(new_lines)
 
     def addTabs(self, text):
         lines = [(' '*indentLen)+x for x in text.split('\n')]
@@ -1857,8 +2105,18 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
             return
 
-        data = SettingsModel().read_settings() or {}
-        if data.get('highlight_all_occurrences', True):
+        action = getattr(
+            getattr(self, 'p', None),
+            'highlightAllOccurrences_act',
+            None,
+        )
+        if action is not None:
+            highlight_all = action.isChecked()
+        else:
+            data = getattr(self, 'data', {}) or {}
+            highlight_all = data.get('highlight_all_occurrences', True)
+
+        if highlight_all:
             cursor = self.textCursor()
             if cursor.hasSelection():
                 # Avoid selecting just empty spaces
@@ -1883,16 +2141,51 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def undo(self):
         if self.multi_cursor_manager.has_cursors():
             self.multi_cursor_manager.clear()
+        line_move = self._line_move_for_undo()
+        scroll_state = (
+            self._capture_scroll_state()
+            if line_move is not None
+            else None
+        )
         self._is_undo_redo = True
-        super(inputClass, self).undo()
-        self._is_undo_redo = False
+        try:
+            super(inputClass, self).undo()
+            if line_move is not None:
+                self._restore_block_states(
+                    line_move['first_block'],
+                    line_move['before_states'],
+                )
+                self._restore_cursor_state(line_move['before_cursor'])
+                self._restore_scroll_state(scroll_state)
+                line_move['undone'] = True
+                line_move['redo_steps'] = self.document().availableRedoSteps()
+        finally:
+            self._is_undo_redo = False
 
     def redo(self):
         if self.multi_cursor_manager.has_cursors():
             self.multi_cursor_manager.clear()
+        line_move = self._line_move_for_redo()
+        scroll_state = (
+            self._capture_scroll_state()
+            if line_move is not None
+            else None
+        )
         self._is_undo_redo = True
-        super(inputClass, self).redo()
-        self._is_undo_redo = False
+        try:
+            super(inputClass, self).redo()
+            if line_move is not None:
+                self._restore_block_states(
+                    line_move['first_block'],
+                    line_move['after_states'],
+                )
+                self._restore_cursor_state(line_move['after_cursor'])
+                self._restore_scroll_state(scroll_state)
+                line_move['undone'] = False
+                line_move['undo_steps'] = self.document().availableUndoSteps()
+                line_move['redo_steps'] = None
+        finally:
+            self._is_undo_redo = False
 
     def cut(self):
         if self.multi_cursor_manager.has_cursors():

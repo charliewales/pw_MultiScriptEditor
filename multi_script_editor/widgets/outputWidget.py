@@ -31,6 +31,7 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.setTabStopWidth(4 * width)
         self.setMouseTracking(1)
         self.setAcceptDrops(True)
+        self._highlight_word_cache = None
         self.applyHightLighter(theme)
         self.selectionChanged.connect(self._on_selection_changed)
 
@@ -45,11 +46,29 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         else:
             self.highlight_word("")
 
-    def highlight_word(self, word):
-        selections = []
+    def _highlight_occurrences_enabled(self):
+        action = getattr(
+            self.window(),
+            'highlightAllOccurrences_act',
+            None,
+        )
+        if action is not None:
+            return action.isChecked()
         data = SettingsModel().read_settings() or {}
-        if word and data.get('highlight_all_occurrences', True):
-            doc = self.document()
+        return data.get('highlight_all_occurrences', True)
+
+    def highlight_word(self, word):
+        doc = self.document()
+        highlight_all = (
+            bool(word)
+            and self._highlight_occurrences_enabled()
+        )
+        cache_key = (word, doc.revision(), highlight_all)
+        if cache_key == self._highlight_word_cache:
+            return
+
+        selections = []
+        if highlight_all:
             cursor = QTextCursor(doc)
             while True:
                 cursor = doc.find(word, cursor)
@@ -60,6 +79,7 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 sel.format.setBackground(QColor(128, 128, 255, 180))
                 selections.append(sel)
         self.setExtraSelections(selections)
+        self._highlight_word_cache = cache_key
 
     def showMessage(self, msg):
         self.moveCursor(QTextCursor.End)
