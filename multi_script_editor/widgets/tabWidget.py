@@ -1560,7 +1560,6 @@ class EditorTabContainer(QWidget):
         self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
-        self.edit.setFocus()
 
         editor_hbox.addWidget(self.lineNum)
         editor_hbox.addWidget(self.edit)
