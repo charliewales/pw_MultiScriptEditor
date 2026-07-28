@@ -43,6 +43,22 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     saveSignal = Signal()
     inputSignal = Signal()
     messageSignal = Signal(str)
+
+    HIGHLIGHTER_CONFIG = (
+        (('.js',), extraSyntaxes.JavascriptHighlighterClass, '//', ''),
+        (('.html', '.htm', '.xml'), extraSyntaxes.HtmlHighlighterClass, '<!--', '-->'),
+        (('.yaml', '.yml'), extraSyntaxes.YamlHighlighterClass, '#', ''),
+        (('.md',), extraSyntaxes.MarkdownHighlighterClass, '<!--', '-->'),
+        (('.css',), extraSyntaxes.CssHighlighterClass, '/*', '*/'),
+        (('.txt',), extraSyntaxes.TextHighlighterClass, '#', ''),
+        (('.log',), extraSyntaxes.LogHighlighterClass, '#', ''),
+        (('.usd', '.usda'), extraSyntaxes.UsdHighlighterClass, '#', ''),
+        (('.json',), extraSyntaxes.JsonHighlighterClass, '//', ''),
+        (('.bat', '.cmd'), extraSyntaxes.BatchHighlighterClass, 'REM ', ''),
+        (('.sh',), extraSyntaxes.BashHighlighterClass, '#', ''),
+        (('.ini',), extraSyntaxes.IniHighlighterClass, ';', ''),
+    )
+
     def __init__(self, parent, desk=None):
 
         # https://github.com/davidhalter/jedi
@@ -321,7 +337,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
         try:
             folded_list = [int(x) for x in str(folded_data).split(',') if x.strip().isdigit()]
-        except:
+        except (TypeError, ValueError):
             return
         doc = self.document()
         for i in folded_list:
@@ -462,8 +478,16 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.completer.updateCompleteList()
         try:
             QPlainTextEdit.hideEvent(self,event)
-        except:
+        except Exception:
             pass
+
+    def _get_highlighter_config(self, ext):
+        if ext:
+            ext = ext.lower()
+            for extensions, highlighter_class, comment_prefix, comment_suffix in self.HIGHLIGHTER_CONFIG:
+                if ext in extensions:
+                    return highlighter_class, comment_prefix, comment_suffix
+        return syntaxHighLighter.PythonHighlighterClass, '#', ''
 
     def applyHightLighter(self, theme=None, ext=None):
         self.blockSignals(True)
@@ -475,54 +499,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
-        highlighter_class = syntaxHighLighter.PythonHighlighterClass
-
         if not ext and hasattr(self.parent(), 'file_path') and self.parent().file_path:
             ext = os.path.splitext(self.parent().file_path)[1]
 
-        self.comment_prefix = '#'
-        self.comment_suffix = ''
-
-        if ext:
-            ext = ext.lower()
-            if ext == '.js':
-                highlighter_class = extraSyntaxes.JavascriptHighlighterClass
-                self.comment_prefix = '//'
-            elif ext in ['.html', '.htm', '.xml']:
-                highlighter_class = extraSyntaxes.HtmlHighlighterClass
-                self.comment_prefix = '<!--'
-                self.comment_suffix = '-->'
-            elif ext in ['.yaml', '.yml']:
-                highlighter_class = extraSyntaxes.YamlHighlighterClass
-            elif ext == '.md':
-                highlighter_class = extraSyntaxes.MarkdownHighlighterClass
-                self.comment_prefix = '<!--'
-                self.comment_suffix = '-->'
-            elif ext == '.css':
-                highlighter_class = extraSyntaxes.CssHighlighterClass
-                self.comment_prefix = '/*'
-                self.comment_suffix = '*/'
-            elif ext == '.txt':
-                highlighter_class = extraSyntaxes.TextHighlighterClass
-            elif ext == '.log':
-                highlighter_class = extraSyntaxes.LogHighlighterClass
-            elif ext in ['.usd', '.usda']:
-                highlighter_class = extraSyntaxes.UsdHighlighterClass
-            elif ext == '.json':
-                highlighter_class = extraSyntaxes.JsonHighlighterClass
-                self.comment_prefix = '//'
-            elif ext in ['.bat', '.cmd']:
-                highlighter_class = extraSyntaxes.BatchHighlighterClass
-                self.comment_prefix = 'REM '
-            elif ext == '.sh':
-                highlighter_class = extraSyntaxes.BashHighlighterClass
-                self.comment_prefix = '#'
-            elif ext == '.ini':
-                highlighter_class = extraSyntaxes.IniHighlighterClass
-                self.comment_prefix = ';'
-
-
-
+        highlighter_class, self.comment_prefix, self.comment_suffix = self._get_highlighter_config(ext)
         self.hgl = highlighter_class(self.document(), colors)
         st = design.editorStyle(theme)
         self.setStyleSheet(st)
@@ -625,7 +605,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             if not currentScreen.contains(futureCompGeo):
                 try:
                     i = currentScreen.intersect(futureCompGeo)
-                except:
+                except AttributeError:
                     i = currentScreen.intersected(futureCompGeo)
                 x = futureCompGeo.width() - i.width()
                 y = futureCompGeo.height()+self.completer.lineHeight if (futureCompGeo.height()-i.height())>0 else 0
@@ -699,7 +679,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
         try:
             lines_list = [int(x) for x in str(lines).split(',') if x.strip().isdigit()]
-        except:
+        except (TypeError, ValueError):
             return
         doc = self.document()
         for line in lines_list:
@@ -966,7 +946,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if self.multi_cursor_manager.handle_key_press(event):
             return
         self.inputSignal.emit()
-        parse = 0
 
         # for tab cycling
         tabWidget = self.parent().parent().parent()
@@ -1080,7 +1059,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     line = line[:-3]
                     cursor.insertText(line)
                     self.setTextCursor(cursor)
-            parse = 1
         # execute all/selected on pressing Enter key (numpad)
         elif event.key() == Qt.Key_Enter:
             selection = self.getSelection()
@@ -1186,8 +1164,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         # just close completer
         elif not event.modifiers() == Qt.NoModifier and not event.modifiers() == Qt.ShiftModifier:
             self.completer.updateCompleteList()
-        else:
-            parse = 1
 
         auto_close = True
         if hasattr(self.p, 'autoCloseDelimiters_act'):
@@ -1332,7 +1308,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if cursor.hasSelection():
             self.document().documentLayout().blockSignals(True)
             self.selectBlocks()
-            start, end = cursor.selectionStart(), cursor.selectionEnd()
+            start = cursor.selectionStart()
             text = cursor.selection().toPlainText()
             cursor.removeSelectedText()
             if inc:
@@ -1570,11 +1546,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         if len(x) > idx + len(prefix) and x[idx+len(prefix)] == ' ':
                             new_lines.append(x[:idx] + x[idx+len(prefix)+1:])
                             shift = -(len(prefix) + 1)
-                            if i == ind: ofs = shift
+                            if i == ind:
+                                ofs = shift
                         else:
                             new_lines.append(x[:idx] + x[idx+len(prefix):])
                             shift = -len(prefix)
-                            if i == ind: ofs = shift
+                            if i == ind:
+                                ofs = shift
                     else:
                         new_lines.append(x)
                     shifts.append((idx, shift))
@@ -1854,54 +1832,33 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.search_service.replace_all(find, rep, case_sensitive)
 
     # --- Multi-Cursor / Multi-Selection Support ---
-    def select_next_occurrence(self):
+    def _run_manual_multi_select(self, callback):
         self._is_manual_multi_selecting = True
         try:
-            self.multi_cursor_manager.select_next_occurrence()
+            callback()
         finally:
             self._is_manual_multi_selecting = False
+
+    def select_next_occurrence(self):
+        self._run_manual_multi_select(self.multi_cursor_manager.select_next_occurrence)
 
     def select_all_occurrences(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.select_all_occurrences()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.select_all_occurrences)
 
     def next_selection(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.next_selection()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.next_selection)
 
     def previous_selection(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.previous_selection()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.previous_selection)
 
     def add_cursors_to_line_ends(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.add_cursors_to_line_ends()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.add_cursors_to_line_ends)
 
     def add_cursor_above(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.add_cursor_above()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.add_cursor_above)
 
     def add_cursor_below(self):
-        self._is_manual_multi_selecting = True
-        try:
-            self.multi_cursor_manager.add_cursor_below()
-        finally:
-            self._is_manual_multi_selecting = False
+        self._run_manual_multi_select(self.multi_cursor_manager.add_cursor_below)
 
 
     def auto_select_all_occurrences(self):

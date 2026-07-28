@@ -1,7 +1,6 @@
 import os
 import re
 
-from icons import *
 from vendor.Qt.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
 from vendor.Qt.QtGui import (
     QColor,
@@ -30,7 +29,6 @@ from vendor.Qt.QtWidgets import (
     QWidget,
     QFileDialog,
 )
-from core.file_utils import read_file_text
 from core.git_manager import GitManager
 from core.diff_manager import DiffManager
 from icons import icons
