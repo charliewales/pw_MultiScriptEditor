@@ -2903,11 +2903,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 try:
     from PySide2.QtCore import QTextCodec
     QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
-except ImportError:
+except (ImportError, AttributeError):
     try:
         from PySide.QtCore import QTextCodec
         QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
-    except ImportError:
+    except (ImportError, AttributeError):
         pass
 
 
