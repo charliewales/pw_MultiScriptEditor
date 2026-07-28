@@ -829,18 +829,25 @@ class tabWidgetClass(QTabWidget):
         btn = getattr(widget, '_custom_close_btn', None)
 
         if not file_path or not os.path.exists(file_path):
+            widget._git_status_info = None
+            widget._git_status_file_path = None
             if btn and hasattr(btn, 'set_git_status_code'):
                 btn.set_git_status_code("")
             return
 
         norm_path = os.path.normpath(file_path)
+        cache_path = os.path.normcase(os.path.abspath(file_path))
         if not getattr(self.p, '_version_control_enabled', False):
+            widget._git_status_info = None
+            widget._git_status_file_path = cache_path
             self.setTabToolTip(index, norm_path)
             if btn and hasattr(btn, 'set_git_status_code'):
                 btn.set_git_status_code("")
             return
 
         status_info = GitManager.get_file_status(file_path)
+        widget._git_status_info = status_info
+        widget._git_status_file_path = cache_path
         git_code = ""
         if status_info.get('in_repo'):
             tooltip = f"{norm_path}\nGit: {status_info['branch']} [{status_info['status_text']}]"
@@ -853,6 +860,19 @@ class tabWidgetClass(QTabWidget):
         self.setTabToolTip(index, tooltip)
         if btn and hasattr(btn, 'set_git_status_code'):
             btn.set_git_status_code(git_code)
+        return status_info
+
+    def git_status_for_tab(self, index):
+        if index < 0 or index >= self.count():
+            return None
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        if not file_path or not os.path.exists(file_path):
+            return None
+        cache_path = os.path.normcase(os.path.abspath(file_path))
+        if getattr(widget, '_git_status_file_path', None) == cache_path:
+            return getattr(widget, '_git_status_info', None)
+        return self.update_tab_git_status(index)
 
     def update_all_tabs_git_status(self):
         for i in range(self.count()):

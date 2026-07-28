@@ -262,9 +262,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def refresh_git_status(self):
         if getattr(self, '_version_control_enabled', False):
-            self.updateGitStatusBarInfo()
             if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
                 self.tab.update_all_tabs_git_status()
+            self.updateGitStatusBarInfo()
         else:
             self.lbl_git.setVisible(False)
             if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
@@ -362,7 +362,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         file_path = getattr(w, 'file_path', None)
         if file_path and os.path.exists(file_path) and getattr(self, '_version_control_enabled', False):
-            git_info = GitManager.get_file_status(file_path)
+            if hasattr(self.tab, 'git_status_for_tab'):
+                git_info = self.tab.git_status_for_tab(idx)
+            else:
+                git_info = GitManager.get_file_status(file_path)
+            if not git_info:
+                self.lbl_git.setVisible(False)
+                return
             if git_info.get('in_repo'):
                 branch = git_info.get('branch', 'HEAD')
                 status_code = git_info.get('status_code', 'CLEAN')
@@ -2326,11 +2332,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.showStatusMessage("")
         else:
             self.showStatusMessage("Version Control (GIT) is disabled in options.")
-        # Force update status info to hide or show git status
-        self.updateGitStatusBarInfo()
         # Refresh all tabs Git status badges
         if hasattr(self, 'tab') and hasattr(self.tab, 'update_all_tabs_git_status'):
             self.tab.update_all_tabs_git_status()
+        # Reuse the current tab result for the status bar.
+        self.updateGitStatusBarInfo()
 
     def toggleAutoCloseDelimiters(self, state=None):
         state = self.autoCloseDelimiters_act.isChecked()
