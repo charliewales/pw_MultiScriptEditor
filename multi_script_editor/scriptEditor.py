@@ -27,27 +27,23 @@ from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
 from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
-from icons import *
+from icons import icons
 from plugins.plugin_manager import PluginManager
 from presenters.main_presenter import MainPresenter
 from style.links import links
 from vendor.Qt.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import (
-    QAbstractItemView,
     QAction,
     QApplication,
     QFileDialog,
     QFontDialog,
     QInputDialog,
     QLabel,
-    QLineEdit,
-    QListWidget,
     QMainWindow,
     QMenu,
     QMessageBox,
     QPushButton,
-    QShortcut,
     QSplitter,
     QStyle,
     QTabWidget,
@@ -64,7 +60,6 @@ from widgets import (
 )
 from widgets import scriptEditor_UIs as ui
 from widgets.main_window_builder import ScriptEditorUIBuilder
-from widgets.outline_utils import HtmlDelegate, create_symbol_item
 from widgets.pythonSyntax import design
 from core.git_manager import GitManager
 
@@ -1419,7 +1414,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 cont.edit.document().setModified(False)
                 if hasattr(cont, 'edit') and hasattr(cont.edit, 'applyHightLighter'):
                     cont.edit.applyHightLighter(self._current_settings.get('theme', 'Multi Script Editor'))
-            except:
+            except Exception:
                 self.out.showMessage('Error save file; %s' % os.path.normpath(path[0]))
 
     def openDiffDialog(self):
@@ -1549,7 +1544,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.updateRecentFilesMenu()
 
     def updateRecentFilesMenu(self):
-        if not hasattr(self, 'recent_files_menu'): return
+        if not hasattr(self, 'recent_files_menu'):
+            return
         self.recent_files_menu.clear()
         data = self._current_settings
         recent = data.get('recent_files', [])
@@ -2907,11 +2903,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 try:
     from PySide2.QtCore import QTextCodec
     QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
-except:
+except ImportError:
     try:
         from PySide.QtCore import QTextCodec
         QTextCodec.setCodecForCStrings(QTextCodec.codecForName("UTF-8"))
-    except:
+    except ImportError:
         pass
 
 
