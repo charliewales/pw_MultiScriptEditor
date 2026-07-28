@@ -43,6 +43,18 @@ class SnippetWidget(SearchPopupWidget):
         if self.list_widget.count() > 0:
             self.list_widget.setCurrentRow(0)
 
+    def _apply_dialog_font(self, dialog):
+        parent = self.parent()
+        font = getattr(parent, 'theme_font', None) if parent else None
+        if not font:
+            font = self._font
+        if not font:
+            return
+        dialog.setFont(font)
+        dialog.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        for btn in dialog.buttons():
+            btn.setFont(font)
+
     def on_item_clicked(self, item):
         if self.mode == "save":
             self.search_le.setText(item.text())
@@ -62,16 +74,7 @@ class SnippetWidget(SearchPopupWidget):
                     msg_box.setIcon(QMessageBox.Question)
                     msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
                     msg_box.setDefaultButton(QMessageBox.No)
-                    if hasattr(self.parent(), 'theme_font'):
-                        msg_box.setFont(self.parent().theme_font)
-                        msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                        for btn in msg_box.buttons():
-                            btn.setFont(self.parent().theme_font)
-                    elif self._font:
-                        msg_box.setFont(self._font)
-                        msg_box.setStyleSheet(f"* {{ font-family: '{self._font.family()}'; }}")
-                        for btn in msg_box.buttons():
-                            btn.setFont(self._font)
+                    self._apply_dialog_font(msg_box)
                     reply = msg_box.exec_()
                     if reply == QMessageBox.No:
                         return
