@@ -18,24 +18,39 @@ from core.git_manager import GitManager
 from core.diff_manager import DiffManager
 
 
+def get_theme_font(parent):
+    p = parent.parent() if hasattr(parent, 'parent') and callable(parent.parent) and parent.parent() else parent
+    font = getattr(p, 'theme_font', getattr(p, 'font', None))
+    if callable(font):
+        font = font()
+    return font
+
+
+def apply_themed_font(widget, parent=None, include_children=True):
+    source = parent or widget
+    font = get_theme_font(source)
+
+    if font:
+        widget.setFont(font)
+        family = font.family()
+        size = font.pointSize()
+        if isinstance(widget, QMessageBox):
+            widget.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
+        else:
+            base_style = source.styleSheet() if hasattr(source, 'styleSheet') else ''
+            widget.setStyleSheet(base_style + f"\n* {{ font-family: '{family}'; }}")
+        if include_children:
+            for w in widget.findChildren(QWidget):
+                w.setFont(font)
+
+
 def show_themed_msg_box(parent, title, text, icon=QMessageBox.Information):
     msg_box = QMessageBox(parent)
     msg_box.setWindowTitle(title)
     msg_box.setText(text)
     msg_box.setIcon(icon)
 
-    p = parent.parent() if hasattr(parent, 'parent') and callable(parent.parent) and parent.parent() else parent
-    font = getattr(p, 'theme_font', getattr(p, 'font', None))
-    if callable(font):
-        font = font()
-
-    if font:
-        msg_box.setFont(font)
-        family = font.family()
-        size = font.pointSize()
-        msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
-        for w in msg_box.findChildren(QWidget):
-            w.setFont(font)
+    apply_themed_font(msg_box, parent)
 
     return msg_box.exec_()
 
@@ -53,8 +68,7 @@ class GitCommitDialog(QDialog):
         self.setWindowTitle(f"Git Commit - {filename}")
         self.resize(550, 380)
 
-        if hasattr(parent, 'theme_font') and parent.theme_font:
-            self.setStyleSheet(parent.styleSheet() + f"\n* {{ font-family: '{parent.theme_font.family()}'; }}")
+        apply_themed_font(self, parent, include_children=False)
 
         layout = QVBoxLayout(self)
 
@@ -140,8 +154,7 @@ class GitHistoryDialog(QDialog):
         self.setWindowTitle(f"Git File History - {filename}")
         self.resize(750, 450)
 
-        if hasattr(parent, 'theme_font') and parent.theme_font:
-            self.setStyleSheet(parent.styleSheet() + f"\n* {{ font-family: '{parent.theme_font.family()}'; }}")
+        apply_themed_font(self, parent, include_children=False)
 
         layout = QVBoxLayout(self)
 
