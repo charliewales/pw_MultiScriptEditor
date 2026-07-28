@@ -21,11 +21,9 @@ from vendor.Qt.QtWidgets import (
     QFileSystemModel,
     QHBoxLayout,
     QInputDialog,
-    QLabel,
     QLineEdit,
     QMenu,
     QMessageBox,
-    QPushButton,
     QToolButton,
     QTreeView,
     QVBoxLayout,
@@ -730,12 +728,8 @@ class ExplorerWidget(QWidget):
             family = font.family()
             size = font.pointSize()
             dlg.setStyleSheet(f"* {{ font-family: '{family}'; font-size: {size}pt; }}")
-            for btn in dlg.findChildren(QPushButton):
-                btn.setFont(font)
-            for lbl in dlg.findChildren(QLabel):
-                lbl.setFont(font)
-            for le in dlg.findChildren(QLineEdit):
-                le.setFont(font)
+            for child in dlg.findChildren(QWidget):
+                child.setFont(font)
 
     def _get_input_text(self, title, label, text=""):
         dlg = QInputDialog(self)
