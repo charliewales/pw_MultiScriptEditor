@@ -1,3 +1,4 @@
+import importlib
 import os
 import platform
 import sys
@@ -72,13 +73,13 @@ exec_name = os.path.basename(sys.executable).lower()
 
 if 'hou' in main.__dict__ or 'houdini' in exec_name or 'hindie' in exec_name or 'hython' in exec_name:
     context = 'hou'
-    from managers import _houdini
+    importlib.import_module('managers._houdini')
 elif 'cmds' in main.__dict__ or 'maya' in exec_name:
     context = 'maya'
-    from managers import _maya
+    importlib.import_module('managers._maya')
 elif 'nuke' in main.__dict__ or 'nuke' in exec_name:
     context = 'nuke'
-    from managers import _nuke
+    importlib.import_module('managers._nuke')
 
 
 
