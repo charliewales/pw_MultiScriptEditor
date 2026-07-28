@@ -252,7 +252,6 @@ class GitManager(object):
         if code != 0:
             return None
 
-        ext = os.path.splitext(file_path)[1]
         basename = os.path.basename(file_path)
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, f"HEAD_{basename}")
