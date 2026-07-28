@@ -232,71 +232,24 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.colors_lwd.clear()
         default_font_size = self.get_settings().get('font', {}).get('pointSize', 12)
 
-        self.textSize_spb.blockSignals(True)
-        if 'textsize' in colors:
-            self.textSize_spb.setValue(int(colors['textsize']))
-        else:
-            self.textSize_spb.setValue(int(default_font_size * 0.9))
-        self.textSize_spb.blockSignals(False)
-
-        self.lineNumbersSize_spb.blockSignals(True)
-        if 'line_numbers_text_size' in colors:
-            self.lineNumbersSize_spb.setValue(int(colors['line_numbers_text_size']))
-        else:
-            self.lineNumbersSize_spb.setValue(max(1, int(default_font_size * 0.8)))
-        self.lineNumbersSize_spb.blockSignals(False)
-
-        self.menuSize_spb.blockSignals(True)
-        if 'menu_text_size' in colors:
-            self.menuSize_spb.setValue(int(colors['menu_text_size']))
-        else:
-            self.menuSize_spb.setValue(int(default_font_size * 0.9))
-        self.menuSize_spb.blockSignals(False)
-
-        # Update tab radius (or default to 12 if not present)
-        self.tabRadius_spb.blockSignals(True)
-        if 'tab_radius' in colors:
-            self.tabRadius_spb.setValue(int(colors['tab_radius']))
-        else:
-            self.tabRadius_spb.setValue(12)
-        self.tabRadius_spb.blockSignals(False)
-
-        # Update tab label text size percentage (or default to 10 if not present)
-        self.tabSize_spb.blockSignals(True)
-        if 'tab_text_size' in colors:
-            self.tabSize_spb.setValue(int(colors['tab_text_size']))
-        else:
-            self.tabSize_spb.setValue(int(default_font_size * 0.9))
-        self.tabSize_spb.blockSignals(False)
-
-        # Update outline text size (or default to 80% if not present)
-        self.outlineSize_spb.blockSignals(True)
-        if 'outline_text_size' in colors:
-            self.outlineSize_spb.setValue(int(colors['outline_text_size']))
-        else:
-            self.outlineSize_spb.setValue(int(default_font_size * 0.9))
-        self.outlineSize_spb.blockSignals(False)
-
-        self.outputSize_spb.blockSignals(True)
-        if 'output_text_size' in colors:
-            self.outputSize_spb.setValue(int(colors['output_text_size']))
-        else:
-            self.outputSize_spb.setValue(int(default_font_size * 0.9))
-        self.outputSize_spb.blockSignals(False)
-
-        self.symbolsSize_spb.blockSignals(True)
-        if 'symbols_text_size' in colors:
-            self.symbolsSize_spb.setValue(int(colors['symbols_text_size']))
-        else:
-            self.symbolsSize_spb.setValue(int(default_font_size * 0.9))
-        self.symbolsSize_spb.blockSignals(False)
-
-        self.statusBarSize_spb.blockSignals(True)
-        if 'status_bar_text_size' in colors:
-            self.statusBarSize_spb.setValue(int(colors['status_bar_text_size']))
-        else:
-            self.statusBarSize_spb.setValue(int(default_font_size * 0.9))
-        self.statusBarSize_spb.blockSignals(False)
+        font_mult = 0.9
+        font_size_controls = (
+            (self.textSize_spb, 'textsize', int(default_font_size * font_mult)),
+            (self.lineNumbersSize_spb, 'line_numbers_text_size', max(1, int(default_font_size * 0.8))),
+            (self.menuSize_spb, 'menu_text_size', int(default_font_size * font_mult)),
+            (self.tabRadius_spb, 'tab_radius', 12),
+            (self.tabSize_spb, 'tab_text_size', int(default_font_size * font_mult)),
+            (self.outlineSize_spb, 'outline_text_size', int(default_font_size * font_mult)),
+            (self.outputSize_spb, 'output_text_size', int(default_font_size * font_mult)),
+            (self.symbolsSize_spb, 'symbols_text_size', int(default_font_size * font_mult)),
+            (self.statusBarSize_spb, 'status_bar_text_size', int(default_font_size * font_mult)),
+        )
+        for control, key, default in font_size_controls:
+            control.blockSignals(True)
+            try:
+                control.setValue(int(colors[key]) if key in colors else default)
+            finally:
+                control.blockSignals(False)
 
         font_option_controls = (
             (self.completerFont_cb, 'use_theme_font_on_completer', True),
