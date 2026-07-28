@@ -438,10 +438,7 @@ class tabWidgetClass(QTabWidget):
                         if hasattr(edit, 'needs_loading_scroll_v'):
                             scroll_v = edit.needs_loading_scroll_v
                             delattr(edit, 'needs_loading_scroll_v')
-                            if scroll_v > 0:
-                                edit.verticalScrollBar().setValue(scroll_v)
-                                QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
-                                QTimer.singleShot(150, lambda: edit.verticalScrollBar().setValue(scroll_v))
+                            edit.verticalScrollBar().setValue(scroll_v)
 
                         edit.document().clearUndoRedoStacks()
                         edit.document().setModified(False)
