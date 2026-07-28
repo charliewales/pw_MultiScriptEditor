@@ -230,32 +230,27 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors = design.getColors(curTheme)
 
         self.colors_lwd.clear()
+        default_font_size = self.get_settings().get('font', {}).get('pointSize', 12)
 
         self.textSize_spb.blockSignals(True)
         if 'textsize' in colors:
             self.textSize_spb.setValue(int(colors['textsize']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.textSize_spb.setValue(int(font_size * 0.9))
+            self.textSize_spb.setValue(int(default_font_size * 0.9))
         self.textSize_spb.blockSignals(False)
 
         self.lineNumbersSize_spb.blockSignals(True)
         if 'line_numbers_text_size' in colors:
             self.lineNumbersSize_spb.setValue(int(colors['line_numbers_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.lineNumbersSize_spb.setValue(max(1, int(font_size * 0.8)))
+            self.lineNumbersSize_spb.setValue(max(1, int(default_font_size * 0.8)))
         self.lineNumbersSize_spb.blockSignals(False)
 
         self.menuSize_spb.blockSignals(True)
         if 'menu_text_size' in colors:
             self.menuSize_spb.setValue(int(colors['menu_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.menuSize_spb.setValue(int(font_size * 0.9))
+            self.menuSize_spb.setValue(int(default_font_size * 0.9))
         self.menuSize_spb.blockSignals(False)
 
         # Update tab radius (or default to 12 if not present)
@@ -271,9 +266,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if 'tab_text_size' in colors:
             self.tabSize_spb.setValue(int(colors['tab_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.tabSize_spb.setValue(int(font_size * 0.9))
+            self.tabSize_spb.setValue(int(default_font_size * 0.9))
         self.tabSize_spb.blockSignals(False)
 
         # Update outline text size (or default to 80% if not present)
@@ -281,36 +274,28 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if 'outline_text_size' in colors:
             self.outlineSize_spb.setValue(int(colors['outline_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.outlineSize_spb.setValue(int(font_size * 0.9))
+            self.outlineSize_spb.setValue(int(default_font_size * 0.9))
         self.outlineSize_spb.blockSignals(False)
 
         self.outputSize_spb.blockSignals(True)
         if 'output_text_size' in colors:
             self.outputSize_spb.setValue(int(colors['output_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.outputSize_spb.setValue(int(font_size * 0.9))
+            self.outputSize_spb.setValue(int(default_font_size * 0.9))
         self.outputSize_spb.blockSignals(False)
 
         self.symbolsSize_spb.blockSignals(True)
         if 'symbols_text_size' in colors:
             self.symbolsSize_spb.setValue(int(colors['symbols_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.symbolsSize_spb.setValue(int(font_size * 0.9))
+            self.symbolsSize_spb.setValue(int(default_font_size * 0.9))
         self.symbolsSize_spb.blockSignals(False)
 
         self.statusBarSize_spb.blockSignals(True)
         if 'status_bar_text_size' in colors:
             self.statusBarSize_spb.setValue(int(colors['status_bar_text_size']))
         else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.statusBarSize_spb.setValue(int(font_size * 0.9))
+            self.statusBarSize_spb.setValue(int(default_font_size * 0.9))
         self.statusBarSize_spb.blockSignals(False)
 
         self.completerFont_cb.blockSignals(True)
@@ -596,33 +581,26 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def _resetAllFontSizes(self):
         pts = self._getBaseFontPointSize()
-        self.textSize_spb.blockSignals(True)
-        self.lineNumbersSize_spb.blockSignals(True)
-        self.menuSize_spb.blockSignals(True)
-        self.outlineSize_spb.blockSignals(True)
-        self.outputSize_spb.blockSignals(True)
-        self.statusBarSize_spb.blockSignals(True)
-        self.tabSize_spb.blockSignals(True)
-        self.symbolsSize_spb.blockSignals(True)
-
         font_mult = 0.9
-        self.textSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.lineNumbersSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.menuSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.outlineSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.outputSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.statusBarSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.tabSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.symbolsSize_spb.setValue(max(1, int(pts * font_mult)))
+        font_size_controls = (
+            (self.textSize_spb, font_mult),
+            (self.lineNumbersSize_spb, 0.8),
+            (self.menuSize_spb, font_mult),
+            (self.outlineSize_spb, font_mult),
+            (self.outputSize_spb, font_mult),
+            (self.statusBarSize_spb, font_mult),
+            (self.tabSize_spb, font_mult),
+            (self.symbolsSize_spb, font_mult),
+        )
 
-        self.textSize_spb.blockSignals(False)
-        self.lineNumbersSize_spb.blockSignals(False)
-        self.menuSize_spb.blockSignals(False)
-        self.outlineSize_spb.blockSignals(False)
-        self.outputSize_spb.blockSignals(False)
-        self.statusBarSize_spb.blockSignals(False)
-        self.tabSize_spb.blockSignals(False)
-        self.symbolsSize_spb.blockSignals(False)
+        for control, _ in font_size_controls:
+            control.blockSignals(True)
+        try:
+            for control, multiplier in font_size_controls:
+                control.setValue(max(1, int(pts * multiplier)))
+        finally:
+            for control, _ in font_size_controls:
+                control.blockSignals(False)
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'
