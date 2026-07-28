@@ -26,6 +26,7 @@ import vendor.Qt
 from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
 from core.outline_parser import OutlineParser
+from core.session_model import get_session_editor_state
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from icons import icons
 from plugins.plugin_manager import PluginManager
@@ -935,6 +936,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for i, s in enumerate(sessions):
                 text = s.get('text')
                 file_path = s.get('file_path')
+                modified = bool(s.get('modified', False))
                 is_active = s.get('active', False)
 
                 if file_path and not os.path.exists(file_path):
@@ -951,12 +953,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
                 if is_active:
                     active_index = i
-                    if file_path and os.path.exists(file_path):
+                    if (
+                        file_path
+                        and os.path.exists(file_path)
+                        and not modified
+                    ):
                         text = read_file_text(file_path)
-                    if text:
-                        w.addText(text)
+                    if text or modified:
+                        w.addText(text or "")
                         w.document().clearUndoRedoStacks()
-                        w.document().setModified(False)
+                        w.document().setModified(modified)
                         if hasattr(w, 'needs_loading_folds') and w.needs_loading_folds:
                             if hasattr(w, 'set_folded_blocks'):
                                 w.set_folded_blocks(w.needs_loading_folds)
@@ -986,6 +992,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 else:
                     w.needs_loading_file = file_path
                     w.needs_loading_text = text
+                    w.needs_loading_modified = modified
 
                 if s.get('size'):
                     # w is the edit widget from addNewTab
@@ -1010,10 +1017,14 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if not widget:
                 continue
             name = self.tab.tabText(item)
-            text = self.tab.getTabText(item)
+            edit = getattr(widget, 'edit', None)
+            text, modified = get_session_editor_state(
+                edit,
+                self.tab.getTabText(item),
+            )
             size = 12
-            if hasattr(widget, 'edit') and hasattr(widget.edit, 'getFontSize'):
-                size = widget.edit.getFontSize()
+            if edit and hasattr(edit, 'getFontSize'):
+                size = edit.getFontSize()
             size = max(1, size - zoom_delta)
 
             file_path = getattr(widget, 'file_path', None)
@@ -1043,7 +1054,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             tab = {
                 'name': name,
-                'text': text if (save_full_text or not file_path) else "",
+                'text': text if (
+                    save_full_text
+                    or not file_path
+                    or modified
+                ) else "",
+                'modified': modified,
                 'active': item == index,
                 'size': size,
                 'file_path': file_path,

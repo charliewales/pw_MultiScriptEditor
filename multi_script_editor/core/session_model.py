@@ -10,6 +10,17 @@ sessionFilename = 'pw_scriptEditor_session.json'
 backupFilename = 'pw_scriptEditor_session_backup.json'
 
 
+def get_session_editor_state(edit, loaded_text):
+    if edit is None:
+        return loaded_text, False
+    if hasattr(edit, 'needs_loading_text'):
+        return (
+            edit.needs_loading_text or "",
+            bool(getattr(edit, 'needs_loading_modified', False)),
+        )
+    return loaded_text, bool(edit.document().isModified())
+
+
 class SessionModel(object):
     def __init__(self):
         self.path = os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), sessionFilename))

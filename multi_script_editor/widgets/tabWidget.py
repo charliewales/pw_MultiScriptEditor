@@ -17,7 +17,6 @@ from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QMenu,
     QMessageBox,
@@ -29,6 +28,7 @@ from vendor.Qt.QtWidgets import (
     QWidget,
     QFileDialog,
 )
+from core.file_utils import read_file_text
 from core.git_manager import GitManager
 from core.diff_manager import DiffManager
 from icons import icons
@@ -52,6 +52,9 @@ class TabCloseButton(QPushButton):
         self._git_status_code = ""
         self._is_dirty = False
         self._is_selected = False
+        self._quick_index = None
+        self._quick_index_font = None
+        self._quick_index_color = None
         self._colors = colors or {}
         self._close_icon = None
         self._close_icon_grey = None
@@ -87,6 +90,12 @@ class TabCloseButton(QPushButton):
             self._is_selected = state
             self.update()
 
+    def set_quick_index(self, index, font=None, color=None):
+        self._quick_index = index
+        self._quick_index_font = font
+        self._quick_index_color = color
+        self.update()
+
     def enterEvent(self, event):
         super(TabCloseButton, self).enterEvent(event)
         self.update()
@@ -102,7 +111,30 @@ class TabCloseButton(QPushButton):
         is_hovered = self.underMouse()
         has_git = bool(self._git_status_code and self._git_status_code != 'CLEAN')
 
-        if is_hovered:
+        if self._quick_index is not None:
+            text_color = self._quick_index_color
+            if text_color is None:
+                text_color = self._colors.get(
+                    'line_number',
+                    self._colors.get(
+                        'tab_selected_text',
+                        [200, 200, 200],
+                    ),
+                )
+            if isinstance(text_color, (list, tuple)):
+                text_color = QColor(*text_color)
+            elif not isinstance(text_color, QColor):
+                text_color = QColor(text_color)
+            painter.setPen(text_color)
+            font = self._quick_index_font or painter.font()
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(
+                self.rect(),
+                Qt.AlignCenter,
+                str(self._quick_index),
+            )
+        elif is_hovered:
             bg_color = QColor(*self._colors.get('background', [60, 60, 60])) if isinstance(self._colors.get('background'), list) else QColor(60, 60, 60)
             if bg_color.isValid():
                 painter.setPen(Qt.NoPen)
@@ -329,53 +361,20 @@ class tabWidgetClass(QTabWidget):
 
     def show_tab_numbers(self, show):
         for i in range(min(self.count(), 9)):
-            tab_widget = self.widget(i)
-            if not tab_widget:
-                continue
-            if show:
-                btn = self.tabBar().tabButton(i, QTabBar.RightSide)
-                style = "border-radius: 4px; margin-right: 4px;"
-                if btn and type(btn).__name__ != 'QLabel':
-                    tab_widget._original_close_button = btn
-
-                    if not hasattr(tab_widget, '_tab_number_label'):
-                        lbl = QLabel(str(i + 1))
-                        lbl.setAlignment(Qt.AlignCenter)
-
-                        # Apply font and color from line numbers
-                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
-                        lbl.setFont(font)
-
-                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
-                        if color:
-                            style += f" color: {color.name()};"
-                        lbl.setStyleSheet(style)
-
-                        # Apply original button size
-                        if btn.size().width() > 0 and btn.size().height() > 0:
-                            lbl.setFixedSize(btn.size())
-
-                        tab_widget._tab_number_label = lbl
-                    else:
-                        tab_widget._tab_number_label.setText(str(i + 1))
-                        # Update size/style in case it changed
-                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
-                        tab_widget._tab_number_label.setFont(font)
-                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
-                        if color:
-                            style += f" color: {color.name()};"
-                        tab_widget._tab_number_label.setStyleSheet(style)
-                        if btn.size().width() > 0 and btn.size().height() > 0:
-                            tab_widget._tab_number_label.setFixedSize(btn.size())
-
-                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._tab_number_label)
-                    tab_widget._tab_number_label.show()
-            else:
-                current_btn = self.tabBar().tabButton(i, QTabBar.RightSide)
-                if current_btn and type(current_btn).__name__ == 'QLabel':
-                    if hasattr(tab_widget, '_original_close_button') and tab_widget._original_close_button:
-                        self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
-                        tab_widget._original_close_button.show()
+            button = self.tabBar().tabButton(i, QTabBar.RightSide)
+            if isinstance(button, TabCloseButton):
+                font = None
+                color = None
+                tab_widget = self.widget(i)
+                if show and tab_widget and hasattr(tab_widget, 'edit'):
+                    font, color = self.get_line_num_font_and_color(
+                        tab_widget.edit
+                    )
+                button.set_quick_index(
+                    i + 1 if show else None,
+                    font,
+                    color,
+                )
 
     def toggle_explorer(self, state):
         if hasattr(self.p, 'toggleExplorer'):
@@ -396,15 +395,17 @@ class tabWidgetClass(QTabWidget):
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
                     text = ""
                     file_path = getattr(edit, 'needs_loading_file', None)
-                    if file_path and os.path.exists(file_path):
-                        from core.file_utils import read_file_text
+                    modified = bool(
+                        getattr(edit, 'needs_loading_modified', False)
+                    )
+                    if file_path and os.path.exists(file_path) and not modified:
                         text = read_file_text(file_path)
                         if not text:
                             text = getattr(edit, 'needs_loading_text', "") or ""
                     else:
                         text = getattr(edit, 'needs_loading_text', "") or ""
 
-                    if text:
+                    if text or modified:
                         edit.addText(text)
                         # Restore line and column once text is loaded
                         if hasattr(edit, 'needs_loading_line'):
@@ -439,7 +440,7 @@ class tabWidgetClass(QTabWidget):
                             edit.verticalScrollBar().setValue(scroll_v)
 
                         edit.document().clearUndoRedoStacks()
-                        edit.document().setModified(False)
+                        edit.document().setModified(modified)
                         if hasattr(edit, 'needs_loading_folds') and edit.needs_loading_folds:
                             if hasattr(edit, 'set_folded_blocks'):
                                 edit.set_folded_blocks(edit.needs_loading_folds)
@@ -469,6 +470,8 @@ class tabWidgetClass(QTabWidget):
                         delattr(edit, 'needs_loading_file')
                     if hasattr(edit, 'needs_loading_text'):
                         delattr(edit, 'needs_loading_text')
+                    if hasattr(edit, 'needs_loading_modified'):
+                        delattr(edit, 'needs_loading_modified')
 
     def close_current_tab(self):
         index = self.currentIndex()
@@ -483,6 +486,8 @@ class tabWidgetClass(QTabWidget):
         if not widget or not hasattr(widget, 'edit'):
             return False
         if hasattr(widget, 'file_path') and widget.file_path:
+            if hasattr(widget.edit, 'needs_loading_modified'):
+                return bool(widget.edit.needs_loading_modified)
             return widget.edit.document().isModified()
         return bool(self.getCurrentText(i).strip())
 
@@ -595,6 +600,12 @@ class tabWidgetClass(QTabWidget):
 
         menu.addSeparator()
 
+        del_action = QAction('Delete file', self)
+        if 'delete_file' in icons:
+            del_action.setIcon(QIcon(icons['delete_file']))
+        del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
+        menu.addAction(del_action)
+
         dup_title = 'Duplicate file' if has_file else 'Duplicate Tab'
         dup_action = QAction(dup_title, self)
         if 'duplicate_file' in icons:
@@ -612,6 +623,15 @@ class tabWidgetClass(QTabWidget):
 
         # File specific actions (only when tab has a file_path)
         if has_file:
+            reload_action = QAction('Reload file', self)
+            reload_action.setEnabled(os.path.exists(widget.file_path))
+            if 'reload_plugins' in icons:
+                reload_action.setIcon(QIcon(icons['reload_plugins']))
+            reload_action.triggered.connect(
+                lambda checked=False, idx=index: self.reloadFile(idx)
+            )
+            menu.addAction(reload_action)
+
             menu.addSeparator()
 
             copy_action = QAction('Copy file path', self)
@@ -621,11 +641,6 @@ class tabWidgetClass(QTabWidget):
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
-            del_action = QAction('Delete file', self)
-            if 'delete_file' in icons:
-                del_action.setIcon(QIcon(icons['delete_file']))
-            del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
-            menu.addAction(del_action)
 
             compare_menu = menu.addMenu('Compare with...')
             if 'git_diff' in icons:
@@ -929,6 +944,86 @@ class tabWidgetClass(QTabWidget):
                 self._apply_parent_theme_font(err_box)
                 err_box.exec_()
 
+    def reloadFile(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
+
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        edit = getattr(widget, 'edit', None)
+        if not file_path or not edit or not os.path.exists(file_path):
+            return
+
+        cursor = edit.textCursor()
+        line = getattr(
+            edit,
+            'needs_loading_line',
+            cursor.blockNumber() + 1,
+        ) - 1
+        column = getattr(
+            edit,
+            'needs_loading_column',
+            cursor.columnNumber(),
+        )
+        scroll_v = getattr(
+            edit,
+            'needs_loading_scroll_v',
+            edit.verticalScrollBar().value(),
+        )
+        scroll_h = edit.horizontalScrollBar().value()
+        text = read_file_text(file_path)
+
+        if hasattr(edit, 'addText'):
+            edit.addText(text)
+        else:
+            edit.setPlainText(text)
+        edit.document().clearUndoRedoStacks()
+        edit.document().setModified(False)
+
+        if (
+            hasattr(edit, 'needs_loading_folds')
+            and edit.needs_loading_folds
+            and hasattr(edit, 'set_folded_blocks')
+        ):
+            edit.set_folded_blocks(edit.needs_loading_folds)
+        if (
+            hasattr(edit, 'needs_loading_bookmarks')
+            and edit.needs_loading_bookmarks
+            and hasattr(edit, 'set_bookmarks')
+        ):
+            edit.set_bookmarks(edit.needs_loading_bookmarks)
+
+        block = edit.document().findBlockByNumber(line)
+        if not block.isValid():
+            block = edit.document().lastBlock()
+        if block.isValid():
+            cursor = edit.textCursor()
+            column = min(column, max(0, block.length() - 1))
+            cursor.setPosition(block.position() + column)
+            edit.setTextCursor(cursor)
+
+        edit.verticalScrollBar().setValue(scroll_v)
+        edit.horizontalScrollBar().setValue(scroll_h)
+        for attribute in (
+            'needs_loading_file',
+            'needs_loading_text',
+            'needs_loading_modified',
+            'needs_loading_line',
+            'needs_loading_column',
+            'needs_loading_scroll_v',
+            'needs_loading_folds',
+            'needs_loading_bookmarks',
+        ):
+            if hasattr(edit, attribute):
+                delattr(edit, attribute)
+        message = 'Reloaded file: %s' % os.path.normpath(file_path)
+        if hasattr(self.p, 'out'):
+            self.p.out.showMessage(message)
+        elif hasattr(self.p, 'showStatusMessage'):
+            self.p.showStatusMessage(message)
+
     def copyFilePath(self, index=None):
         if index is None or isinstance(index, bool):
             index = self.currentIndex()
@@ -963,6 +1058,8 @@ class tabWidgetClass(QTabWidget):
                     f.write(text or '')
                 new_tab_name = os.path.basename(new_path)
                 self.addNewTab(new_tab_name, text, file_path=new_path, insert_index=target_index)
+                if hasattr(self.p, 'addRecentFile'):
+                    self.p.addRecentFile(new_path)
                 norm_new_path = os.path.normpath(new_path)
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Duplicated file saved to: %s' % norm_new_path)
