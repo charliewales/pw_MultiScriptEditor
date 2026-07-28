@@ -1204,10 +1204,15 @@ class tabWidgetClass(QTabWidget):
         self.widget(i).edit.setPlainText(text)
         self.widget(i).edit.document().clearUndoRedoStacks()
 
+    def _iter_editors(self):
+        for i in range(self.count()):
+            widget = self.widget(i)
+            if widget and hasattr(widget, 'edit'):
+                yield widget.edit
 
     def hideAllCompleters(self):
-        for i in range(self.count()):
-            self.widget(i).edit.completer.hideMe()
+        for editor in self._iter_editors():
+            editor.completer.hideMe()
 
     def current(self):
         w = self.widget(self.currentIndex())
@@ -1404,21 +1409,18 @@ class tabWidgetClass(QTabWidget):
         self.setStyleSheet(ss + css)
 
     def render_whitespace(self, state):
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.render_whitespace(state)
 
     def wordWrap(self, state):
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.wordWrap(state)
         # update line numbers
         self.update()
 
     def set_font(self, font):
         self._apply_tab_font(font)
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.setFont(font)
 
     def set_start_font(self, font_d=None):
@@ -1432,8 +1434,7 @@ class tabWidgetClass(QTabWidget):
                 font = QFont(family, size, weight, italic)
                 font.setStyleHint(QFont.Monospace)
                 self._apply_tab_font(font)
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.set_start_font(font_d)
 
     def paste(self):
