@@ -753,6 +753,16 @@ class tabWidgetClass(QTabWidget):
         dlg = GitHistoryDialog(parent=self.p, file_path=file_path)
         dlg.exec_()
 
+    def _apply_parent_theme_font(self, widget):
+        font = getattr(self.p, 'theme_font', None)
+        if not font:
+            return
+        widget.setFont(font)
+        widget.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        if hasattr(widget, 'buttons'):
+            for btn in widget.buttons():
+                btn.setFont(font)
+
     def git_discard_changes(self, index, file_path):
         if hasattr(self.p, 'show_question_msg'):
             reply = self.p.show_question_msg(
@@ -899,11 +909,7 @@ class tabWidgetClass(QTabWidget):
         msg_box.setText('Are you sure you want to delete "%s" from disk?' % filename)
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg_box.setDefaultButton(QMessageBox.No)
-        if hasattr(self.p, 'theme_font'):
-            msg_box.setFont(self.p.theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
+        self._apply_parent_theme_font(msg_box)
 
         reply = msg_box.exec_()
 
@@ -924,11 +930,7 @@ class tabWidgetClass(QTabWidget):
                 err_box.setIcon(QMessageBox.Critical)
                 err_box.setWindowTitle('Delete File Error')
                 err_box.setText('Could not delete file:\n%s' % str(e))
-                if hasattr(self.p, 'theme_font'):
-                    err_box.setFont(self.p.theme_font)
-                    err_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-                    for btn in err_box.buttons():
-                        btn.setFont(self.p.theme_font)
+                self._apply_parent_theme_font(err_box)
                 err_box.exec_()
 
     def copyFilePath(self, index=None):
@@ -1505,17 +1507,10 @@ class tabWidgetClass(QTabWidget):
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Multi Script Editor")
         msg_box.setText(question)
-        if hasattr(self.p, 'theme_font'):
-            msg_box.setFont(self.p.theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         msg_box.addButton("No", QMessageBox.NoRole)
         yes_button.setFocus()
-        if hasattr(self.p, 'theme_font'):
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
+        self._apply_parent_theme_font(msg_box)
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 
