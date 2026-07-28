@@ -68,13 +68,13 @@ def split_path_into_components(full_path):
     while True:
         parent, name = os.path.split(curr)
         if name:
-            is_dir = os.path.isdir(curr)
+            is_dir = curr != norm
             parts.insert(0, (name, curr, is_dir))
             curr = parent
         else:
             if curr:
                 title = curr.rstrip('\\').rstrip('/') or curr
-                parts.insert(0, (title, curr, os.path.isdir(curr)))
+                parts.insert(0, (title, curr, True))
             break
 
     return parts
@@ -258,7 +258,7 @@ class BreadcrumbBar(QScrollArea):
     symbolSelected = Signal(int)
     fileSelected = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, file_path=None, fallback_name=""):
         super(BreadcrumbBar, self).__init__(parent)
         self.setObjectName("breadcrumbBar")
         self.setFixedHeight(26)
@@ -281,12 +281,13 @@ class BreadcrumbBar(QScrollArea):
         self.setWidget(self._container)
 
         self._raw_symbols = []
-        self._file_path = None
-        self._fallback_name = ""
+        self._file_path = file_path
+        self._fallback_name = fallback_name or "Untitled"
         self._ext = ".py"
         self._current_line = 1
         self._theme_colors = {}
         self._font = None
+        self._active_chain_key = ()
 
         self.rebuild_breadcrumbs()
 
@@ -377,7 +378,12 @@ class BreadcrumbBar(QScrollArea):
     def set_cursor_line(self, line_num):
         if self._current_line != line_num:
             self._current_line = line_num
-            self.rebuild_breadcrumbs()
+            chain = self._find_active_chain(
+                self._raw_symbols,
+                self._current_line,
+            )
+            if self._chain_key(chain) != self._active_chain_key:
+                self.rebuild_breadcrumbs()
 
     def set_outline_context(
         self,
@@ -422,31 +428,32 @@ class BreadcrumbBar(QScrollArea):
         current_symbols = symbols
 
         while current_symbols:
-            candidates = [s for s in current_symbols if s.get('line', 1) <= line_num]
-            if not candidates:
-                break
-
-            candidates.sort(key=lambda x: x.get('line', 1))
             matched = None
-            matched_siblings = current_symbols
-
-            for sym in candidates:
-                sym_index = current_symbols.index(sym)
-                next_sym_line = None
-                if sym_index + 1 < len(current_symbols):
-                    next_sym_line = current_symbols[sym_index + 1].get('line', 1)
-
-                if next_sym_line is None or line_num < next_sym_line:
+            matched_line = -1
+            for sym in current_symbols:
+                symbol_line = sym.get('line', 1)
+                if symbol_line <= line_num and symbol_line >= matched_line:
                     matched = sym
-                    break
+                    matched_line = symbol_line
 
             if matched:
-                chain.append((matched, matched_siblings))
+                chain.append((matched, current_symbols))
                 current_symbols = matched.get('children', [])
             else:
                 break
 
         return chain
+
+    @staticmethod
+    def _chain_key(chain):
+        return tuple(
+            (
+                symbol.get('type'),
+                symbol.get('name'),
+                symbol.get('line'),
+            )
+            for symbol, _siblings in chain
+        )
 
     def rebuild_breadcrumbs(self):
         # Clear layout items safely
@@ -499,6 +506,7 @@ class BreadcrumbBar(QScrollArea):
 
         # Build active symbol chain
         chain = self._find_active_chain(self._raw_symbols, self._current_line)
+        self._active_chain_key = self._chain_key(chain)
 
         for sym_data, siblings in chain:
             sep = QLabel(">", self)

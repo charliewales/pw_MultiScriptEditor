@@ -1335,6 +1335,16 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.verticalScrollBar().setValue(vertical)
         self.horizontalScrollBar().setValue(horizontal)
 
+    def reset_horizontal_scroll_for_cursor(self):
+        horizontal = self.horizontalScrollBar()
+        horizontal.setValue(0)
+
+        cursor_rect = self.cursorRect(self.textCursor())
+        viewport_width = self.viewport().width()
+        if cursor_rect.right() > viewport_width:
+            target = cursor_rect.right() - viewport_width + 4
+            horizontal.setValue(min(horizontal.maximum(), target))
+
     def _record_line_move(self, before_cursor, after_cursor, first_block,
                           before_states, after_states):
         if not hasattr(self, '_line_move_history'):

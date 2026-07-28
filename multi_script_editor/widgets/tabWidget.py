@@ -1099,7 +1099,13 @@ class tabWidgetClass(QTabWidget):
                         self.setCurrentIndex(i)
                     return w.edit
 
-        cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
+        cont = EditorTabContainer(
+            text,
+            self.p,
+            self.desk,
+            file_path=file_path,
+            fallback_name=name,
+        )
         cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         if hasattr(self.p, 'showStatusMessage'):
@@ -1513,7 +1519,14 @@ class tabWidgetClass(QTabWidget):
 
 
 class EditorTabContainer(QWidget):
-    def __init__(self, text, parent, desk, file_path=None):
+    def __init__(
+        self,
+        text,
+        parent,
+        desk,
+        file_path=None,
+        fallback_name="Untitled",
+    ):
         super(EditorTabContainer, self).__init__()
         self.file_path = file_path
         self.setMinimumWidth(0)
@@ -1523,7 +1536,11 @@ class EditorTabContainer(QWidget):
         vbox.setContentsMargins(0, 0, 0, 0)
 
         # Breadcrumbs Bar
-        self.breadcrumbs = BreadcrumbBar(self)
+        self.breadcrumbs = BreadcrumbBar(
+            self,
+            file_path=file_path,
+            fallback_name=fallback_name,
+        )
         self.breadcrumbs.symbolSelected.connect(self._on_breadcrumb_symbol_selected)
         self.breadcrumbs.fileSelected.connect(self._on_breadcrumb_file_selected)
         show_b = False
@@ -1548,12 +1565,23 @@ class EditorTabContainer(QWidget):
         self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
+        self._initial_horizontal_scroll_pending = True
 
         editor_hbox.addWidget(self.lineNum)
         editor_hbox.addWidget(self.edit)
 
         vbox.addLayout(editor_hbox)
 
+    def showEvent(self, event):
+        super(EditorTabContainer, self).showEvent(event)
+        if self._initial_horizontal_scroll_pending:
+            QTimer.singleShot(0, self._restore_initial_horizontal_scroll)
+
+    def _restore_initial_horizontal_scroll(self):
+        if not self.isVisible():
+            return
+        self._initial_horizontal_scroll_pending = False
+        self.edit.reset_horizontal_scroll_for_cursor()
 
     def _on_cursor_changed_update_breadcrumbs(self):
         line_num = self.edit.textCursor().blockNumber() + 1
