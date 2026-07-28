@@ -142,6 +142,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         ClipboardManager.init()
 
     def _on_text_changed(self):
+        self._lint_timer.start(500)
         if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
             pass
         elif getattr(self, '_is_undo_redo', False):

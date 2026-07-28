@@ -337,8 +337,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             lang = 'Python'
 
         self.lbl_lang.setText(lang)
-        if lang == 'Python' and hasattr(w.edit, 'runLinter'):
-            w.edit.runLinter()
 
         # Toggle execution UI based on language
         can_execute = (lang == 'Python')
