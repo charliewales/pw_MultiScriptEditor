@@ -862,6 +862,18 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             if __name__ == '__main__':
                 self.setWindowIcon(QIcon(icons['pw']))
 
+    def _apply_dialog_font(self, dialog):
+        font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
+        if font:
+            dialog.setFont(font)
+            family = font.family()
+            size = font.pointSize()
+            dialog.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
+            for w in dialog.findChildren(QWidget):
+                w.setFont(font)
+            for lbl in dialog.findChildren(QLabel):
+                lbl.setFont(font)
+
     def show_question_msg(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, defaultButton=QMessageBox.No):
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle(title)
@@ -879,16 +891,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 msg_box.setDefaultButton(defaultButton)
 
-        font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
-        if font:
-            msg_box.setFont(font)
-            family = font.family()
-            size = font.pointSize()
-            msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
-            for w in msg_box.findChildren(QWidget):
-                w.setFont(font)
-            for lbl in msg_box.findChildren(QLabel):
-                lbl.setFont(font)
+        self._apply_dialog_font(msg_box)
 
         if hasattr(msg_box, "exec"):
             return msg_box.exec()
@@ -2521,9 +2524,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         dlg = QInputDialog(self)
         dlg.setWindowTitle("Save Named Session")
         dlg.setLabelText("Enter session name:")
-        if hasattr(self, 'theme_font'):
-            dlg.setFont(self.theme_font)
-            dlg.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
+        self._apply_dialog_font(dlg)
         ok = dlg.exec_() == QInputDialog.Accepted
         name = dlg.textValue()
         if ok and name.strip():
@@ -2673,11 +2674,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Error")
                 msg_box.setText(f"Could not read the file:\n{e}")
-                if hasattr(self, 'theme_font'):
-                    msg_box.setFont(self.theme_font)
-                    msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
-                    for btn in msg_box.buttons():
-                        btn.setFont(self.theme_font)
+                self._apply_dialog_font(msg_box)
                 msg_box.exec_()
                 return
 
@@ -2686,11 +2683,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             msg_box.setIcon(QMessageBox.Information)
             msg_box.setWindowTitle("Import Snippets")
             msg_box.setText("No snippets found in the selected file.")
-            if hasattr(self, 'theme_font'):
-                msg_box.setFont(self.theme_font)
-                msg_box.setStyleSheet(f"* {{ font-family: '{self.theme_font.family()}'; }}")
-                for btn in msg_box.buttons():
-                    btn.setFont(self.theme_font)
+            self._apply_dialog_font(msg_box)
             msg_box.exec_()
             return
 
