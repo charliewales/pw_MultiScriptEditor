@@ -839,17 +839,6 @@ class ExplorerWidget(QWidget):
         if not colors:
             colors = {}
 
-        def rgb2hex(rgb):
-            if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
-                return "#2b2b2b"
-            return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
-
-        bg_color = rgb2hex(colors.get("background", (40, 40, 40)))
-        text_color = rgb2hex(colors.get("default", colors.get("tab_selected_text", (210, 210, 210))))
-        sel_bg = rgb2hex(colors.get("selection_background", (60, 80, 110)))
-        sel_text = rgb2hex(colors.get("selection", (255, 255, 255)))
-        border_color = rgb2hex(colors.get("border", (60, 60, 60)))
-
         if font:
             self._current_font = font
             self.setFont(font)

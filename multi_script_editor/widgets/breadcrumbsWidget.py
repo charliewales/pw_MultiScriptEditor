@@ -1,6 +1,5 @@
 import os
 
-from icons import icons
 from vendor.Qt.QtCore import QFileInfo, QSize, Qt, Signal
 from vendor.Qt.QtWidgets import (
     QAction,
@@ -218,13 +217,11 @@ class BreadcrumbItemWidget(QToolButton):
     def _apply_menu_style(self, menu):
         bg = self._theme_colors.get('window', self._theme_colors.get('tab_bg', (35, 35, 35)))
         fg = self._theme_colors.get('tab_selected_text', self._theme_colors.get('text', (220, 220, 220)))
-        sel_bg = self._theme_colors.get('tab_selected_bg', (60, 60, 60))
         sel_fg = self._theme_colors.get('tab_selected_text', (255, 255, 255))
         sel_hl = self._theme_colors.get('highlight_line', (128, 128, 128))
 
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg[:3]) if isinstance(bg, (list, tuple)) else "#232323"
         fg_hex = "#{:02x}{:02x}{:02x}".format(*fg[:3]) if isinstance(fg, (list, tuple)) else "#dcdcdc"
-        sel_bg_hex = "#{:02x}{:02x}{:02x}".format(*sel_bg[:3]) if isinstance(sel_bg, (list, tuple)) else "#3c3c3c"
         sel_fg_hex = "#{:02x}{:02x}{:02x}".format(*sel_fg[:3]) if isinstance(sel_fg, (list, tuple)) else "#ffffff"
         sel_hl_hex = "#{:02x}{:02x}{:02x}".format(*sel_hl[:3]) if isinstance(sel_hl, (list, tuple)) else "#ffffff"
 
@@ -239,10 +236,10 @@ class BreadcrumbItemWidget(QToolButton):
                 border-radius: 2px;
             }}
             QMenu::item:selected {{
-                background-color: {4};
-                color: {3};
+                background-color: {3};
+                color: {2};
             }}
-        """.format(bg_hex, fg_hex, sel_bg_hex, sel_fg_hex, sel_hl_hex)
+        """.format(bg_hex, fg_hex, sel_fg_hex, sel_hl_hex)
         menu.setStyleSheet(style)
 
     def _on_file_clicked(self):
@@ -324,12 +321,10 @@ class BreadcrumbBar(QScrollArea):
 
         bg = self._theme_colors.get('window', self._theme_colors.get('tab_bg', (50, 50, 50)))
         fg = self._theme_colors.get('tab_selected_text', self._theme_colors.get('text', (220, 220, 220)))
-        border = self._theme_colors.get('line_number_fg', (70, 70, 70))
         highlight = self._theme_colors.get('highlight_line', (70, 70, 70))
 
         bg_hex = "#{:02x}{:02x}{:02x}".format(*bg[:3]) if isinstance(bg, (list, tuple)) else "#323232"
         fg_hex = "#{:02x}{:02x}{:02x}".format(*fg[:3]) if isinstance(fg, (list, tuple)) else "#c8c8c8"
-        border_hex = "#{:02x}{:02x}{:02x}".format(*border[:3]) if isinstance(border, (list, tuple)) else "#464646"
         highlight_hex = "#{:02x}{:02x}{:02x}".format(*highlight[:3]) if isinstance(highlight, (list, tuple)) else "#464646"
 
         style = """
@@ -342,7 +337,7 @@ class BreadcrumbBar(QScrollArea):
                 border: none;
             }}
             QToolButton#breadcrumbItem {{
-                color: {2};
+                color: {1};
                 background: transparent;
                 border: none;
                 padding: 1px 0px;
@@ -364,10 +359,10 @@ class BreadcrumbBar(QScrollArea):
                 margin: 0px;
             }}
             QLabel {{
-                color: {3};
+                color: {2};
                 font-weight: bold;
             }}
-        """.format(bg_hex, border_hex, fg_hex, highlight_hex)
+        """.format(bg_hex, fg_hex, highlight_hex)
         self.setStyleSheet(style)
         self.rebuild_breadcrumbs()
 

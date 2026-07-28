@@ -1,4 +1,3 @@
-import os
 import sys
 
 from docs.constants import SHORTCUTS_TEXT
@@ -24,9 +23,9 @@ class shortcutsClass(QDialog, shortcuts_UIs.Ui_Dialog):
     def read(self):
         self.label.hide()
         lines = SHORTCUTS_TEXT.strip().split('\n')
-        for i, l in enumerate(lines):
+        for i, line in enumerate(lines):
             self.table.insertRow(self.table.rowCount())
-            description, shortcut = l.split('>')
+            description, shortcut = line.split('>')
             item = QTableWidgetItem(description)
             self.table.setItem(i, 0, item)
             item.setFlags(Qt.ItemIsEnabled)

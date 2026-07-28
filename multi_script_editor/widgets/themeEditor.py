@@ -13,7 +13,6 @@ from vendor.Qt.QtWidgets import (
     QFontDialog,
     QInputDialog,
     QLabel,
-    QLineEdit,
     QListWidgetItem,
     QMainWindow,
     QMenu,
@@ -445,7 +444,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.resetFont()
 
     def resetFont(self):
-        curTheme = self.themeList_cbb.currentText()
         settings = self.get_settings()
 
         global_font_data = settings.get('font', {})
@@ -545,7 +543,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def openSizeMenu(self, position):
         sender = self.sender()
-        if not sender: return
+        if not sender:
+            return
         menu = QMenu(self)
         ratio_1 = (None,)
         ratio_08 = (self.lineNumbersSize_spb,)
@@ -807,8 +806,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if saved_v is None:
                 return True
 
-            if isinstance(v, list): v = tuple(v)
-            if isinstance(saved_v, list): saved_v = tuple(saved_v)
+            if isinstance(v, list):
+                v = tuple(v)
+            if isinstance(saved_v, list):
+                saved_v = tuple(saved_v)
 
             if v != saved_v:
                 return True
@@ -831,7 +832,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     btn.setFont(self.parent().theme_font)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
-            cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
+            msg_box.addButton("Cancel", QMessageBox.RejectRole)
             msg_box.exec_()
 
             if msg_box.clickedButton() == save_btn:
@@ -866,7 +867,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             for btn in msg_box.buttons():
                 btn.setFont(self.parent().theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
-        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        msg_box.addButton("No", QMessageBox.NoRole)
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 
