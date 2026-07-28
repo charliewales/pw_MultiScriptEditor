@@ -1442,6 +1442,19 @@ class tabWidgetClass(QTabWidget):
         btn.style().unpolish(btn)
         btn.style().polish(btn)
 
+    def mark_untitled_tabs_session_saved(self):
+        for index in range(self.count()):
+            container = self.widget(index)
+            if not container or getattr(container, 'file_path', None):
+                continue
+            edit = getattr(container, 'edit', None)
+            if not edit:
+                continue
+            if hasattr(edit, 'needs_loading_modified'):
+                edit.needs_loading_modified = False
+            edit.document().setModified(False)
+            self.mark_tab_dirty(container, False)
+
     def apply_tab_style(self, colors=None):
         if not colors:
             colors = design.defaultColors

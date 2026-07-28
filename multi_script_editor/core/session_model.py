@@ -10,6 +10,20 @@ sessionFilename = 'pw_scriptEditor_session.json'
 backupFilename = 'pw_scriptEditor_session_backup.json'
 
 
+def get_restored_modified_state(file_path, modified):
+    return bool(file_path and modified)
+
+
+def prepare_tabs_for_session_save(tabs):
+    saved_tabs = []
+    for tab in tabs:
+        saved_tab = dict(tab)
+        if not saved_tab.get('file_path'):
+            saved_tab['modified'] = False
+        saved_tabs.append(saved_tab)
+    return saved_tabs
+
+
 def get_session_editor_state(edit, loaded_text):
     if edit is None:
         return loaded_text, False

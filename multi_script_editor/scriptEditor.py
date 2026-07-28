@@ -26,7 +26,11 @@ import vendor.Qt
 from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
 from core.outline_parser import OutlineParser
-from core.session_model import get_session_editor_state
+from core.session_model import (
+    get_restored_modified_state,
+    get_session_editor_state,
+    prepare_tabs_for_session_save,
+)
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from icons import icons
 from plugins.plugin_manager import PluginManager
@@ -940,7 +944,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for i, s in enumerate(sessions):
                 text = s.get('text')
                 file_path = s.get('file_path')
-                modified = bool(s.get('modified', False))
+                modified = get_restored_modified_state(
+                    file_path,
+                    s.get('modified', False),
+                )
                 is_active = s.get('active', False)
 
                 if file_path and not os.path.exists(file_path):
@@ -1079,8 +1086,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def saveSession(self, verbos=False):
         if not hasattr(self, '_presenter'):
             return
-        tabs = self._get_tabs_data(save_full_text=False)
+        tabs = prepare_tabs_for_session_save(
+            self._get_tabs_data(save_full_text=False)
+        )
         path = self._presenter.save_session(tabs)
+        self.tab.mark_untitled_tabs_session_saved()
         if verbos:
             self.out.showMessage('>>> Session saved: %s' % path.replace('\\', '/'))
 
