@@ -1167,6 +1167,8 @@ class tabWidgetClass(QTabWidget):
             cont.edit.set_start_font(font_d)
             cont.edit.applyHightLighter(theme_name)
 
+        cont.edit.setFocus()
+
         return cont.edit
 
     def getTabText(self, i):
@@ -1558,11 +1560,13 @@ class EditorTabContainer(QWidget):
         self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(lambda: self.lineNum.update())
         self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
+        self.edit.setFocus()
 
         editor_hbox.addWidget(self.lineNum)
         editor_hbox.addWidget(self.edit)
 
         vbox.addLayout(editor_hbox)
+
 
     def _on_cursor_changed_update_breadcrumbs(self):
         line_num = self.edit.textCursor().blockNumber() + 1
@@ -1598,6 +1602,7 @@ class EditorTabContainer(QWidget):
         if hasattr(parent, 'openRecentFile'):
             parent.openRecentFile(file_path)
 
+        self.edit.setFocus()
 
 if __name__ == '__main__':
     app = QApplication([])

@@ -285,7 +285,7 @@ class BreadcrumbBar(QScrollArea):
 
         self._raw_symbols = []
         self._file_path = None
-        self._fallback_name = "Untitled"
+        self._fallback_name = ""
         self._ext = ".py"
         self._current_line = 1
         self._theme_colors = {}
