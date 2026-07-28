@@ -753,12 +753,15 @@ class tabWidgetClass(QTabWidget):
         dlg = GitHistoryDialog(parent=self.p, file_path=file_path)
         dlg.exec_()
 
-    def _apply_parent_theme_font(self, widget):
-        font = getattr(self.p, 'theme_font', None)
+    def _apply_parent_theme_font(self, widget, fallback_font=None):
+        font = getattr(self.p, 'theme_font', None) or fallback_font
         if not font:
             return
         widget.setFont(font)
-        widget.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        size_css = f" font-size: {font.pointSize()}pt;" if font.pointSize() > 0 else ""
+        widget.setStyleSheet(f"* {{ font-family: '{font.family()}';{size_css} }}")
+        for child in widget.findChildren(QWidget):
+            child.setFont(font)
         if hasattr(widget, 'buttons'):
             for btn in widget.buttons():
                 btn.setFont(font)
@@ -783,14 +786,8 @@ class tabWidgetClass(QTabWidget):
                 btn.setFocus()
             else:
                 msg_box.setDefaultButton(QMessageBox.Yes)
-            font = getattr(self.p, 'theme_font', getattr(self.p, 'current_outline_font', self.font()))
-            if font:
-                msg_box.setFont(font)
-                family = font.family()
-                size = font.pointSize()
-                msg_box.setStyleSheet(f"QMessageBox, QLabel, QPushButton {{ font-family: '{family}'; font-size: {size}pt; }}")
-                for w in msg_box.findChildren(QWidget):
-                    w.setFont(font)
+            fallback_font = getattr(self.p, 'current_outline_font', self.font())
+            self._apply_parent_theme_font(msg_box, fallback_font)
             reply = msg_box.exec_()
 
         if reply == QMessageBox.Yes:
