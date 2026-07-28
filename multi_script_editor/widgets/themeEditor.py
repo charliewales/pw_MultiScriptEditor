@@ -298,29 +298,20 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.statusBarSize_spb.setValue(int(default_font_size * 0.9))
         self.statusBarSize_spb.blockSignals(False)
 
-        self.completerFont_cb.blockSignals(True)
-        self.completerFont_cb.setChecked(bool(colors.get('use_theme_font_on_completer', True)))
-        self.completerFont_cb.blockSignals(False)
-
-        self.menuFont_cb.blockSignals(True)
-        self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
-        self.menuFont_cb.blockSignals(False)
-
-        self.outlineFont_cb.blockSignals(True)
-        self.outlineFont_cb.setChecked(bool(colors.get('use_theme_font_on_outline', True)))
-        self.outlineFont_cb.blockSignals(False)
-
-        self.symbolsFont_cb.blockSignals(True)
-        self.symbolsFont_cb.setChecked(bool(colors.get('use_theme_font_on_symbols', True)))
-        self.symbolsFont_cb.blockSignals(False)
-
-        self.statusBarFont_cb.blockSignals(True)
-        self.statusBarFont_cb.setChecked(bool(colors.get('use_theme_font_on_status_bar', False)))
-        self.statusBarFont_cb.blockSignals(False)
-
-        self.tabFont_cb.blockSignals(True)
-        self.tabFont_cb.setChecked(bool(colors.get('use_theme_font_on_tab_label', True)))
-        self.tabFont_cb.blockSignals(False)
+        font_option_controls = (
+            (self.completerFont_cb, 'use_theme_font_on_completer', True),
+            (self.menuFont_cb, 'use_theme_font_on_menus', False),
+            (self.outlineFont_cb, 'use_theme_font_on_outline', True),
+            (self.symbolsFont_cb, 'use_theme_font_on_symbols', True),
+            (self.statusBarFont_cb, 'use_theme_font_on_status_bar', False),
+            (self.tabFont_cb, 'use_theme_font_on_tab_label', True),
+        )
+        for control, key, default in font_option_controls:
+            control.blockSignals(True)
+            try:
+                control.setChecked(bool(colors.get(key, default)))
+            finally:
+                control.blockSignals(False)
 
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
