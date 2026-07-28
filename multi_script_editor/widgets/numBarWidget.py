@@ -34,8 +34,11 @@ class lineNumberBarClass(QWidget):
         self.setMouseTracking(True)
 
     def enterEvent(self, event):
-        self.update()
+        self.request_repaint()
         QWidget.enterEvent(self, event)
+
+    def request_repaint(self, *args):
+        QWidget.update(self)
 
     def update(self, *args):
         '''
@@ -302,14 +305,14 @@ class lineNumberBarClass(QWidget):
             changed = True
 
         if changed:
-            self.update()
+            self.request_repaint()
         QWidget.mouseMoveEvent(self, event)
 
     def leaveEvent(self, event):
         self.hover_block_number = -1
         self.hover_in_bookmark_area = False
         self.hover_in_folding_area = False
-        self.update()
+        self.request_repaint()
         QWidget.leaveEvent(self, event)
 
     def mousePressEvent(self, event):
@@ -348,14 +351,14 @@ class lineNumberBarClass(QWidget):
                         if hasattr(self.edit, 'folding_regions') and block_num in self.edit.folding_regions:
                             recursive = bool(event.modifiers() & Qt.ShiftModifier)
                             self.edit.toggle_fold(block_num, recursive=recursive)
-                            self.update()
+                            self.request_repaint()
                             return
                     elif event.x() < 20:
                         # Toggle bookmark on left margin click
                         block_num = block.blockNumber()
                         if hasattr(self.edit, 'toggle_bookmark'):
                             self.edit.toggle_bookmark(block_num)
-                            self.update()
+                            self.request_repaint()
                             return
                     break
                 block = block.next()
@@ -365,6 +368,6 @@ class lineNumberBarClass(QWidget):
         # Update the line numbers for all events on the text edit and the viewport.
         # This is easier than connecting all necessary signals.
         if object in (self.edit, self.edit.viewport()):
-            self.update()
+            self.request_repaint()
             return False
         return QWidget.eventFilter(object, event)

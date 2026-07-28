@@ -1689,11 +1689,12 @@ class EditorTabContainer(QWidget):
             self.edit.document().clearUndoRedoStacks()
             self.edit.document().setModified(False)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
-        self.edit.verticalScrollBar().valueChanged.connect(lambda: self.lineNum.update())
-        self.edit.inputSignal.connect(lambda: self.lineNum.update())
+        self.edit.verticalScrollBar().valueChanged.connect(self.lineNum.request_repaint)
+        self.edit.inputSignal.connect(self.lineNum.request_repaint)
         self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
-        self.edit.cursorPositionChanged.connect(lambda: self.lineNum.update())
+        self.edit.cursorPositionChanged.connect(self.lineNum.request_repaint)
         self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
+        self.lineNum.update()
         self._initial_horizontal_scroll_pending = True
 
         editor_hbox.addWidget(self.lineNum)
