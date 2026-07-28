@@ -914,7 +914,6 @@ class tabWidgetClass(QTabWidget):
             try:
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                widget.file_path = None
                 if hasattr(widget, 'edit') and hasattr(widget.edit, 'document'):
                     widget.edit.document().setModified(False)
                 self.closeTab(index)
