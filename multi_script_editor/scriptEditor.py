@@ -469,12 +469,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             edit = current_widget.edit
             if hasattr(edit, 'needs_loading_scroll_v'):
                 scroll_v = edit.needs_loading_scroll_v
-                if hasattr(edit, 'needs_loading_scroll_v'):
-                    delattr(edit, 'needs_loading_scroll_v')
-
+                delattr(edit, 'needs_loading_scroll_v')
                 edit.verticalScrollBar().setValue(scroll_v)
-                QTimer.singleShot(50, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
-                QTimer.singleShot(150, lambda e=edit, val=scroll_v: e.verticalScrollBar().setValue(val))
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
