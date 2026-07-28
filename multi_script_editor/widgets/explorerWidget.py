@@ -731,13 +731,16 @@ class ExplorerWidget(QWidget):
             for child in dlg.findChildren(QWidget):
                 child.setFont(font)
 
+    def _exec_dialog(self, dlg):
+        return dlg.exec_() if hasattr(dlg, 'exec_') else dlg.exec()
+
     def _get_input_text(self, title, label, text=""):
         dlg = QInputDialog(self)
         dlg.setWindowTitle(title)
         dlg.setLabelText(label)
         dlg.setTextValue(text)
         self._apply_dialog_font(dlg)
-        ok = (dlg.exec_() if hasattr(dlg, 'exec_') else dlg.exec()) == QInputDialog.Accepted
+        ok = self._exec_dialog(dlg) == QInputDialog.Accepted
         return dlg.textValue(), ok
 
     def _show_question_dialog(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, default_button=QMessageBox.No):
@@ -748,7 +751,7 @@ class ExplorerWidget(QWidget):
         msg_box.setStandardButtons(buttons)
         msg_box.setDefaultButton(default_button)
         self._apply_dialog_font(msg_box)
-        return msg_box.exec_() if hasattr(msg_box, 'exec_') else msg_box.exec()
+        return self._exec_dialog(msg_box)
 
     def _show_warning_dialog(self, title, text):
         msg_box = QMessageBox(self)
@@ -756,7 +759,7 @@ class ExplorerWidget(QWidget):
         msg_box.setText(text)
         msg_box.setIcon(QMessageBox.Warning)
         self._apply_dialog_font(msg_box)
-        return msg_box.exec_() if hasattr(msg_box, 'exec_') else msg_box.exec()
+        return self._exec_dialog(msg_box)
 
     def _create_new_file(self, target_dir):
         filename, ok = self._get_input_text("New File", "Enter file name:")
