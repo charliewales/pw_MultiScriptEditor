@@ -178,6 +178,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def save_theme_settings(self, theme_settings):
         self.t_model.write_settings(theme_settings)
 
+    def _apply_parent_theme_font(self, widget):
+        parent = self.parent()
+        font = getattr(parent, 'theme_font', None) if parent else None
+        if not font:
+            return
+        widget.setFont(font)
+        widget.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        if hasattr(widget, 'buttons'):
+            for btn in widget.buttons():
+                btn.setFont(font)
+
     def fillUI(self, restore=None):
         self.themeList_cbb.blockSignals(True)
         try:
@@ -619,9 +630,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         dlg.setWindowTitle('Theme name')
         dlg.setLabelText('Enter Theme name')
         dlg.setTextValue(text)
-        if hasattr(self.parent(), 'theme_font'):
-            dlg.setFont(self.parent().theme_font)
-            dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+        self._apply_parent_theme_font(dlg)
         ok = dlg.exec_() == QInputDialog.Accepted
         name = dlg.textValue().strip() if ok else ""
         if name:
@@ -704,11 +713,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Error")
                 msg_box.setText("Could not export theme:\n" + str(e))
-                if hasattr(self.parent(), 'theme_font'):
-                    msg_box.setFont(self.parent().theme_font)
-                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                    for btn in msg_box.buttons():
-                        btn.setFont(self.parent().theme_font)
+                self._apply_parent_theme_font(msg_box)
                 msg_box.exec_()
 
     def importTheme(self):
@@ -726,9 +731,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 dlg.setWindowTitle('Theme name')
                 dlg.setLabelText('Enter Theme name')
                 dlg.setTextValue(name)
-                if hasattr(self.parent(), 'theme_font'):
-                    dlg.setFont(self.parent().theme_font)
-                    dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                self._apply_parent_theme_font(dlg)
                 ok = dlg.exec_() == QInputDialog.Accepted
                 name_input = dlg.textValue().strip() if ok else ""
                 if name_input:
@@ -763,11 +766,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Error")
                 msg_box.setText("Could not import theme:\n" + str(e))
-                if hasattr(self.parent(), 'theme_font'):
-                    msg_box.setFont(self.parent().theme_font)
-                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                    for btn in msg_box.buttons():
-                        btn.setFont(self.parent().theme_font)
+                self._apply_parent_theme_font(msg_box)
                 msg_box.exec_()
 
     def updateUI(self):
@@ -825,11 +824,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
-            if hasattr(self.parent(), 'theme_font'):
-                msg_box.setFont(self.parent().theme_font)
-                msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                for btn in msg_box.buttons():
-                    btn.setFont(self.parent().theme_font)
+            self._apply_parent_theme_font(msg_box)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
             msg_box.addButton("Cancel", QMessageBox.RejectRole)
@@ -861,11 +856,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
         msg_box.setWindowTitle('?')
-        if hasattr(self.parent(), 'theme_font'):
-            msg_box.setFont(self.parent().theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.parent().theme_font)
+        self._apply_parent_theme_font(msg_box)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         msg_box.addButton("No", QMessageBox.NoRole)
         msg_box.exec_()
