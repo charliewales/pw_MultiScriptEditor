@@ -47,6 +47,7 @@ FILE_TYPE_COLORS = {
 }
 
 SUPPORTED_EXTENSIONS_EXTRA = set()
+_SUPPORTED_EXTENSIONS_VERSION = 0
 
 
 def register_supported_extension(ext):
@@ -57,7 +58,13 @@ def register_supported_extension(ext):
         return
     if not ext.startswith("."):
         ext = "." + ext
-    SUPPORTED_EXTENSIONS_EXTRA.add(ext.lower())
+    ext = ext.lower()
+    if ext in SUPPORTED_EXTENSIONS_EXTRA:
+        return
+
+    SUPPORTED_EXTENSIONS_EXTRA.add(ext)
+    global _SUPPORTED_EXTENSIONS_VERSION
+    _SUPPORTED_EXTENSIONS_VERSION += 1
 
 
 def get_supported_extensions():
@@ -101,6 +108,14 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
         self.setFilterCaseSensitivity(Qt.CaseInsensitive)
         self._filter_text = ""
         self._filter_supported_only = True
+        self._supported_extensions = set()
+        self._supported_extensions_version = -1
+
+    def _get_supported_extensions(self):
+        if self._supported_extensions_version != _SUPPORTED_EXTENSIONS_VERSION:
+            self._supported_extensions = get_supported_extensions()
+            self._supported_extensions_version = _SUPPORTED_EXTENSIONS_VERSION
+        return self._supported_extensions
 
     def setFilterFixedString(self, pattern):
         self._filter_text = pattern.strip().lower() if pattern else ""
@@ -126,7 +141,7 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
             # If _filter_supported_only is True (Checked button), filter to supported extensions only
             if self._filter_supported_only:
                 ext = os.path.splitext(file_name)[1].lower()
-                if ext not in get_supported_extensions():
+                if ext not in self._get_supported_extensions():
                     return False
 
             # Check if name text filter matches
