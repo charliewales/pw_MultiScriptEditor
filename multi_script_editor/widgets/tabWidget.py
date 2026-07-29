@@ -1250,9 +1250,11 @@ class tabWidgetClass(QTabWidget):
 
         new_index = self.indexOf(cont)
 
+        presenter = getattr(self.p, '_presenter', None)
+        settings = presenter.settings_model.read_settings() if presenter else {}
         colors = {}
-        if hasattr(self.p, '_presenter'):
-            theme_name = self.p._presenter.settings_model.read_settings().get('theme', 'Multi Script Editor')
+        if presenter:
+            theme_name = settings.get('theme', 'Multi Script Editor')
             colors = design.getColors(theme_name)
 
         btn = TabCloseButton(colors=colors)
@@ -1291,23 +1293,12 @@ class tabWidgetClass(QTabWidget):
             self.setCurrentIndex(new_index)
 
         # Apply settings from presenter instead of trying to find actions in MainWindow
-        if hasattr(self.p, '_presenter'):
-            settings = self.p._presenter.settings_model.read_settings()
+        if presenter:
             show_whitespace = settings.get('show_whitespace', False)
             wrap = settings.get('wrap', False)
 
-            # Resolve font: theme font first, then general settings font
-            theme_name = settings.get('theme', 'Multi Script Editor')
-
-            colors = design.getColors(theme_name)
-            font_d = colors.get('font')
-            if not font_d:
-                font_d = settings.get('font', {})
-
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
-            cont.edit.set_start_font(font_d)
-            cont.edit.applyHightLighter(theme_name)
 
         cont.edit.setFocus()
 
@@ -1723,7 +1714,12 @@ class EditorTabContainer(QWidget):
         editor_hbox.setContentsMargins(0, 2, 0, 0)
 
         # Input widget
-        self.edit = inputWidget.inputClass(parent, desk)
+        file_extension = os.path.splitext(file_path)[1] if file_path else None
+        self.edit = inputWidget.inputClass(
+            parent,
+            desk,
+            file_extension=file_extension,
+        )
         if text:
             self.edit.addText(text)
             self.edit.document().clearUndoRedoStacks()

@@ -65,7 +65,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         (('.ini',), extraSyntaxes.IniHighlighterClass, ';', ''),
     )
 
-    def __init__(self, parent, desk=None):
+    def __init__(self, parent, desk=None, file_extension=None):
 
         # https://github.com/davidhalter/jedi
         # http://jedi.jedidjah.ch/en/latest/
@@ -99,9 +99,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._last_highlight_cursor_state = None
         self._last_highlight_multi_selections = None
         self.data = SettingsModel().read_settings()
-        self.applyHightLighter(self.data.get('theme'))
+        self.applyHightLighter(
+            self.data.get('theme'),
+            ext=file_extension,
+        )
         self.set_start_font()
-        self.changeFontSize(True)
         self.highlight_current_line()
 
         # Performance optimization: Use a debounced timer for jedi autocompletion parsing to prevent UI lag on fast typing
