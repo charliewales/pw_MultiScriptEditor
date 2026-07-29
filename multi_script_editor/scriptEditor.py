@@ -232,9 +232,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.autosave_timer.timeout.connect(self.autoSave)
         self.autosave_timer.start(60000)
 
-        # Tab current change triggers outline refresh
-        self.tab.currentChanged.connect(self.updateOutline)
-
         if hasattr(self, 'explorer_widget'):
             self.explorer_widget.options_changed.connect(self.saveSettings)
         if hasattr(self, 'outline_widget'):
