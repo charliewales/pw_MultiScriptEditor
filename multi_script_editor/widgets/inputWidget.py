@@ -3,6 +3,7 @@ import re
 from bisect import bisect_right
 
 import managers
+from core.autocomplete_provider import PYTHON_COMPLETION_EXTENSIONS
 from core.base_text_widget import BaseTextWidgetMixin, get_font_families
 from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
@@ -632,7 +633,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             )
 
             if should_complete:
-                if hasattr(self.p, '_presenter') and self._current_file_extension() != '.py':
+                if (
+                    hasattr(self.p, '_presenter')
+                    and self._current_file_extension()
+                    not in PYTHON_COMPLETION_EXTENSIONS
+                ):
                     self.completer.updateCompleteList([])
                     self._lint_timer.start(500)
                     return
