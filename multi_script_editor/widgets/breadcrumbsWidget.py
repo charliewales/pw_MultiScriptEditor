@@ -1,4 +1,5 @@
 import os
+from bisect import bisect_right
 
 from vendor.Qt.QtCore import QFileInfo, QSize, Qt, Signal
 from vendor.Qt.QtWidgets import (
@@ -288,6 +289,7 @@ class BreadcrumbBar(QScrollArea):
         self._theme_colors = {}
         self._font = None
         self._active_chain_key = ()
+        self._symbol_line_indexes = {}
 
         self.rebuild_breadcrumbs()
 
@@ -370,6 +372,7 @@ class BreadcrumbBar(QScrollArea):
 
     def set_symbols(self, symbols, file_path=None, fallback_name="Untitled", ext=".py"):
         self._raw_symbols = symbols or []
+        self._rebuild_symbol_line_indexes()
         self._file_path = file_path
         self._fallback_name = fallback_name or "Untitled"
         self._ext = ext
@@ -417,30 +420,60 @@ class BreadcrumbBar(QScrollArea):
             self.apply_theme(theme_colors, font, rebuild=False)
 
         self._raw_symbols = symbols
+        self._rebuild_symbol_line_indexes()
         self._file_path = file_path
         self._fallback_name = fallback_name
         self._ext = ext
         self._current_line = line_num
         self.rebuild_breadcrumbs()
 
+    def _rebuild_symbol_line_indexes(self):
+        self._symbol_line_indexes = {}
+        self._index_symbol_lines(self._raw_symbols)
+
+    def _index_symbol_lines(self, symbols):
+        if not symbols:
+            return
+
+        entries = []
+        for position, symbol in enumerate(symbols):
+            entries.append(
+                (
+                    symbol.get('line', 1),
+                    position,
+                    symbol,
+                )
+            )
+            self._index_symbol_lines(symbol.get('children', []))
+
+        entries.sort(key=lambda item: (item[0], item[1]))
+        self._symbol_line_indexes[id(symbols)] = (
+            symbols,
+            tuple(item[0] for item in entries),
+            tuple(item[2] for item in entries),
+        )
+
+    def _indexed_symbols(self, symbols):
+        indexed = self._symbol_line_indexes.get(id(symbols))
+        if indexed is None or indexed[0] is not symbols:
+            self._index_symbol_lines(symbols)
+            indexed = self._symbol_line_indexes[id(symbols)]
+        return indexed[1], indexed[2]
+
     def _find_active_chain(self, symbols, line_num):
         chain = []
         current_symbols = symbols
 
         while current_symbols:
-            matched = None
-            matched_line = -1
-            for sym in current_symbols:
-                symbol_line = sym.get('line', 1)
-                if symbol_line <= line_num and symbol_line >= matched_line:
-                    matched = sym
-                    matched_line = symbol_line
-
-            if matched:
-                chain.append((matched, current_symbols))
-                current_symbols = matched.get('children', [])
-            else:
+            lines, ordered_symbols = self._indexed_symbols(
+                current_symbols
+            )
+            match_index = bisect_right(lines, line_num) - 1
+            if match_index < 0:
                 break
+            matched = ordered_symbols[match_index]
+            chain.append((matched, current_symbols))
+            current_symbols = matched.get('children', [])
 
         return chain
 
