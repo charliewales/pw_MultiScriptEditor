@@ -1,3 +1,5 @@
+from bisect import bisect_right
+
 from icons import icons
 from vendor.Qt.QtCore import QSize, Qt, Signal
 from vendor.Qt.QtGui import QIcon, QKeySequence
@@ -32,6 +34,9 @@ class OutlineWidget(QWidget):
         self._ext = '.py'
         self._follow_cursor = False
         self._sort_alphabetical = False
+        self._symbol_lines = ()
+        self._symbol_items = ()
+        self._highlighted_item = None
 
         self._setup_ui()
 
@@ -160,8 +165,13 @@ class OutlineWidget(QWidget):
             _save_expanded(self.tree_widget.topLevelItem(i))
 
         self.tree_widget.clear()
+        self._symbol_lines = ()
+        self._symbol_items = ()
+        self._highlighted_item = None
         if not self._raw_symbols:
             return
+
+        first_item_by_line = {}
 
         def _add_nodes(parent_item, sym_list):
             items_to_process = list(sym_list)
@@ -175,12 +185,23 @@ class OutlineWidget(QWidget):
                 else:
                     self.tree_widget.addTopLevelItem(tree_item)
 
+                item_line = tree_item.data(0, Qt.UserRole)
+                if item_line and item_line not in first_item_by_line:
+                    first_item_by_line[item_line] = tree_item
+
                 children = sym.get('children', [])
                 if children:
                     _add_nodes(tree_item, children)
 
         self.tree_widget.setUpdatesEnabled(False)
         _add_nodes(None, self._raw_symbols)
+        indexed_items = sorted(first_item_by_line.items())
+        self._symbol_lines = tuple(
+            line for line, _item in indexed_items
+        )
+        self._symbol_items = tuple(
+            item for _line, item in indexed_items
+        )
 
         if expanded_keys:
             def _restore_expanded(item):
@@ -265,32 +286,25 @@ class OutlineWidget(QWidget):
         """
         Highlights the symbol in the tree corresponding to the active cursor line number.
         """
-        if not self._follow_cursor or self.tree_widget.topLevelItemCount() == 0:
+        if not self._follow_cursor or not self._symbol_lines:
             return
 
-        best_item = None
-        best_line = -1
+        item_index = bisect_right(self._symbol_lines, line_num) - 1
+        if item_index < 0:
+            return
+        best_item = self._symbol_items[item_index]
+        if (
+            best_item is self._highlighted_item
+            and self.tree_widget.currentItem() is best_item
+        ):
+            return
 
-        def _find_best_match(parent_item=None):
-            nonlocal best_item, best_line
-            count = parent_item.childCount() if parent_item else self.tree_widget.topLevelItemCount()
-            for i in range(count):
-                item = parent_item.child(i) if parent_item else self.tree_widget.topLevelItem(i)
-                item_line = item.data(0, Qt.UserRole)
-                if item_line and item_line <= line_num and item_line > best_line:
-                    best_line = item_line
-                    best_item = item
-                if item.childCount() > 0:
-                    _find_best_match(item)
-
-        _find_best_match(None)
-
-        if best_item:
-            self.tree_widget.blockSignals(True)
-            parent = best_item.parent()
-            while parent:
-                parent.setExpanded(True)
-                parent = parent.parent()
-            self.tree_widget.setCurrentItem(best_item)
-            self.tree_widget.scrollToItem(best_item)
-            self.tree_widget.blockSignals(False)
+        self.tree_widget.blockSignals(True)
+        parent = best_item.parent()
+        while parent:
+            parent.setExpanded(True)
+            parent = parent.parent()
+        self.tree_widget.setCurrentItem(best_item)
+        self.tree_widget.scrollToItem(best_item)
+        self.tree_widget.blockSignals(False)
+        self._highlighted_item = best_item
