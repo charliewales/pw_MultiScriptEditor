@@ -1300,7 +1300,8 @@ class tabWidgetClass(QTabWidget):
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
 
-        cont.edit.setFocus()
+        if make_current:
+            cont.edit.setFocus()
 
         return cont.edit
 
