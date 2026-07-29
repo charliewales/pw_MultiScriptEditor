@@ -77,6 +77,163 @@ class GitManager(object):
             return stdout.strip()
         return ''
 
+    @staticmethod
+    def _empty_file_status():
+        return {
+            'in_repo': False,
+            'repo_root': None,
+            'branch': '',
+            'status_code': 'CLEAN',
+            'status_text': 'Clean',
+            'is_modified': False,
+            'is_staged': False,
+            'is_untracked': False,
+            'relative_path': '',
+        }
+
+    @staticmethod
+    def _apply_porcelain_status(result, x, y):
+        if x == '?' and y == '?':
+            result['status_code'] = 'U'
+            result['status_text'] = 'Untracked'
+            result['is_untracked'] = True
+            return
+
+        if x in ('M', 'A', 'R', 'C', 'D'):
+            result['is_staged'] = True
+        if y in ('M', 'D'):
+            result['is_modified'] = True
+
+        if result['is_staged'] and result['is_modified']:
+            result['status_code'] = 'M+'
+            result['status_text'] = 'Staged & Modified'
+        elif result['is_staged']:
+            if x == 'A':
+                result['status_code'] = 'A'
+                result['status_text'] = 'Added (Staged)'
+            else:
+                result['status_code'] = 'S'
+                result['status_text'] = 'Staged'
+        elif result['is_modified']:
+            result['status_code'] = 'M'
+            result['status_text'] = 'Modified'
+        elif x == 'D' or y == 'D':
+            result['status_code'] = 'D'
+            result['status_text'] = 'Deleted'
+
+    @staticmethod
+    def _path_is_within(path, root):
+        try:
+            common_path = os.path.commonpath((path, root))
+        except ValueError:
+            return False
+        return os.path.normcase(common_path) == os.path.normcase(root)
+
+    @classmethod
+    def _known_repo_root_for_path(cls, path, known_roots):
+        for root in sorted(known_roots, key=len, reverse=True):
+            if not cls._path_is_within(path, root):
+                continue
+
+            folder = os.path.dirname(path)
+            while os.path.normcase(folder) != os.path.normcase(root):
+                if os.path.exists(os.path.join(folder, '.git')):
+                    return None
+                parent = os.path.dirname(folder)
+                if parent == folder:
+                    return None
+                folder = parent
+            return root
+        return None
+
+    @classmethod
+    def get_files_status(cls, file_paths):
+        """Return Git status data for multiple files, grouped by repository."""
+        results = {}
+        repo_groups = {}
+        known_roots = []
+
+        for file_path in file_paths:
+            if not file_path:
+                continue
+
+            abs_path = os.path.abspath(file_path)
+            cache_path = os.path.normcase(abs_path)
+            if cache_path in results:
+                continue
+            result = cls._empty_file_status()
+            results[cache_path] = result
+            if not os.path.exists(abs_path):
+                continue
+
+            repo_root = cls._known_repo_root_for_path(
+                abs_path,
+                known_roots,
+            )
+            if repo_root is None:
+                repo_root = cls.get_repo_root(abs_path)
+                if not repo_root:
+                    continue
+                known_roots.append(repo_root)
+
+            try:
+                rel_path = os.path.relpath(abs_path, repo_root)
+            except ValueError:
+                rel_path = os.path.basename(abs_path)
+
+            result['in_repo'] = True
+            result['repo_root'] = repo_root
+            result['relative_path'] = rel_path
+            repo_groups.setdefault(repo_root, []).append(
+                (cache_path, rel_path)
+            )
+
+        for repo_root, entries in repo_groups.items():
+            code, branch, _ = cls.run_git_cmd(
+                ['rev-parse', '--abbrev-ref', 'HEAD'],
+                cwd=repo_root,
+            )
+            branch = branch.strip() if code == 0 else ''
+            for cache_path, _ in entries:
+                results[cache_path]['branch'] = branch
+
+            rel_paths = [rel_path for _, rel_path in entries]
+            code, stdout, _ = cls.run_git_cmd(
+                ['status', '--porcelain=v1', '-z', '--'] + rel_paths,
+                cwd=repo_root,
+            )
+            if code != 0 or not stdout:
+                continue
+
+            statuses = {}
+            records = stdout.split('\0')
+            index = 0
+            while index < len(records):
+                record = records[index]
+                index += 1
+                if len(record) < 4:
+                    continue
+                x, y = record[0], record[1]
+                rel_path = record[3:]
+                statuses[os.path.normcase(os.path.normpath(rel_path))] = (
+                    x,
+                    y,
+                )
+                if x in ('R', 'C') and index < len(records):
+                    index += 1
+
+            for cache_path, rel_path in entries:
+                status = statuses.get(
+                    os.path.normcase(os.path.normpath(rel_path))
+                )
+                if status:
+                    cls._apply_porcelain_status(
+                        results[cache_path],
+                        *status,
+                    )
+
+        return results
+
     @classmethod
     def get_file_status(cls, file_path):
         """
@@ -93,72 +250,14 @@ class GitManager(object):
             'relative_path': str
         }
         """
-        result = {
-            'in_repo': False,
-            'repo_root': None,
-            'branch': '',
-            'status_code': 'CLEAN',
-            'status_text': 'Clean',
-            'is_modified': False,
-            'is_staged': False,
-            'is_untracked': False,
-            'relative_path': ''
-        }
-
         if not file_path:
-            return result
+            return cls._empty_file_status()
 
-        abs_path = os.path.abspath(file_path)
-        repo_root = cls.get_repo_root(abs_path)
-        if not repo_root:
-            return result
-
-        result['in_repo'] = True
-        result['repo_root'] = repo_root
-        result['branch'] = cls.get_branch(abs_path)
-
-        try:
-            rel_path = os.path.relpath(abs_path, repo_root)
-            result['relative_path'] = rel_path
-        except Exception:
-            rel_path = os.path.basename(abs_path)
-            result['relative_path'] = rel_path
-
-        # Run git status --porcelain for specific file
-        code, stdout, _ = cls.run_git_cmd(['status', '--porcelain', rel_path], cwd=repo_root)
-        if code == 0 and stdout:
-            # Porcelain format: XY FILENAME
-            # X = index (staged) status, Y = work tree (unstaged) status
-            line = stdout.splitlines()[0]
-            if len(line) >= 2:
-                x, y = line[0], line[1]
-                if x == '?' and y == '?':
-                    result['status_code'] = 'U'
-                    result['status_text'] = 'Untracked'
-                    result['is_untracked'] = True
-                else:
-                    if x in ('M', 'A', 'R', 'C', 'D'):
-                        result['is_staged'] = True
-                    if y in ('M', 'D'):
-                        result['is_modified'] = True
-
-                    if result['is_staged'] and result['is_modified']:
-                        result['status_code'] = 'M+'
-                        result['status_text'] = 'Staged & Modified'
-                    elif result['is_staged']:
-                        if x == 'A':
-                            result['status_code'] = 'A'
-                            result['status_text'] = 'Added (Staged)'
-                        else:
-                            result['status_code'] = 'S'
-                            result['status_text'] = 'Staged'
-                    elif result['is_modified']:
-                        result['status_code'] = 'M'
-                        result['status_text'] = 'Modified'
-                    elif x == 'D' or y == 'D':
-                        result['status_code'] = 'D'
-                        result['status_text'] = 'Deleted'
-        return result
+        cache_path = os.path.normcase(os.path.abspath(file_path))
+        return cls.get_files_status([file_path]).get(
+            cache_path,
+            cls._empty_file_status(),
+        )
 
     @classmethod
     def stage_file(cls, file_path):

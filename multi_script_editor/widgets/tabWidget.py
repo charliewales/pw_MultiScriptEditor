@@ -835,7 +835,7 @@ class tabWidgetClass(QTabWidget):
                 if hasattr(self.p, 'updateStatusBarInfo'):
                     self.p.updateStatusBarInfo()
 
-    def update_tab_git_status(self, index):
+    def update_tab_git_status(self, index, status_info=None):
         if index < 0 or index >= self.count():
             return
         widget = self.widget(index)
@@ -859,7 +859,8 @@ class tabWidgetClass(QTabWidget):
                 btn.set_git_status_code("")
             return
 
-        status_info = GitManager.get_file_status(file_path)
+        if status_info is None:
+            status_info = GitManager.get_file_status(file_path)
         widget._git_status_info = status_info
         widget._git_status_file_path = cache_path
         git_code = ""
@@ -889,8 +890,29 @@ class tabWidgetClass(QTabWidget):
         return self.update_tab_git_status(index)
 
     def update_all_tabs_git_status(self):
-        for i in range(self.count()):
-            self.update_tab_git_status(i)
+        if not getattr(self.p, '_version_control_enabled', False):
+            for index in range(self.count()):
+                self.update_tab_git_status(index)
+            return
+
+        tabs = []
+        for index in range(self.count()):
+            widget = self.widget(index)
+            file_path = getattr(widget, 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                tabs.append((index, file_path))
+            else:
+                self.update_tab_git_status(index)
+
+        statuses = GitManager.get_files_status(
+            [file_path for _, file_path in tabs]
+        )
+        for index, file_path in tabs:
+            cache_path = os.path.normcase(os.path.abspath(file_path))
+            self.update_tab_git_status(
+                index,
+                statuses.get(cache_path),
+            )
 
     def build_compare_menu(self, compare_menu, index):
         if index < 0 or index >= self.count():
