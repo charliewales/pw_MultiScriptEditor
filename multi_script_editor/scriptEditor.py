@@ -388,7 +388,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.execAll_act,
                 self.execLine_act,
                 self.execSel_act,
-                self.clearHistory_act,
                 self.clear_exec_act,
             ):
                 if hasattr(self, act.objectName()):
