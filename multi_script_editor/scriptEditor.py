@@ -733,8 +733,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.applyHightLighter(name)
             w.edit.completer.setStyleSheet(qss)
             w.edit.setStyleSheet(qss)
-            if hasattr(w, 'breadcrumbs'):
-                w.breadcrumbs.apply_theme(colors, getattr(self, 'current_outline_font', None))
 
         font_data = colors.get('font')
         if not font_data:
@@ -745,7 +743,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not font_data:
             font_data = {'pointSize': 10}
 
-        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         if zoom_delta:
             font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
 
@@ -766,19 +763,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             self.set_font_act.setEnabled(True)
             self.set_font_act.setText("Choose Font...")
-
-        font_data = colors.get('font')
-        if not font_data:
-            font_data = self._current_settings.get('font', {}).copy()
-        else:
-            font_data = font_data.copy()
-
-        if not font_data:
-            font_data = {'pointSize': 10}
-
-        zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
-        if zoom_delta:
-            font_data['pointSize'] = max(1, font_data.get('pointSize', 10) + zoom_delta)
 
         if font_data:
             self.tab.set_start_font(font_data)
