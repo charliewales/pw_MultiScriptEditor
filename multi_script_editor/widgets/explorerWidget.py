@@ -455,8 +455,7 @@ class ExplorerWidget(QWidget):
             if proxy_index.isValid():
                 self.tree_view.setRootIndex(proxy_index)
             if getattr(self, '_pending_select_file', None):
-                self._select_and_highlight_file(self._pending_select_file)
-                self._pending_select_file = None
+                self._retry_pending_selection(self._pending_select_file)
 
     def get_current_root(self):
         return self._current_root
@@ -493,16 +492,33 @@ class ExplorerWidget(QWidget):
             return
         filepath = os.path.abspath(filepath)
         dirpath = os.path.dirname(filepath) if os.path.isfile(filepath) else filepath
-        self._pending_select_file = filepath if os.path.isfile(filepath) else None
+        self._pending_select_file = filepath
 
-        self.set_root_path(dirpath)
-        self._select_and_highlight_file(filepath)
-        QTimer.singleShot(50, lambda: self._select_and_highlight_file(filepath))
-        QTimer.singleShot(200, lambda: self._select_and_highlight_file(filepath))
+        if os.path.normcase(dirpath) != os.path.normcase(self._current_root):
+            self.set_root_path(dirpath)
+
+        if self._select_and_highlight_file(filepath):
+            self._pending_select_file = None
+            return
+
+        QTimer.singleShot(
+            50,
+            lambda path=filepath: self._retry_pending_selection(path),
+        )
+        QTimer.singleShot(
+            200,
+            lambda path=filepath: self._retry_pending_selection(path),
+        )
+
+    def _retry_pending_selection(self, filepath):
+        if self._pending_select_file != filepath:
+            return
+        if self._select_and_highlight_file(filepath):
+            self._pending_select_file = None
 
     def _select_and_highlight_file(self, filepath):
         if not filepath or not os.path.exists(filepath):
-            return
+            return False
         source_index = self.fs_model.index(filepath)
         if source_index.isValid():
             proxy_index = self.proxy_model.mapFromSource(source_index)
@@ -514,6 +530,8 @@ class ExplorerWidget(QWidget):
                         QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows
                     )
                 self.tree_view.scrollTo(proxy_index)
+                return True
+        return False
 
     def navigate_up(self):
         parent_dir = os.path.dirname(self._current_root)
