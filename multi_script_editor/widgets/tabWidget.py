@@ -215,6 +215,8 @@ class tabWidgetClass(QTabWidget):
         self.lastSearch = [0, None]
         self._ctrl_pressed = False
         self._mru_tabs = []
+        self._selected_close_button = None
+        self._current_editor = None
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
@@ -381,17 +383,26 @@ class tabWidgetClass(QTabWidget):
             self.p.toggleExplorer(state)
 
     def onTabChanged(self, index):
-        self.hideAllCompleters()
+        container = self.widget(index) if index >= 0 else None
+        edit = getattr(container, 'edit', None)
+        previous_editor = self._current_editor
+        if previous_editor is not None and previous_editor is not edit:
+            try:
+                completer = getattr(previous_editor, 'completer', None)
+                if completer is not None:
+                    completer.hideMe()
+            except RuntimeError:
+                pass
+        self._current_editor = edit
+
         if index >= 0:
             self.update_tab_git_status(index)
-            container = self.widget(index)
             if hasattr(self, '_mru_tabs'):
                 if container in self._mru_tabs:
                     self._mru_tabs.remove(container)
                 self._mru_tabs.insert(0, container)
 
-            if hasattr(container, 'edit'):
-                edit = container.edit
+            if edit is not None:
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
                     text = ""
                     file_path = getattr(edit, 'needs_loading_file', None)
@@ -1245,10 +1256,13 @@ class tabWidgetClass(QTabWidget):
             colors = design.getColors(theme_name)
 
         btn = TabCloseButton(colors=colors)
-        btn.set_selected(new_index == self.currentIndex())
+        is_selected = new_index == self.currentIndex()
+        btn.set_selected(is_selected)
         btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
         self.tabBar().setTabButton(new_index, QTabBar.RightSide, btn)
         cont._custom_close_btn = btn
+        if is_selected:
+            self._selected_close_button = btn
 
         if file_path:
             self.setTabToolTip(new_index, os.path.normpath(file_path))
@@ -1394,19 +1408,33 @@ class tabWidgetClass(QTabWidget):
             return
         super(tabWidgetClass, self).dropEvent(event)
 
-############################## editor commands
+    ############################## editor commands
     def update_custom_close_buttons(self, index=None):
-        for i in range(self.count()):
-            cont = self.widget(i)
-            if hasattr(cont, '_custom_close_btn'):
-                btn = cont._custom_close_btn
-                is_sel = (i == self.currentIndex())
-                if hasattr(btn, 'set_selected'):
-                    btn.set_selected(is_sel)
-                else:
-                    btn.setProperty('isSelected', is_sel)
-                    btn.style().unpolish(btn)
-                    btn.style().polish(btn)
+        index = self.currentIndex() if index is None else index
+        container = self.widget(index) if index >= 0 else None
+        current_button = getattr(container, '_custom_close_btn', None)
+        previous_button = self._selected_close_button
+
+        if previous_button is current_button:
+            return
+
+        self._set_close_button_selected(previous_button, False)
+        self._set_close_button_selected(current_button, True)
+        self._selected_close_button = current_button
+
+    @staticmethod
+    def _set_close_button_selected(button, state):
+        if button is None:
+            return
+        try:
+            if hasattr(button, 'set_selected'):
+                button.set_selected(state)
+            else:
+                button.setProperty('isSelected', state)
+                button.style().unpolish(button)
+                button.style().polish(button)
+        except RuntimeError:
+            pass
 
     def mark_tab_dirty(self, container, state):
         if not hasattr(container, '_custom_close_btn'):
