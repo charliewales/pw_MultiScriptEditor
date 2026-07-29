@@ -73,7 +73,12 @@ class SnippetWidget(SearchPopupWidget):
                     msg_box.setText(f"A snippet named '{name}' already exists. Overwrite?")
                     msg_box.setIcon(QMessageBox.Question)
                     msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-                    msg_box.setDefaultButton(QMessageBox.No)
+                    no_button = msg_box.button(QMessageBox.No)
+                    if no_button:
+                        msg_box.setDefaultButton(no_button)
+                        no_button.setFocus()
+                    else:
+                        msg_box.setDefaultButton(QMessageBox.No)
                     self._apply_dialog_font(msg_box)
                     reply = msg_box.exec_()
                     if reply == QMessageBox.No:

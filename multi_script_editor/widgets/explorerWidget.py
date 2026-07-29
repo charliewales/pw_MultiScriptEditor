@@ -776,13 +776,18 @@ class ExplorerWidget(QWidget):
         ok = self._exec_dialog(dlg) == QInputDialog.Accepted
         return dlg.textValue(), ok
 
-    def _show_question_dialog(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, default_button=QMessageBox.No):
+    def _show_question_dialog(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, default_button=QMessageBox.Yes):
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle(title)
         msg_box.setText(text)
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setStandardButtons(buttons)
-        msg_box.setDefaultButton(default_button)
+        button = msg_box.button(default_button)
+        if button:
+            msg_box.setDefaultButton(button)
+            button.setFocus()
+        else:
+            msg_box.setDefaultButton(default_button)
         self._apply_dialog_font(msg_box)
         return self._exec_dialog(msg_box)
 

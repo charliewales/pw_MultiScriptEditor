@@ -561,7 +561,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             theme_settings = self.get_theme_settings()
             if 'colors' in theme_settings:
                 if name in theme_settings['colors']:
-                    if not self.yes_no_question('Replace existing?'):
+                    if not self.yes_no_question(
+                        'Replace existing?',
+                        QMessageBox.No,
+                    ):
                         return False
 
             colors = self.getCurrentColors()
@@ -596,7 +599,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     prev_theme = item_text
                     break
 
-            if self.yes_no_question('Remove current theme?'):
+            if self.yes_no_question(
+                'Remove current theme?',
+                QMessageBox.No,
+            ):
                 name = self.themeList_cbb.currentText()
                 theme_settings = self.get_theme_settings()
                 if 'colors' in theme_settings:
@@ -664,7 +670,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     theme_settings = self.get_theme_settings()
                     if 'colors' in theme_settings:
                         if name in theme_settings['colors']:
-                            if not self.yes_no_question('Replace existing?'):
+                            if not self.yes_no_question(
+                                'Replace existing?',
+                                QMessageBox.No,
+                            ):
                                 return
 
                     if 'colors' in theme_settings:
@@ -774,13 +783,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         pass
         # print self.colors_lwd.selectedItems()[0].data(32)
 
-    def yes_no_question(self, question):
+    def yes_no_question(self, question, default_button=QMessageBox.Yes):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
         msg_box.setWindowTitle('?')
         self._apply_parent_theme_font(msg_box)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
-        msg_box.addButton("No", QMessageBox.NoRole)
+        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        button = yes_button if default_button == QMessageBox.Yes else no_button
+        msg_box.setDefaultButton(button)
+        button.setFocus()
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 

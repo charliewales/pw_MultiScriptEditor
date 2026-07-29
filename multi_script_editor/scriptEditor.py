@@ -914,7 +914,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             for lbl in dialog.findChildren(QLabel):
                 lbl.setFont(font)
 
-    def show_question_msg(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, defaultButton=QMessageBox.No):
+    def show_question_msg(self, title, text, buttons=QMessageBox.Yes | QMessageBox.No, defaultButton=QMessageBox.Yes):
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle(title)
         msg_box.setText(text)
@@ -1129,7 +1129,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         res = self.show_question_msg(
             "Close All Tabs",
             "Are you sure you want to close all tabs?",
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
         if res == QMessageBox.Yes:
             self.tab.clear()
@@ -1639,7 +1640,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.recent_files_menu.addAction(clear_act)
 
     def clearRecentFiles(self):
-        reply = self.show_question_msg('Clear Recent Files', 'Are you sure you want to clear the recent files list?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        reply = self.show_question_msg(
+            'Clear Recent Files',
+            'Are you sure you want to clear the recent files list?',
+            QMessageBox.Yes | QMessageBox.No,
+        )
         if reply == QMessageBox.Yes:
             data = self._current_settings
             data['recent_files'] = []
@@ -2600,7 +2605,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 res = self.show_question_msg(
                     "Overwrite Session",
                     "A session with the name '{0}' already exists. Do you want to overwrite it?".format(name),
-                    QMessageBox.Yes | QMessageBox.No
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
                 )
                 if res != QMessageBox.Yes:
                     return
@@ -2614,7 +2620,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         res = self.show_question_msg(
             "Load Session",
             "Loading session '{0}' will replace all current tabs. Do you want to proceed?".format(name),
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
         if res == QMessageBox.Yes:
             sessions = self._presenter.get_named_session_tabs(name)
@@ -2625,7 +2632,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         res = self.show_question_msg(
             "Delete Session",
             "Are you sure you want to delete session '{0}'?".format(name),
-            QMessageBox.Yes | QMessageBox.No
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
         if res == QMessageBox.Yes:
             self._presenter.delete_named_session(name)
@@ -2937,7 +2945,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             "Delete Snippet",
             "Are you sure you want to delete snippet '{0}'?".format(name),
             QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
+            QMessageBox.No,
         )
         if res == QMessageBox.Yes:
             snippets = self._get_snippets()
