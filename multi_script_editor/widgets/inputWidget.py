@@ -117,6 +117,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._lint_timer.setSingleShot(True)
         self._lint_timer.timeout.connect(self.runLinter)
 
+        self._occurrence_selection_timer = QTimer(self)
+        self._occurrence_selection_timer.setSingleShot(True)
+        self._occurrence_selection_timer.timeout.connect(
+            self._apply_auto_select_all_occurrences
+        )
+
         self.textChanged.connect(self._on_text_changed)
         self.cursorPositionChanged.connect(self.highlight_current_line)
         self.cursorPositionChanged.connect(self.ensure_current_line_visible)
@@ -2182,6 +2188,9 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     # --- Multi-Cursor / Multi-Selection Support ---
     def _run_manual_multi_select(self, callback):
+        timer = getattr(self, '_occurrence_selection_timer', None)
+        if timer is not None:
+            timer.stop()
         self._is_manual_multi_selecting = True
         try:
             callback()
@@ -2212,39 +2221,70 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def auto_select_all_occurrences(self):
         if self._is_auto_selecting or getattr(self, '_is_manual_multi_selecting', False):
+            timer = getattr(self, '_occurrence_selection_timer', None)
+            if timer is not None:
+                timer.stop()
             return
 
+        if not self._highlight_all_occurrences_enabled():
+            timer = getattr(self, '_occurrence_selection_timer', None)
+            if timer is not None:
+                timer.stop()
+            return
+
+        timer = getattr(self, '_occurrence_selection_timer', None)
+        if timer is None:
+            self._apply_auto_select_all_occurrences()
+        else:
+            timer.start(75)
+
+    def _highlight_all_occurrences_enabled(self):
         action = getattr(
             getattr(self, 'p', None),
             'highlightAllOccurrences_act',
             None,
         )
         if action is not None:
-            highlight_all = action.isChecked()
-        else:
-            data = getattr(self, 'data', {}) or {}
-            highlight_all = data.get('highlight_all_occurrences', True)
+            return action.isChecked()
+        data = getattr(self, 'data', {}) or {}
+        return data.get('highlight_all_occurrences', True)
 
-        if highlight_all:
-            cursor = self.textCursor()
-            if cursor.hasSelection():
-                # Avoid selecting just empty spaces
-                text = cursor.selectedText()
-                if text and '\u2029' not in text and text.strip():
-                    self._is_auto_selecting = True
+    def _apply_auto_select_all_occurrences(self):
+        if (
+            self._is_auto_selecting
+            or getattr(self, '_is_manual_multi_selecting', False)
+            or not self._highlight_all_occurrences_enabled()
+        ):
+            return
+
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            # Avoid selecting just empty spaces
+            text = cursor.selectedText()
+            if text and '\u2029' not in text and text.strip():
+                self._is_auto_selecting = True
+                try:
                     self.select_all_occurrences()
+                finally:
                     self._is_auto_selecting = False
-                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
-                        self.p.out.highlight_word(text)
-                else:
-                    if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
-                        self.p.out.highlight_word("")
+                if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                    self.p.out.highlight_word(text)
             else:
                 if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
                     self.p.out.highlight_word("")
-                if self.multi_cursor_manager.has_cursors() and getattr(self.multi_cursor_manager, 'is_auto_populated', False):
-                    self.multi_cursor_manager.clear()
-                    self.highlight_current_line()
+        else:
+            if hasattr(self.p, 'out') and hasattr(self.p.out, 'highlight_word'):
+                self.p.out.highlight_word("")
+            if (
+                self.multi_cursor_manager.has_cursors()
+                and getattr(
+                    self.multi_cursor_manager,
+                    'is_auto_populated',
+                    False,
+                )
+            ):
+                self.multi_cursor_manager.clear()
+                self.highlight_current_line()
 
     # Clear multi-cursor selections on standard clipboard and undo/redo operations
     def undo(self):

@@ -2,7 +2,7 @@ import os
 
 from core.base_text_widget import BaseTextWidgetMixin
 from core.settings_model import SettingsModel
-from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtCore import Qt, QTimer
 from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
 from widgets.pythonSyntax import design, syntaxHighLighter
@@ -33,9 +33,17 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.setAcceptDrops(True)
         self._highlight_word_cache = None
         self.applyHightLighter(theme)
+        self._selection_highlight_timer = QTimer(self)
+        self._selection_highlight_timer.setSingleShot(True)
+        self._selection_highlight_timer.timeout.connect(
+            self._apply_selection_highlight
+        )
         self.selectionChanged.connect(self._on_selection_changed)
 
     def _on_selection_changed(self):
+        self._selection_highlight_timer.start(75)
+
+    def _apply_selection_highlight(self):
         cursor = self.textCursor()
         if cursor.hasSelection():
             text = cursor.selectedText()
