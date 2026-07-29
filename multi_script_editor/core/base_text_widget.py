@@ -1,9 +1,19 @@
 import os
 import webbrowser
+from functools import lru_cache
 
 from icons import icons
 from vendor.Qt.QtGui import QFont, QFontDatabase, QIcon, QTextOption
 from vendor.Qt.QtWidgets import QAction, QPlainTextEdit, QTextEdit
+
+
+@lru_cache(maxsize=1)
+def get_font_families():
+    try:
+        families = QFontDatabase.families()
+    except TypeError:
+        families = QFontDatabase().families()
+    return frozenset(families)
 
 
 class BaseTextWidgetMixin:
@@ -74,12 +84,7 @@ class BaseTextWidgetMixin:
         weight = font_d.get('weight', 1)
 
         # Cross-compatibility patch for PySide2 (NF) vs PySide6 (Nerd Font)
-        try:
-            families = QFontDatabase.families()
-        except TypeError:
-            db = QFontDatabase()
-            families = db.families()
-
+        families = get_font_families()
         if family not in families:
             variations = [
                 family.replace(" NFM", " Nerd Font Mono"),

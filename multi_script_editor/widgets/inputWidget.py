@@ -3,7 +3,7 @@ import re
 from bisect import bisect_right
 
 import managers
-from core.base_text_widget import BaseTextWidgetMixin
+from core.base_text_widget import BaseTextWidgetMixin, get_font_families
 from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
 from core.settings_model import SettingsModel
@@ -11,7 +11,6 @@ from vendor.Qt.QtCore import QPoint, Qt, QTimer, Signal
 from vendor.Qt.QtGui import (
     QColor,
     QFont,
-    QFontDatabase,
     QFontMetrics,
     QGuiApplication,
     QKeySequence,
@@ -470,12 +469,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         weight = font_d.get('weight', 1.0)
 
 
-        try:
-            families = QFontDatabase.families()
-        except TypeError:
-            db = QFontDatabase()
-            families = db.families()
-
+        families = get_font_families()
         if family not in families:
             variations = [
                 family.replace(" NFM", " Nerd Font Mono"),
