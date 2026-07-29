@@ -259,7 +259,14 @@ class BreadcrumbBar(QScrollArea):
     symbolSelected = Signal(int)
     fileSelected = Signal(str)
 
-    def __init__(self, parent=None, file_path=None, fallback_name=""):
+    def __init__(
+        self,
+        parent=None,
+        file_path=None,
+        fallback_name="",
+        theme_colors=None,
+        font=None,
+    ):
         super(BreadcrumbBar, self).__init__(parent)
         self.setObjectName("breadcrumbBar")
         self.setFixedHeight(26)
@@ -286,11 +293,16 @@ class BreadcrumbBar(QScrollArea):
         self._fallback_name = fallback_name or "Untitled"
         self._ext = ".py"
         self._current_line = 1
-        self._theme_colors = {}
-        self._font = None
+        self._theme_colors = theme_colors or {}
+        self._font = font
         self._active_chain_key = ()
         self._symbol_line_indexes = {}
 
+        if font:
+            self.setFont(font)
+            self._container.setFont(font)
+        if theme_colors:
+            self.apply_theme(theme_colors, font, rebuild=False)
         self.rebuild_breadcrumbs()
 
     def wheelEvent(self, event):

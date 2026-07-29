@@ -1700,6 +1700,8 @@ class EditorTabContainer(QWidget):
             self,
             file_path=file_path,
             fallback_name=fallback_name,
+            theme_colors=getattr(parent, '_current_colors_cache', None),
+            font=getattr(parent, 'current_outline_font', None),
         )
         self.breadcrumbs.symbolSelected.connect(self._on_breadcrumb_symbol_selected)
         self.breadcrumbs.fileSelected.connect(self._on_breadcrumb_file_selected)
