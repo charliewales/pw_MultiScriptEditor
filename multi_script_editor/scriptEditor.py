@@ -696,6 +696,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
     def applyTheme(self, name):
         qss = design.editorStyle(name)
         colors = design.getColors(name).copy()
+        self._current_editor_style_cache = qss
 
         zoom_delta = getattr(self, '_temporary_zoom_delta', 0)
         if zoom_delta:
@@ -729,9 +730,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
-            w.edit.applyHightLighter(name)
-            w.edit.completer.setStyleSheet(qss)
-            w.edit.setStyleSheet(qss)
+            w.edit.applyHightLighter(
+                name,
+                colors=colors,
+                style=qss,
+            )
 
         font_data = colors.get('font')
         if not font_data:

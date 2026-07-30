@@ -99,12 +99,21 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._highlight_color_cache = None
         self._last_highlight_cursor_state = None
         self._last_highlight_multi_selections = None
-        self.data = SettingsModel().read_settings()
-        self.applyHightLighter(
-            self.data.get('theme'),
-            ext=file_extension,
+        self.data = (
+            getattr(parent, '_current_settings', None)
+            or SettingsModel().read_settings()
         )
-        self.set_start_font()
+        theme_name = self.data.get('theme')
+        theme_colors = getattr(parent, '_current_colors_cache', None)
+        theme_style = getattr(parent, '_current_editor_style_cache', None)
+        self.applyHightLighter(
+            theme_name,
+            ext=file_extension,
+            colors=theme_colors,
+            style=theme_style,
+        )
+        font_data = theme_colors.get('font') if theme_colors else None
+        self.set_start_font(font_data or self.data.get('font'))
         self.highlight_current_line()
 
         # Performance optimization: Use a debounced timer for jedi autocompletion parsing to prevent UI lag on fast typing
@@ -573,13 +582,18 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     return highlighter_class, comment_prefix, comment_suffix
         return syntaxHighLighter.PythonHighlighterClass, '#', ''
 
-    def applyHightLighter(self, theme=None, ext=None):
+    def applyHightLighter(
+        self,
+        theme=None,
+        ext=None,
+        colors=None,
+        style=None,
+    ):
         self.blockSignals(True)
-        colors = None
-        if theme or not theme =='Multi Script Editor':
+        if colors is None:
             colors = design.getColors(theme)
-            if self.completer:
-                self.completer.updateStyle(colors)
+        if self.completer:
+            self.completer.updateStyle(colors, style=style)
         self._highlight_color_cache = colors.get('highlight_line', (85,85,85)) if colors else None
         self._line_num_text_cache = colors.get('line_num_text', colors.get('tab_selected_text', (200,200,200))) if colors else None
         self._line_num_size_cache = colors.get('line_numbers_text_size', None) if colors else None
@@ -588,7 +602,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         highlighter_class, self.comment_prefix, self.comment_suffix = self._get_highlighter_config(ext)
         self.hgl = highlighter_class(self.document(), colors)
-        st = design.editorStyle(theme)
+        st = design.editorStyle(theme) if style is None else style
         self.setStyleSheet(st)
         self.blockSignals(False)
         self.highlight_current_line()

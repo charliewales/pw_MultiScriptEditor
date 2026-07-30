@@ -96,8 +96,8 @@ class completeMenuClass(QListWidget):
         else:
             self.doc_tooltip.hide()
 
-    def updateStyle(self, colors=None):
-        text = design.editorStyle()
+    def updateStyle(self, colors=None, style=None):
+        text = design.editorStyle() if style is None else style
         self.setStyleSheet(text)
         if hasattr(self, 'e') and self.e:
             use_theme_font = True
