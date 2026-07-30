@@ -521,6 +521,8 @@ class BreadcrumbBar(QScrollArea):
             item = self.layout.takeAt(0)
             widget = item.widget()
             if widget:
+                widget.hide()
+                widget.setParent(None)
                 widget.deleteLater()
 
         first = True
@@ -577,5 +579,12 @@ class BreadcrumbBar(QScrollArea):
             )
             item_btn.symbolSelected.connect(self.symbolSelected.emit)
             self.layout.addWidget(item_btn)
+
+        if first:
+            placeholder = QLabel(">", self)
+            placeholder.setStatusTip("Empty breadcrumb")
+            if self._font:
+                placeholder.setFont(self._font)
+            self.layout.addWidget(placeholder)
 
         self.layout.addStretch(1)
