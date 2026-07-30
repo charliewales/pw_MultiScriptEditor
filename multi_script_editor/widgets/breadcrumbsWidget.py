@@ -1,7 +1,7 @@
 import os
 from bisect import bisect_right
 
-from vendor.Qt.QtCore import QFileInfo, QRect, QSize, Qt, Signal
+from vendor.Qt.QtCore import QDir, QFileInfo, QRect, QSize, Qt, Signal
 from vendor.Qt.QtGui import QColor, QIcon, QPainter, QPalette
 from vendor.Qt.QtWidgets import (
     QAction,
@@ -133,6 +133,35 @@ def populate_dir_menu(menu, dir_path, on_file_selected, theme_colors=None, font=
         act.setStatusTip("Open {0}".format(name))
         act.triggered.connect(lambda checked=False, path=p: on_file_selected(path))
         menu.addAction(act)
+
+
+def populate_drives_menu(
+    menu,
+    on_file_selected,
+    theme_colors=None,
+    font=None,
+):
+    menu.clear()
+    for drive_info in QDir.drives():
+        drive_path = os.path.normpath(drive_info.absoluteFilePath())
+        drive_name = os.path.splitdrive(drive_path)[0] or drive_path
+        sub_menu = QMenu(drive_name, menu)
+        sub_menu.setIcon(get_folder_icon(drive_path))
+        if font:
+            sub_menu.setFont(font)
+        sub_menu.menuAction().setStatusTip(
+            "Browse drive {0}".format(drive_name)
+        )
+        sub_menu.aboutToShow.connect(
+            lambda m=sub_menu, path=drive_path: populate_dir_menu(
+                m,
+                path,
+                on_file_selected,
+                theme_colors,
+                font,
+            )
+        )
+        menu.addMenu(sub_menu)
 
 
 class _SymbolMenuItemWidget(QWidget):
@@ -367,9 +396,36 @@ class BreadcrumbItemWidget(QToolButton):
         font = menu.font()
 
         if self._node_type == "dir":
-            dir_path = self._path_or_data
-            if dir_path and os.path.exists(dir_path):
-                populate_dir_menu(menu, dir_path, self.fileSelected.emit, self._theme_colors, font)
+            normalized_path = (
+                os.path.normpath(self._path_or_data)
+                if self._path_or_data
+                else ""
+            )
+            if (
+                os.name == "nt"
+                and normalized_path
+                and QFileInfo(normalized_path).isRoot()
+            ):
+                populate_drives_menu(
+                    menu,
+                    self.fileSelected.emit,
+                    self._theme_colors,
+                    font,
+                )
+            else:
+                dir_path = (
+                    os.path.dirname(normalized_path)
+                    if normalized_path
+                    else ""
+                )
+                if dir_path and os.path.exists(dir_path):
+                    populate_dir_menu(
+                        menu,
+                        dir_path,
+                        self.fileSelected.emit,
+                        self._theme_colors,
+                        font,
+                    )
 
         elif self._node_type == "file":
             dir_path = os.path.dirname(self._path_or_data) if self._path_or_data else ""
