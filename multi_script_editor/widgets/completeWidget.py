@@ -31,6 +31,7 @@ class completeMenuClass(QListWidget):
         self.doc_tooltip.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.doc_tooltip.setWordWrap(True)
         self.doc_tooltip.setContentsMargins(4, 4, 4, 4)
+        self._pending_style = None
 
         def doc_tooltip_focusOutEvent(event):
             QLabel.focusOutEvent(self.doc_tooltip, event)
@@ -98,7 +99,9 @@ class completeMenuClass(QListWidget):
 
     def updateStyle(self, colors=None, style=None):
         text = design.editorStyle() if style is None else style
-        self.setStyleSheet(text)
+        self._pending_style = text if text != self.styleSheet() else None
+        if self.isVisible():
+            self._apply_pending_style()
         if hasattr(self, 'e') and self.e:
             use_theme_font = True
             if colors and 'use_theme_font_on_completer' in colors:
@@ -117,6 +120,11 @@ class completeMenuClass(QListWidget):
             self.setFont(new_font)
             if hasattr(self, 'doc_tooltip'):
                 self.doc_tooltip.setFont(new_font)
+
+    def _apply_pending_style(self):
+        if self._pending_style is not None:
+            self.setStyleSheet(self._pending_style)
+            self._pending_style = None
 
     def updateCompleteList(self, lines=None, extra=None):
         self.clear()
@@ -253,6 +261,7 @@ class completeMenuClass(QListWidget):
             self.setCurrentRow(self.count()-1)
 
     def showMe(self):
+        self._apply_pending_style()
         self.show()
         self.e.moveCompleter()
 
