@@ -2592,7 +2592,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not hasattr(self, '_presenter'):
             return
         tabs = self._get_tabs_data(save_full_text=True)
+        if tabs == getattr(self, '_last_backup_tabs', None):
+            return
         self._presenter.save_backup(tabs)
+        self._last_backup_tabs = tabs
 
     def fillSessionsMenu(self):
         self.sessions_menu.clear()
