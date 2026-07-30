@@ -282,6 +282,7 @@ class tabWidgetClass(QTabWidget):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
 
         self.currentChanged.connect(self.onTabChanged)
+        self.tabBarClicked.connect(self._schedule_editor_focus_after_tab_click)
         self.tabBarDoubleClicked.connect(self.on_tab_bar_double_clicked)
         QApplication.instance().installEventFilter(self)
 
@@ -363,6 +364,22 @@ class tabWidgetClass(QTabWidget):
     def _focus_editor_after_keyboard_tab_change(self, previous_index):
         if self.currentIndex() == previous_index:
             return
+        self._focus_current_editor()
+
+    def _schedule_editor_focus_after_tab_click(self, index):
+        QTimer.singleShot(
+            0,
+            lambda clicked_index=index: (
+                self._focus_editor_after_tab_click(clicked_index)
+            ),
+        )
+
+    def _focus_editor_after_tab_click(self, index):
+        if self.currentIndex() != index:
+            return
+        self._focus_current_editor()
+
+    def _focus_current_editor(self):
         current_widget = self.currentWidget()
         edit = getattr(current_widget, 'edit', None)
         if edit is not None:
