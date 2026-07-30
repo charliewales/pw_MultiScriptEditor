@@ -339,6 +339,17 @@ class tabWidgetClass(QTabWidget):
                 if hasattr(self.p, 'showOpenTabs'):
                     self.p.showOpenTabs()
                 return True
+            elif (
+                key in (Qt.Key_PageUp, Qt.Key_PageDown)
+                and event.modifiers() & Qt.ControlModifier
+            ):
+                previous_index = self.currentIndex()
+                QTimer.singleShot(
+                    0,
+                    lambda index=previous_index: (
+                        self._focus_editor_after_keyboard_tab_change(index)
+                    ),
+                )
         elif event_type == QEvent.KeyRelease:
             if event.key() == Qt.Key_Control and self._ctrl_pressed:
                 self._ctrl_pressed = False
@@ -348,6 +359,14 @@ class tabWidgetClass(QTabWidget):
                 self._ctrl_pressed = False
                 self.show_tab_numbers(False)
         return False
+
+    def _focus_editor_after_keyboard_tab_change(self, previous_index):
+        if self.currentIndex() == previous_index:
+            return
+        current_widget = self.currentWidget()
+        edit = getattr(current_widget, 'edit', None)
+        if edit is not None:
+            edit.setFocus()
 
     def get_line_num_font_and_color(self, edit):
         font = edit.font()
