@@ -90,6 +90,12 @@ class OutlineParser:
             if name.startswith('__') and name.endswith('__') and name not in ['__all__', '__version__', '__author__']:
                 return None
             return name
+        if (
+            isinstance(target, ast.Attribute)
+            and isinstance(target.value, ast.Name)
+            and target.value.id in ('self', 'cls')
+        ):
+            return "{0}.{1}".format(target.value.id, target.attr)
         return None
 
     @staticmethod
