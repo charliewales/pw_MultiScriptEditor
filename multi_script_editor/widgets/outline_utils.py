@@ -1,3 +1,4 @@
+from icons import icons
 from vendor.Qt.QtCore import QRectF, QSize, Qt
 from vendor.Qt.QtGui import QColor, QFont, QIcon, QPainter, QPixmap, QTextDocument
 from vendor.Qt.QtWidgets import (
@@ -7,6 +8,22 @@ from vendor.Qt.QtWidgets import (
     QStyledItemDelegate,
     QTreeWidgetItem,
 )
+
+
+_SYMBOL_ICON_KEYS = {
+    'class': 'sym_class',
+    'method': 'sym_method',
+    'function': 'sym_function',
+    'variable': 'sym_variable',
+    'constant': 'sym_constant',
+    'yaml': 'sym_yaml',
+    'json': 'sym_json',
+    'usd': 'sym_usd',
+    'xml': 'sym_xml',
+    'ini_section': 'sym_ini_section',
+    'ini_key': 'sym_ini_key',
+}
+_symbol_type_icon_cache = {}
 
 
 def rgb_to_hex(rgb, default="#ffffff"):
@@ -71,8 +88,21 @@ class HtmlDelegate(QStyledItemDelegate):
 
 def get_symbol_type_icon(sym_type, theme_colors=None):
     """
-    Generates a crisp QIcon badge representing the symbol type (Class, Method, Function, Variable, Constant).
+    Returns a cached QIcon representing the symbol type.
     """
+    cache_key = sym_type or 'symbol'
+    cached_icon = _symbol_type_icon_cache.get(cache_key)
+    if cached_icon is not None:
+        return cached_icon
+
+    icon_key = _SYMBOL_ICON_KEYS.get(sym_type)
+    icon_path = icons.get(icon_key) if icon_key else None
+    if icon_path:
+        icon = QIcon(icon_path)
+        if not icon.isNull():
+            _symbol_type_icon_cache[cache_key] = icon
+            return icon
+
     size = 20
     pix = QPixmap(size, size)
     pix.fill(Qt.transparent)
@@ -126,7 +156,9 @@ def get_symbol_type_icon(sym_type, theme_colors=None):
     painter.drawText(text_rect, Qt.AlignCenter, letter)
     painter.end()
 
-    return QIcon(pix)
+    icon = QIcon(pix)
+    _symbol_type_icon_cache[cache_key] = icon
+    return icon
 
 
 def format_html_symbol_name(name, sym_type, theme_colors=None, ext='.py'):
