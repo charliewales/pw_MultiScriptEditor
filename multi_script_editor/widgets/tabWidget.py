@@ -442,7 +442,7 @@ class tabWidgetClass(QTabWidget):
         self._current_editor = edit
 
         if index >= 0:
-            self.update_tab_git_status(index)
+            self.git_status_for_tab(index)
             if hasattr(self, '_mru_tabs'):
                 if container in self._mru_tabs:
                     self._mru_tabs.remove(container)
