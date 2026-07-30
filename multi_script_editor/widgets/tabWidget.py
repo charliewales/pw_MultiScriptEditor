@@ -290,11 +290,13 @@ class tabWidgetClass(QTabWidget):
             self.renameTab(index)
 
     def eventFilter(self, obj, event):
-        if obj == getattr(self, '_rename_edit', None) and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+        event_type = event.type()
+
+        if event_type == QEvent.KeyPress and obj == getattr(self, '_rename_edit', None) and event.key() == Qt.Key_Escape:
             self.finishRename(commit=False)
             return True
 
-        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
+        if event_type in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
             if getattr(self, '_rename_edit', None):
                 return True
             # Check if click is on the tab bar or one of its children
@@ -306,34 +308,42 @@ class tabWidgetClass(QTabWidget):
                     break
                 p = p.parent()
             if is_tabbar_click:
-                if event.type() == QEvent.MouseButtonPress:
+                if event_type == QEvent.MouseButtonPress:
                     pos = self.tabBar().mapFrom(obj, event.pos())
                     index = self.tabBar().tabAt(pos)
                     if index >= 0:
                         QTimer.singleShot(0, lambda i=index: self.closeTab(i))
                 return True
 
-        quick_tab_switching = True
-        if hasattr(self.p, 'quickTabSwitching_act'):
-            try:
-                quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
-            except RuntimeError:
-                quick_tab_switching = False
+        if event_type not in (
+            QEvent.KeyPress,
+            QEvent.KeyRelease,
+            QEvent.WindowDeactivate,
+            QEvent.ApplicationDeactivate,
+        ):
+            return False
 
-        if event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Control and not self._ctrl_pressed:
+        if event_type == QEvent.KeyPress:
+            key = event.key()
+            if key == Qt.Key_Control and not self._ctrl_pressed:
+                quick_tab_switching = True
+                if hasattr(self.p, 'quickTabSwitching_act'):
+                    try:
+                        quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+                    except RuntimeError:
+                        quick_tab_switching = False
                 if quick_tab_switching:
                     self._ctrl_pressed = True
                     self.show_tab_numbers(True)
-            elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
+            elif key == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
                 if hasattr(self.p, 'showOpenTabs'):
                     self.p.showOpenTabs()
                 return True
-        elif event.type() == QEvent.KeyRelease:
+        elif event_type == QEvent.KeyRelease:
             if event.key() == Qt.Key_Control and self._ctrl_pressed:
                 self._ctrl_pressed = False
                 self.show_tab_numbers(False)
-        elif event.type() == QEvent.WindowDeactivate or event.type() == QEvent.ApplicationDeactivate:
+        else:
             if self._ctrl_pressed:
                 self._ctrl_pressed = False
                 self.show_tab_numbers(False)
