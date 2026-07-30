@@ -2475,7 +2475,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit = self.tab.current()
         if not edit:
             return
-        code = edit.toPlainText()
 
         ext = '.py'
         w = self.tab.widget(self.tab.currentIndex())
@@ -2487,6 +2486,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.outline_widget.set_symbols([])
             return
 
+        cache_key = (edit.document().revision(), ext)
+        if cache_key == getattr(edit, '_outline_cache_key', None):
+            symbols = getattr(edit, '_outline_cached_symbols', ())
+            self.set_outline_symbols(symbols, ext)
+            return
+
+        code = edit.toPlainText()
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
@@ -2500,10 +2506,17 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.outline_widget.set_symbols(symbols, theme_colors, font, ext=ext)
 
         current_container = self.tab.widget(self.tab.currentIndex())
+        edit = getattr(current_container, 'edit', None)
+        if edit is not None:
+            edit._outline_cache_key = (
+                edit.document().revision(),
+                ext,
+            )
+            edit._outline_cached_symbols = symbols
+
         if current_container and hasattr(current_container, 'breadcrumbs'):
             file_path = getattr(current_container, 'file_path', None)
             fallback_name = self.tab.tabText(self.tab.currentIndex())
-            edit = getattr(current_container, 'edit', None)
             line_num = edit.textCursor().blockNumber() + 1 if edit else 1
             current_container.breadcrumbs.set_outline_context(
                 symbols,
