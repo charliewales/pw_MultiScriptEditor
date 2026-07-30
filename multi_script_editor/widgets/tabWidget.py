@@ -484,6 +484,17 @@ class tabWidgetClass(QTabWidget):
                     if hasattr(edit, 'needs_loading_modified'):
                         delattr(edit, 'needs_loading_modified')
 
+                syntax_action = getattr(self.p, 'syntaxCheck_act', None)
+                if (
+                    syntax_action is None
+                    or syntax_action.isChecked()
+                ):
+                    lint_timer = getattr(edit, '_lint_timer', None)
+                    if lint_timer is not None:
+                        lint_timer.start(0)
+                    elif hasattr(edit, 'runLinter'):
+                        edit.runLinter()
+
     def close_current_tab(self):
         index = self.currentIndex()
         self.closeTab(index)

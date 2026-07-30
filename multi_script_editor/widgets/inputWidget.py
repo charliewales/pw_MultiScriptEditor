@@ -116,6 +116,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._lint_timer = QTimer(self)
         self._lint_timer.setSingleShot(True)
         self._lint_timer.timeout.connect(self.runLinter)
+        self._last_lint_key = None
 
         self._occurrence_selection_timer = QTimer(self)
         self._occurrence_selection_timer.setSingleShot(True)
@@ -676,20 +677,39 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def runLinter(self):
         main_win = self.p
+        tab_widget = getattr(main_win, 'tab', None)
+        if (
+            tab_widget is not None
+            and hasattr(tab_widget, 'current')
+            and tab_widget.current() is not self
+        ):
+            return
+
         check_syntax = True
         if hasattr(main_win, 'syntaxCheck_act'):
             check_syntax = main_win.syntaxCheck_act.isChecked()
+
+        extension = self._current_file_extension()
+        lint_key = (
+            self.document().revision(),
+            bool(check_syntax),
+            extension,
+        )
+        if lint_key == getattr(self, '_last_lint_key', None):
+            return
 
         if not check_syntax:
             self.syntax_errors = {}
             if hasattr(self.p, 'show_syntax_errors'):
                 self.p.show_syntax_errors({})
+            self._last_lint_key = lint_key
             return
 
-        if hasattr(self.p, '_presenter') and self._current_file_extension() != '.py':
+        if hasattr(self.p, '_presenter') and extension != '.py':
             self.syntax_errors = {}
             if hasattr(self.p, 'show_syntax_errors'):
                 self.p.show_syntax_errors({})
+            self._last_lint_key = lint_key
             return
 
         code = self.toPlainText()
@@ -702,6 +722,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.syntax_errors = {}
             if hasattr(self.p, 'show_syntax_errors'):
                 self.p.show_syntax_errors({})
+        self._last_lint_key = lint_key
 
     def moveCompleter(self):
         rec = self.cursorRect()

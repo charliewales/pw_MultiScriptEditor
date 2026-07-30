@@ -2392,13 +2392,26 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self._current_settings['syntax_check'] = state
         self.saveSettings()
 
+        if state:
+            edit = self.tab.current()
+            if edit is not None:
+                edit.runLinter()
+            return
+
         for i in range(self.tab.count()):
             w = self.tab.widget(i)
             if hasattr(w, 'edit'):
-                w.edit.runLinter()
+                edit = w.edit
+                lint_timer = getattr(edit, '_lint_timer', None)
+                if lint_timer is not None:
+                    lint_timer.stop()
+                edit._last_lint_key = None
+                edit.syntax_errors = {}
+                if hasattr(w, 'lineNum'):
+                    w.lineNum.update()
 
-        if not state:
-            self.statusBar().clearMessage()
+        self.show_syntax_errors({})
+        self.statusBar().clearMessage()
 
     def toggleHighlightAllOccurrences(self, state=None):
         state = self.highlightAllOccurrences_act.isChecked()
