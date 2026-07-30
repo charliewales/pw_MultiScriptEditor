@@ -1046,8 +1046,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             self.tab.blockSignals(False)
             if active_index != -1:
+                index_changed = self.tab.currentIndex() != active_index
                 self.tab.setCurrentIndex(active_index)
-                if hasattr(self.tab, 'onTabChanged'):
+                if (
+                    not index_changed
+                    and hasattr(self.tab, 'onTabChanged')
+                ):
                     self.tab.onTabChanged(active_index)
 
         if self.tab.count() == 0:
