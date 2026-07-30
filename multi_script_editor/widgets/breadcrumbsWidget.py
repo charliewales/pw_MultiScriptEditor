@@ -142,6 +142,7 @@ class BreadcrumbItemWidget(QToolButton):
         self._path_or_data = path_or_data
         self._siblings = siblings or []
         self._theme_colors = theme_colors or {}
+        self._menu_font = font
 
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
@@ -158,12 +159,10 @@ class BreadcrumbItemWidget(QToolButton):
 
         if self._node_type == "dir":
             self.setStatusTip("Browse folder {0}".format(title))
-            self._setup_lazy_menu(font)
 
         elif self._node_type == "file":
             self.setStatusTip("File {0}".format(title))
             self.clicked.connect(self._on_file_clicked)
-            self._setup_lazy_menu(font)
 
         else:
             # Code Symbol Node
@@ -175,15 +174,31 @@ class BreadcrumbItemWidget(QToolButton):
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
             self.setIconSize(QSize(18, 18))
             self.clicked.connect(self._on_symbol_clicked)
-            self._setup_lazy_menu(font)
 
-    def _setup_lazy_menu(self, font):
+    def _setup_lazy_menu(self):
+        existing_menu = self.menu()
+        if existing_menu:
+            return existing_menu
+
         menu = QMenu(self)
-        if font:
-            menu.setFont(font)
+        if self._menu_font:
+            menu.setFont(self._menu_font)
         self._apply_menu_style(menu)
         menu.aboutToShow.connect(self._on_menu_about_to_show)
         self.setMenu(menu)
+        return menu
+
+    def mousePressEvent(self, event):
+        self._setup_lazy_menu()
+        super(BreadcrumbItemWidget, self).mousePressEvent(event)
+
+    def keyPressEvent(self, event):
+        self._setup_lazy_menu()
+        super(BreadcrumbItemWidget, self).keyPressEvent(event)
+
+    def showMenu(self):
+        self._setup_lazy_menu()
+        super(BreadcrumbItemWidget, self).showMenu()
 
     def _on_menu_about_to_show(self):
         menu = self.menu()
