@@ -348,7 +348,7 @@ class MultiCursorManager:
         self._center_cursor_in_editor()
 
     def _center_cursor_in_editor(self):
-        self.editor.centerCursor()
+        self.editor.ensureCursorVisible()
 
     def add_cursors_to_line_ends(self):
         cursor = self.editor.textCursor()
