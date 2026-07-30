@@ -24,6 +24,26 @@ _SYMBOL_ICON_KEYS = {
     'ini_key': 'sym_ini_key',
 }
 _symbol_type_icon_cache = {}
+_SYMBOL_TEXT_COLOR_KEYS = {
+    'class': 'definition',
+    'method': 'methods',
+    'function': 'methods',
+    'variable': 'default',
+    'constant': 'default',
+    'yaml': 'keywords',
+    'json': 'keywords',
+    'usd': 'keywords',
+    'xml': 'keywords',
+    'ini_section': 'keywords',
+    'ini_key': 'methods',
+}
+_SYMBOL_TEXT_COLOR_DEFAULTS = {
+    'definition': (255, 160, 250),
+    'methods': (120, 190, 205),
+    'default': (210, 210, 210),
+    'digits': (250, 255, 62),
+    'keywords': (65, 255, 130),
+}
 
 
 def rgb_to_hex(rgb, default="#ffffff"):
@@ -40,6 +60,19 @@ def color_to_str(color_val, default="#d4d4d4"):
     if hasattr(color_val, "name"):
         return color_val.name()
     return str(color_val)
+
+
+def get_symbol_text_color(sym_type, theme_colors=None):
+    theme_colors = theme_colors or {}
+    color_key = _SYMBOL_TEXT_COLOR_KEYS.get(sym_type, 'default')
+    fallback = _SYMBOL_TEXT_COLOR_DEFAULTS[color_key]
+    value = theme_colors.get(color_key, fallback)
+    if isinstance(value, QColor):
+        return QColor(value)
+    if isinstance(value, (list, tuple)) and len(value) >= 3:
+        return QColor(*value[:3])
+    color = QColor(value)
+    return color if color.isValid() else QColor(*fallback)
 
 
 class HtmlDelegate(QStyledItemDelegate):
@@ -169,12 +202,12 @@ def format_html_symbol_name(name, sym_type, theme_colors=None, ext='.py'):
     if not theme_colors:
         theme_colors = {}
 
-    c_def = rgb_to_hex(theme_colors.get('definition', (255, 160, 250)))
-    c_meth = rgb_to_hex(theme_colors.get('methods', (120, 190, 205)))
+    c_def = get_symbol_text_color('class', theme_colors).name()
+    c_meth = get_symbol_text_color('method', theme_colors).name()
     c_kw = rgb_to_hex(theme_colors.get('keywords', (65, 255, 130)))
     c_str = rgb_to_hex(theme_colors.get('string', (128, 255, 128)))
-    c_text = rgb_to_hex(theme_colors.get("tab_selected_text", (200, 200, 200)))
-    c_num = rgb_to_hex(theme_colors.get("numbers", (220, 140, 100)))
+    c_text = get_symbol_text_color('variable', theme_colors).name()
+    c_num = get_symbol_text_color('constant', theme_colors).name()
 
     # Strip prefixes like class, async def, def, etc.
     clean_name = name

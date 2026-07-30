@@ -2,7 +2,7 @@ import os
 from bisect import bisect_right
 
 from vendor.Qt.QtCore import QFileInfo, QRect, QSize, Qt, Signal
-from vendor.Qt.QtGui import QIcon, QPalette
+from vendor.Qt.QtGui import QColor, QIcon, QPainter, QPalette
 from vendor.Qt.QtWidgets import (
     QAction,
     QFileIconProvider,
@@ -17,8 +17,12 @@ from vendor.Qt.QtWidgets import (
     QStylePainter,
     QToolButton,
     QWidget,
+    QWidgetAction,
 )
-from widgets.outline_utils import get_symbol_type_icon
+from widgets.outline_utils import (
+    get_symbol_text_color,
+    get_symbol_type_icon,
+)
 
 
 _icon_provider = None
@@ -131,6 +135,80 @@ def populate_dir_menu(menu, dir_path, on_file_selected, theme_colors=None, font=
         menu.addAction(act)
 
 
+class _SymbolMenuItemWidget(QWidget):
+    _LEFT_PADDING = 8
+    _ICON_COLUMN_WIDTH = 24
+    _ICON_SIZE = 18
+    _TEXT_SPACING = 6
+    _RIGHT_PADDING = 20
+
+    def __init__(
+        self,
+        menu,
+        action,
+        icon,
+        text,
+        text_color,
+        highlight_color,
+    ):
+        super(_SymbolMenuItemWidget, self).__init__(menu)
+        self._menu = menu
+        self._action = action
+        self._icon = icon
+        self._text = text
+        self._text_color = text_color
+        self._highlight_color = highlight_color
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setFont(menu.font())
+
+    def sizeHint(self):
+        metrics = self.fontMetrics()
+        if hasattr(metrics, "horizontalAdvance"):
+            text_width = metrics.horizontalAdvance(self._text)
+        else:
+            text_width = metrics.width(self._text)
+        width = (
+            self._LEFT_PADDING
+            + self._ICON_COLUMN_WIDTH
+            + self._TEXT_SPACING
+            + text_width
+            + self._RIGHT_PADDING
+        )
+        return QSize(width, max(24, metrics.height()) + 8)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if self._menu.activeAction() is self._action:
+            painter.fillRect(self.rect(), self._highlight_color)
+
+        icon_rect = QRect(
+            self._LEFT_PADDING
+            + (self._ICON_COLUMN_WIDTH - self._ICON_SIZE) // 2,
+            (self.height() - self._ICON_SIZE) // 2,
+            self._ICON_SIZE,
+            self._ICON_SIZE,
+        )
+        self._icon.paint(painter, icon_rect)
+
+        text_x = (
+            self._LEFT_PADDING
+            + self._ICON_COLUMN_WIDTH
+            + self._TEXT_SPACING
+        )
+        text_rect = QRect(
+            text_x,
+            0,
+            max(0, self.width() - text_x - self._RIGHT_PADDING),
+            self.height(),
+        )
+        painter.setPen(self._text_color)
+        painter.drawText(
+            text_rect,
+            Qt.AlignLeft | Qt.AlignVCenter,
+            self._text,
+        )
+
+
 class BreadcrumbItemWidget(QToolButton):
     """
     Custom button for a single breadcrumb segment (Directory, File, or Code Symbol).
@@ -235,11 +313,20 @@ class BreadcrumbItemWidget(QToolButton):
             text_width,
             self.height(),
         )
+        palette = QPalette(option.palette)
+        sym_data = self._path_or_data or {}
+        palette.setColor(
+            QPalette.ButtonText,
+            get_symbol_text_color(
+                sym_data.get('type', 'function'),
+                self._theme_colors,
+            ),
+        )
         self.style().drawItemText(
             painter,
             text_rect,
             Qt.AlignLeft | Qt.AlignVCenter,
-            option.palette,
+            palette,
             bool(option.state & QStyle.State_Enabled),
             text,
             QPalette.ButtonText,
@@ -255,6 +342,7 @@ class BreadcrumbItemWidget(QToolButton):
             menu.setFont(self._menu_font)
         self._apply_menu_style(menu)
         menu.aboutToShow.connect(self._on_menu_about_to_show)
+        menu.hovered.connect(self._on_menu_action_hovered)
         self.setMenu(menu)
         return menu
 
@@ -274,6 +362,7 @@ class BreadcrumbItemWidget(QToolButton):
         menu = self.menu()
         if not menu:
             return
+        menu._hovered_symbol_widget = None
         menu.clear()
         font = menu.font()
 
@@ -288,17 +377,50 @@ class BreadcrumbItemWidget(QToolButton):
                 populate_dir_menu(menu, dir_path, self.fileSelected.emit, self._theme_colors, font)
 
         elif self._node_type == "symbol":
+            highlight_value = self._theme_colors.get(
+                'highlight_line',
+                (128, 128, 128),
+            )
+            if isinstance(highlight_value, (list, tuple)):
+                highlight_color = QColor(*highlight_value[:3])
+            else:
+                highlight_color = QColor(highlight_value)
             for sym in self._siblings:
                 s_name = sym.get('name', '')
                 s_type = sym.get('type', 'function')
                 s_line = sym.get('line', 1)
                 c_name = clean_symbol_name(s_name)
 
-                act = QAction(get_symbol_type_icon(s_type, self._theme_colors), c_name, menu)
+                act = QWidgetAction(menu)
+                act.setText(c_name)
                 act.setStatusTip("Navigate to {0} (Line {1})".format(c_name, s_line))
                 act.setData(s_line)
+                item_widget = _SymbolMenuItemWidget(
+                    menu,
+                    act,
+                    get_symbol_type_icon(s_type, self._theme_colors),
+                    c_name,
+                    get_symbol_text_color(s_type, self._theme_colors),
+                    highlight_color,
+                )
+                act.setDefaultWidget(item_widget)
+                act._symbol_item_widget = item_widget
                 act.triggered.connect(lambda checked=False, line=s_line: self.symbolSelected.emit(line))
                 menu.addAction(act)
+
+    def _on_menu_action_hovered(self, action):
+        menu = self.menu()
+        if not menu:
+            return
+        previous = getattr(menu, '_hovered_symbol_widget', None)
+        current = getattr(action, '_symbol_item_widget', None)
+        if previous is current:
+            return
+        if previous:
+            previous.update()
+        if current:
+            current.update()
+        menu._hovered_symbol_widget = current
 
     def _apply_menu_style(self, menu):
         bg = self._theme_colors.get('window', self._theme_colors.get('tab_bg', (35, 35, 35)))
