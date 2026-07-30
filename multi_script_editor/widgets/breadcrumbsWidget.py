@@ -1,7 +1,8 @@
 import os
 from bisect import bisect_right
 
-from vendor.Qt.QtCore import QFileInfo, QSize, Qt, Signal
+from vendor.Qt.QtCore import QFileInfo, QRect, QSize, Qt, Signal
+from vendor.Qt.QtGui import QIcon, QPalette
 from vendor.Qt.QtWidgets import (
     QAction,
     QFileIconProvider,
@@ -11,6 +12,9 @@ from vendor.Qt.QtWidgets import (
     QMenu,
     QScrollArea,
     QSizePolicy,
+    QStyle,
+    QStyleOptionToolButton,
+    QStylePainter,
     QToolButton,
     QWidget,
 )
@@ -174,6 +178,72 @@ class BreadcrumbItemWidget(QToolButton):
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
             self.setIconSize(QSize(18, 18))
             self.clicked.connect(self._on_symbol_clicked)
+
+    def paintEvent(self, event):
+        if self._node_type != "symbol" or self.icon().isNull():
+            super(BreadcrumbItemWidget, self).paintEvent(event)
+            return
+
+        painter = QStylePainter(self)
+        option = QStyleOptionToolButton()
+        self.initStyleOption(option)
+        icon = QIcon(option.icon)
+        icon_size = option.iconSize
+        text = option.text
+
+        option.icon = QIcon()
+        option.text = ""
+        painter.drawComplexControl(QStyle.CC_ToolButton, option)
+
+        metrics = option.fontMetrics
+        if hasattr(metrics, "horizontalAdvance"):
+            text_width = metrics.horizontalAdvance(text)
+        else:
+            text_width = metrics.width(text)
+        spacing = 4
+        content_width = icon_size.width() + spacing + text_width
+        start_x = max(0, (self.width() - content_width) // 2)
+        icon_rect = QRect(
+            start_x,
+            (self.height() - icon_size.height()) // 2,
+            icon_size.width(),
+            icon_size.height(),
+        )
+
+        if option.state & QStyle.State_Enabled:
+            icon_mode = (
+                QIcon.Active
+                if option.state & QStyle.State_MouseOver
+                else QIcon.Normal
+            )
+        else:
+            icon_mode = QIcon.Disabled
+        icon_state = (
+            QIcon.On if option.state & QStyle.State_On else QIcon.Off
+        )
+        icon.paint(
+            painter,
+            icon_rect,
+            Qt.AlignCenter,
+            icon_mode,
+            icon_state,
+        )
+
+        text_rect = QRect(
+            start_x + icon_size.width() + spacing,
+            0,
+            text_width,
+            self.height(),
+        )
+        self.style().drawItemText(
+            painter,
+            text_rect,
+            Qt.AlignLeft | Qt.AlignVCenter,
+            option.palette,
+            bool(option.state & QStyle.State_Enabled),
+            text,
+            QPalette.ButtonText,
+        )
 
     def _setup_lazy_menu(self):
         existing_menu = self.menu()
