@@ -161,12 +161,25 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def _on_text_changed(self):
         self._lint_timer.start(500)
-        if hasattr(self, 'multi_cursor_manager') and self.multi_cursor_manager.has_cursors():
-            pass
-        elif getattr(self, '_is_undo_redo', False):
-            pass
-        else:
-            self.autocomplete_timer.start(200)
+        if (
+            hasattr(self, 'multi_cursor_manager')
+            and self.multi_cursor_manager.has_cursors()
+        ):
+            return
+        if getattr(self, '_is_undo_redo', False):
+            return
+        if (
+            hasattr(self.p, 'autocomplete_act')
+            and not self.p.autocomplete_act.isChecked()
+        ):
+            return
+        if (
+            hasattr(self.p, '_presenter')
+            and self._current_file_extension()
+            not in PYTHON_COMPLETION_EXTENSIONS
+        ):
+            return
+        self.autocomplete_timer.start(200)
 
     @staticmethod
     def _folding_signature(text):
