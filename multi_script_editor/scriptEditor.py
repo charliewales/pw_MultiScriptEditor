@@ -1067,19 +1067,37 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 continue
             name = self.tab.tabText(item)
             edit = getattr(widget, 'edit', None)
+            file_path = getattr(widget, 'file_path', None)
             text, modified = get_session_editor_state(
                 edit,
-                self.tab.getTabText(item),
+                "",
             )
+            is_deferred = (
+                edit is not None
+                and hasattr(edit, 'needs_loading_text')
+            )
+            if (
+                edit is not None
+                and not is_deferred
+                and (
+                    save_full_text
+                    or not file_path
+                    or modified
+                )
+            ):
+                text = self.tab.getTabText(item)
+
             size = 12
             if edit and hasattr(edit, 'getFontSize'):
                 size = edit.getFontSize()
             size = max(1, size - zoom_delta)
 
-            file_path = getattr(widget, 'file_path', None)
             bookmarks = []
-            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_bookmarks'):
-                bookmarks = widget.edit.get_bookmarks()
+            if edit is not None:
+                if hasattr(edit, 'needs_loading_bookmarks'):
+                    bookmarks = edit.needs_loading_bookmarks
+                elif hasattr(edit, 'get_bookmarks'):
+                    bookmarks = edit.get_bookmarks()
 
             line = 1
             column = 0
@@ -1098,8 +1116,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     scroll_v = widget.edit.verticalScrollBar().value()
 
             folds = []
-            if hasattr(widget, 'edit') and hasattr(widget.edit, 'get_folded_blocks'):
-                folds = widget.edit.get_folded_blocks()
+            if edit is not None:
+                if hasattr(edit, 'needs_loading_folds'):
+                    folds = edit.needs_loading_folds
+                elif hasattr(edit, 'get_folded_blocks'):
+                    folds = edit.get_folded_blocks()
 
             tab = {
                 'name': name,
