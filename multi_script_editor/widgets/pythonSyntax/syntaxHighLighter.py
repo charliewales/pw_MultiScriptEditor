@@ -47,9 +47,6 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         # Single-quoted string
         rules.append((r"[ru]?'[^'\\]*(\\.[^'\\]*)*'", 0, self.getStyle(self.colors['string'])))
 
-        # Whitespace, \s
-        rules.append((r"\s", 0, self.getStyle(self.colors['whitespace'])))
-
         # Build a compiled regex for each pattern
         self.rules = [(re.compile(pat), index, fmt) for (pat, index, fmt) in rules]
         
@@ -79,15 +76,12 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         self.setFormat(0, len(text), self.default_format)
 
         # Do other syntax formatting using fast compiled Python regexes
-        for expression, nth, format in self.rules:
+        for expression, nth, text_format in self.rules:
             for match in expression.finditer(text):
-                try:
-                    index = match.start(nth)
-                    length = match.end(nth) - index
-                    if length > 0:
-                        self.setFormat(index, length, format)
-                except IndexError:
-                    pass
+                index = match.start(nth)
+                length = match.end(nth) - index
+                if length > 0:
+                    self.setFormat(index, length, text_format)
 
         if '#' in text:
             # Safely replace all strings with underscores to avoid matching '#' inside strings
