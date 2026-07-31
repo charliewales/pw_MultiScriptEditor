@@ -1,23 +1,24 @@
 import os
 from bisect import bisect_right
 
-from vendor.Qt.QtCore import QDir, QFileInfo, QRect, QSize, Qt, Signal
-from vendor.Qt.QtGui import QColor, QIcon, QPainter, QPalette
+from vendor.Qt.QtCore import QDir, QFileInfo, QPoint, QRect, QSize, Qt, Signal
+from vendor.Qt.QtGui import QBrush, QColor, QIcon, QPalette
 from vendor.Qt.QtWidgets import (
-    QAction,
+    QApplication,
     QFileIconProvider,
     QFrame,
     QHBoxLayout,
     QLabel,
-    QMenu,
     QScrollArea,
     QSizePolicy,
     QStyle,
     QStyleOptionToolButton,
     QStylePainter,
     QToolButton,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
     QWidget,
-    QWidgetAction,
 )
 from widgets.outline_utils import (
     get_symbol_text_color,
@@ -89,15 +90,11 @@ def split_path_into_components(full_path):
     return parts
 
 
-def populate_dir_menu(menu, dir_path, on_file_selected, theme_colors=None, font=None):
-    """
-    Dynamically populates a QMenu with subdirectories and files of dir_path.
-    """
-    menu.clear()
+def list_directory_entries(dir_path):
     try:
         entries = os.listdir(dir_path)
-    except Exception:
-        return
+    except OSError:
+        return [], []
 
     dirs = []
     files = []
@@ -112,129 +109,323 @@ def populate_dir_menu(menu, dir_path, on_file_selected, theme_colors=None, font=
 
     dirs.sort(key=lambda x: x[0].lower())
     files.sort(key=lambda x: x[0].lower())
+    return dirs, files
 
-    for name, p in dirs:
-        sub_menu = QMenu(name, menu)
-        sub_menu.setIcon(get_folder_icon(p))
-        if font:
-            sub_menu.setFont(font)
-        sub_menu.menuAction().setStatusTip("Browse folder {0}".format(name))
-        sub_menu.aboutToShow.connect(
-            lambda m=sub_menu, path=p: populate_dir_menu(m, path, on_file_selected, theme_colors, font)
+def _color_css(value, fallback):
+    if isinstance(value, QColor):
+        return value.name()
+    if isinstance(value, (list, tuple)) and len(value) >= 3:
+        return "#{:02x}{:02x}{:02x}".format(*value[:3])
+    if isinstance(value, str):
+        color = QColor(value)
+        if color.isValid():
+            return color.name()
+    return fallback
+
+
+class BreadcrumbTreePopup(QFrame):
+    fileSelected = Signal(str)
+    symbolSelected = Signal(int)
+
+    _KIND_ROLE = Qt.UserRole
+    _VALUE_ROLE = Qt.UserRole + 1
+    _LOADED_ROLE = Qt.UserRole + 2
+    _DIRECTORY = "directory"
+    _FILE = "file"
+    _SYMBOL = "symbol"
+
+    def __init__(self, theme_colors=None, font=None, parent=None):
+        super(BreadcrumbTreePopup, self).__init__(
+            parent,
+            Qt.Popup | Qt.FramelessWindowHint,
         )
-        menu.addMenu(sub_menu)
+        self.setObjectName("breadcrumbPopup")
+        self._theme_colors = theme_colors or {}
 
-    if dirs and files:
-        menu.addSeparator()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setSpacing(0)
 
-    for name, p in files:
-        file_icon = get_file_icon(p)
-        act = QAction(file_icon, name, menu)
-        act.setStatusTip("Open {0}".format(name))
-        act.triggered.connect(lambda checked=False, path=p: on_file_selected(path))
-        menu.addAction(act)
-
-
-def populate_drives_menu(
-    menu,
-    on_file_selected,
-    theme_colors=None,
-    font=None,
-):
-    menu.clear()
-    for drive_info in QDir.drives():
-        drive_path = os.path.normpath(drive_info.absoluteFilePath())
-        drive_name = os.path.splitdrive(drive_path)[0] or drive_path
-        sub_menu = QMenu(drive_name, menu)
-        sub_menu.setIcon(get_folder_icon(drive_path))
+        self.tree = QTreeWidget(self)
+        self.tree.setObjectName("breadcrumbTree")
+        self.tree.setHeaderHidden(True)
+        self.tree.setColumnCount(1)
+        self.tree.setIndentation(18)
+        self.tree.setRootIsDecorated(True)
+        self.tree.setUniformRowHeights(True)
+        self.tree.setAnimated(False)
+        self.tree.setExpandsOnDoubleClick(False)
+        self.tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.tree.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         if font:
-            sub_menu.setFont(font)
-        sub_menu.menuAction().setStatusTip(
-            "Browse drive {0}".format(drive_name)
+            self.setFont(font)
+            self.tree.setFont(font)
+
+        self.tree.itemExpanded.connect(self._on_item_expanded)
+        self.tree.itemPressed.connect(self._on_item_pressed)
+        self.tree.itemClicked.connect(self._on_item_clicked)
+        self.tree.itemActivated.connect(self._on_item_activated)
+        layout.addWidget(self.tree)
+        self._apply_theme()
+        self._pressed_item = None
+        self._pressed_item_was_expanded = False
+
+    def populate(self, node_type, path_or_data=None, siblings=None):
+        self.tree.setUpdatesEnabled(False)
+        self.tree.clear()
+        self.tree.setRootIsDecorated(node_type != "symbol")
+
+        if node_type == "symbol":
+            self._populate_symbols(siblings or [])
+        elif node_type == "file":
+            file_path = path_or_data or ""
+            self._populate_directory(os.path.dirname(file_path))
+        elif node_type == "dir":
+            normalized_path = (
+                os.path.normpath(path_or_data)
+                if path_or_data
+                else ""
+            )
+            if (
+                os.name == "nt"
+                and normalized_path
+                and QFileInfo(normalized_path).isRoot()
+            ):
+                self._populate_drives()
+            else:
+                self._populate_directory(
+                    os.path.dirname(normalized_path)
+                    if normalized_path
+                    else ""
+                )
+
+        self.tree.setUpdatesEnabled(True)
+
+    def show_for(self, button, node_type, path_or_data=None, siblings=None):
+        self.populate(node_type, path_or_data, siblings)
+
+        screen = button.screen() or QApplication.primaryScreen()
+        available = screen.availableGeometry()
+        row_height = self.tree.sizeHintForRow(0)
+        if row_height <= 0:
+            row_height = max(24, self.tree.fontMetrics().height() + 8)
+        content_rows = max(1, self.tree.topLevelItemCount())
+        maximum_height = min(600, max(240, int(available.height() * 0.7)))
+        height = min(
+            maximum_height,
+            content_rows * row_height + self.frameWidth() * 2 + 6,
         )
-        sub_menu.aboutToShow.connect(
-            lambda m=sub_menu, path=drive_path: populate_dir_menu(
-                m,
-                path,
-                on_file_selected,
-                theme_colors,
-                font,
+        width = min(
+            max(220, self.tree.sizeHintForColumn(0) + 42),
+            max(220, int(available.width() * 0.7)),
+        )
+        self.resize(width, height)
+
+        position = button.mapToGlobal(QPoint(0, button.height()))
+        if position.y() + height > available.bottom() + 1:
+            position.setY(
+                button.mapToGlobal(QPoint(0, 0)).y() - height
+            )
+        position.setX(
+            min(
+                max(position.x(), available.left()),
+                available.right() - width + 1,
             )
         )
-        menu.addMenu(sub_menu)
+        position.setY(
+            min(
+                max(position.y(), available.top()),
+                available.bottom() - height + 1,
+            )
+        )
 
+        self.move(position)
+        self.show()
+        self.raise_()
+        self.tree.setFocus(Qt.PopupFocusReason)
 
-class _SymbolMenuItemWidget(QWidget):
-    _LEFT_PADDING = 8
-    _ICON_COLUMN_WIDTH = 24
-    _ICON_SIZE = 18
-    _TEXT_SPACING = 6
-    _RIGHT_PADDING = 20
+    def _populate_directory(self, dir_path, parent_item=None):
+        if not dir_path or not os.path.isdir(dir_path):
+            return
 
-    def __init__(
-        self,
-        menu,
-        action,
-        icon,
-        text,
-        text_color,
-        highlight_color,
-    ):
-        super(_SymbolMenuItemWidget, self).__init__(menu)
-        self._menu = menu
-        self._action = action
-        self._icon = icon
-        self._text = text
-        self._text_color = text_color
-        self._highlight_color = highlight_color
-        self.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.setFont(menu.font())
+        dirs, files = list_directory_entries(dir_path)
+        for name, path in dirs:
+            item = self._create_item(
+                name,
+                self._DIRECTORY,
+                path,
+                get_folder_icon(path),
+            )
+            item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+            item.setData(0, self._LOADED_ROLE, False)
+            self._add_item(item, parent_item)
 
-    def sizeHint(self):
-        metrics = self.fontMetrics()
-        if hasattr(metrics, "horizontalAdvance"):
-            text_width = metrics.horizontalAdvance(self._text)
+        for name, path in files:
+            self._add_item(
+                self._create_item(
+                    name,
+                    self._FILE,
+                    path,
+                    get_file_icon(path),
+                ),
+                parent_item,
+            )
+
+    def _populate_drives(self):
+        for drive_info in QDir.drives():
+            drive_path = os.path.normpath(drive_info.absoluteFilePath())
+            drive_name = os.path.splitdrive(drive_path)[0] or drive_path
+            item = self._create_item(
+                drive_name,
+                self._DIRECTORY,
+                drive_path,
+                get_folder_icon(drive_path),
+            )
+            item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
+            item.setData(0, self._LOADED_ROLE, False)
+            self.tree.addTopLevelItem(item)
+
+    def _populate_symbols(self, siblings):
+        for symbol in siblings:
+            name = clean_symbol_name(symbol.get('name', ''))
+            symbol_type = symbol.get('type', 'function')
+            item = self._create_item(
+                name,
+                self._SYMBOL,
+                symbol.get('line', 1),
+                get_symbol_type_icon(
+                    symbol_type,
+                    self._theme_colors,
+                ),
+            )
+            item.setForeground(
+                0,
+                QBrush(
+                    get_symbol_text_color(
+                        symbol_type,
+                        self._theme_colors,
+                    )
+                ),
+            )
+            item.setToolTip(
+                0,
+                "Navigate to {0} (Line {1})".format(
+                    name,
+                    symbol.get('line', 1),
+                ),
+            )
+            self.tree.addTopLevelItem(item)
+
+    def _create_item(self, text, kind, value, icon):
+        item = QTreeWidgetItem([text])
+        item.setIcon(0, icon)
+        item.setData(0, self._KIND_ROLE, kind)
+        item.setData(0, self._VALUE_ROLE, value)
+        return item
+
+    def _add_item(self, item, parent_item):
+        if parent_item is None:
+            self.tree.addTopLevelItem(item)
         else:
-            text_width = metrics.width(self._text)
-        width = (
-            self._LEFT_PADDING
-            + self._ICON_COLUMN_WIDTH
-            + self._TEXT_SPACING
-            + text_width
-            + self._RIGHT_PADDING
-        )
-        return QSize(width, max(24, metrics.height()) + 8)
+            parent_item.addChild(item)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        if self._menu.activeAction() is self._action:
-            painter.fillRect(self.rect(), self._highlight_color)
+    def _on_item_expanded(self, item):
+        if item.data(0, self._KIND_ROLE) != self._DIRECTORY:
+            return
+        if item.data(0, self._LOADED_ROLE):
+            return
+        item.setData(0, self._LOADED_ROLE, True)
+        self._populate_directory(
+            item.data(0, self._VALUE_ROLE),
+            parent_item=item,
+        )
+        if item.childCount() == 0:
+            item.setChildIndicatorPolicy(
+                QTreeWidgetItem.DontShowIndicator
+            )
 
-        icon_rect = QRect(
-            self._LEFT_PADDING
-            + (self._ICON_COLUMN_WIDTH - self._ICON_SIZE) // 2,
-            (self.height() - self._ICON_SIZE) // 2,
-            self._ICON_SIZE,
-            self._ICON_SIZE,
-        )
-        self._icon.paint(painter, icon_rect)
+    def _on_item_pressed(self, item, column):
+        self._pressed_item = item
+        self._pressed_item_was_expanded = item.isExpanded()
 
-        text_x = (
-            self._LEFT_PADDING
-            + self._ICON_COLUMN_WIDTH
-            + self._TEXT_SPACING
+    def _on_item_clicked(self, item, column):
+        if item.data(0, self._KIND_ROLE) == self._DIRECTORY:
+            expansion_changed = (
+                self._pressed_item is item
+                and item.isExpanded()
+                != self._pressed_item_was_expanded
+            )
+            if not expansion_changed and not item.isExpanded():
+                item.setExpanded(True)
+            return
+        self._activate_leaf(item)
+
+    def _on_item_activated(self, item, column):
+        kind = item.data(0, self._KIND_ROLE)
+        if kind == self._DIRECTORY:
+            item.setExpanded(True)
+        else:
+            self._activate_leaf(item)
+
+    def _activate_leaf(self, item):
+        kind = item.data(0, self._KIND_ROLE)
+        if kind == self._FILE:
+            self.fileSelected.emit(item.data(0, self._VALUE_ROLE))
+            self.close()
+        elif kind == self._SYMBOL:
+            self.symbolSelected.emit(int(item.data(0, self._VALUE_ROLE)))
+            self.close()
+
+    def _apply_theme(self):
+        background = _color_css(
+            self._theme_colors.get(
+                'window',
+                self._theme_colors.get('tab_bg'),
+            ),
+            "#232323",
         )
-        text_rect = QRect(
-            text_x,
-            0,
-            max(0, self.width() - text_x - self._RIGHT_PADDING),
-            self.height(),
+        foreground = _color_css(
+            self._theme_colors.get(
+                'tab_selected_text',
+                self._theme_colors.get('text'),
+            ),
+            "#dcdcdc",
         )
-        painter.setPen(self._text_color)
-        painter.drawText(
-            text_rect,
-            Qt.AlignLeft | Qt.AlignVCenter,
-            self._text,
+        highlight = _color_css(
+            self._theme_colors.get('highlight_line'),
+            "#464646",
+        )
+        border = _color_css(
+            self._theme_colors.get('tab_border'),
+            "#555555",
+        )
+        self.setStyleSheet(
+            """
+            QFrame#breadcrumbPopup {{
+                background-color: {0};
+                border: 1px solid {3};
+            }}
+            QTreeWidget#breadcrumbTree {{
+                background-color: {0};
+                color: {1};
+                border: none;
+                outline: none;
+                padding: 2px;
+            }}
+            QTreeWidget#breadcrumbTree::item {{
+                min-height: 24px;
+                padding: 1px 4px;
+            }}
+            QTreeWidget#breadcrumbTree::item:hover,
+            QTreeWidget#breadcrumbTree::item:selected {{
+                background-color: {2};
+            }}
+            """.format(
+                background,
+                foreground,
+                highlight,
+                border,
+            )
         )
 
 
@@ -254,6 +445,7 @@ class BreadcrumbItemWidget(QToolButton):
         self._siblings = siblings or []
         self._theme_colors = theme_colors or {}
         self._menu_font = font
+        self._popup = None
 
         self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
@@ -265,15 +457,13 @@ class BreadcrumbItemWidget(QToolButton):
             self.setFont(font)
 
         self.setText(title)
-
-        self.setPopupMode(QToolButton.InstantPopup)
+        self.clicked.connect(self._show_popup)
 
         if self._node_type == "dir":
             self.setStatusTip("Browse folder {0}".format(title))
 
         elif self._node_type == "file":
             self.setStatusTip("File {0}".format(title))
-            self.clicked.connect(self._on_file_clicked)
 
         else:
             # Code Symbol Node
@@ -284,7 +474,6 @@ class BreadcrumbItemWidget(QToolButton):
             self.setStatusTip("Jump to {0} (Line {1})".format(title, line))
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
             self.setIconSize(QSize(18, 18))
-            self.clicked.connect(self._on_symbol_clicked)
 
     def paintEvent(self, event):
         if self._node_type != "symbol" or self.icon().isNull():
@@ -361,158 +550,27 @@ class BreadcrumbItemWidget(QToolButton):
             QPalette.ButtonText,
         )
 
-    def _setup_lazy_menu(self):
-        existing_menu = self.menu()
-        if existing_menu:
-            return existing_menu
+    def _setup_lazy_popup(self):
+        if self._popup is not None:
+            return self._popup
 
-        menu = QMenu(self)
-        if self._menu_font:
-            menu.setFont(self._menu_font)
-        self._apply_menu_style(menu)
-        menu.aboutToShow.connect(self._on_menu_about_to_show)
-        menu.hovered.connect(self._on_menu_action_hovered)
-        self.setMenu(menu)
-        return menu
+        self._popup = BreadcrumbTreePopup(
+            theme_colors=self._theme_colors,
+            font=self._menu_font,
+            parent=self,
+        )
+        self._popup.fileSelected.connect(self.fileSelected.emit)
+        self._popup.symbolSelected.connect(self.symbolSelected.emit)
+        return self._popup
 
-    def mousePressEvent(self, event):
-        self._setup_lazy_menu()
-        super(BreadcrumbItemWidget, self).mousePressEvent(event)
-
-    def keyPressEvent(self, event):
-        self._setup_lazy_menu()
-        super(BreadcrumbItemWidget, self).keyPressEvent(event)
-
-    def showMenu(self):
-        self._setup_lazy_menu()
-        super(BreadcrumbItemWidget, self).showMenu()
-
-    def _on_menu_about_to_show(self):
-        menu = self.menu()
-        if not menu:
-            return
-        menu._hovered_symbol_widget = None
-        menu.clear()
-        font = menu.font()
-
-        if self._node_type == "dir":
-            normalized_path = (
-                os.path.normpath(self._path_or_data)
-                if self._path_or_data
-                else ""
-            )
-            if (
-                os.name == "nt"
-                and normalized_path
-                and QFileInfo(normalized_path).isRoot()
-            ):
-                populate_drives_menu(
-                    menu,
-                    self.fileSelected.emit,
-                    self._theme_colors,
-                    font,
-                )
-            else:
-                dir_path = (
-                    os.path.dirname(normalized_path)
-                    if normalized_path
-                    else ""
-                )
-                if dir_path and os.path.exists(dir_path):
-                    populate_dir_menu(
-                        menu,
-                        dir_path,
-                        self.fileSelected.emit,
-                        self._theme_colors,
-                        font,
-                    )
-
-        elif self._node_type == "file":
-            dir_path = os.path.dirname(self._path_or_data) if self._path_or_data else ""
-            if dir_path and os.path.exists(dir_path):
-                populate_dir_menu(menu, dir_path, self.fileSelected.emit, self._theme_colors, font)
-
-        elif self._node_type == "symbol":
-            highlight_value = self._theme_colors.get(
-                'highlight_line',
-                (128, 128, 128),
-            )
-            if isinstance(highlight_value, (list, tuple)):
-                highlight_color = QColor(*highlight_value[:3])
-            else:
-                highlight_color = QColor(highlight_value)
-            for sym in self._siblings:
-                s_name = sym.get('name', '')
-                s_type = sym.get('type', 'function')
-                s_line = sym.get('line', 1)
-                c_name = clean_symbol_name(s_name)
-
-                act = QWidgetAction(menu)
-                act.setText(c_name)
-                act.setStatusTip("Navigate to {0} (Line {1})".format(c_name, s_line))
-                act.setData(s_line)
-                item_widget = _SymbolMenuItemWidget(
-                    menu,
-                    act,
-                    get_symbol_type_icon(s_type, self._theme_colors),
-                    c_name,
-                    get_symbol_text_color(s_type, self._theme_colors),
-                    highlight_color,
-                )
-                act.setDefaultWidget(item_widget)
-                act._symbol_item_widget = item_widget
-                act.triggered.connect(lambda checked=False, line=s_line: self.symbolSelected.emit(line))
-                menu.addAction(act)
-
-    def _on_menu_action_hovered(self, action):
-        menu = self.menu()
-        if not menu:
-            return
-        previous = getattr(menu, '_hovered_symbol_widget', None)
-        current = getattr(action, '_symbol_item_widget', None)
-        if previous is current:
-            return
-        if previous:
-            previous.update()
-        if current:
-            current.update()
-        menu._hovered_symbol_widget = current
-
-    def _apply_menu_style(self, menu):
-        bg = self._theme_colors.get('window', self._theme_colors.get('tab_bg', (35, 35, 35)))
-        fg = self._theme_colors.get('tab_selected_text', self._theme_colors.get('text', (220, 220, 220)))
-        sel_fg = self._theme_colors.get('tab_selected_text', (255, 255, 255))
-        sel_hl = self._theme_colors.get('highlight_line', (128, 128, 128))
-
-        bg_hex = "#{:02x}{:02x}{:02x}".format(*bg[:3]) if isinstance(bg, (list, tuple)) else "#232323"
-        fg_hex = "#{:02x}{:02x}{:02x}".format(*fg[:3]) if isinstance(fg, (list, tuple)) else "#dcdcdc"
-        sel_fg_hex = "#{:02x}{:02x}{:02x}".format(*sel_fg[:3]) if isinstance(sel_fg, (list, tuple)) else "#ffffff"
-        sel_hl_hex = "#{:02x}{:02x}{:02x}".format(*sel_hl[:3]) if isinstance(sel_hl, (list, tuple)) else "#ffffff"
-
-        style = """
-            QMenu {{
-                background-color: {0};
-                color: {1};
-                padding: 4px;
-            }}
-            QMenu::item {{
-                padding: 4px 20px 4px 8px;
-                border-radius: 2px;
-            }}
-            QMenu::item:selected {{
-                background-color: {3};
-                color: {2};
-            }}
-        """.format(bg_hex, fg_hex, sel_fg_hex, sel_hl_hex)
-        menu.setStyleSheet(style)
-
-    def _on_file_clicked(self):
-        if self._path_or_data:
-            self.fileSelected.emit(self._path_or_data)
-
-    def _on_symbol_clicked(self):
-        line = self._path_or_data.get('line', 1) if isinstance(self._path_or_data, dict) else 1
-        self.symbolSelected.emit(line)
+    def _show_popup(self):
+        popup = self._setup_lazy_popup()
+        popup.show_for(
+            self,
+            self._node_type,
+            self._path_or_data,
+            self._siblings,
+        )
 
 
 class BreadcrumbBar(QScrollArea):
