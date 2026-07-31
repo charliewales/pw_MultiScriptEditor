@@ -1238,8 +1238,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def _popup_style_args(self, edit_widget=None, apply_symbols_size=True):
         theme_name = self._current_settings.get('theme', 'Dark')
-        qss = design.editorStyle(theme_name)
-        colors = design.getColors(theme_name)
+        qss = getattr(self, '_current_editor_style_cache', None)
+        if qss is None:
+            qss = design.editorStyle(theme_name)
+        colors = getattr(self, '_current_colors_cache', None)
+        if colors is None:
+            colors = design.getColors(theme_name)
 
         if colors.get('use_theme_font_on_symbols', True):
             font_data = colors.get('font')
