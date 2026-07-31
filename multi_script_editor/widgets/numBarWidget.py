@@ -40,6 +40,49 @@ class lineNumberBarClass(QWidget):
     def request_repaint(self, *args):
         QWidget.update(self)
 
+    def update_from_editor(self, rect, dy):
+        if dy:
+            self.scroll(0, dy)
+            return
+
+        offset = self._viewport_offset()
+        self._update_region(rect.y() + offset, rect.height())
+
+    def _update_region(self, y, height):
+        QWidget.update(self, 0, y, self.width(), height)
+
+    def _viewport_offset(self):
+        if self.edit and self.edit.viewport():
+            return self.edit.y() + self.edit.viewport().y() - self.y()
+        return 0
+
+    def _block_geometry(
+        self,
+        block,
+        contents_y=0,
+        viewport_offset=None,
+    ):
+        if viewport_offset is None:
+            viewport_offset = self._viewport_offset()
+
+        if hasattr(self.edit, 'blockBoundingGeometry'):
+            block_rect = self.edit.blockBoundingGeometry(block).translated(
+                self.edit.contentOffset()
+            )
+            pos_y = block_rect.top() + viewport_offset
+            layout = block.layout()
+            layout_height = layout.boundingRect().height() if layout else 0
+            block_height = (
+                layout_height if layout_height > 0 else block_rect.height()
+            )
+            return block_rect, pos_y, block_height
+
+        block_rect = self.edit.document().documentLayout().blockBoundingRect(
+            block
+        )
+        pos_y = block_rect.top() - contents_y + viewport_offset
+        return block_rect, pos_y, block_rect.height()
+
     def update(self, *args):
         '''
         Updates the number bar to display the current set of numbers.
@@ -121,9 +164,7 @@ class lineNumberBarClass(QWidget):
         align = Qt.AlignRight | Qt.AlignVCenter
         is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
         
-        vp_offset = 0
-        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
+        vp_offset = self._viewport_offset()
 
         while block.isValid():
             if not block.isVisible():
@@ -132,22 +173,19 @@ class lineNumberBarClass(QWidget):
                 
             actual_line_number = block.blockNumber() + 1
             
+            block_rect, pos_y, block_height = self._block_geometry(
+                block,
+                contents_y,
+                vp_offset,
+            )
+
             if is_plaintextedit:
-                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top() + vp_offset
-                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                block_height = layout_h if layout_h > 0 else block_rect.height()
                 if pos_y > self.edit.viewport().height() + vp_offset:
                     break
                 if pos_y + block_height < vp_offset:
                     block = block.next()
                     continue
             else:
-                # The top left position of the block in the document
-                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y + vp_offset
-                block_height = block_rect.height()
-                
                 # Check if the position of the block is outside of the visible area.
                 if block_rect.top() > page_bottom:
                     break
@@ -264,26 +302,18 @@ class lineNumberBarClass(QWidget):
         if block.previous().isValid():
             block = block.previous()
             
-        vp_offset = 0
-        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
-
         hover_block = -1
-        is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+        viewport_offset = self._viewport_offset()
         while block.isValid():
             if not block.isVisible():
                 block = block.next()
                 continue
-                
-            if is_plaintextedit:
-                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top() + vp_offset
-                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                block_height = layout_h if layout_h > 0 else block_rect.height()
-            else:
-                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y + vp_offset
-                block_height = block_rect.height()
+
+            _, pos_y, block_height = self._block_geometry(
+                block,
+                contents_y,
+                viewport_offset,
+            )
                 
             if pos_y <= click_y <= pos_y + block_height:
                 hover_block = block.blockNumber()
@@ -323,26 +353,18 @@ class lineNumberBarClass(QWidget):
             block = cursor.block()
             if block.previous().isValid():
                 block = block.previous()
-                
-            vp_offset = 0
-            if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-                vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
 
-            is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
+            viewport_offset = self._viewport_offset()
             while block.isValid():
                 if not block.isVisible():
                     block = block.next()
                     continue
-                    
-                if is_plaintextedit:
-                    block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                    pos_y = block_rect.top() + vp_offset
-                    layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                    block_height = layout_h if layout_h > 0 else block_rect.height()
-                else:
-                    block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                    pos_y = block_rect.top() - contents_y + vp_offset
-                    block_height = block_rect.height()
+
+                _, pos_y, block_height = self._block_geometry(
+                    block,
+                    contents_y,
+                    viewport_offset,
+                )
                     
                 if pos_y <= click_y <= pos_y + block_height:
                     # Check if click is on the right side (chevron / folding region)
