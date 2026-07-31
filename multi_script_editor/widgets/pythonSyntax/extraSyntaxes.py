@@ -34,15 +34,14 @@ class BaseHighlighterClass(QSyntaxHighlighter):
             for match in self.whitespace_regex.finditer(text):
                 self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
 
-        for expression, nth, format in self.rules:
+        for expression, nth, text_format in self.rules:
+            if not 0 <= nth <= expression.groups:
+                continue
             for match in expression.finditer(text):
-                try:
-                    index = match.start(nth)
-                    length = match.end(nth) - index
-                    if length > 0:
-                        self.setFormat(index, length, format)
-                except IndexError:
-                    pass
+                index = match.start(nth)
+                length = match.end(nth) - index
+                if length > 0:
+                    self.setFormat(index, length, text_format)
 
         self.applyExtraHighlighting(text)
 
