@@ -838,11 +838,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Returns a comma-separated string of 1-based line numbers of all bookmarks.
         """
-        bookmarks = []
-        for block in self._iter_blocks():
-            if self._is_bookmarked_block(block):
-                bookmarks.append(block.blockNumber() + 1)
-        return ",".join(str(x) for x in sorted(bookmarks))
+        return ",".join(
+            str(block.blockNumber() + 1)
+            for block in self._iter_blocks()
+            if self._is_bookmarked_block(block)
+        )
 
     def set_bookmarks(self, lines):
         """
@@ -964,13 +964,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         """
         Show the BookmarkWidget popup to search and navigate bookmarks.
         """
-        bookmarks = []
-        for block in self._iter_blocks():
-            if self._is_bookmarked_block(block):
-                bookmarks.append({
-                    'line': block.blockNumber() + 1,
-                    'text': block.text()
-                })
+        bookmarks = [
+            {
+                'line': block.blockNumber() + 1,
+                'text': block.text(),
+            }
+            for block in self._iter_blocks()
+            if self._is_bookmarked_block(block)
+        ]
 
         if not bookmarks:
             if hasattr(self, 'messageSignal'):
