@@ -1107,21 +1107,27 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             column = 0
             scroll_v = 0
             if hasattr(widget, 'edit'):
-                if hasattr(widget.edit, 'needs_loading_line'):
+                if (
+                    is_deferred
+                    and hasattr(widget.edit, 'needs_loading_line')
+                ):
                     line = widget.edit.needs_loading_line
                     column = getattr(widget.edit, 'needs_loading_column', 0)
                 elif hasattr(widget.edit, 'textCursor'):
                     line = widget.edit.textCursor().blockNumber() + 1
                     column = widget.edit.textCursor().columnNumber()
 
-                if hasattr(widget.edit, 'needs_loading_scroll_v'):
+                if (
+                    is_deferred
+                    and hasattr(widget.edit, 'needs_loading_scroll_v')
+                ):
                     scroll_v = widget.edit.needs_loading_scroll_v
                 else:
                     scroll_v = widget.edit.verticalScrollBar().value()
 
             folds = []
             if edit is not None:
-                if hasattr(edit, 'needs_loading_folds'):
+                if is_deferred and hasattr(edit, 'needs_loading_folds'):
                     folds = edit.needs_loading_folds
                 elif hasattr(edit, 'get_folded_blocks'):
                     folds = edit.get_folded_blocks()
