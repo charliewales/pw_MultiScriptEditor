@@ -883,11 +883,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.edit.completer.hideMe()
             w.edit._skip_autocomplete_once = True
 
-        self.setWindowStyle()
+        self.setWindowStyle(colors)
 
-    def setWindowStyle(self):
-        theme = self._current_settings.get('theme', 'Multi Script Editor')
-        colors = design.getColors(theme)
+    def setWindowStyle(self, colors=None):
+        if colors is None:
+            theme = self._current_settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
         css = design.applyColorToMainStyle(colors)
         if css:
             self.setStyleSheet(css)
