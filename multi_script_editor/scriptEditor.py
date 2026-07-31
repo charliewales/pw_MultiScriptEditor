@@ -1095,7 +1095,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             bookmarks = []
             if edit is not None:
-                if hasattr(edit, 'needs_loading_bookmarks'):
+                if (
+                    is_deferred
+                    and hasattr(edit, 'needs_loading_bookmarks')
+                ):
                     bookmarks = edit.needs_loading_bookmarks
                 elif hasattr(edit, 'get_bookmarks'):
                     bookmarks = edit.get_bookmarks()
