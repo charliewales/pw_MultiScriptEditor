@@ -50,6 +50,18 @@ FILE_TYPE_COLORS = {
 
 SUPPORTED_EXTENSIONS_EXTRA = set()
 _SUPPORTED_EXTENSIONS_VERSION = 0
+_SUPPORTED_FILES_FILTER_ENABLED = True
+
+
+def file_extension_sort_key(file_name):
+    return (
+        os.path.splitext(file_name)[1].lower(),
+        file_name.lower(),
+    )
+
+
+def is_supported_files_filter_enabled():
+    return _SUPPORTED_FILES_FILTER_ENABLED
 
 
 def register_supported_extension(ext):
@@ -129,6 +141,8 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
         If disabled (False / Unchecked button): Show ALL files.
         """
         self._filter_supported_only = bool(enabled)
+        global _SUPPORTED_FILES_FILTER_ENABLED
+        _SUPPORTED_FILES_FILTER_ENABLED = self._filter_supported_only
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
@@ -185,13 +199,10 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
             return left_name.lower() < right_name.lower()
 
         # For files: sort by file extension ascending
-        left_ext = os.path.splitext(left_name)[1].lower()
-        right_ext = os.path.splitext(right_name)[1].lower()
-
-        if left_ext == right_ext:
-            return left_name.lower() < right_name.lower()
-
-        return left_ext < right_ext
+        return (
+            file_extension_sort_key(left_name)
+            < file_extension_sort_key(right_name)
+        )
 
     def data(self, index, role=Qt.DisplayRole):
         if role == Qt.ForegroundRole:

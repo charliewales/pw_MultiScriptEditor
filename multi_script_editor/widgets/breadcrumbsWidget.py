@@ -20,7 +20,13 @@ from vendor.Qt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from widgets.explorerWidget import DIRECTORY_COLOR, FILE_TYPE_COLORS
+from widgets.explorerWidget import (
+    DIRECTORY_COLOR,
+    FILE_TYPE_COLORS,
+    file_extension_sort_key,
+    get_supported_extensions,
+    is_supported_files_filter_enabled,
+)
 from widgets.outline_utils import (
     get_symbol_text_color,
     get_symbol_type_icon,
@@ -91,7 +97,7 @@ def split_path_into_components(full_path):
     return parts
 
 
-def list_directory_entries(dir_path):
+def list_directory_entries(dir_path, supported_extensions=None):
     try:
         entries = os.listdir(dir_path)
     except OSError:
@@ -106,10 +112,14 @@ def list_directory_entries(dir_path):
         if os.path.isdir(p):
             dirs.append((entry, p))
         else:
+            if supported_extensions is not None:
+                extension = os.path.splitext(entry)[1].lower()
+                if extension not in supported_extensions:
+                    continue
             files.append((entry, p))
 
     dirs.sort(key=lambda x: x[0].lower())
-    files.sort(key=lambda x: x[0].lower())
+    files.sort(key=lambda x: file_extension_sort_key(x[0]))
     return dirs, files
 
 def _color_css(value, fallback):
@@ -175,6 +185,12 @@ class BreadcrumbTreePopup(QFrame):
         self.tree.setUpdatesEnabled(False)
         self.tree.clear()
         self.tree.setRootIsDecorated(node_type != "symbol")
+        self._supported_extensions = None
+        if (
+            node_type in ("dir", "file")
+            and is_supported_files_filter_enabled()
+        ):
+            self._supported_extensions = get_supported_extensions()
 
         if node_type == "symbol":
             self._populate_symbols(siblings or [])
@@ -249,7 +265,10 @@ class BreadcrumbTreePopup(QFrame):
         if not dir_path or not os.path.isdir(dir_path):
             return
 
-        dirs, files = list_directory_entries(dir_path)
+        dirs, files = list_directory_entries(
+            dir_path,
+            self._supported_extensions,
+        )
         for name, path in dirs:
             item = self._create_item(
                 name,
