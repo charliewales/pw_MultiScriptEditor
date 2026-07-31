@@ -120,6 +120,14 @@ class OutlineWidget(QWidget):
             self.tree_widget.setFont(font)
             self.filter_le.setFont(font)
 
+    def apply_theme(self, theme_colors, font):
+        self.set_symbols(
+            self._raw_symbols,
+            theme_colors,
+            font,
+            ext=self._ext,
+        )
+
     def set_symbols(self, symbols, theme_colors=None, font=None, ext='.py'):
         """
         Populates the tree with hierarchical code symbols.

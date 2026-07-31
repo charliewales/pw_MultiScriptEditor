@@ -806,9 +806,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             else:
                 outline_font.setPointSize(secondary_default)
 
-            if hasattr(self, 'outline_widget'):
-                self.outline_widget.set_font(outline_font)
             self.current_outline_font = outline_font
+            if hasattr(self, 'outline_widget'):
+                self.outline_widget.apply_theme(colors, outline_font)
             for i in range(self.tab.count()):
                 w = self.tab.widget(i)
                 if hasattr(w, 'breadcrumbs'):
@@ -2524,8 +2524,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
-        theme_colors = None
-        if hasattr(self, '_current_settings'):
+        theme_colors = getattr(self, '_current_colors_cache', None)
+        if theme_colors is None and hasattr(self, '_current_settings'):
             theme_name = self._current_settings.get('theme', 'Dark')
             theme_colors = design.getColors(theme_name)
 
