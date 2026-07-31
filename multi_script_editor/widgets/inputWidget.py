@@ -960,6 +960,36 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.setTextCursor(cursor)
         self.centerCursor()
 
+    def _search_popup_style_args(self):
+        parent = getattr(self, 'p', None)
+        qss = parent.styleSheet() if parent and hasattr(parent, 'styleSheet') else ""
+        colors = getattr(parent, '_current_colors_cache', None)
+        if colors is None:
+            settings = SettingsModel().read_settings()
+            theme = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme)
+
+        if colors.get('use_theme_font_on_symbols', True):
+            font_data = colors.get('font')
+            if font_data:
+                popup_font = QFont(
+                    font_data.get('family', ''),
+                    font_data.get('pointSize', 10),
+                    font_data.get('weight', -1),
+                    font_data.get('italic', False),
+                )
+            else:
+                popup_font = QFont(self.font())
+        else:
+            popup_font = QApplication.font("QListWidget")
+
+        if 'symbols_text_size' in colors:
+            popup_font.setPointSize(max(1, int(colors['symbols_text_size'])))
+        else:
+            popup_font.setPointSize(max(1, int(popup_font.pointSize() * 0.9)))
+
+        return qss, colors, popup_font
+
     def show_bookmarks_popup(self):
         """
         Show the BookmarkWidget popup to search and navigate bookmarks.
@@ -979,32 +1009,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
 
         from widgets.bookmarkWidget import BookmarkWidget
-        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
-        colors = {}
+        qss, colors, popup_font = self._search_popup_style_args()
         highlighter_class = None
         if hasattr(self, 'hgl'):
             highlighter_class = self.hgl.__class__
-        if hasattr(self, '_highlight_color_cache'):
-            # Fetch styling info
-            from core.settings_model import SettingsModel
-            settings = SettingsModel().read_settings()
-            from widgets.pythonSyntax import design
-            theme = settings.get('theme', 'Multi Script Editor')
-            colors = design.getColors(theme)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                popup_font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                popup_font = QFont(self.font())
-        else:
-            popup_font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            popup_font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            popup_font.setPointSize(max(1, int(popup_font.pointSize() * 0.9)))
 
         popup = BookmarkWidget(
             bookmarks,
@@ -1044,28 +1052,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 self.messageSignal.emit("Clipboard history is empty.")
             return
 
-        qss = self.p.styleSheet() if hasattr(self.p, 'styleSheet') else ""
-        colors = {}
-        if hasattr(self, '_highlight_color_cache'):
-            from core.settings_model import SettingsModel
-            settings = SettingsModel().read_settings()
-            from widgets.pythonSyntax import design
-            theme = settings.get('theme', 'Multi Script Editor')
-            colors = design.getColors(theme)
-
-        if colors.get('use_theme_font_on_symbols', True):
-            font_data = colors.get('font')
-            if font_data:
-                popup_font = QFont(font_data.get('family', ''), font_data.get('pointSize', 10), font_data.get('weight', -1), font_data.get('italic', False))
-            else:
-                popup_font = QFont(self.font())
-        else:
-            popup_font = QApplication.font("QListWidget")
-
-        if 'symbols_text_size' in colors:
-            popup_font.setPointSize(max(1, int(colors['symbols_text_size'])))
-        else:
-            popup_font.setPointSize(max(1, int(popup_font.pointSize() * 0.9)))
+        qss, colors, popup_font = self._search_popup_style_args()
 
         popup = ClipboardWidget(
             ClipboardManager._history,
