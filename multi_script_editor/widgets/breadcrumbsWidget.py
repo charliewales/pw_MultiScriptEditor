@@ -181,7 +181,10 @@ class BreadcrumbTreePopup(QFrame):
             else None
         )
         if active_popup is not None and active_popup is not self:
-            active_popup.cancel_pending_show()
+            try:
+                active_popup.cancel_pending_show()
+            except RuntimeError:
+                BreadcrumbTreePopup._active_popup_ref = None
         BreadcrumbTreePopup._active_popup_ref = weakref.ref(self)
 
         self._show_request_id += 1
@@ -222,10 +225,12 @@ class BreadcrumbTreePopup(QFrame):
         self._pending_node_type = None
         self.hide()
 
-    def _show_pending(self, request_id, force=False):
+    def _show_pending(self, request_id, force=False, refine=False):
         if request_id != self._show_request_id:
             return
         if self._waiting_for_root and not force:
+            return
+        if refine and not self.isVisible():
             return
 
         button = self._pending_button
@@ -293,6 +298,21 @@ class BreadcrumbTreePopup(QFrame):
         self.show()
         self.raise_()
         active_tree.setFocus(Qt.PopupFocusReason)
+        if refine:
+            if node_type == "symbol":
+                scroll_bar = active_tree.verticalScrollBar()
+                scroll_bar.setVisible(
+                    scroll_bar.maximum() > scroll_bar.minimum()
+                )
+        else:
+            QTimer.singleShot(
+                0,
+                lambda current_request=request_id: self._show_pending(
+                    current_request,
+                    force=True,
+                    refine=True,
+                ),
+            )
 
     def _ensure_file_tree(self):
         if self.file_tree is not None:
