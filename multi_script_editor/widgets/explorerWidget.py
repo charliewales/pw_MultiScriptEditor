@@ -83,17 +83,12 @@ def register_supported_extension(ext):
 
 def get_supported_extensions():
     """
-    Dynamically returns all supported file extensions in Multi Script Editor.
-    Fetches SUPPORTED_EXTENSIONS from scriptEditor and combines with FILE_TYPE_COLORS.
+    Returns built-in and dynamically registered file extensions.
     """
-    exts = set(FILE_TYPE_COLORS.keys()) | SUPPORTED_EXTENSIONS_EXTRA
-    try:
-        import scriptEditor
-        if hasattr(scriptEditor, 'SUPPORTED_EXTENSIONS'):
-            exts.update(scriptEditor.SUPPORTED_EXTENSIONS)
-    except Exception:
-        pass
-    return exts
+    return (
+        set(FILE_TYPE_COLORS.keys())
+        | SUPPORTED_EXTENSIONS_EXTRA
+    )
 
 
 def get_default_bookmarks():
@@ -273,6 +268,400 @@ class ExplorerTreeView(QTreeView):
         super(ExplorerTreeView, self).keyPressEvent(event)
 
 
+class FileBrowserTree(ExplorerTreeView):
+    root_loaded = Signal(str)
+
+    def __init__(
+        self,
+        parent=None,
+        action_handler=None,
+        expand_directories_on_click=False,
+    ):
+        super(FileBrowserTree, self).__init__(parent)
+        self._action_handler = action_handler
+        self._current_root = ""
+        self._loaded_paths = set()
+        self._expand_directories_on_click = (
+            expand_directories_on_click
+        )
+        self._pressed_index = QModelIndex()
+        self._pressed_index_was_expanded = False
+
+        self.fs_model = QFileSystemModel(self)
+        self.fs_model.setFilter(
+            QDir.AllEntries
+            | QDir.NoDotAndDotDot
+            | QDir.AllDirs
+            | QDir.Hidden
+        )
+        self.proxy_model = FileSystemFilterProxyModel(self)
+        self.proxy_model.setSourceModel(self.fs_model)
+
+        self.setModel(self.proxy_model)
+        self.setHeaderHidden(True)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setAnimated(True)
+        self.setSortingEnabled(True)
+        self.setDragEnabled(True)
+        self.setDragDropMode(QAbstractItemView.DragOnly)
+        self.setToolTip(
+            "- Return/Enter/Middle Click: set root folder\n"
+            "- Backspace: go to parent folder"
+        )
+        self.proxy_model.sort(0, Qt.AscendingOrder)
+        for column in range(1, 4):
+            self.setColumnHidden(column, True)
+
+        self.customContextMenuRequested.connect(
+            self.show_context_menu
+        )
+        self.doubleClicked.connect(self._activate_index)
+        self.clicked.connect(self._expand_clicked_directory)
+        self.fs_model.directoryLoaded.connect(
+            self._on_directory_loaded
+        )
+
+    def set_action_handler(self, handler):
+        self._action_handler = handler
+
+    def set_filter_supported_only(self, enabled):
+        self.proxy_model.setFilterSupportedOnly(enabled)
+
+    def set_root_path(self, path):
+        self._current_root = path or ""
+        source_index = self.fs_model.setRootPath(self._current_root)
+        proxy_index = self.proxy_model.mapFromSource(source_index)
+        self.setRootIndex(
+            proxy_index if proxy_index.isValid() else QModelIndex()
+        )
+        return source_index, proxy_index
+
+    def is_root_loaded(self):
+        if not self._current_root:
+            return True
+        return self._normalized_path(self._current_root) in self._loaded_paths
+
+    @staticmethod
+    def _normalized_path(path):
+        if not path:
+            return ""
+        return os.path.normcase(os.path.abspath(path))
+
+    def path_for_index(self, proxy_index):
+        if not proxy_index.isValid():
+            return ""
+        source_index = self.proxy_model.mapToSource(proxy_index)
+        return self.fs_model.filePath(source_index)
+
+    def _on_directory_loaded(self, path):
+        normalized_path = self._normalized_path(path)
+        self._loaded_paths.add(normalized_path)
+        if normalized_path != self._normalized_path(self._current_root):
+            return
+        source_index = self.fs_model.index(self._current_root)
+        proxy_index = self.proxy_model.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.setRootIndex(proxy_index)
+        self.root_loaded.emit(self._current_root)
+
+    def mousePressEvent(self, event):
+        self._pressed_index = self.indexAt(event.pos())
+        self._pressed_index_was_expanded = (
+            self._pressed_index.isValid()
+            and self.isExpanded(self._pressed_index)
+        )
+        super(FileBrowserTree, self).mousePressEvent(event)
+
+    def _activate_index(self, proxy_index):
+        path = self.path_for_index(proxy_index)
+        if os.path.isfile(path):
+            self.file_open_requested.emit(path)
+
+    def _expand_clicked_directory(self, proxy_index):
+        if not self._expand_directories_on_click:
+            return
+        path = self.path_for_index(proxy_index)
+        if not os.path.isdir(path):
+            return
+        expansion_changed = (
+            self._pressed_index == proxy_index
+            and self.isExpanded(proxy_index)
+            != self._pressed_index_was_expanded
+        )
+        if not expansion_changed and not self.isExpanded(proxy_index):
+            self.expand(proxy_index)
+
+    def _selected_paths(self, position):
+        selected_indexes = [
+            index
+            for index in self.selectedIndexes()
+            if index.column() == 0
+        ]
+        clicked_index = self.indexAt(position)
+        if (
+            clicked_index.isValid()
+            and clicked_index not in selected_indexes
+        ):
+            selected_indexes = [clicked_index]
+
+        selected_paths = [
+            self.path_for_index(index)
+            for index in selected_indexes
+        ]
+        selected_paths = [path for path in selected_paths if path]
+        if not selected_paths and self._current_root:
+            selected_paths = [self._current_root]
+        return selected_paths, clicked_index
+
+    def _handler_method(self, name):
+        return getattr(self._action_handler, name, None)
+
+    def _show_status_tip(self, action):
+        owner = self._action_handler or self
+        main_window = owner.window()
+        if not hasattr(main_window, 'statusBar'):
+            return
+        if (
+            action
+            and action.statusTip()
+            and getattr(main_window, '_show_status_tips', True)
+        ):
+            main_window.statusBar().showMessage(action.statusTip())
+        else:
+            main_window.statusBar().clearMessage()
+
+    def show_context_menu(self, position):
+        selected_paths, clicked_index = self._selected_paths(position)
+        if not selected_paths:
+            return
+
+        menu = QMenu(self)
+        menu.setFont(self.font())
+        menu.hovered.connect(self._show_status_tip)
+
+        if len(selected_paths) > 1:
+            self._populate_multi_path_menu(
+                menu,
+                selected_paths,
+            )
+        else:
+            self._populate_single_path_menu(
+                menu,
+                selected_paths[0],
+                clicked_index,
+            )
+
+        menu.exec_(self.viewport().mapToGlobal(position))
+
+    def _populate_multi_path_menu(self, menu, selected_paths):
+        files_to_open = [
+            path for path in selected_paths if os.path.isfile(path)
+        ]
+        if files_to_open:
+            open_action = QAction(
+                "Open selected files ({0})".format(
+                    len(files_to_open)
+                ),
+                menu,
+            )
+            open_action.setStatusTip("Open all selected files in tabs")
+            open_action.setIcon(QIcon(icons.get("open", "")))
+            open_action.triggered.connect(
+                lambda: [
+                    self.file_open_requested.emit(path)
+                    for path in files_to_open
+                ]
+            )
+            menu.addAction(open_action)
+
+        copy_action = QAction("Copy selected full paths", menu)
+        copy_action.setStatusTip(
+            "Copy all selected paths to clipboard"
+        )
+        copy_action.setIcon(QIcon(icons.get("copy", "")))
+        copy_action.triggered.connect(
+            lambda: QApplication.clipboard().setText(
+                "\n".join(selected_paths)
+            )
+        )
+        menu.addAction(copy_action)
+
+        delete_path = self._handler_method("_delete_path")
+        if delete_path:
+            menu.addSeparator()
+            delete_action = QAction(
+                "Delete selected ({0})".format(
+                    len(selected_paths)
+                ),
+                menu,
+            )
+            delete_action.setStatusTip(
+                "Delete selected files and folders"
+            )
+            delete_action.setIcon(
+                QIcon(icons.get("delete_file", ""))
+            )
+            delete_action.triggered.connect(
+                lambda: [
+                    delete_path(path)
+                    for path in selected_paths
+                ]
+            )
+            menu.addAction(delete_action)
+
+    def _populate_single_path_menu(
+        self,
+        menu,
+        target_path,
+        clicked_index,
+    ):
+        if os.path.isfile(target_path):
+            open_action = QAction(
+                "Open in editor [MMB]",
+                menu,
+            )
+            open_action.setStatusTip(
+                "Open this file in a new tab (Middle Mouse Button)"
+            )
+            open_action.setIcon(QIcon(icons.get("open", "")))
+            open_action.triggered.connect(
+                lambda: self.file_open_requested.emit(target_path)
+            )
+            menu.addAction(open_action)
+        elif os.path.isdir(target_path):
+            root_action = QAction(
+                "Set as explorer root [MMB]",
+                menu,
+            )
+            root_action.setStatusTip(
+                "Navigate into this folder (Middle Mouse Button)"
+            )
+            root_action.setIcon(QIcon(icons.get("open", "")))
+            root_action.triggered.connect(
+                lambda: self.directory_set_root_requested.emit(
+                    target_path
+                )
+            )
+            menu.addAction(root_action)
+
+            add_bookmark = self._handler_method(
+                "add_path_to_bookmarks"
+            )
+            if add_bookmark:
+                bookmark_action = QAction(
+                    "Add to favorites/bookmarks",
+                    menu,
+                )
+                bookmark_action.setStatusTip("Bookmark this folder")
+                bookmark_action.setIcon(
+                    QIcon(icons.get("bookmark_toggle", ""))
+                )
+                bookmark_action.triggered.connect(
+                    lambda: add_bookmark(target_path)
+                )
+                menu.addAction(bookmark_action)
+
+        menu.addSeparator()
+
+        reveal_action = QAction("Reveal in file explorer", menu)
+        reveal_action.setStatusTip("Open in system file manager")
+        reveal_action.setIcon(
+            QIcon(icons.get("file_recent", ""))
+        )
+        reveal_action.triggered.connect(
+            lambda: self._reveal_path(target_path)
+        )
+        menu.addAction(reveal_action)
+
+        copy_action = QAction("Copy full path", menu)
+        copy_action.setStatusTip(
+            "Copy the absolute file path to clipboard"
+        )
+        copy_action.setIcon(QIcon(icons.get("copy", "")))
+        copy_action.triggered.connect(
+            lambda: QApplication.clipboard().setText(target_path)
+        )
+        menu.addAction(copy_action)
+
+        target_dir = (
+            target_path
+            if os.path.isdir(target_path)
+            else os.path.dirname(target_path)
+        )
+        create_file = self._handler_method("_create_new_file")
+        create_folder = self._handler_method("_create_new_folder")
+        if create_file or create_folder:
+            menu.addSeparator()
+        if create_file:
+            new_file_action = QAction("New file...", menu)
+            new_file_action.setStatusTip(
+                "Create a new file in this directory"
+            )
+            if "new_file" in icons:
+                new_file_action.setIcon(QIcon(icons["new_file"]))
+            new_file_action.triggered.connect(
+                lambda: create_file(target_dir)
+            )
+            menu.addAction(new_file_action)
+        if create_folder:
+            new_folder_action = QAction("New folder...", menu)
+            new_folder_action.setStatusTip(
+                "Create a new folder in this directory"
+            )
+            if "new_folder" in icons:
+                new_folder_action.setIcon(
+                    QIcon(icons["new_folder"])
+                )
+            new_folder_action.triggered.connect(
+                lambda: create_folder(target_dir)
+            )
+            menu.addAction(new_folder_action)
+
+        rename_path = self._handler_method("_rename_path")
+        delete_path = self._handler_method("_delete_path")
+        if (
+            clicked_index.isValid()
+            and (rename_path or delete_path)
+        ):
+            menu.addSeparator()
+            if rename_path:
+                rename_action = QAction("Rename...", menu)
+                rename_action.setStatusTip(
+                    "Rename this file or folder"
+                )
+                rename_action.setIcon(
+                    QIcon(icons.get("rename_file", ""))
+                )
+                rename_action.triggered.connect(
+                    lambda: rename_path(target_path)
+                )
+                menu.addAction(rename_action)
+            if delete_path:
+                delete_action = QAction("Delete", menu)
+                delete_action.setStatusTip(
+                    "Move this file or folder to trash"
+                )
+                delete_action.setIcon(
+                    QIcon(icons.get("delete_file", ""))
+                )
+                delete_action.triggered.connect(
+                    lambda: delete_path(target_path)
+                )
+                menu.addAction(delete_action)
+
+    def _reveal_path(self, path):
+        reveal_path = self._handler_method("_open_in_os_explorer")
+        if reveal_path:
+            reveal_path(path)
+            return
+        if not path or not os.path.exists(path):
+            return
+        if os.path.isfile(path):
+            path = os.path.dirname(path)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+
 class ExplorerWidget(QWidget):
     """
     VSCode-style File Explorer Widget with path navigation, filtering, extension sorting,
@@ -383,31 +772,14 @@ class ExplorerWidget(QWidget):
 
         main_layout.addLayout(path_layout)
 
-        # Tree View & File System Model
-        self.fs_model = QFileSystemModel()
-        self.fs_model.setFilter(QDir.AllEntries | QDir.NoDotAndDotDot | QDir.AllDirs | QDir.Hidden)
-
-        self.proxy_model = FileSystemFilterProxyModel(self)
-        self.proxy_model.setSourceModel(self.fs_model)
-
-        self.tree_view = ExplorerTreeView()
-        self.tree_view.setObjectName("explorerTreeView")
-        self.tree_view.setModel(self.proxy_model)
-        self.tree_view.setHeaderHidden(True)
-        self.tree_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.tree_view.setAnimated(True)
-        self.tree_view.setSortingEnabled(True)
-        self.tree_view.setDragEnabled(True)
-        self.tree_view.setDragDropMode(QAbstractItemView.DragOnly)
-        self.tree_view.setToolTip(
-            "- Return/Enter/Middle Click: set root folder\n- Backspace: go to parent folder"
+        # Shared file browser used by both Explorer and breadcrumbs.
+        self.tree_view = FileBrowserTree(
+            self,
+            action_handler=self,
         )
-        self.proxy_model.sort(0, Qt.AscendingOrder)
-
-        # Hide extra columns (size, type, date modified) to keep explorer compact
-        for col in range(1, 4):
-            self.tree_view.setColumnHidden(col, True)
+        self.tree_view.setObjectName("explorerTreeView")
+        self.fs_model = self.tree_view.fs_model
+        self.proxy_model = self.tree_view.proxy_model
 
         main_layout.addWidget(self.tree_view, 1)
 
@@ -427,11 +799,9 @@ class ExplorerWidget(QWidget):
         self.add_bookmark_btn.clicked.connect(self.add_current_to_bookmarks)
         self.refresh_btn.clicked.connect(self.refresh_tree)
 
-        self.tree_view.doubleClicked.connect(self._on_item_double_clicked)
         self.tree_view.file_open_requested.connect(self.file_selected.emit)
         self.tree_view.directory_set_root_requested.connect(self.set_root_path)
         self.tree_view.navigate_parent_requested.connect(self.navigate_up)
-        self.tree_view.customContextMenuRequested.connect(self._show_context_menu)
         self.fs_model.directoryLoaded.connect(self._on_directory_loaded)
 
     def _on_auto_sync_toggled(self, checked):
@@ -453,20 +823,12 @@ class ExplorerWidget(QWidget):
 
         self.path_filter_input.setText(path)
 
-        source_index = self.fs_model.setRootPath(path)
-        proxy_index = self.proxy_model.mapFromSource(source_index)
-
-        if proxy_index.isValid():
-            self.tree_view.setRootIndex(proxy_index)
+        self.tree_view.set_root_path(path)
 
         self.folder_changed.emit(path)
 
     def _on_directory_loaded(self, path):
         if os.path.abspath(path) == os.path.abspath(self._current_root):
-            source_index = self.fs_model.index(path)
-            proxy_index = self.proxy_model.mapFromSource(source_index)
-            if proxy_index.isValid():
-                self.tree_view.setRootIndex(proxy_index)
             if getattr(self, '_pending_select_file', None):
                 self._retry_pending_selection(self._pending_select_file)
 
@@ -557,13 +919,6 @@ class ExplorerWidget(QWidget):
         self.fs_model.setRootPath(current)
         self.set_root_path(current)
 
-    def _on_item_double_clicked(self, proxy_index):
-        source_index = self.proxy_model.mapToSource(proxy_index)
-        filepath = self.fs_model.filePath(source_index)
-
-        if os.path.isfile(filepath):
-            self.file_selected.emit(filepath)
-
     def get_bookmarks(self):
         return list(self.bookmarks)
 
@@ -636,129 +991,7 @@ class ExplorerWidget(QWidget):
             self.bookmarks_menu.addMenu(remove_menu)
 
     def _show_context_menu(self, position):
-        selected_indexes = [idx for idx in self.tree_view.selectedIndexes() if idx.column() == 0]
-        click_proxy_index = self.tree_view.indexAt(position)
-
-        if click_proxy_index.isValid() and click_proxy_index not in selected_indexes:
-            selected_indexes = [click_proxy_index]
-
-        selected_paths = []
-        for idx in selected_indexes:
-            src_idx = self.proxy_model.mapToSource(idx)
-            p = self.fs_model.filePath(src_idx)
-            if p:
-                selected_paths.append(p)
-
-        if not selected_paths:
-            selected_paths = [self._current_root]
-
-        menu = QMenu(self)
-        menu.setFont(self.font())
-
-        def on_hover(action):
-            main_window = self.window()
-            if hasattr(main_window, 'statusBar'):
-                if action and action.statusTip():
-                    if getattr(main_window, '_show_status_tips', True):
-                        main_window.statusBar().showMessage(action.statusTip())
-                else:
-                    main_window.statusBar().clearMessage()
-
-        menu.hovered.connect(on_hover)
-
-        if len(selected_paths) > 1:
-            files_to_open = [p for p in selected_paths if os.path.isfile(p)]
-            if files_to_open:
-                open_all_act = QAction(f"Open selected files ({len(files_to_open)})", menu)
-                open_all_act.setStatusTip("Open all selected files in tabs")
-                open_all_act.setIcon(QIcon(icons.get("open", "")))
-                open_all_act.triggered.connect(lambda: [self.file_selected.emit(p) for p in files_to_open])
-                menu.addAction(open_all_act)
-
-            copy_all_paths_act = QAction("Copy selected full paths", menu)
-            copy_all_paths_act.setStatusTip("Copy all selected paths to clipboard")
-            copy_all_paths_act.setIcon(QIcon(icons.get("copy", "")))
-            copy_all_paths_act.triggered.connect(lambda: QApplication.clipboard().setText("\n".join(selected_paths)))
-            menu.addAction(copy_all_paths_act)
-
-            menu.addSeparator()
-
-            delete_all_act = QAction(f"Delete selected ({len(selected_paths)})", menu)
-            delete_all_act.setStatusTip("Delete selected files and folders")
-            delete_all_act.setIcon(QIcon(icons.get("delete_file", "")))
-            delete_all_act.triggered.connect(lambda: [self._delete_path(p) for p in selected_paths])
-            menu.addAction(delete_all_act)
-        else:
-            target_path = selected_paths[0]
-            source_index = self.proxy_model.mapToSource(self.tree_view.indexAt(position)) if click_proxy_index.isValid() else QModelIndex()
-
-            if os.path.isfile(target_path):
-                open_act = QAction("Open in editor [MMB]", menu)
-                open_act.setStatusTip("Open this file in a new tab (Middle Mouse Button)")
-                open_act.setIcon(QIcon(icons.get("open", "")))
-                open_act.triggered.connect(lambda: self.file_selected.emit(target_path))
-                menu.addAction(open_act)
-            elif os.path.isdir(target_path):
-                set_root_act = QAction("Set as explorer root [MMB]", menu)
-                set_root_act.setStatusTip("Navigate into this folder (Middle Mouse Button)")
-                set_root_act.setIcon(QIcon(icons.get("open", "")))
-                set_root_act.triggered.connect(lambda: self.set_root_path(target_path))
-                menu.addAction(set_root_act)
-
-                bookmark_act = QAction("Add to favorites/bookmarks", menu)
-                bookmark_act.setStatusTip("Bookmark this folder")
-                bookmark_act.setIcon(QIcon(icons.get("bookmark_toggle", "")))
-                bookmark_act.triggered.connect(lambda: self.add_path_to_bookmarks(target_path))
-                menu.addAction(bookmark_act)
-
-            menu.addSeparator()
-
-            open_os_act = QAction("Reveal in file explorer", menu)
-            open_os_act.setStatusTip("Open in system file manager")
-            open_os_act.setIcon(QIcon(icons.get("file_recent", "")))
-            open_os_act.triggered.connect(lambda: self._open_in_os_explorer(target_path))
-            menu.addAction(open_os_act)
-
-            copy_path_act = QAction("Copy full path", menu)
-            copy_path_act.setStatusTip("Copy the absolute file path to clipboard")
-            copy_path_act.setIcon(QIcon(icons.get("copy", "")))
-            copy_path_act.triggered.connect(lambda: QApplication.clipboard().setText(target_path))
-            menu.addAction(copy_path_act)
-
-            menu.addSeparator()
-
-            target_dir = target_path if os.path.isdir(target_path) else os.path.dirname(target_path)
-
-            new_file_act = QAction("New file...", menu)
-            new_file_act.setStatusTip("Create a new file in this directory")
-            if "new_file" in icons:
-                new_file_act.setIcon(QIcon(icons["new_file"]))
-            new_file_act.triggered.connect(lambda: self._create_new_file(target_dir))
-            menu.addAction(new_file_act)
-
-            new_folder_act = QAction("New folder...", menu)
-            new_folder_act.setStatusTip("Create a new folder in this directory")
-            if "new_folder" in icons:
-                new_folder_act.setIcon(QIcon(icons["new_folder"]))
-            new_folder_act.triggered.connect(lambda: self._create_new_folder(target_dir))
-            menu.addAction(new_folder_act)
-
-            if source_index.isValid():
-                menu.addSeparator()
-
-                rename_act = QAction("Rename...", menu)
-                rename_act.setStatusTip("Rename this file or folder")
-                rename_act.setIcon(QIcon(icons.get("rename_file", "")))
-                rename_act.triggered.connect(lambda: self._rename_path(target_path))
-                menu.addAction(rename_act)
-
-                delete_act = QAction("Delete", menu)
-                delete_act.setStatusTip("Move this file or folder to trash")
-                delete_act.setIcon(QIcon(icons.get("delete_file", "")))
-                delete_act.triggered.connect(lambda: self._delete_path(target_path))
-                menu.addAction(delete_act)
-
-        menu.exec_(self.tree_view.viewport().mapToGlobal(position))
+        self.tree_view.show_context_menu(position)
 
     def _open_in_os_explorer(self, path):
         if not path or not os.path.exists(path):

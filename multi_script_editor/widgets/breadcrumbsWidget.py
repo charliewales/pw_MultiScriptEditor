@@ -1,11 +1,20 @@
 import os
+import weakref
 from bisect import bisect_right
 
-from vendor.Qt.QtCore import QDir, QFileInfo, QPoint, QRect, QSize, Qt, Signal
+from vendor.Qt.QtCore import (
+    QFileInfo,
+    QPoint,
+    QRect,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+)
 from vendor.Qt.QtGui import QBrush, QColor, QIcon, QPalette
 from vendor.Qt.QtWidgets import (
+    QAbstractItemView,
     QApplication,
-    QFileIconProvider,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -21,41 +30,13 @@ from vendor.Qt.QtWidgets import (
     QWidget,
 )
 from widgets.explorerWidget import (
-    DIRECTORY_COLOR,
-    FILE_TYPE_COLORS,
-    file_extension_sort_key,
-    get_supported_extensions,
+    FileBrowserTree,
     is_supported_files_filter_enabled,
 )
 from widgets.outline_utils import (
     get_symbol_text_color,
     get_symbol_type_icon,
 )
-
-
-_icon_provider = None
-
-
-def get_system_icon_provider():
-    global _icon_provider
-    if _icon_provider is None:
-        _icon_provider = QFileIconProvider()
-    return _icon_provider
-
-
-def get_folder_icon(dir_path=None):
-    provider = get_system_icon_provider()
-    if dir_path and os.path.exists(dir_path):
-        return provider.icon(QFileInfo(dir_path))
-    return provider.icon(QFileIconProvider.Folder)
-
-
-def get_file_icon(file_path=None):
-    provider = get_system_icon_provider()
-    if file_path and os.path.exists(file_path):
-        return provider.icon(QFileInfo(file_path))
-    return provider.icon(QFileIconProvider.File)
-
 
 def clean_symbol_name(name):
     """
@@ -96,32 +77,6 @@ def split_path_into_components(full_path):
 
     return parts
 
-
-def list_directory_entries(dir_path, supported_extensions=None):
-    try:
-        entries = os.listdir(dir_path)
-    except OSError:
-        return [], []
-
-    dirs = []
-    files = []
-    for entry in entries:
-        if entry.startswith('.'):
-            continue
-        p = os.path.join(dir_path, entry)
-        if os.path.isdir(p):
-            dirs.append((entry, p))
-        else:
-            if supported_extensions is not None:
-                extension = os.path.splitext(entry)[1].lower()
-                if extension not in supported_extensions:
-                    continue
-            files.append((entry, p))
-
-    dirs.sort(key=lambda x: x[0].lower())
-    files.sort(key=lambda x: file_extension_sort_key(x[0]))
-    return dirs, files
-
 def _color_css(value, fallback):
     if isinstance(value, QColor):
         return value.name()
@@ -138,12 +93,8 @@ class BreadcrumbTreePopup(QFrame):
     fileSelected = Signal(str)
     symbolSelected = Signal(int)
 
-    _KIND_ROLE = Qt.UserRole
     _VALUE_ROLE = Qt.UserRole + 1
-    _LOADED_ROLE = Qt.UserRole + 2
-    _DIRECTORY = "directory"
-    _FILE = "file"
-    _SYMBOL = "symbol"
+    _active_popup_ref = None
 
     def __init__(self, theme_colors=None, font=None, parent=None):
         super(BreadcrumbTreePopup, self).__init__(
@@ -156,6 +107,10 @@ class BreadcrumbTreePopup(QFrame):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(1, 1, 1, 1)
         layout.setSpacing(0)
+        self._layout = layout
+        self._font = font
+
+        self.file_tree = None
 
         self.tree = QTreeWidget(self)
         self.tree.setObjectName("breadcrumbTree")
@@ -172,32 +127,35 @@ class BreadcrumbTreePopup(QFrame):
             self.setFont(font)
             self.tree.setFont(font)
 
-        self.tree.itemExpanded.connect(self._on_item_expanded)
-        self.tree.itemPressed.connect(self._on_item_pressed)
         self.tree.itemClicked.connect(self._on_item_clicked)
         self.tree.itemActivated.connect(self._on_item_activated)
         layout.addWidget(self.tree)
         self._apply_theme()
-        self._pressed_item = None
-        self._pressed_item_was_expanded = False
+        self._action_handler = None
+        self._show_request_id = 0
+        self._pending_button = None
+        self._pending_node_type = None
+        self._waiting_for_root = False
 
     def populate(self, node_type, path_or_data=None, siblings=None):
-        self.tree.setUpdatesEnabled(False)
-        self.tree.clear()
-        self.tree.setRootIsDecorated(node_type != "symbol")
-        self._supported_extensions = None
-        if (
-            node_type in ("dir", "file")
-            and is_supported_files_filter_enabled()
-        ):
-            self._supported_extensions = get_supported_extensions()
-
         if node_type == "symbol":
+            if self.file_tree:
+                self.file_tree.hide()
+            self.tree.show()
+            self.tree.setUpdatesEnabled(False)
+            self.tree.clear()
             self._populate_symbols(siblings or [])
+            self.tree.setUpdatesEnabled(True)
         elif node_type == "file":
+            self._ensure_file_tree()
+            self.tree.hide()
+            self.file_tree.show()
             file_path = path_or_data or ""
-            self._populate_directory(os.path.dirname(file_path))
+            self._populate_file_tree(os.path.dirname(file_path))
         elif node_type == "dir":
+            self._ensure_file_tree()
+            self.tree.hide()
+            self.file_tree.show()
             normalized_path = (
                 os.path.normpath(path_or_data)
                 if path_or_data
@@ -208,32 +166,107 @@ class BreadcrumbTreePopup(QFrame):
                 and normalized_path
                 and QFileInfo(normalized_path).isRoot()
             ):
-                self._populate_drives()
+                root_path = ""
             else:
-                self._populate_directory(
+                root_path = (
                     os.path.dirname(normalized_path)
-                    if normalized_path
-                    else ""
+                    if normalized_path else ""
                 )
-
-        self.tree.setUpdatesEnabled(True)
+            self._populate_file_tree(root_path)
 
     def show_for(self, button, node_type, path_or_data=None, siblings=None):
+        active_popup = (
+            self._active_popup_ref()
+            if self._active_popup_ref is not None
+            else None
+        )
+        if active_popup is not None and active_popup is not self:
+            active_popup.cancel_pending_show()
+        BreadcrumbTreePopup._active_popup_ref = weakref.ref(self)
+
+        self._show_request_id += 1
+        request_id = self._show_request_id
+        self._pending_button = button
+        self._pending_node_type = node_type
+        self._action_handler = getattr(
+            button.window(),
+            "explorer_widget",
+            None,
+        )
         self.populate(node_type, path_or_data, siblings)
+        if self.file_tree:
+            self.file_tree.set_action_handler(
+                self._action_handler
+            )
+
+        self._waiting_for_root = (
+            node_type != "symbol"
+            and not self.file_tree.is_root_loaded()
+        )
+        if self._waiting_for_root:
+            QTimer.singleShot(
+                2000,
+                lambda current_request=request_id: self._show_pending(
+                    current_request,
+                    force=True,
+                ),
+            )
+            return
+
+        self._show_pending(request_id)
+
+    def cancel_pending_show(self):
+        self._show_request_id += 1
+        self._waiting_for_root = False
+        self._pending_button = None
+        self._pending_node_type = None
+        self.hide()
+
+    def _show_pending(self, request_id, force=False):
+        if request_id != self._show_request_id:
+            return
+        if self._waiting_for_root and not force:
+            return
+
+        button = self._pending_button
+        node_type = self._pending_node_type
+        if button is None or node_type is None:
+            return
+        self._waiting_for_root = False
 
         screen = button.screen() or QApplication.primaryScreen()
         available = screen.availableGeometry()
-        row_height = self.tree.sizeHintForRow(0)
+        active_tree = (
+            self.tree
+            if node_type == "symbol"
+            else self.file_tree
+        )
+        active_tree.resizeColumnToContents(0)
+        row_height = active_tree.sizeHintForRow(0)
         if row_height <= 0:
-            row_height = max(24, self.tree.fontMetrics().height() + 8)
-        content_rows = max(1, self.tree.topLevelItemCount())
+            row_height = max(
+                24,
+                active_tree.fontMetrics().height() + 8,
+            )
+        if node_type == "symbol":
+            content_rows = max(
+                1,
+                self.tree.topLevelItemCount(),
+            )
+        else:
+            content_rows = max(
+                8,
+                self.file_tree.model().rowCount(
+                    self.file_tree.rootIndex()
+                ),
+            )
         maximum_height = min(600, max(240, int(available.height() * 0.7)))
         height = min(
             maximum_height,
             content_rows * row_height + self.frameWidth() * 2 + 6,
         )
         width = min(
-            max(220, self.tree.sizeHintForColumn(0) + 42),
+            max(220, active_tree.sizeHintForColumn(0) + 42),
             max(220, int(available.width() * 0.7)),
         )
         self.resize(width, height)
@@ -259,64 +292,69 @@ class BreadcrumbTreePopup(QFrame):
         self.move(position)
         self.show()
         self.raise_()
-        self.tree.setFocus(Qt.PopupFocusReason)
+        active_tree.setFocus(Qt.PopupFocusReason)
 
-    def _populate_directory(self, dir_path, parent_item=None):
-        if not dir_path or not os.path.isdir(dir_path):
+    def _ensure_file_tree(self):
+        if self.file_tree is not None:
             return
-
-        dirs, files = list_directory_entries(
-            dir_path,
-            self._supported_extensions,
+        self.file_tree = FileBrowserTree(
+            self,
+            expand_directories_on_click=True,
         )
-        for name, path in dirs:
-            item = self._create_item(
-                name,
-                self._DIRECTORY,
-                path,
-                get_folder_icon(path),
-            )
-            item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
-            item.setData(0, self._LOADED_ROLE, False)
-            self._add_item(item, parent_item)
+        self.file_tree.setObjectName("breadcrumbFileTree")
+        self.file_tree.setDragEnabled(False)
+        self.file_tree.setSelectionMode(
+            QAbstractItemView.SingleSelection
+        )
+        if self._font:
+            self.file_tree.setFont(self._font)
+        self.file_tree.file_open_requested.connect(
+            self._open_file
+        )
+        self.file_tree.root_loaded.connect(
+            self._on_file_tree_root_loaded
+        )
+        self.file_tree.directory_set_root_requested.connect(
+            self._set_explorer_root
+        )
+        self.file_tree.clicked.connect(
+            self._on_file_tree_clicked
+        )
+        self._layout.insertWidget(0, self.file_tree)
 
-        for name, path in files:
-            self._add_item(
-                self._create_item(
-                    name,
-                    self._FILE,
-                    path,
-                    get_file_icon(path),
-                ),
-                parent_item,
-            )
+    def _on_file_tree_root_loaded(self, _path):
+        if not self._waiting_for_root:
+            return
+        request_id = self._show_request_id
+        QTimer.singleShot(
+            0,
+            lambda current_request=request_id: self._show_pending(
+                current_request,
+                force=True,
+            ),
+        )
 
-    def _populate_drives(self):
-        for drive_info in QDir.drives():
-            drive_path = os.path.normpath(drive_info.absoluteFilePath())
-            drive_name = os.path.splitdrive(drive_path)[0] or drive_path
-            item = self._create_item(
-                drive_name,
-                self._DIRECTORY,
-                drive_path,
-                get_folder_icon(drive_path),
-            )
-            item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
-            item.setData(0, self._LOADED_ROLE, False)
-            self.tree.addTopLevelItem(item)
+    def _populate_file_tree(self, root_path):
+        self.file_tree.set_filter_supported_only(
+            is_supported_files_filter_enabled()
+        )
+        self.file_tree.set_root_path(root_path)
 
     def _populate_symbols(self, siblings):
         for symbol in siblings:
             name = clean_symbol_name(symbol.get('name', ''))
             symbol_type = symbol.get('type', 'function')
-            item = self._create_item(
-                name,
-                self._SYMBOL,
-                symbol.get('line', 1),
+            item = QTreeWidgetItem([name])
+            item.setIcon(
+                0,
                 get_symbol_type_icon(
-                    symbol_type,
-                    self._theme_colors,
+                    symbol_type, self._theme_colors
                 ),
+            )
+            item.setData(
+                0,
+                self._VALUE_ROLE,
+                symbol.get('line', 1),
             )
             item.setForeground(
                 0,
@@ -336,72 +374,31 @@ class BreadcrumbTreePopup(QFrame):
             )
             self.tree.addTopLevelItem(item)
 
-    def _create_item(self, text, kind, value, icon):
-        item = QTreeWidgetItem([text])
-        item.setIcon(0, icon)
-        item.setData(0, self._KIND_ROLE, kind)
-        item.setData(0, self._VALUE_ROLE, value)
-        if kind == self._DIRECTORY:
-            item.setForeground(0, QBrush(QColor(DIRECTORY_COLOR)))
-        elif kind == self._FILE:
-            extension = os.path.splitext(value)[1].lower()
-            file_color = FILE_TYPE_COLORS.get(extension)
-            if file_color:
-                item.setForeground(0, QBrush(QColor(file_color)))
-        return item
-
-    def _add_item(self, item, parent_item):
-        if parent_item is None:
-            self.tree.addTopLevelItem(item)
-        else:
-            parent_item.addChild(item)
-
-    def _on_item_expanded(self, item):
-        if item.data(0, self._KIND_ROLE) != self._DIRECTORY:
-            return
-        if item.data(0, self._LOADED_ROLE):
-            return
-        item.setData(0, self._LOADED_ROLE, True)
-        self._populate_directory(
-            item.data(0, self._VALUE_ROLE),
-            parent_item=item,
-        )
-        if item.childCount() == 0:
-            item.setChildIndicatorPolicy(
-                QTreeWidgetItem.DontShowIndicator
-            )
-
-    def _on_item_pressed(self, item, column):
-        self._pressed_item = item
-        self._pressed_item_was_expanded = item.isExpanded()
-
     def _on_item_clicked(self, item, column):
-        if item.data(0, self._KIND_ROLE) == self._DIRECTORY:
-            expansion_changed = (
-                self._pressed_item is item
-                and item.isExpanded()
-                != self._pressed_item_was_expanded
-            )
-            if not expansion_changed and not item.isExpanded():
-                item.setExpanded(True)
-            return
-        self._activate_leaf(item)
+        self._activate_symbol(item)
 
     def _on_item_activated(self, item, column):
-        kind = item.data(0, self._KIND_ROLE)
-        if kind == self._DIRECTORY:
-            item.setExpanded(True)
-        else:
-            self._activate_leaf(item)
+        self._activate_symbol(item)
 
-    def _activate_leaf(self, item):
-        kind = item.data(0, self._KIND_ROLE)
-        if kind == self._FILE:
-            self.fileSelected.emit(item.data(0, self._VALUE_ROLE))
-            self.close()
-        elif kind == self._SYMBOL:
-            self.symbolSelected.emit(int(item.data(0, self._VALUE_ROLE)))
-            self.close()
+    def _activate_symbol(self, item):
+        self.symbolSelected.emit(
+            int(item.data(0, self._VALUE_ROLE))
+        )
+        self.close()
+
+    def _on_file_tree_clicked(self, proxy_index):
+        path = self.file_tree.path_for_index(proxy_index)
+        if os.path.isfile(path):
+            self._open_file(path)
+
+    def _open_file(self, path):
+        self.fileSelected.emit(path)
+        self.close()
+
+    def _set_explorer_root(self, path):
+        if self._action_handler:
+            self._action_handler.set_root_path(path)
+        self.close()
 
     def _apply_theme(self):
         background = _color_css(
