@@ -20,6 +20,7 @@ from vendor.Qt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from widgets.explorerWidget import DIRECTORY_COLOR, FILE_TYPE_COLORS
 from widgets.outline_utils import (
     get_symbol_text_color,
     get_symbol_type_icon,
@@ -321,6 +322,13 @@ class BreadcrumbTreePopup(QFrame):
         item.setIcon(0, icon)
         item.setData(0, self._KIND_ROLE, kind)
         item.setData(0, self._VALUE_ROLE, value)
+        if kind == self._DIRECTORY:
+            item.setForeground(0, QBrush(QColor(DIRECTORY_COLOR)))
+        elif kind == self._FILE:
+            extension = os.path.splitext(value)[1].lower()
+            file_color = FILE_TYPE_COLORS.get(extension)
+            if file_color:
+                item.setForeground(0, QBrush(QColor(file_color)))
         return item
 
     def _add_item(self, item, parent_item):
@@ -379,8 +387,8 @@ class BreadcrumbTreePopup(QFrame):
     def _apply_theme(self):
         background = _color_css(
             self._theme_colors.get(
-                'window',
-                self._theme_colors.get('tab_bg'),
+                'background',
+                self._theme_colors.get('window'),
             ),
             "#232323",
         )
@@ -396,7 +404,10 @@ class BreadcrumbTreePopup(QFrame):
             "#464646",
         )
         border = _color_css(
-            self._theme_colors.get('tab_border'),
+            self._theme_colors.get(
+                'border',
+                self._theme_colors.get('tab_border'),
+            ),
             "#555555",
         )
         self.setStyleSheet(
@@ -415,10 +426,13 @@ class BreadcrumbTreePopup(QFrame):
             QTreeWidget#breadcrumbTree::item {{
                 min-height: 24px;
                 padding: 1px 4px;
+                border: 1px solid transparent;
             }}
             QTreeWidget#breadcrumbTree::item:hover,
             QTreeWidget#breadcrumbTree::item:selected {{
                 background-color: {2};
+                border: 1px solid {3};
+                color: {1};
             }}
             """.format(
                 background,

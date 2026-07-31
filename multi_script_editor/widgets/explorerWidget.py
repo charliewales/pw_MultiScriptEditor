@@ -30,6 +30,8 @@ from vendor.Qt.QtWidgets import (
     QWidget,
 )
 
+DIRECTORY_COLOR = "#e5c07b"
+
 FILE_TYPE_COLORS = {
     # Python
     ".py": "#61afef", ".pyw": "#61afef", ".pyx": "#61afef", ".pyc": "#5c6370",
@@ -198,7 +200,7 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
             if source_index.isValid() and source_model:
                 if source_model.isDir(source_index):
                     # Directory color (Folder gold/yellow)
-                    return QColor("#e5c07b")
+                    return QColor(DIRECTORY_COLOR)
                 else:
                     file_name = source_model.fileName(source_index)
                     ext = os.path.splitext(file_name)[1].lower()
