@@ -13,3 +13,4 @@ AGENTS.md
 CLAUDE.md
 .claude/
 tests/
+.tokensave/
