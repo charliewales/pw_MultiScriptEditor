@@ -317,7 +317,11 @@ class tabWidgetClass(QTabWidget):
                 QTimer.singleShot(0, lambda i=index: self.renameTab(i))
                 return True
 
-        if event_type in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
+        if event_type in (
+            QEvent.MouseButtonPress,
+            QEvent.MouseButtonRelease,
+            QEvent.MouseButtonDblClick,
+        ) and event.button() == Qt.MiddleButton:
             if getattr(self, '_rename_edit', None):
                 return True
             # Check if click is on the tab bar or one of its children
@@ -330,10 +334,18 @@ class tabWidgetClass(QTabWidget):
                 p = p.parent()
             if is_tabbar_click:
                 if event_type == QEvent.MouseButtonPress:
-                    pos = self.tabBar().mapFrom(obj, event.pos())
+                    event_pos = (
+                        event.position().toPoint()
+                        if hasattr(event, 'position')
+                        else event.pos()
+                    )
+                    pos = self.tabBar().mapFrom(obj, event_pos)
                     index = self.tabBar().tabAt(pos)
                     if index >= 0:
-                        QTimer.singleShot(0, lambda i=index: self.closeTab(i))
+                        QTimer.singleShot(
+                            0,
+                            lambda i=index: self.closeTab(i),
+                        )
                 return True
 
         if event_type not in (
@@ -1478,17 +1490,6 @@ class tabWidgetClass(QTabWidget):
         if w:
             return w.edit
         return None
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MiddleButton:
-            if getattr(self, '_rename_edit', None):
-                return
-            pos = self.tabBar().mapFrom(self, event.pos())
-            index = self.tabBar().tabAt(pos)
-            if index >= 0:
-                QTimer.singleShot(0, lambda i=index: self.closeTab(i))
-        else:
-            super(tabWidgetClass, self).mousePressEvent(event)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
