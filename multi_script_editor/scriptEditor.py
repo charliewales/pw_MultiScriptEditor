@@ -1711,14 +1711,22 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 self.removeRecentFile(path, prompt=False)
 
     def tabsToSpaces(self):
-        text = self.tab.getCurrentText()
-        text = text.replace('\t', '    ')
-        self.tab.setCurrentText(text)
+        current_text = self.tab.getCurrentText()
+        converted_text = current_text.replace('\t', '    ')
+        if converted_text == current_text:
+            return
+        self.tab.setCurrentText(converted_text)
+        current_index = self.tab.currentIndex()
+        self.tab.widget(current_index).edit.document().setModified(True)
 
     def spacesToTabs(self):
-        text = self.tab.getCurrentText()
-        text = text.replace('    ', '\t')
-        self.tab.setCurrentText(text)
+        current_text = self.tab.getCurrentText()
+        converted_text = current_text.replace('    ', '\t')
+        if converted_text == current_text:
+            return
+        self.tab.setCurrentText(converted_text)
+        current_index = self.tab.currentIndex()
+        self.tab.widget(current_index).edit.document().setModified(True)
 
     def trimTrailingWhitespace(self):
         index = self.tab.currentIndex()
