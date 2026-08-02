@@ -1165,6 +1165,14 @@ class tabWidgetClass(QTabWidget):
         ):
             if hasattr(edit, attribute):
                 delattr(edit, attribute)
+        if index == self.currentIndex():
+            status_update = getattr(
+                self.p,
+                'updateDocumentStatusBarInfo',
+                getattr(self.p, 'updateStatusBarInfo', None),
+            )
+            if status_update:
+                status_update()
         message = 'Reloaded file: %s' % os.path.normpath(file_path)
         if hasattr(self.p, 'out'):
             self.p.out.showMessage(message)
