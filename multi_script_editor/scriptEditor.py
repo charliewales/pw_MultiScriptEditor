@@ -1739,6 +1739,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         edit = cont.edit
         cursor = edit.textCursor()
         cursor.beginEditBlock()
+        changed = False
 
         document = edit.document()
         for i in range(document.blockCount()):
@@ -1752,8 +1753,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     c.movePosition(QTextCursor.EndOfBlock)
                     c.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor, diff)
                     c.removeSelectedText()
+                    changed = True
 
         cursor.endEditBlock()
+        if changed:
+            edit._cancel_pending_autocomplete()
 
     def insertText(self, text):
         self.tab.addToCurrent(text)

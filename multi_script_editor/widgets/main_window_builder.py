@@ -68,8 +68,8 @@ class ScriptEditorUIBuilder:
         configure(editor.trimWhitespace_act, editor.trimTrailingWhitespace, 'trim_whitespace')
         configure(editor.quit_act, editor.close, 'quit', "Ctrl+Q")
 
-        configure(editor.duplicateLine_act, editor.duplicateLine, 'duplicate_line', 'Ctrl+Shift+D', Qt.WidgetShortcut)
-        configure(editor.deleteLine_act, editor.deleteLine, 'delete_line', 'Ctrl+D', Qt.WidgetShortcut)
+        configure(editor.duplicateLine_act, editor.duplicateLine, 'duplicate_line', 'Ctrl+Shift+D', Qt.WindowShortcut)
+        configure(editor.deleteLine_act, editor.deleteLine, 'delete_line', 'Ctrl+D', Qt.WindowShortcut)
         configure(editor.set_font_act, editor.choose_font, 'font')
         configure(editor.settingsFile_act, editor.openSettingsFile, 'settings')
 

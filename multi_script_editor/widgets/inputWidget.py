@@ -198,6 +198,14 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
         self.autocomplete_timer.start(200)
 
+    def _cancel_pending_autocomplete(self):
+        timer = getattr(self, 'autocomplete_timer', None)
+        if timer is not None:
+            timer.stop()
+        completer = getattr(self, 'completer', None)
+        if completer is not None:
+            completer.hide()
+
     @staticmethod
     def _folding_signature(text):
         content = text.lstrip()
@@ -1225,16 +1233,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         # ignore Shift + Enter
         elif event.modifiers() == Qt.ShiftModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
             return
-        # duplicate
-        elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_D:
-            self.duplicate()
-            self.update()
-            return
-        # delete
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
-            self.deleteLine()
-            self.update()
-            return
         # increase indent
         elif event.key() == Qt.Key_Tab:
             if self.completer:
@@ -1714,6 +1712,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             cursor.setPosition(new_end)
             cursor.setPosition(block_start, QTextCursor.KeepAnchor)
         self.setTextCursor(cursor)
+        self._cancel_pending_autocomplete()
         self.update()
 
     def _outdent_current_line(self):
@@ -1748,6 +1747,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         edit_cursor.endEditBlock()
         edit_cursor.setPosition(block.position() + new_column)
         self.setTextCursor(edit_cursor)
+        self._cancel_pending_autocomplete()
         self.update()
 
     def addQuotesSelected(self, prefer_single_quotes=False):
@@ -2165,6 +2165,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             cursor.setPosition(current_cursor_pos + len(line) + 1)
             self.setTextCursor(cursor)
 
+        self._cancel_pending_autocomplete()
         self.highlight_current_line()
 
     def deleteLine(self):
@@ -2208,6 +2209,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         cursor.endEditBlock()
         self.setTextCursor(cursor)
+        self._cancel_pending_autocomplete()
         self.highlight_current_line()
 
     def removeTabs(self, text):
