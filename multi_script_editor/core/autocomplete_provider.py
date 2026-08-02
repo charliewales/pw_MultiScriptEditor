@@ -1,3 +1,4 @@
+import os
 import re
 
 import managers
@@ -7,17 +8,33 @@ PYTHON_COMPLETION_EXTENSIONS = frozenset(('.py', '.pyw', '.pyx'))
 
 
 class CompletionItem:
-    def __init__(self, name, complete, comp_type, docstring_val="", prefix_length=0):
+    def __init__(
+        self,
+        name,
+        complete,
+        comp_type,
+        docstring_val="",
+        prefix_length=0,
+        docstring_loader=None,
+    ):
         self.name = name
         self.complete = complete
         self.type = comp_type
         self._docstring = docstring_val
+        self._docstring_loader = docstring_loader
         self.prefix_length = prefix_length
 
     def get_completion_prefix_length(self):
         return self.prefix_length
 
     def docstring(self):
+        if self._docstring_loader is not None:
+            loader = self._docstring_loader
+            self._docstring_loader = None
+            try:
+                self._docstring = loader()
+            except Exception:
+                self._docstring = ""
         return self._docstring
 
 
@@ -25,12 +42,30 @@ class AutocompleteProvider:
     def __init__(self):
         # Lazy load jedi to avoid heavy startup overhead if possible
         self._jedi = None
+        self._maya_project = None
 
     def _get_jedi(self):
         if self._jedi is None:
             import jedi
             self._jedi = jedi
         return self._jedi
+
+    def _get_jedi_project(self, context):
+        if context != 'maya':
+            return None
+        if self._maya_project is None:
+            package_root = os.path.dirname(os.path.dirname(__file__))
+            completion_path = os.path.join(
+                package_root,
+                'managers',
+                'maya_completion',
+            )
+            self._maya_project = self._get_jedi().Project(
+                package_root,
+                added_sys_path=[completion_path],
+                smart_sys_path=False,
+            )
+        return self._maya_project
 
     def get_completions(self, text, line, column, namespace=None, fuzzy=True, context=None, prefer_single_quotes=False):
         """
@@ -69,11 +104,25 @@ class AutocompleteProvider:
                 if comp:
                     for c in comp:
                         name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
-                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
+                        comp_items.append(CompletionItem(
+                            name,
+                            complete,
+                            getattr(c, 'type', 'statement'),
+                            docstring_loader=(
+                                c.docstring if hasattr(c, 'docstring') else None
+                            ),
+                        ))
                 if extra:
                     for c in extra:
                         name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
-                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
+                        comp_items.append(CompletionItem(
+                            name,
+                            complete,
+                            getattr(c, 'type', 'statement'),
+                            docstring_loader=(
+                                c.docstring if hasattr(c, 'docstring') else None
+                            ),
+                        ))
                 
                 if comp_items:
                     return comp_items
@@ -81,6 +130,7 @@ class AutocompleteProvider:
         # 2. Fallback to Jedi Autocompletion
         if not context_completer:
             jedi = self._get_jedi()
+            project = self._get_jedi_project(context)
             
             # Prepend autoImports if necessary
             offs = 0
@@ -94,9 +144,13 @@ class AutocompleteProvider:
             
             try:
                 if namespace:
-                    script = jedi.Interpreter(text, namespaces=[namespace])
+                    script = jedi.Interpreter(
+                        text,
+                        namespaces=[namespace],
+                        project=project,
+                    )
                 else:
-                    script = jedi.Script(code=text)
+                    script = jedi.Script(code=text, project=project)
                     
                 jedi_comps = script.complete(line=jedi_line, column=column, fuzzy=fuzzy)
                 
@@ -105,12 +159,6 @@ class AutocompleteProvider:
                     if c.name == 'mro':
                         continue
                     
-                    doc = ''
-                    try:
-                        doc = c.docstring()
-                    except Exception:
-                        pass
-                        
                     prefix_len = 0
                     if hasattr(c, 'get_completion_prefix_length'):
                         prefix_len = c.get_completion_prefix_length()
@@ -121,8 +169,8 @@ class AutocompleteProvider:
                         name=name,
                         complete=complete,
                         comp_type=c.type,
-                        docstring_val=doc,
-                        prefix_length=prefix_len
+                        prefix_length=prefix_len,
+                        docstring_loader=c.docstring,
                     ))
             except Exception:
                 pass
