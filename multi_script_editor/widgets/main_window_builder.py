@@ -1,7 +1,6 @@
 import sys
 from functools import partial
 
-import managers
 import vendor.Qt
 from icons import icons
 from vendor.Qt.QtCore import Qt, QTimer
@@ -17,7 +16,12 @@ class ScriptEditorUIBuilder:
         if icon is not None:
             action.setIcon(QIcon(icons[icon]))
         if shortcut is not None:
-            action.setShortcut(shortcut)
+            if isinstance(shortcut, (list, tuple)):
+                action.setShortcuts(
+                    [QKeySequence(value) for value in shortcut]
+                )
+            else:
+                action.setShortcut(shortcut)
         if context is not None:
             action.setShortcutContext(context)
         if checkable is not None:
@@ -125,9 +129,9 @@ class ScriptEditorUIBuilder:
         configure(editor.moveLineUp_act, editor.tab.move_line_up, 'move_line_up', 'Alt+Up', Qt.WidgetShortcut)
         configure(editor.moveLineDown_act, editor.tab.move_line_down, 'move_line_down', 'Alt+Down', Qt.WidgetShortcut)
         configure(editor.comment_cat, editor.tab.comment, 'comment', 'Alt+C', Qt.WidgetShortcut)
-        configure(editor.add_quotes_act, editor.tab.addQuotes, 'add_quotes', 'Alt+Q', Qt.WidgetShortcut)
-        configure(editor.f_string_act, editor.tab.fString, 'f_string', 'Alt+F', Qt.WidgetShortcut)
-        configure(editor.zoom_in_act, partial(editor.change_global_font_size, True), 'zoom_in', context=Qt.WindowShortcut)
+        configure(editor.add_quotes_act, editor.tab.addQuotes, 'add_quotes', 'Alt+Q', Qt.WindowShortcut)
+        configure(editor.f_string_act, editor.tab.fString, 'f_string', 'Alt+F', Qt.WindowShortcut)
+        configure(editor.zoom_in_act, partial(editor.change_global_font_size, True), 'zoom_in', ('Ctrl++', 'Ctrl+='), Qt.WindowShortcut)
         configure(editor.zoom_out_act, partial(editor.change_global_font_size, False), 'zoom_out', context=Qt.WindowShortcut)
         configure(editor.reset_zoom_act, editor.restore_global_font_size, 'zoom_reset', 'Ctrl+0', Qt.WindowShortcut)
         configure(editor.fold_act, editor.fold_current, 'fold', 'Alt+-', Qt.WindowShortcut)
@@ -135,9 +139,6 @@ class ScriptEditorUIBuilder:
         configure(editor.fold_all_act, editor.fold_all, 'fold_all', 'Ctrl+Alt+-', Qt.WindowShortcut)
         configure(editor.unfold_all_act, editor.unfold_all, 'unfold_all', 'Ctrl+Alt++', Qt.WindowShortcut)
         configure(editor.autocomplete_act, shortcut='Alt+A', context=Qt.WindowShortcut)
-        QShortcut(QKeySequence("Alt+Q"), editor, editor.tab.addQuotes)
-        QShortcut(QKeySequence("Alt+f"), editor, editor.tab.fString)
-
         configure(editor.selectNextOccurrence_act, editor.tab.selectNextOccurrence, 'select_next_occurrence', 'Ctrl+Alt+D', Qt.WindowShortcut)
         configure(editor.nextSelection_act, editor.tab.nextSelection, 'down', 'Ctrl+J', Qt.WindowShortcut)
         configure(editor.previousSelection_act, editor.tab.previousSelection, 'up', 'Ctrl+Shift+J', Qt.WindowShortcut)
@@ -145,45 +146,42 @@ class ScriptEditorUIBuilder:
         configure(editor.always_ontop_act, editor.always_ontop, context=Qt.WidgetShortcut, checkable=True)
 
         dir_f = partial(editor.function_cmd, 'dir')
-        configure(editor.dir_act, dir_f, 'sel', 'Alt+D', Qt.WidgetShortcut)
-        QShortcut(QKeySequence('Alt+d'), editor, dir_f)
+        configure(editor.dir_act, dir_f, 'sel', 'Alt+D', Qt.WindowShortcut)
 
         help_f = partial(editor.function_cmd, 'help')
-        configure(editor.help_act, help_f, 'sel', 'Alt+H', Qt.WidgetShortcut)
-        QShortcut(QKeySequence('Alt+h'), editor, help_f)
+        configure(editor.help_act, help_f, 'sel', 'Alt+H', Qt.WindowShortcut)
 
         print_f = partial(editor.function_cmd, "print")
-        configure(editor.print_act, print_f, 'sel', "Alt+e", Qt.WidgetShortcut)
-        QShortcut(QKeySequence("Alt+e"), editor, print_f)
+        configure(editor.print_act, print_f, 'sel', "Alt+e", Qt.WindowShortcut)
 
         type_f = partial(editor.function_cmd, 'type')
-        configure(editor.type_act, type_f, 'sel', 'Alt+T', Qt.WidgetShortcut)
-        QShortcut(QKeySequence('Alt+t'), editor, type_f)
+        configure(editor.type_act, type_f, 'sel', 'Alt+T', Qt.WindowShortcut)
 
-        configure(editor.quick_help_act, editor.get_word_help, 'help', 'F1', Qt.WidgetShortcut)
-        QShortcut(QKeySequence('F1'), editor, editor.get_word_help)
+        configure(editor.quick_help_act, editor.get_word_help, 'help', 'F1', Qt.WindowShortcut)
 
         editor.fillThemeMenu()
 
         # shortcuts
-        if managers.context == 'nuke':
-            import nuke
-            if nuke.NUKE_VERSION_MAJOR > 8:
-                editor.execSel_act.setShortcut('Ctrl+Return')
-                editor.execSel_act.setShortcutContext(Qt.ApplicationShortcut)
-
-        configure(editor.execSel_act, editor.executeSelected, shortcut='Ctrl+Return', context=Qt.WidgetWithChildrenShortcut)
-        QShortcut(QKeySequence('Ctrl+Enter'), editor, editor.executeSelected)
-
-        configure(editor.execAll_act, editor.executeAll, shortcut='Alt+Return', context=Qt.ApplicationShortcut)
-        QShortcut(QKeySequence('Alt+Enter'), editor, editor.executeAll)
-
-        configure(editor.execLine_act, editor.executeLine, shortcut='Ctrl+Shift+Return', context=Qt.ApplicationShortcut)
-        QShortcut(QKeySequence('Ctrl+Shift+Enter'), editor, editor.executeLine)
+        configure(
+            editor.execSel_act,
+            editor.executeSelected,
+            shortcut=('Ctrl+Return', 'Ctrl+Enter'),
+            context=Qt.WidgetWithChildrenShortcut,
+        )
+        configure(
+            editor.execAll_act,
+            editor.executeAll,
+            shortcut=('Alt+Return', 'Alt+Enter'),
+            context=Qt.ApplicationShortcut,
+        )
+        configure(
+            editor.execLine_act,
+            editor.executeLine,
+            shortcut=('Ctrl+Shift+Return', 'Ctrl+Shift+Enter'),
+            context=Qt.ApplicationShortcut,
+        )
 
         configure(editor.clearHistory_act, editor.clearHistory, shortcut='Ctrl+Shift+C')
-
-        QShortcut(QKeySequence('Ctrl+='), editor, partial(editor.change_global_font_size, True))
 
         # hide
         editor.donate_act.setIcon(QIcon(icons["donate"]))
