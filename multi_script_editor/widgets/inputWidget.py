@@ -1316,12 +1316,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         QPlainTextEdit.keyPressEvent(self, event)
 
-        # start parse text (Debounced to prevent lag on keypress)
-        # Note: We now rely on textChanged signal for more reliable updates,
-        # but if we needed key-specific parsing, it would go here.
-
-        self.highlight_current_line()
-
     def move_line_up(self):
         if self._move_multi_cursor_lines(-1):
             return
@@ -1994,12 +1988,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self._restore_multi_cursor_states(states, transform)
 
     def _finish_comment_edit(self):
-        # Prevent autocomplete dialog from popping up due to textChanged
-        if hasattr(self, 'autocomplete_timer'):
-            self.autocomplete_timer.stop()
-        if hasattr(self, 'completer') and self.completer:
-            self.completer.hide()
-
+        self._cancel_pending_autocomplete()
         self.update()
 
     def addRemoveComments(self, text):
@@ -2300,11 +2289,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.highlight_current_line()
             return
 
-        if self.multi_cursor_manager.has_cursors():
+        cleared_multi_cursors = self.multi_cursor_manager.has_cursors()
+        if cleared_multi_cursors:
             self.multi_cursor_manager.clear()
 
         super(inputClass, self).mousePressEvent(event)
-        self.highlight_current_line()
+        if cleared_multi_cursors:
+            self.highlight_current_line()
 
     def function_cmd(self, function):
         selectedText = self.get_current_word()
