@@ -160,6 +160,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         ClipboardManager.init()
 
     def _on_text_changed(self):
+        self._document_text_cache = None
         self._lint_timer.start(500)
         if (
             hasattr(self, 'multi_cursor_manager')
@@ -641,6 +642,15 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return os.path.splitext(file_path)[1].lower()
         return '.py'
 
+    def _document_text(self):
+        revision = self.document().revision()
+        cached = getattr(self, '_document_text_cache', None)
+        if cached is not None and cached[0] == revision:
+            return cached[1]
+        text = self.toPlainText()
+        self._document_text_cache = (revision, text)
+        return text
+
     def parseText(self, force=False):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
@@ -675,7 +685,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     self.completer.updateCompleteList([])
                     self._lint_timer.start(500)
                     return
-                text = self.toPlainText()
+                text = self._document_text()
                 self.moveCompleter()
                 bl = tc.blockNumber() + 1
                 col = tc.columnNumber()
@@ -739,7 +749,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self._last_lint_key = lint_key
             return
 
-        code = self.toPlainText()
+        code = self._document_text()
         if code.strip():
             # Delegate linting to the presenter
             if hasattr(self.p, '_presenter'):
