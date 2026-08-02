@@ -1,5 +1,4 @@
 import os
-import webbrowser
 from functools import lru_cache
 
 from icons import icons
@@ -157,12 +156,17 @@ class BaseTextWidgetMixin:
                 menu.addAction(sel_to_tab_action)
 
         # File type specific actions (Markdown Preview / Open in browser) - Available regardless of text selection
-        if file_path:
+        browser_preview_action = getattr(
+            self,
+            'open_browser_preview_action',
+            None,
+        )
+        if file_path and browser_preview_action is not None:
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
-                open_action = QAction('Open in browser    \tCtrl+Alt+Shift+B', self)
+                open_action = browser_preview_action
+                open_action.setText('Open in browser')
                 open_action.setIcon(QIcon(icons['open_in_browser']))
-                open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():
                     first_action = menu.actions()[0]
                     menu.insertAction(first_action, open_action)
@@ -170,12 +174,10 @@ class BaseTextWidgetMixin:
                 else:
                     menu.addAction(open_action)
             elif ext.lower() == '.md':
-                preview_action = QAction(
-                    "Markdown Preview    \tCtrl+Alt+Shift+B", self
-                )
+                preview_action = browser_preview_action
+                preview_action.setText("Markdown Preview")
                 if 'docs' in icons:
                     preview_action.setIcon(QIcon(icons['docs']))
-                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
                 if menu.actions():
                     first_action = menu.actions()[0]
                     menu.insertAction(first_action, preview_action)

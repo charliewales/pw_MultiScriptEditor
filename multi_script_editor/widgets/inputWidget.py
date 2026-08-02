@@ -1,5 +1,6 @@
 import os
 import re
+import webbrowser
 from bisect import bisect_right
 
 import managers
@@ -19,7 +20,7 @@ from vendor.Qt.QtGui import (
     QTextCursor,
     QTextFormat,
 )
-from vendor.Qt.QtWidgets import QApplication, QMessageBox, QPlainTextEdit, QTextEdit
+from vendor.Qt.QtWidgets import QAction, QApplication, QMessageBox, QPlainTextEdit, QTextEdit
 from widgets import completeWidget
 from widgets.clipboardWidget import ClipboardManager, ClipboardWidget
 from widgets.markdown_preview import MarkdownPreviewEdit
@@ -121,6 +122,21 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.autocomplete_timer.setSingleShot(True)
         self.autocomplete_timer.timeout.connect(self.parseText)
         self.syntax_errors = {}
+
+        self.open_browser_preview_action = QAction(
+            "Open in browser / Markdown Preview",
+            self,
+        )
+        self.open_browser_preview_action.setShortcut(
+            QKeySequence("Ctrl+Alt+Shift+B")
+        )
+        self.open_browser_preview_action.setShortcutContext(
+            Qt.WidgetShortcut
+        )
+        self.open_browser_preview_action.triggered.connect(
+            self.open_browser_or_markdown_preview
+        )
+        self.addAction(self.open_browser_preview_action)
 
         self._lint_timer = QTimer(self)
         self._lint_timer.setSingleShot(True)
@@ -1078,6 +1094,19 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         popup.textSelected.connect(on_selected)
         popup.exec_()
 
+    def open_browser_or_markdown_preview(self):
+        file_path = getattr(self, 'file_path', None)
+        if not file_path:
+            file_path = getattr(self.parent(), 'file_path', None)
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        extension = os.path.splitext(file_path)[1].lower()
+        if extension in ('.html', '.htm'):
+            webbrowser.open(file_path)
+        elif extension == '.md':
+            self.show_markdown_preview()
+
     def show_markdown_preview(self):
 
         """
@@ -1114,60 +1143,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         tabWidget = self.parent().parent().parent()
         current_tab_index = tabWidget.currentIndex()
         tab_count = tabWidget.count()
-
-        # force autocomplete, Ctrl+Space
-        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_Space:
-            self.parseText(force=True)
-            return
-
-        # Bookmarks Finder shortcut, Ctrl+B
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_B:
-            self.show_bookmarks_popup()
-            return
-
-        # Clipboard Manager shortcut, Ctrl+Shift+V
-        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_V:
-            self.show_clipboard_popup()
-            return
-
-        # Open in browser or Markdown Preview shortcut, Ctrl+Alt+Shift+B
-
-        elif (
-            event.modifiers() == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
-            and event.key() == Qt.Key_B
-        ):
-            file_path = getattr(self, 'file_path', None)
-            if not file_path and hasattr(self, 'parent') and self.parent():
-                file_path = getattr(self.parent(), 'file_path', None)
-            if file_path and os.path.exists(file_path):
-                _, ext = os.path.splitext(file_path)
-                if ext.lower() in ['.html', '.htm']:
-                    import webbrowser
-                    webbrowser.open(file_path)
-                    return
-                elif ext.lower() == '.md':
-                    self.show_markdown_preview()
-                    return
-
-        # Toggle bookmark, Ctrl+F2
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_F2:
-            self.toggle_bookmark()
-            return
-
-        # Next bookmark, F2
-        elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_F2:
-            self.next_bookmark()
-            return
-
-        # Previous bookmark, Shift+F2
-        elif event.modifiers() == Qt.ShiftModifier and event.key() == Qt.Key_F2:
-            self.prev_bookmark()
-            return
-
-        # Clear bookmarks, Ctrl+Shift+F2
-        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_F2:
-            self.clear_bookmarks()
-            return
 
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
