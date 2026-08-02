@@ -160,7 +160,7 @@ class BaseTextWidgetMixin:
         if file_path:
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
-                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
+                open_action = QAction('Open in browser    \tCtrl+Alt+Shift+B', self)
                 open_action.setIcon(QIcon(icons['open_in_browser']))
                 open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():
@@ -170,7 +170,9 @@ class BaseTextWidgetMixin:
                 else:
                     menu.addAction(open_action)
             elif ext.lower() == '.md':
-                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
+                preview_action = QAction(
+                    "Markdown Preview    \tCtrl+Alt+Shift+B", self
+                )
                 if 'docs' in icons:
                     preview_action.setIcon(QIcon(icons['docs']))
                 preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())

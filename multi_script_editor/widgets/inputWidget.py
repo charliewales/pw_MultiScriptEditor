@@ -1125,8 +1125,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.show_clipboard_popup()
             return
 
-        # Open in browser or Markdown Preview shortcut, Ctrl+Alt+B
-        elif event.modifiers() == (Qt.ControlModifier | Qt.AltModifier) and event.key() == Qt.Key_B:
+        # Open in browser or Markdown Preview shortcut, Ctrl+Alt+Shift+B
+
+        elif (
+            event.modifiers() == (Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier)
+            and event.key() == Qt.Key_B
+        ):
             file_path = getattr(self, 'file_path', None)
             if not file_path and hasattr(self, 'parent') and self.parent():
                 file_path = getattr(self.parent(), 'file_path', None)
