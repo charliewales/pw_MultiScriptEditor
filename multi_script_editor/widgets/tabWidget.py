@@ -202,9 +202,6 @@ class TabCloseButton(QPushButton):
 
 
 class tabWidgetClass(QTabWidget):
-    # Signals to decouple from MainWindow
-    tab_closed = Signal(int)
-    session_save_requested = Signal()
     execute_selected_requested = Signal()
 
     def __init__(self, parent=None):
@@ -1325,7 +1322,6 @@ class tabWidgetClass(QTabWidget):
             file_path=file_path,
             fallback_name=name,
         )
-        cont.edit.saveSignal.connect(self.session_save_requested.emit)
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         if hasattr(self.p, 'showStatusMessage'):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)

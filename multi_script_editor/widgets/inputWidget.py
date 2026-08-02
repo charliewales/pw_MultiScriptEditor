@@ -48,8 +48,6 @@ class BlockUserData(QTextBlockUserData):
 
 class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     executeSignal = Signal()
-    saveSignal = Signal()
-    inputSignal = Signal()
     messageSignal = Signal(str)
 
     HIGHLIGHTER_CONFIG = (
@@ -577,7 +575,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 self.completer.doc_tooltip.setFont(new_font)
 
     def focusOutEvent(self, event):
-        self.saveSignal.emit()
         QPlainTextEdit.focusOutEvent(self,event)
         QTimer.singleShot(10, self._check_focus_loss)
 
@@ -1149,7 +1146,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         # Multi-cursor interception
         if self.multi_cursor_manager.handle_key_press(event):
             return
-        self.inputSignal.emit()
 
         if event.matches(QKeySequence.Undo):
             self.undo()
