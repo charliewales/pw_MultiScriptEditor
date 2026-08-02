@@ -655,16 +655,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if self.completer:
             if not force and hasattr(self.p, 'autocomplete_act') and not self.p.autocomplete_act.isChecked():
                 self.completer.hide()
-                self._lint_timer.start(500)
                 return
             if getattr(self, '_suppress_autocomplete', False) and not force:
                 self.completer.hide()
-                self._lint_timer.start(500)
                 return
             if getattr(self, '_skip_autocomplete_once', False):
                 self._skip_autocomplete_once = False
                 self.completer.hide()
-                self._lint_timer.start(500)
                 return
             tc = self.textCursor()
             pos = tc.position()
@@ -683,7 +680,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     not in PYTHON_COMPLETION_EXTENSIONS
                 ):
                     self.completer.updateCompleteList([])
-                    self._lint_timer.start(500)
                     return
                 text = self._document_text()
                 self.moveCompleter()
@@ -710,7 +706,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     self.completer.updateCompleteList()
             else:
                 self.completer.updateCompleteList()
-        self._lint_timer.start(500)
 
     def runLinter(self):
         main_win = self.p
