@@ -202,6 +202,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         timer = getattr(self, 'autocomplete_timer', None)
         if timer is not None:
             timer.stop()
+        self._skip_autocomplete_once = False
         completer = getattr(self, 'completer', None)
         if completer is not None:
             completer.hide()
@@ -1422,7 +1423,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         manager.multi_cursors = []
         self.setTextCursor(selection)
-        self._skip_autocomplete_once = True
         self.move_selected_lines(direction)
         self._restore_multi_cursor_states(
             states,
@@ -1641,6 +1641,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             before_states,
             after_states,
         )
+        self._cancel_pending_autocomplete()
 
     def highlight_current_line(self):
         cursor = self.textCursor()
