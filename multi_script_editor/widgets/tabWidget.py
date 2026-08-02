@@ -292,7 +292,7 @@ class tabWidgetClass(QTabWidget):
         QApplication.instance().installEventFilter(self)
 
     def on_tab_bar_double_clicked(self, index):
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if index >= 0:
             self.renameTab(index)
 
     def eventFilter(self, obj, event):
@@ -301,6 +301,21 @@ class tabWidgetClass(QTabWidget):
         if event_type == QEvent.KeyPress and obj == getattr(self, '_rename_edit', None) and event.key() == Qt.Key_Escape:
             self.finishRename(commit=False)
             return True
+
+        if (
+            event_type == QEvent.MouseButtonDblClick
+            and event.button() == Qt.LeftButton
+            and obj is self.tabBar()
+        ):
+            pos = (
+                event.position().toPoint()
+                if hasattr(event, 'position')
+                else event.pos()
+            )
+            index = self.tabBar().tabAt(pos)
+            if index >= 0:
+                QTimer.singleShot(0, lambda i=index: self.renameTab(i))
+                return True
 
         if event_type in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
             if getattr(self, '_rename_edit', None):
@@ -1198,13 +1213,13 @@ class tabWidgetClass(QTabWidget):
         edit = getattr(self, '_rename_edit', None)
         if not edit:
             return
+        widget = getattr(edit, '_widget_to_rename', None)
         self._rename_edit = None
         try:
             edit.editingFinished.disconnect()
         except Exception:
             pass
         if commit:
-            widget = getattr(edit, '_widget_to_rename', None)
             if widget:
                 new_text = edit.text().strip()
                 idx = self.indexOf(widget)
@@ -1250,6 +1265,20 @@ class tabWidgetClass(QTabWidget):
                         self.setTabText(idx, new_text)
         edit.hide()
         edit.deleteLater()
+        QTimer.singleShot(
+            0,
+            lambda target=widget: self._focus_editor_after_rename(target),
+        )
+
+    def _focus_editor_after_rename(self, widget):
+        if (
+            widget is not None
+            and self.currentWidget() is widget
+            and getattr(self, '_rename_edit', None) is None
+        ):
+            edit = getattr(widget, 'edit', None)
+            if edit is not None:
+                edit.setFocus()
 
     def renameTab(self, index=None):
         if index is None or isinstance(index, bool):
