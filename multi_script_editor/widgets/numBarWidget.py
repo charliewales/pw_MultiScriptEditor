@@ -56,6 +56,26 @@ class lineNumberBarClass(QWidget):
             return self.edit.y() + self.edit.viewport().y() - self.y()
         return 0
 
+    def _block_at_y(self, y):
+        viewport_offset = self._viewport_offset()
+        viewport_y = y - viewport_offset
+        viewport = self.edit.viewport()
+        if viewport_y < 0 or viewport_y >= viewport.height():
+            return None
+
+        block = self.edit.cursorForPosition(QPoint(0, viewport_y)).block()
+        if not block.isValid() or not block.isVisible():
+            return None
+
+        _, pos_y, block_height = self._block_geometry(
+            block,
+            self.edit.verticalScrollBar().value(),
+            viewport_offset,
+        )
+        if pos_y <= y <= pos_y + block_height:
+            return block
+        return None
+
     def _block_geometry(
         self,
         block,
@@ -296,29 +316,8 @@ class lineNumberBarClass(QWidget):
 
     def mouseMoveEvent(self, event):
         click_y = event.y()
-        contents_y = self.edit.verticalScrollBar().value()
-        cursor = self.edit.cursorForPosition(QPoint(0, 0))
-        block = cursor.block()
-        if block.previous().isValid():
-            block = block.previous()
-            
-        hover_block = -1
-        viewport_offset = self._viewport_offset()
-        while block.isValid():
-            if not block.isVisible():
-                block = block.next()
-                continue
-
-            _, pos_y, block_height = self._block_geometry(
-                block,
-                contents_y,
-                viewport_offset,
-            )
-                
-            if pos_y <= click_y <= pos_y + block_height:
-                hover_block = block.blockNumber()
-                break
-            block = block.next()
+        block = self._block_at_y(click_y)
+        hover_block = block.blockNumber() if block is not None else -1
 
         hover_in_bookmark_area = (event.x() < 20)
         hover_in_folding_area = (event.x() > self.width() - 20)
@@ -347,49 +346,30 @@ class lineNumberBarClass(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            click_y = event.y()
-            contents_y = self.edit.verticalScrollBar().value()
-            cursor = self.edit.cursorForPosition(QPoint(0, 0))
-            block = cursor.block()
-            if block.previous().isValid():
-                block = block.previous()
-
-            viewport_offset = self._viewport_offset()
-            while block.isValid():
-                if not block.isVisible():
-                    block = block.next()
-                    continue
-
-                _, pos_y, block_height = self._block_geometry(
-                    block,
-                    contents_y,
-                    viewport_offset,
-                )
-                    
-                if pos_y <= click_y <= pos_y + block_height:
-                    # Check if click is on the right side (chevron / folding region)
-                    if event.x() > self.width() - 20:
-                        block_num = block.blockNumber()
-                        if hasattr(self.edit, 'folding_regions') and block_num in self.edit.folding_regions:
-                            recursive = bool(event.modifiers() & Qt.ShiftModifier)
-                            self.edit.toggle_fold(block_num, recursive=recursive)
-                            self.request_repaint()
-                            return
-                    elif event.x() < 20:
-                        # Toggle bookmark on left margin click
-                        block_num = block.blockNumber()
-                        if hasattr(self.edit, 'toggle_bookmark'):
-                            self.edit.toggle_bookmark(block_num)
-                            self.request_repaint()
-                            return
-                    break
-                block = block.next()
+            block = self._block_at_y(event.y())
+            if block is not None:
+                # Check if click is on the right side (chevron / folding region)
+                if event.x() > self.width() - 20:
+                    block_num = block.blockNumber()
+                    if (
+                        hasattr(self.edit, 'folding_regions')
+                        and block_num in self.edit.folding_regions
+                    ):
+                        recursive = bool(
+                            event.modifiers() & Qt.ShiftModifier
+                        )
+                        self.edit.toggle_fold(
+                            block_num,
+                            recursive=recursive,
+                        )
+                        self.request_repaint()
+                        return
+                elif event.x() < 20:
+                    # Toggle bookmark on left margin click
+                    block_num = block.blockNumber()
+                    if hasattr(self.edit, 'toggle_bookmark'):
+                        self.edit.toggle_bookmark(block_num)
+                        self.request_repaint()
+                        return
         QWidget.mousePressEvent(self, event)
 
-    def eventFilter(self, object, event):
-        # Update the line numbers for all events on the text edit and the viewport.
-        # This is easier than connecting all necessary signals.
-        if object in (self.edit, self.edit.viewport()):
-            self.request_repaint()
-            return False
-        return QWidget.eventFilter(object, event)
