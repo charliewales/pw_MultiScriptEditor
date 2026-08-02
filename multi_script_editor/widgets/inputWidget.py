@@ -1174,20 +1174,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 cursor.insertText(add)
                 self.setTextCursor(cursor)
                 return
-        # comment, Alt+C
-        elif event.modifiers() == Qt.AltModifier and event.key() == Qt.Key_C:
-            self.p.tab.comment()
-            return
-        # shuffle lines, Alt+up, Alt+down
-        elif event.modifiers() == Qt.AltModifier:
-            if event.key() == Qt.Key_Up:
-                self._skip_autocomplete_once = True
-                self.move_line_up()
-                return
-            elif event.key() == Qt.Key_Down:
-                self._skip_autocomplete_once = True
-                self.move_line_down()
-                return
         # remove 4 spaces
         elif event.modifiers() == Qt.NoModifier and event.key() == Qt.Key_Backspace:
             cursor = self.textCursor()
@@ -1351,10 +1337,100 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.highlight_current_line()
 
     def move_line_up(self):
+        if self._move_multi_cursor_lines(-1):
+            return
         self.move_selected_lines(-1)
 
     def move_line_down(self):
+        if self._move_multi_cursor_lines(1):
+            return
         self.move_selected_lines(1)
+
+    def _capture_multi_cursor_states(self):
+        document = self.document()
+
+        def line_column(position):
+            block = document.findBlock(position)
+            return block.blockNumber(), position - block.position()
+
+        return [
+            (
+                line_column(cursor.position()),
+                line_column(cursor.anchor()),
+            )
+            for cursor in self.multi_cursor_manager.multi_cursors
+        ]
+
+    def _restore_multi_cursor_states(self, states, transform):
+        document = self.document()
+        restored = []
+        for position_state, anchor_state in states:
+            position_line, position_column = transform(*position_state)
+            anchor_line, anchor_column = transform(*anchor_state)
+            position_block = document.findBlockByNumber(position_line)
+            anchor_block = document.findBlockByNumber(anchor_line)
+            if not position_block.isValid() or not anchor_block.isValid():
+                continue
+
+            position = position_block.position() + min(
+                position_column,
+                len(position_block.text()),
+            )
+            anchor = anchor_block.position() + min(
+                anchor_column,
+                len(anchor_block.text()),
+            )
+            cursor = QTextCursor(document)
+            cursor.setPosition(anchor)
+            cursor.setPosition(position, QTextCursor.KeepAnchor)
+            restored.append(cursor)
+
+        manager = self.multi_cursor_manager
+        manager.multi_cursors = restored
+        manager.deduplicate_and_sort_cursors()
+        if manager.multi_cursors:
+            self.setTextCursor(manager.multi_cursors[0])
+        self.highlight_current_line()
+
+    def _move_multi_cursor_lines(self, direction):
+        manager = self.multi_cursor_manager
+        if not manager.has_cursors():
+            return False
+
+        states = self._capture_multi_cursor_states()
+        touched_lines = [
+            line
+            for position_state, anchor_state in states
+            for line in (position_state[0], anchor_state[0])
+        ]
+        start_line = min(touched_lines)
+        end_line = max(touched_lines)
+        last_line = self.document().blockCount() - 1
+        if (
+            (direction < 0 and start_line == 0)
+            or (direction > 0 and end_line >= last_line)
+        ):
+            return True
+
+        document = self.document()
+        start_block = document.findBlockByNumber(start_line)
+        end_block = document.findBlockByNumber(end_line)
+        selection = QTextCursor(document)
+        selection.setPosition(start_block.position())
+        selection.setPosition(
+            end_block.position() + len(end_block.text()),
+            QTextCursor.KeepAnchor,
+        )
+
+        manager.multi_cursors = []
+        self.setTextCursor(selection)
+        self._skip_autocomplete_once = True
+        self.move_selected_lines(direction)
+        self._restore_multi_cursor_states(
+            states,
+            lambda line, column: (line + direction, column),
+        )
+        return True
 
     def selected_line_range(self):
         cursor = self.textCursor()
@@ -1814,6 +1890,11 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.update()
 
     def commentSelected(self):
+        if self.multi_cursor_manager.has_cursors():
+            self._comment_multi_cursor_lines()
+            self._finish_comment_edit()
+            return
+
         cursor = self.textCursor()
         pos = cursor.position()
         start = cursor.selectionStart()
@@ -1876,6 +1957,55 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
         self.setTextCursor(cursor)
 
+        self._finish_comment_edit()
+
+    def _comment_multi_cursor_lines(self):
+        states = self._capture_multi_cursor_states()
+        document = self.document()
+        line_numbers = set()
+        for cursor in self.multi_cursor_manager.multi_cursors:
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            end_lookup = end - 1 if cursor.hasSelection() and end > start else end
+            start_line = document.findBlock(start).blockNumber()
+            end_line = document.findBlock(end_lookup).blockNumber()
+            line_numbers.update(range(start_line, end_line + 1))
+
+        ordered_lines = sorted(line_numbers)
+        source_lines = [
+            document.findBlockByNumber(line).text()
+            for line in ordered_lines
+        ]
+        new_text, _offset, shifts = self.addRemoveComments(
+            '\n'.join(source_lines)
+        )
+        replacement_lines = new_text.split('\n')
+
+        edit_cursor = QTextCursor(document)
+        edit_cursor.beginEditBlock()
+        for line, replacement in reversed(
+            list(zip(ordered_lines, replacement_lines))
+        ):
+            block = document.findBlockByNumber(line)
+            line_cursor = QTextCursor(block)
+            line_cursor.movePosition(
+                QTextCursor.EndOfBlock,
+                QTextCursor.KeepAnchor,
+            )
+            line_cursor.insertText(replacement)
+        edit_cursor.endEditBlock()
+
+        shifts_by_line = dict(zip(ordered_lines, shifts))
+
+        def transform(line, column):
+            index, shift = shifts_by_line.get(line, (-1, 0))
+            if index != -1 and column > index:
+                column = max(index, column + shift)
+            return line, column
+
+        self._restore_multi_cursor_states(states, transform)
+
+    def _finish_comment_edit(self):
         # Prevent autocomplete dialog from popping up due to textChanged
         if hasattr(self, 'autocomplete_timer'):
             self.autocomplete_timer.stop()

@@ -98,6 +98,12 @@ class MultiCursorManager:
         if key in (Qt.Key_Control, Qt.Key_Shift, Qt.Key_Alt, Qt.Key_Meta):
             return False
 
+        if (
+            modifiers == Qt.AltModifier
+            and key in (Qt.Key_C, Qt.Key_Up, Qt.Key_Down)
+        ):
+            return False
+
         if key == Qt.Key_Escape:
             self.clear()
             self.editor.highlight_current_line()
