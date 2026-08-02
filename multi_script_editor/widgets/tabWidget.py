@@ -1461,8 +1461,7 @@ class tabWidgetClass(QTabWidget):
     def getCurrentText(self, i=None):
         if i is None:
             i = self.currentIndex()
-        text = self.widget(i).edit.toPlainText()
-        return text
+        return self.getTabText(i)
 
     def getCurrentLine(self, i=None):
         if i is None:
