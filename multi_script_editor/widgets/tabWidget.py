@@ -344,10 +344,6 @@ class tabWidgetClass(QTabWidget):
                 if quick_tab_switching:
                     self._ctrl_pressed = True
                     self.show_tab_numbers(True)
-            elif key == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
-                if hasattr(self.p, 'showOpenTabs'):
-                    self.p.showOpenTabs()
-                return True
             elif (
                 key in (Qt.Key_PageUp, Qt.Key_PageDown)
                 and event.modifiers() & Qt.ControlModifier

@@ -1130,6 +1130,16 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.markdown_preview_widget.show()
         self.markdown_preview_widget.setFocus()
 
+    def _cycle_tab(self, offset):
+        tab_widget = getattr(self.p, 'tab', None)
+        if tab_widget is None:
+            return
+        tab_count = tab_widget.count()
+        if tab_count:
+            tab_widget.setCurrentIndex(
+                (tab_widget.currentIndex() + offset) % tab_count
+            )
+
     def keyPressEvent(self, event):
         # unsuppress autocomplete if alphanumeric or dot/underscore
         text = event.text()
@@ -1147,11 +1157,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if event.matches(QKeySequence.Redo):
             self.redo()
             return
-
-        # for tab cycling
-        tabWidget = self.parent().parent().parent()
-        current_tab_index = tabWidget.currentIndex()
-        tab_count = tabWidget.count()
 
         # apply complete
         if event.modifiers() == Qt.NoModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
@@ -1205,31 +1210,17 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 self.p.executeAll()
             event.ignore()
             return
-        # execute selected
-        elif event.modifiers() == Qt.ControlModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
-            if self.completer:
-                self.completer.updateCompleteList()
-            self.executeSignal.emit()
-            return
         # focus previous tab with Ctrl+Shift+Tab
         elif (event.modifiers() & Qt.ControlModifier) and (event.modifiers() & Qt.ShiftModifier) and event.key() == Qt.Key_Backtab:
-            previous_tab_index = (current_tab_index - 1) if current_tab_index > 0 else (tab_count - 1)
-            tabWidget.setCurrentIndex(previous_tab_index)
+            self._cycle_tab(-1)
             return
         # focus previous tab with Ctrl+PageUp
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_PageUp:
-            previous_tab_index = (current_tab_index - 1) if current_tab_index > 0 else (tab_count - 1)
-            tabWidget.setCurrentIndex(previous_tab_index)
-            return
-        # focus next tab with Ctrl+Tab
-        elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_Tab:
-            next_tab_index = (current_tab_index + 1) if current_tab_index < (tab_count - 1) else 0
-            tabWidget.setCurrentIndex(next_tab_index)
+            self._cycle_tab(-1)
             return
         # focus next tab with Ctrl+PageDown
         elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_PageDown:
-            next_tab_index = (current_tab_index + 1) if current_tab_index < (tab_count - 1) else 0
-            tabWidget.setCurrentIndex(next_tab_index)
+            self._cycle_tab(1)
             return
         # ignore Shift + Enter
         elif event.modifiers() == Qt.ShiftModifier and event.key() in [Qt.Key_Return , Qt.Key_Enter]:
