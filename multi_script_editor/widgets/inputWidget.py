@@ -1093,7 +1093,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.markdown_preview_widget.close_preview()
             return
         self.markdown_preview_widget = MarkdownPreviewEdit(self)
-        self.markdown_preview_widget.setMarkdown(self.toPlainText())
+        self.markdown_preview_widget.setMarkdown(self._document_text())
         self.markdown_preview_widget.show()
         self.markdown_preview_widget.setFocus()
 

@@ -1393,8 +1393,11 @@ class tabWidgetClass(QTabWidget):
         return cont.edit
 
     def getTabText(self, i):
-        text = self.widget(i).edit.toPlainText()
-        return text
+        edit = self.widget(i).edit
+        document_text = getattr(edit, '_document_text', None)
+        if callable(document_text):
+            return document_text()
+        return edit.toPlainText()
 
     def addToCurrent(self, text):
         i = self.currentIndex()
