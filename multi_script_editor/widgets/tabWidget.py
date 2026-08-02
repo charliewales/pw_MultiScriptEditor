@@ -277,6 +277,14 @@ class tabWidgetClass(QTabWidget):
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
         sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
+        self.reload_file_shortcut = QShortcut(
+            QKeySequence("Ctrl+Alt+Shift+R"),
+            self,
+            self.reloadFile,
+        )
+        self.reload_file_shortcut.setContext(
+            Qt.WidgetWithChildrenShortcut
+        )
 
         for i in range(1, 10):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
@@ -694,7 +702,8 @@ class tabWidgetClass(QTabWidget):
 
         # File specific actions (only when tab has a file_path)
         if has_file:
-            reload_action = QAction('Reload file', self)
+            reload_action = QAction('Reload file', menu)
+            reload_action.setShortcut('Ctrl+Alt+Shift+R')
             reload_action.setEnabled(os.path.exists(widget.file_path))
             if 'reload_plugins' in icons:
                 reload_action.setIcon(QIcon(icons['reload_plugins']))
