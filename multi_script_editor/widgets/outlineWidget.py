@@ -89,7 +89,7 @@ class OutlineWidget(QWidget):
         self.sort_btn.toggled.connect(self._on_sort_toggled)
 
         self.sync_btn = QToolButton()
-        self.sync_btn.setIcon(QIcon(icons.get("bookmark_toggle", icons.get("goto_line", ""))))
+        self.sync_btn.setIcon(QIcon(icons["follow_cursor"]))
         self.sync_btn.setCheckable(True)
         self.sync_btn.setChecked(False)
         self.sync_btn.setToolTip("Follow Cursor")

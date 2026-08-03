@@ -24,6 +24,7 @@ from vendor.Qt.QtWidgets import (
     QShortcut,
     QTabBar,
     QTabWidget,
+    QToolButton,
     QVBoxLayout,
     QWidget,
     QFileDialog,
@@ -232,7 +233,7 @@ class tabWidgetClass(QTabWidget):
         self.corner_layout.setContentsMargins(0, 0, 10, 0)
         self.corner_layout.setSpacing(2)
 
-        self.toggleExplorer_btn = QPushButton(self.corner_widget)
+        self.toggleExplorer_btn = QToolButton(self.corner_widget)
         self.toggleExplorer_btn.setMaximumWidth(30)
         self.toggleExplorer_btn.setCursor(Qt.ArrowCursor)
         self.toggleExplorer_btn.setIcon(QIcon(icons.get('explorer_panel', icons.get('open', ''))))
@@ -242,7 +243,7 @@ class tabWidgetClass(QTabWidget):
         self.toggleExplorer_btn.setCheckable(True)
         self.toggleExplorer_btn.toggled.connect(self.toggle_explorer)
 
-        newTabButton = QPushButton(self.corner_widget)
+        newTabButton = QToolButton(self.corner_widget)
         newTabButton.setMaximumWidth(30)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))

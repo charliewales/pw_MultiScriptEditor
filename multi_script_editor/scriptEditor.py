@@ -175,7 +175,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.editor_toolbar.setObjectName("editorToolBar")
         self.editor_toolbar.setMovable(False)
         self.editor_toolbar.setFloatable(False)
-        self.editor_toolbar.setIconSize(QSize(24, 24))
+        self.editor_toolbar.setIconSize(QSize(22, 22))
 
         self.editor_ly.addWidget(self.editor_toolbar)
         self.editor_ly.addWidget(self.tab)
