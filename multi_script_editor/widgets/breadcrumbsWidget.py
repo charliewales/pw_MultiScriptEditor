@@ -341,7 +341,30 @@ class BreadcrumbTreePopup(QFrame):
         self.file_tree.clicked.connect(
             self._on_file_tree_clicked
         )
+        self.file_tree.expanded.connect(
+            self._schedule_file_tree_geometry_refinement
+        )
+        self.file_tree.collapsed.connect(
+            self._schedule_file_tree_geometry_refinement
+        )
+        self.file_tree.fs_model.directoryLoaded.connect(
+            self._schedule_file_tree_geometry_refinement
+        )
         self._layout.insertWidget(0, self.file_tree)
+
+    def _schedule_file_tree_geometry_refinement(self, *_args):
+        if getattr(self, '_geometry_refinement_scheduled', False):
+            return
+        self._geometry_refinement_scheduled = True
+        QTimer.singleShot(0, self._refine_file_tree_geometry)
+
+    def _refine_file_tree_geometry(self):
+        self._geometry_refinement_scheduled = False
+        self._show_pending(
+            self._show_request_id,
+            force=True,
+            refine=True,
+        )
 
     def _on_file_tree_root_loaded(self, _path):
         if not self._waiting_for_root:

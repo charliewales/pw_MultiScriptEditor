@@ -34,7 +34,7 @@ DIRECTORY_COLOR = "#e5c07b"
 
 FILE_TYPE_COLORS = {
     # Python
-    ".py": "#61afef", ".pyw": "#61afef", ".pyx": "#61afef", ".pyc": "#5c6370",
+    ".py": "#61afef", ".pyw": "#61afef", ".pyx": "#61afef",
     # Data / Config
     ".json": "#d19a66", ".yaml": "#d19a66", ".yml": "#d19a66",
     ".xml": "#d19a66", ".ini": "#d19a66", ".toml": "#d19a66", ".csv": "#d19a66",
@@ -49,6 +49,7 @@ FILE_TYPE_COLORS = {
 }
 
 SUPPORTED_EXTENSIONS_EXTRA = set()
+FILTERED_DIRECTORY_NAMES = {"__pycache__"}
 _SUPPORTED_EXTENSIONS_VERSION = 0
 _SUPPORTED_FILES_FILTER_ENABLED = True
 
@@ -148,10 +149,17 @@ class FileSystemFilterProxyModel(QSortFilterProxyModel):
 
         file_name = source_model.fileName(index)
 
-        if not source_model.isDir(index):
+        is_directory = source_model.isDir(index)
+        if is_directory:
+            if (
+                self._filter_supported_only
+                and file_name.lower() in FILTERED_DIRECTORY_NAMES
+            ):
+                return False
+        else:
+            ext = os.path.splitext(file_name)[1].lower()
             # If _filter_supported_only is True (Checked button), filter to supported extensions only
             if self._filter_supported_only:
-                ext = os.path.splitext(file_name)[1].lower()
                 if ext not in self._get_supported_extensions():
                     return False
 
