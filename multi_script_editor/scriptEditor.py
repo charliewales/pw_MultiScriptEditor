@@ -1334,15 +1334,23 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if index < 0:
             return
 
-        edit_widget = self.tab.widget(index).edit
-        code = edit_widget.toPlainText()
+        container = self.tab.widget(index)
+        edit_widget = container.edit
 
         # Determine extension based on file_path or fallback to .py
         ext = '.py'
-        if hasattr(self.tab.widget(index), 'file_path') and self.tab.widget(index).file_path:
-            _, ext = os.path.splitext(self.tab.widget(index).file_path)
+        if getattr(container, 'file_path', None):
+            _, ext = os.path.splitext(container.file_path)
+            ext = ext.lower()
 
-        symbols = OutlineParser.parse(code, ext)
+        cache_key = (edit_widget.document().revision(), ext)
+        if cache_key == getattr(edit_widget, '_outline_cache_key', None):
+            symbols = getattr(edit_widget, '_outline_cached_symbols', ())
+        else:
+            code = self.tab.getTabText(index)
+            symbols = OutlineParser.parse(code, ext)
+            edit_widget._outline_cache_key = cache_key
+            edit_widget._outline_cached_symbols = symbols
         if not symbols:
             return
 
