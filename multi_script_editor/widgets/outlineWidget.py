@@ -19,6 +19,9 @@ from widgets.outline_utils import (
 )
 
 
+_SOURCE_ORDER_ROLE = Qt.UserRole + 3
+
+
 class OutlineWidget(QWidget):
     """
     Enhanced Outline Panel featuring a hierarchical tree view of document symbols
@@ -186,12 +189,13 @@ class OutlineWidget(QWidget):
         first_item_by_line = {}
 
         def _add_nodes(parent_item, sym_list):
-            items_to_process = list(sym_list)
+            items_to_process = list(enumerate(sym_list))
             if self._sort_alphabetical:
-                items_to_process.sort(key=symbol_sort_key)
+                items_to_process.sort(key=lambda entry: symbol_sort_key(entry[1]))
 
-            for sym in items_to_process:
+            for source_order, sym in items_to_process:
                 tree_item = create_tree_symbol_item(sym, self._theme_colors, self._font, ext=self._ext)
+                tree_item.setData(0, _SOURCE_ORDER_ROLE, source_order)
                 if parent_item:
                     parent_item.addChild(tree_item)
                 else:
@@ -244,9 +248,33 @@ class OutlineWidget(QWidget):
     def expand_all(self):
         self.tree_widget.expandAll()
 
+    def _sort_existing_items(self, parent_item=None):
+        parent_item = parent_item or self.tree_widget.invisibleRootItem()
+        items = parent_item.takeChildren()
+        if self._sort_alphabetical:
+            items.sort(
+                key=lambda item: symbol_sort_key(
+                    item.data(0, Qt.UserRole + 2)
+                )
+            )
+        else:
+            items.sort(key=lambda item: item.data(0, _SOURCE_ORDER_ROLE))
+        parent_item.addChildren(items)
+
+        for item in items:
+            if item.childCount():
+                self._sort_existing_items(item)
+
     def _on_sort_toggled(self, checked):
         self._sort_alphabetical = checked
-        self.rebuild_tree()
+        current_item = self.tree_widget.currentItem()
+        self.tree_widget.setUpdatesEnabled(False)
+        try:
+            self._sort_existing_items()
+            if current_item:
+                self.tree_widget.setCurrentItem(current_item)
+        finally:
+            self.tree_widget.setUpdatesEnabled(True)
         self.options_changed.emit()
 
     def _on_sync_toggled(self, checked):
