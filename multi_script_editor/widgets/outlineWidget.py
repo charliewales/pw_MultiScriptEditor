@@ -12,7 +12,11 @@ from vendor.Qt.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from widgets.outline_utils import HtmlDelegate, create_tree_symbol_item
+from widgets.outline_utils import (
+    HtmlDelegate,
+    create_tree_symbol_item,
+    symbol_sort_key,
+)
 
 
 class OutlineWidget(QWidget):
@@ -184,7 +188,7 @@ class OutlineWidget(QWidget):
         def _add_nodes(parent_item, sym_list):
             items_to_process = list(sym_list)
             if self._sort_alphabetical:
-                items_to_process.sort(key=lambda x: x.get('raw_name', x.get('name', '')).lower())
+                items_to_process.sort(key=symbol_sort_key)
 
             for sym in items_to_process:
                 tree_item = create_tree_symbol_item(sym, self._theme_colors, self._font, ext=self._ext)

@@ -1,21 +1,73 @@
 from core.outline_parser import OutlineParser
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics
-from widgets.outline_utils import HtmlDelegate, create_symbol_item
+from widgets.outline_utils import (
+    HtmlDelegate,
+    create_symbol_item,
+    symbol_sort_key,
+)
 from widgets.searchPopupWidget import SearchPopupWidget
+
+
+def _flatten_symbols_alphabetically(symbols):
+    flat = []
+    for symbol in sorted(symbols, key=symbol_sort_key):
+        symbol_copy = dict(symbol)
+        children = symbol_copy.pop('children', [])
+        flat.append(symbol_copy)
+        if children:
+            flat.extend(_flatten_symbols_alphabetically(children))
+    return flat
 
 
 class SymbolWidget(SearchPopupWidget):
     symbolSelected = Signal(object)  # emits the line number or any other data
     symbolDeleted = Signal(object)
 
-    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False):
+    def __init__(
+        self,
+        symbols,
+        parent=None,
+        center_widget=None,
+        qss=None,
+        font=None,
+        colors=None,
+        ext='.py',
+        placeholder_text="Search symbol...",
+        auto_accept_on_ctrl_release=False,
+        allow_delete=False,
+        sort_alphabetical=None,
+    ):
         super(SymbolWidget, self).__init__(parent, center_widget, qss, font, colors, placeholder_text=placeholder_text)
 
+        if sort_alphabetical is None:
+            outline_widget = getattr(
+                parent,
+                'outline_widget',
+                None,
+            )
+            sort_alphabetical = bool(
+                ext != '.generic'
+                and getattr(
+                    outline_widget,
+                    '_sort_alphabetical',
+                    False,
+                )
+            )
+
         if any('children' in s for s in symbols):
-            self.symbols = OutlineParser.flatten_symbols(symbols)
+            if sort_alphabetical:
+                self.symbols = _flatten_symbols_alphabetically(
+                    symbols
+                )
+            else:
+                self.symbols = OutlineParser.flatten_symbols(symbols)
         else:
-            self.symbols = symbols
+            self.symbols = (
+                sorted(symbols, key=symbol_sort_key)
+                if sort_alphabetical
+                else symbols
+            )
         self.ext = ext
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
         self.allow_delete = allow_delete

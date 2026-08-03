@@ -46,6 +46,14 @@ _SYMBOL_TEXT_COLOR_DEFAULTS = {
 }
 
 
+def symbol_sort_key(symbol):
+    return (
+        symbol.get('raw_name')
+        or symbol.get('name')
+        or ''
+    ).lower()
+
+
 def rgb_to_hex(rgb, default="#ffffff"):
     if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
         return default

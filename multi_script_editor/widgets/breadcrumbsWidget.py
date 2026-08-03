@@ -36,6 +36,7 @@ from widgets.explorerWidget import (
 from widgets.outline_utils import (
     get_symbol_text_color,
     get_symbol_type_icon,
+    symbol_sort_key,
 )
 
 def clean_symbol_name(name):
@@ -615,11 +616,27 @@ class BreadcrumbItemWidget(QToolButton):
 
     def _show_popup(self):
         popup = self._setup_lazy_popup()
+        siblings = self._siblings
+        if self._node_type == "symbol":
+            outline_widget = getattr(
+                self.window(),
+                "outline_widget",
+                None,
+            )
+            if getattr(
+                outline_widget,
+                "_sort_alphabetical",
+                False,
+            ):
+                siblings = sorted(
+                    siblings or [],
+                    key=symbol_sort_key,
+                )
         popup.show_for(
             self,
             self._node_type,
             self._path_or_data,
-            self._siblings,
+            siblings,
         )
 
 
@@ -782,11 +799,12 @@ class BreadcrumbBar(QScrollArea):
         line_num=1,
     ):
         symbols = symbols or []
+        symbols_changed = symbols != self._raw_symbols
         fallback_name = fallback_name or "Untitled"
         effective_theme = theme_colors or self._theme_colors
         effective_font = font or self._font
         if (
-            symbols == self._raw_symbols
+            not symbols_changed
             and file_path == self._file_path
             and fallback_name == self._fallback_name
             and ext == self._ext
@@ -803,7 +821,8 @@ class BreadcrumbBar(QScrollArea):
             self.apply_theme(theme_colors, font, rebuild=False)
 
         self._raw_symbols = symbols
-        self._rebuild_symbol_line_indexes()
+        if symbols_changed:
+            self._rebuild_symbol_line_indexes()
         self._file_path = file_path
         self._fallback_name = fallback_name
         self._ext = ext
