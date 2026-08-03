@@ -72,7 +72,8 @@ class SymbolWidget(SearchPopupWidget):
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
         self.allow_delete = allow_delete
         self._items_by_symbol_id = {}
-        
+
+        self.list_widget.setUniformItemSizes(True)
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
         # Calculate dynamic size
