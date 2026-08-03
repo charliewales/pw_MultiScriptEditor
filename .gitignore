@@ -5,6 +5,10 @@ tmp
 _backup
 _tmp
 *.pyc
+*.dist-info/
+*.egg-info/
+build/
+dist/
 .history/
 .agents/
 scratch/
