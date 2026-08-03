@@ -1,6 +1,7 @@
 import os
 import re
 
+import vendor.Qt
 from vendor.Qt.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
 from vendor.Qt.QtGui import (
     QColor,
@@ -48,7 +49,8 @@ class TabCloseButton(QPushButton):
     def __init__(self, parent=None, colors=None):
         super(TabCloseButton, self).__init__(parent)
         self.setObjectName("CustomCloseBtn")
-        self.setFixedSize(20, 20)
+        self._right_spacing = 4 if vendor.Qt.IsPySide6 else 0
+        self.setFixedSize(20 + self._right_spacing, 20)
         self.setMouseTracking(True)
         self._git_status_code = ""
         self._is_dirty = False
@@ -108,6 +110,12 @@ class TabCloseButton(QPushButton):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        content_rect = self.rect().adjusted(
+            0,
+            0,
+            -self._right_spacing,
+            0,
+        )
 
         is_hovered = self.underMouse()
         has_git = bool(self._git_status_code and self._git_status_code != 'CLEAN')
@@ -131,7 +139,7 @@ class TabCloseButton(QPushButton):
             font.setBold(True)
             painter.setFont(font)
             painter.drawText(
-                self.rect(),
+                content_rect,
                 Qt.AlignCenter,
                 str(self._quick_index),
             )
@@ -140,18 +148,18 @@ class TabCloseButton(QPushButton):
             if bg_color.isValid():
                 painter.setPen(Qt.NoPen)
                 painter.setBrush(bg_color)
-                painter.drawRoundedRect(self.rect(), 3, 3)
+                painter.drawRoundedRect(content_rect, 3, 3)
 
             icon = self._close_icon or self._close_icon_grey
             if icon and not icon.isNull():
-                icon.paint(painter, self.rect())
+                icon.paint(painter, content_rect)
             else:
                 painter.setPen(QColor(200, 200, 200))
                 font = painter.font()
                 font.setBold(True)
                 font.setPointSize(10)
                 painter.setFont(font)
-                painter.drawText(self.rect(), Qt.AlignCenter, "×")
+                painter.drawText(content_rect, Qt.AlignCenter, "×")
         elif has_git:
             code = self._git_status_code
             if 'U' in code or 'A' in code:
@@ -168,7 +176,7 @@ class TabCloseButton(QPushButton):
             font.setBold(True)
             font.setPointSize(9)
             painter.setFont(font)
-            painter.drawText(self.rect(), Qt.AlignCenter, code)
+            painter.drawText(content_rect, Qt.AlignCenter, code)
         elif self._is_dirty:
             dirty_color = self._colors.get('tab_selected_text', self._colors.get('window', [200, 200, 200]))
             if isinstance(dirty_color, (list, tuple)):
@@ -180,9 +188,9 @@ class TabCloseButton(QPushButton):
             else:
                 painter.setBrush(QColor(200, 200, 200))
             painter.setPen(Qt.NoPen)
-            r = min(self.width(), self.height()) / 4.0
-            cx = self.width() / 2.0
-            cy = self.height() / 2.0
+            r = min(content_rect.width(), content_rect.height()) / 4.0
+            cx = content_rect.x() + content_rect.width() / 2.0
+            cy = content_rect.y() + content_rect.height() / 2.0
             painter.drawEllipse(QRectF(cx - r, cy - r, r * 2.0, r * 2.0))
         else:
             if self._is_selected:
@@ -191,14 +199,14 @@ class TabCloseButton(QPushButton):
                 icon = self._close_icon_grey or self._close_icon
 
             if icon and not icon.isNull():
-                icon.paint(painter, self.rect())
+                icon.paint(painter, content_rect)
             else:
                 painter.setPen(QColor(150, 150, 150) if not self._is_selected else QColor(220, 220, 220))
                 font = painter.font()
                 font.setBold(True)
                 font.setPointSize(10)
                 painter.setFont(font)
-                painter.drawText(self.rect(), Qt.AlignCenter, "×")
+                painter.drawText(content_rect, Qt.AlignCenter, "×")
         painter.end()
 
 
