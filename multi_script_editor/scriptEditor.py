@@ -2566,7 +2566,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.set_outline_symbols(symbols, ext)
             return
 
-        code = edit.toPlainText()
+        code = self.tab.getTabText(self.tab.currentIndex())
         self.update_outline_requested.emit(code, ext)
 
     def set_outline_symbols(self, symbols, ext='.py'):
