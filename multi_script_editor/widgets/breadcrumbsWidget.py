@@ -476,20 +476,24 @@ class BreadcrumbTreePopup(QFrame):
                 background-color: {0};
                 border: 1px solid {3};
             }}
-            QTreeWidget#breadcrumbTree {{
+            QTreeWidget#breadcrumbTree,
+            QTreeView#breadcrumbFileTree {{
                 background-color: {0};
                 color: {1};
                 border: none;
                 outline: none;
                 padding: 2px;
             }}
-            QTreeWidget#breadcrumbTree::item {{
+            QTreeWidget#breadcrumbTree::item,
+            QTreeView#breadcrumbFileTree::item {{
                 min-height: 24px;
                 padding: 1px 4px;
                 border: 1px solid transparent;
             }}
             QTreeWidget#breadcrumbTree::item:hover,
-            QTreeWidget#breadcrumbTree::item:selected {{
+            QTreeWidget#breadcrumbTree::item:selected,
+            QTreeView#breadcrumbFileTree::item:hover,
+            QTreeView#breadcrumbFileTree::item:selected {{
                 background-color: {2};
                 border: 1px solid {3};
                 color: {1};

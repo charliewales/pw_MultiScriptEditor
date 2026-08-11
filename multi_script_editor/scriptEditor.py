@@ -511,7 +511,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def showEvent(self, event):
         super(scriptEditorClass, self).showEvent(event)
-        self._schedule_houdini_qt5_style_refresh()
         data = self._current_settings
         if not data:
             self.saveSettings()
@@ -523,17 +522,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 scroll_v = edit.needs_loading_scroll_v
                 delattr(edit, 'needs_loading_scroll_v')
                 edit.verticalScrollBar().setValue(scroll_v)
-
-    def _schedule_houdini_qt5_style_refresh(self):
-        if (
-            managers.context != 'hou'
-            or vendor.Qt.__binding__ != 'PySide2'
-            or getattr(self, '_houdini_qt5_style_refresh_scheduled', False)
-        ):
-            return
-
-        self._houdini_qt5_style_refresh_scheduled = True
-        QTimer.singleShot(0, self.setWindowStyle)
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
