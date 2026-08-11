@@ -105,12 +105,13 @@ class SessionModel(object):
 
     def listNamedSessions(self):
         folder = self.getSessionsFolder()
-        sessions = []
         if os.path.exists(folder):
-            for f in os.listdir(folder):
-                if f.endswith('.json'):
-                    sessions.append(os.path.splitext(f)[0])
-        return sorted(sessions)
+            return sorted(
+                os.path.splitext(f)[0]
+                for f in os.listdir(folder)
+                if f.endswith('.json')
+            )
+        return []
 
     def writeNamedSession(self, name, data):
         folder = self.getSessionsFolder()
