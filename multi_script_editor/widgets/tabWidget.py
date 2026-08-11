@@ -1196,8 +1196,6 @@ class tabWidgetClass(QTabWidget):
             widget = self.widget(index)
             if hasattr(widget, 'file_path') and widget.file_path:
                 QApplication.clipboard().setText(os.path.normpath(widget.file_path))
-                # self.p.out.showMessage(out_message)
-                # self.p.showStatusMessage(message)
                 if hasattr(self.p, 'out'):
                     out_message = "File path: %s" % os.path.normpath(widget.file_path)
                     self.p.out.showMessage(out_message)
