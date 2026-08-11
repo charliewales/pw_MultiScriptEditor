@@ -2,6 +2,7 @@ import re
 
 from vendor.Qt.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 from widgets.pythonSyntax import design
+from widgets.pythonSyntax.highlighter_utils import apply_multiline_highlighting
 
 
 class BaseHighlighterClass(QSyntaxHighlighter):
@@ -137,42 +138,15 @@ class UsdHighlighterClass(BaseHighlighterClass):
         super(UsdHighlighterClass, self).highlightBlock(text)
         
         self.setCurrentBlockState(0)
-        self.match_multiline(text, *self.tri_double)
+        apply_multiline_highlighting(
+            self,
+            text,
+            *self.tri_double,
+        )
 
         if hasattr(self, 'whitespace_regex'):
             for match in self.whitespace_regex.finditer(text):
                 self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
-
-    def match_multiline(self, text, delimiter, in_state, style):
-        if self.previousBlockState() == in_state:
-            start = 0
-            add = 0
-        else:
-            match = delimiter.search(text)
-            start = match.start() if match else -1
-            add = match.end() - match.start() if match else 0
-
-        while start >= 0:
-            match = delimiter.search(text, start + add)
-            end = match.start() if match else -1
-            matchedLength = match.end() - match.start() if match else 0
-                
-            if end >= 0:
-                length = end - start + matchedLength
-                self.setCurrentBlockState(0)
-            else:
-                self.setCurrentBlockState(in_state)
-                length = len(text) - start
-            
-            self.setFormat(start, length, style)
-            
-            match = delimiter.search(text, start + length)
-            start = match.start() if match else -1
-            add = match.end() - match.start() if match else 0
-
-        return self.currentBlockState() == in_state
-
-
 
 class MarkdownHighlighterClass(BaseHighlighterClass):
     def __init__(self, document, colors=None):

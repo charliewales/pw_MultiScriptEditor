@@ -2,6 +2,7 @@ import re
 
 from vendor.Qt.QtGui import QBrush, QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 from widgets.pythonSyntax import design, keywords
+from widgets.pythonSyntax.highlighter_utils import apply_multiline_highlighting
 
 
 class PythonHighlighterClass(QSyntaxHighlighter):
@@ -94,48 +95,18 @@ class PythonHighlighterClass(QSyntaxHighlighter):
         self.setCurrentBlockState(0)
 
         # Do multi-line strings
-        in_multiline = self.match_multiline(text, *self.tri_single)
+        in_multiline = apply_multiline_highlighting(
+            self,
+            text,
+            *self.tri_single,
+        )
         if not in_multiline:
-            in_multiline = self.match_multiline(text, *self.tri_double)
+            apply_multiline_highlighting(
+                self,
+                text,
+                *self.tri_double,
+            )
 
         # Re-apply whitespace formatting on top of multiline strings
         for match in self.whitespace_regex.finditer(text):
             self.setFormat(match.start(), match.end() - match.start(), self.whitespace_format)
-
-    def match_multiline(self, text, delimiter, in_state, style):
-        """Do highlighting of multi-line strings."""
-        # If inside triple-single quotes, start at 0
-        if self.previousBlockState() == in_state:
-            start = 0
-            add = 0
-        else:
-            match = delimiter.search(text)
-            start = match.start() if match else -1
-            add = match.end() - match.start() if match else 0
-
-        # As long as there's a delimiter match on this line...
-        while start >= 0:
-            # Look for the ending delimiter
-            match = delimiter.search(text, start + add)
-            end = match.start() if match else -1
-            matchedLength = match.end() - match.start() if match else 0
-                
-            # Ending delimiter on this line?
-            if end >= 0:
-                length = end - start + matchedLength
-                self.setCurrentBlockState(0)
-            # No; multi-line string
-            else:
-                self.setCurrentBlockState(in_state)
-                length = len(text) - start
-            
-            # Apply formatting
-            self.setFormat(start, length, style)
-            
-            # Look for the next match
-            match = delimiter.search(text, start + length)
-            start = match.start() if match else -1
-            add = match.end() - match.start() if match else 0
-
-        # Return True if still inside a multi-line string, False otherwise
-        return self.currentBlockState() == in_state
