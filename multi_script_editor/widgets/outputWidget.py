@@ -1,9 +1,9 @@
 import os
 
-from core.base_text_widget import BaseTextWidgetMixin
+from core.base_text_widget import BaseTextWidgetMixin, configure_tab_stops
 from core.settings_model import SettingsModel
 from vendor.Qt.QtCore import Qt, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QTextCursor, QTextDocument
+from vendor.Qt.QtGui import QColor, QFont, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
 from widgets.pythonSyntax import design, syntaxHighLighter
 
@@ -23,12 +23,7 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         default_font = QFont(font_name, self.fs)
         default_font.setStyleHint(QFont.Monospace)
         self.document().setDefaultFont(default_font)
-        metrics = QFontMetrics(self.document().defaultFont())
-        width = metrics.horizontalAdvance(' ') if hasattr(metrics, 'horizontalAdvance') else metrics.width(' ')
-        if hasattr(self, 'setTabStopDistance'):
-            self.setTabStopDistance(4 * width)
-        else:
-            self.setTabStopWidth(4 * width)
+        configure_tab_stops(self)
         self.setMouseTracking(1)
         self.setAcceptDrops(True)
         self._highlight_word_cache = None

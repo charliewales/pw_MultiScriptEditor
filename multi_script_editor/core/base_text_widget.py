@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 
 from icons import icons
-from vendor.Qt.QtGui import QFont, QFontDatabase, QIcon, QTextOption
+from vendor.Qt.QtGui import QFont, QFontDatabase, QFontMetrics, QIcon, QTextOption
 from vendor.Qt.QtWidgets import QAction, QPlainTextEdit, QTextEdit
 
 
@@ -227,3 +227,15 @@ class BaseTextWidgetMixin:
 
         menu.exec_(event.globalPos())
         del menu
+
+
+def configure_tab_stops(editor, spaces=4):
+    metrics = QFontMetrics(editor.document().defaultFont())
+    if hasattr(metrics, 'horizontalAdvance'):
+        width = metrics.horizontalAdvance(' ')
+    else:
+        width = metrics.width(' ')
+    if hasattr(editor, 'setTabStopDistance'):
+        editor.setTabStopDistance(spaces * width)
+    else:
+        editor.setTabStopWidth(spaces * width)
