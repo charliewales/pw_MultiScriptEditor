@@ -5,7 +5,7 @@ from bisect import bisect_right
 
 import managers
 from core.autocomplete_provider import PYTHON_COMPLETION_EXTENSIONS
-from core.base_text_widget import BaseTextWidgetMixin, get_font_families
+from core.base_text_widget import BaseTextWidgetMixin, resolve_font_family
 from core.multi_cursor import MultiCursorManager
 from core.search_service import SearchService
 from core.settings_model import SettingsModel
@@ -525,24 +525,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         weight = font_d.get('weight', 1.0)
 
 
-        families = get_font_families()
-        if family not in families:
-            variations = [
-                family.replace(" NFM", " Nerd Font Mono"),
-                family.replace(" Nerd Font Mono", " NFM"),
-                family.replace(" NFP", " Nerd Font Propo"),
-                family.replace(" Nerd Font Propo", " NFP"),
-                family.replace(" NF", " Nerd Font"),
-                family.replace(" Nerd Font", " NF"),
-                family.replace(" Nerd Font Mono", " Nerd Font"),
-                family.replace(" Nerd Font Propo", " Nerd Font"),
-                family.replace(" Nerd Font", " Nerd Font Mono"),
-                family.replace(" Nerd Font", " Nerd Font Propo")
-            ]
-            for alt in variations:
-                if alt in families:
-                    family = alt
-                    break
+        family = resolve_font_family(family)
 
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)

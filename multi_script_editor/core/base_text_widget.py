@@ -15,6 +15,26 @@ def get_font_families():
     return frozenset(families)
 
 
+def resolve_font_family(family):
+    families = get_font_families()
+    if family in families:
+        return family
+
+    variations = (
+        family.replace(" NFM", " Nerd Font Mono"),
+        family.replace(" Nerd Font Mono", " NFM"),
+        family.replace(" NFP", " Nerd Font Propo"),
+        family.replace(" Nerd Font Propo", " NFP"),
+        family.replace(" NF", " Nerd Font"),
+        family.replace(" Nerd Font", " NF"),
+        family.replace(" Nerd Font Mono", " Nerd Font"),
+        family.replace(" Nerd Font Propo", " Nerd Font"),
+        family.replace(" Nerd Font", " Nerd Font Mono"),
+        family.replace(" Nerd Font", " Nerd Font Propo"),
+    )
+    return next((name for name in variations if name in families), family)
+
+
 class BaseTextWidgetMixin:
     """
     Mixin class that provides common text editing functionalities
@@ -82,25 +102,7 @@ class BaseTextWidgetMixin:
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1)
 
-        # Cross-compatibility patch for PySide2 (NF) vs PySide6 (Nerd Font)
-        families = get_font_families()
-        if family not in families:
-            variations = [
-                family.replace(" NFM", " Nerd Font Mono"),
-                family.replace(" Nerd Font Mono", " NFM"),
-                family.replace(" NFP", " Nerd Font Propo"),
-                family.replace(" Nerd Font Propo", " NFP"),
-                family.replace(" NF", " Nerd Font"),
-                family.replace(" Nerd Font", " NF"),
-                family.replace(" Nerd Font Mono", " Nerd Font"),
-                family.replace(" Nerd Font Propo", " Nerd Font"),
-                family.replace(" Nerd Font", " Nerd Font Mono"),
-                family.replace(" Nerd Font", " Nerd Font Propo")
-            ]
-            for alt in variations:
-                if alt in families:
-                    family = alt
-                    break
+        family = resolve_font_family(family)
 
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
