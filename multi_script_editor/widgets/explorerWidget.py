@@ -1,6 +1,7 @@
 import os
 import shutil
 
+from core.diff_manager import DiffManager
 from icons import icons
 from vendor.Qt.QtCore import (
     QDir,
@@ -482,6 +483,27 @@ class FileBrowserTree(ExplorerTreeView):
                 ]
             )
             menu.addAction(open_action)
+
+        compare_label = ""
+        if len(selected_paths) == 2:
+            if all(os.path.isfile(path) for path in selected_paths):
+                compare_label = "Compare files"
+            elif all(os.path.isdir(path) for path in selected_paths):
+                compare_label = "Compare folders"
+        if compare_label:
+            compare_action = QAction(compare_label, menu)
+            compare_action.setStatusTip(
+                "Compare the two selected items with the configured diff tool"
+            )
+            compare_action.setIcon(QIcon(icons.get("git_diff", "")))
+            compare_action.triggered.connect(
+                lambda: DiffManager.run_diff(
+                    selected_paths[0],
+                    selected_paths[1],
+                    parent=self,
+                )
+            )
+            menu.addAction(compare_action)
 
         copy_action = QAction("Copy selected full paths", menu)
         copy_action.setStatusTip(
