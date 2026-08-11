@@ -33,7 +33,6 @@ from core.session_model import (
 )
 from core.settings_model import SettingsModel, SnippetsModel, ThemesModel
 from icons import icons
-from plugins.plugin_manager import PluginManager
 from presenters.main_presenter import MainPresenter
 from style.links import links
 from vendor.Qt.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
@@ -271,10 +270,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.applyTheme(current_theme)
         self.addArgs()
         self.updateStatusBarInfo()
-
-        # Initialize and load plugins
-        self.plugin_manager = PluginManager(self)
-        self.plugin_manager.load_plugins(quiet=True)
 
     def setupStatusBarWidgets(self):
         self.lbl_msg = QLabel("")
@@ -594,9 +589,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if not hasattr(self, '_presenter'):
             return
         self._session_shutdown_saved = True
-
-        if hasattr(self, 'plugin_manager'):
-            self.plugin_manager.unload_plugins()
 
         self.saveSession()
         self.saveSettings()
@@ -2788,33 +2780,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             self.saveSnippet()
         else:
             self.insertSnippet()
-
-    def handlePluginShortcut(self):
-        from widgets import pluginWidget
-        if not hasattr(self, 'plugin_manager') or not self.plugin_manager.plugins:
-            self.out.showMessage(">>> No plugins loaded.")
-            return
-
-        index = self.tab.currentIndex()
-        if index < 0:
-            return
-
-        edit_widget = self.tab.widget(index).edit
-
-        qss, colors, font = self._popup_style_args(edit_widget)
-
-        self.plugin_widget = pluginWidget.PluginWidget(self.plugin_manager.plugins, self, edit_widget, qss=qss, font=font, colors=colors)
-
-        def execute_plugin(plugin_inst):
-            if hasattr(plugin_inst, 'action') and plugin_inst.action:
-                plugin_inst.action.trigger()
-
-        self.plugin_widget.pluginSelected.connect(execute_plugin)
-
-        if hasattr(self.plugin_widget, 'exec'):
-            self.plugin_widget.exec()
-        else:
-            self.plugin_widget.exec_()
 
     def _get_snippets(self):
         snippets_model = SnippetsModel()

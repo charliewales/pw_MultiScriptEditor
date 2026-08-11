@@ -783,7 +783,7 @@ class ExplorerWidget(QWidget):
         self.refresh_btn.setIconSize(QSize(24, 24))
         self.refresh_btn.setToolTip("Refresh directory")
         self.refresh_btn.setStatusTip("Refresh the file explorer view")
-        self.refresh_btn.setIcon(QIcon(icons.get("reload_plugins", icons.get("clear", ""))))
+        self.refresh_btn.setIcon(QIcon(icons.get("clear", "")))
 
         self.top_layout.addWidget(self.up_btn)
         self.top_layout.addWidget(self.sync_tab_btn)

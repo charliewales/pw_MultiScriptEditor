@@ -279,11 +279,6 @@ class ScriptEditorUIBuilder:
         configure(editor.manageSnippet_act, editor.handleSnippetShortcut, shortcut='Alt+S', context=Qt.WindowShortcut)
         editor.addAction(editor.manageSnippet_act)
 
-        # Plugin search action shortcut
-        editor.searchPlugin_act = QAction("Search/Run plugin", editor)
-        configure(editor.searchPlugin_act, editor.handlePluginShortcut, shortcut='Alt+P', context=Qt.WindowShortcut)
-        editor.addAction(editor.searchPlugin_act)
-
         # Create Bookmarks actions
         editor.toggleBookmark_act = QAction("Toggle Bookmark", editor)
         configure_optional(editor.toggleBookmark_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'toggle_bookmark'), 'bookmark_toggle', "Ctrl+F2")
@@ -390,7 +385,6 @@ class ScriptEditorUIBuilder:
             editor.saveOutputAs_act: "Save the output panel text to a file",
             editor.saveOutputToTab_act: "Copy the output panel text to a new tab",
             editor.saveSeccion_act: "Save the current session tabs and layout",
-            editor.searchPlugin_act: "Search and execute a plugin",
             editor.selectAllOccurrences_act: "Select all occurrences of the current word",
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.set_font_act: "Choose the font for the editor",

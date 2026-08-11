@@ -734,8 +734,8 @@ class tabWidgetClass(QTabWidget):
             reload_action = QAction('Reload file', menu)
             reload_action.setShortcut('Ctrl+Alt+Shift+R')
             reload_action.setEnabled(os.path.exists(widget.file_path))
-            if 'reload_plugins' in icons:
-                reload_action.setIcon(QIcon(icons['reload_plugins']))
+            if 'clear' in icons:
+                reload_action.setIcon(QIcon(icons['clear']))
             reload_action.triggered.connect(
                 lambda checked=False, idx=index: self.reloadFile(idx)
             )

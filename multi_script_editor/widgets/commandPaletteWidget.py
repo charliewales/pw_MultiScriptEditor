@@ -55,7 +55,7 @@ class CommandPaletteWidget(SearchPopupWidget):
     def load_commands(self):
         """
         Recursively extracts actions exclusively from allowed menus:
-        Bookmarks, Edit, Options, Plugins, Run, Snippets, View.
+        Bookmarks, Edit, Options, Run, Snippets, View.
         """
         self.list_widget.clear()
         self.actions_data = []
@@ -63,7 +63,7 @@ class CommandPaletteWidget(SearchPopupWidget):
         self._searchable_by_action_id.clear()
         visited_actions = set()
 
-        ALLOWED_MENUS = {"bookmarks", "edit", "options", "plugins", "run", "snippets", "view"}
+        ALLOWED_MENUS = {"bookmarks", "edit", "options", "run", "snippets", "view"}
 
         def is_allowed_top_level(title):
             return title.lower().strip() in ALLOWED_MENUS
@@ -110,7 +110,6 @@ class CommandPaletteWidget(SearchPopupWidget):
             "bookmarks_menu",
             "tools_menu",
             "options_menu",
-            "plugins_menu",
             "run_menu",
             "snippets_menu",
             "view_menu",
