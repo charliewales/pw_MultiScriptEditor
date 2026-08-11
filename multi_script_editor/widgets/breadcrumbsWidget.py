@@ -526,7 +526,7 @@ class BreadcrumbItemWidget(QToolButton):
         self.setAutoRaise(True)
         self.setFixedHeight(24)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.setStyleSheet("max-width: 16777215px;")
+        # self.setStyleSheet("max-width: 16777215px;")
 
         if font:
             self.setFont(font)
@@ -557,7 +557,7 @@ class BreadcrumbItemWidget(QToolButton):
             content_width = metrics.width(title)
         if not self.icon().isNull():
             content_width += self.iconSize().width() + 4
-        self.setMinimumWidth(content_width)
+        self.setMinimumWidth(content_width + 12)
 
     def paintEvent(self, event):
         if self._node_type != "symbol" or self.icon().isNull():
