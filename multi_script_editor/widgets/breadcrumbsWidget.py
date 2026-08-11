@@ -526,6 +526,7 @@ class BreadcrumbItemWidget(QToolButton):
         self.setAutoRaise(True)
         self.setFixedHeight(24)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setStyleSheet("max-width: 16777215px;")
 
         if font:
             self.setFont(font)
@@ -548,6 +549,15 @@ class BreadcrumbItemWidget(QToolButton):
             self.setStatusTip("Jump to {0} (Line {1})".format(title, line))
             self.setIcon(get_symbol_type_icon(sym_type, self._theme_colors))
             self.setIconSize(QSize(18, 18))
+
+        metrics = self.fontMetrics()
+        if hasattr(metrics, "horizontalAdvance"):
+            content_width = metrics.horizontalAdvance(title)
+        else:
+            content_width = metrics.width(title)
+        if not self.icon().isNull():
+            content_width += self.iconSize().width() + 4
+        self.setMinimumWidth(content_width)
 
     def paintEvent(self, event):
         if self._node_type != "symbol" or self.icon().isNull():
