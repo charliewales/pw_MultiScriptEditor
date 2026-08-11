@@ -213,6 +213,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # variables
         self._current_settings = {}
+        self._session_shutdown_saved = False
         self.namespace = __import__('__main__').__dict__
         self.dial = None
 
@@ -231,6 +232,13 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.autosave_timer = QTimer(self)
         self.autosave_timer.timeout.connect(self.autoSave)
         self.autosave_timer.start(60000)
+        self.session_save_timer = QTimer(self)
+        self.session_save_timer.setSingleShot(True)
+        self.session_save_timer.timeout.connect(self.autoSave)
+
+        app = QApplication.instance()
+        if app and hasattr(app, 'aboutToQuit'):
+            app.aboutToQuit.connect(self._save_session_on_app_quit)
 
         if hasattr(self, 'explorer_widget'):
             self.explorer_widget.options_changed.connect(self.saveSettings)
@@ -244,6 +252,9 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.tab.currentChanged.connect(self.updateGitStatusBarInfo)
         self.tab.currentChanged.connect(self._on_tab_changed_sync_explorer)
         self.tab.currentChanged.connect(self._on_tab_changed_sync_outline)
+        self.tab.currentChanged.connect(self._schedule_session_autosave)
+        self.tab.tabCloseRequested.connect(self._schedule_session_autosave)
+        self.tab.tabBar().tabMoved.connect(self._schedule_session_autosave)
         self.wordWrap_act.toggled.connect(self.updateStatusBarInfo)
 
         # start
@@ -574,7 +585,16 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             event.ignore()
             return
 
-        # Unload plugins to clean up resources and UI
+        self._save_session_on_app_quit()
+        event.accept()
+
+    def _save_session_on_app_quit(self):
+        if getattr(self, '_session_shutdown_saved', False):
+            return
+        if not hasattr(self, '_presenter'):
+            return
+        self._session_shutdown_saved = True
+
         if hasattr(self, 'plugin_manager'):
             self.plugin_manager.unload_plugins()
 
@@ -582,7 +602,10 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         self.saveSettings()
         if hasattr(self, '_presenter'):
             self._presenter.remove_backup()
-        event.accept()
+
+    def _schedule_session_autosave(self, *args):
+        if hasattr(self, 'session_save_timer'):
+            self.session_save_timer.start(1000)
 
     def appContextMenu(self):
         if managers.context in managers.contextMenus:
@@ -2637,6 +2660,11 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         if tabs == getattr(self, '_last_backup_tabs', None):
             return
         self._presenter.save_backup(tabs)
+        self._presenter.save_session(
+            prepare_tabs_for_session_save(
+                self._get_tabs_data(save_full_text=False)
+            )
+        )
         self._last_backup_tabs = tabs
 
     def fillSessionsMenu(self):
