@@ -220,18 +220,40 @@ class BreadcrumbTreePopup(QFrame):
         self._show_pending(request_id)
 
     def cancel_pending_show(self):
+        self._clear_pending_show()
+        self.hide()
+
+    def _clear_pending_show(self):
         self._show_request_id += 1
         self._waiting_for_root = False
         self._pending_button = None
         self._pending_node_type = None
-        self.hide()
+        active_popup = (
+            self._active_popup_ref()
+            if self._active_popup_ref is not None
+            else None
+        )
+        if active_popup is self:
+            BreadcrumbTreePopup._active_popup_ref = None
+
+    def hide(self):
+        self._clear_pending_show()
+        super(BreadcrumbTreePopup, self).hide()
+
+    def hideEvent(self, event):
+        self._clear_pending_show()
+        super(BreadcrumbTreePopup, self).hideEvent(event)
 
     def _show_pending(self, request_id, force=False, refine=False):
+        try:
+            is_visible = self.isVisible()
+        except RuntimeError:
+            return
         if request_id != self._show_request_id:
             return
         if self._waiting_for_root and not force:
             return
-        if refine and not self.isVisible():
+        if refine and not is_visible:
             return
 
         button = self._pending_button
