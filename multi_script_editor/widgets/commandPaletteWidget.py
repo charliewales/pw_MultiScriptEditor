@@ -1,8 +1,10 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFontMetrics
 from vendor.Qt.QtWidgets import QAction, QListWidgetItem, QMenu
 from widgets.outline_utils import HtmlDelegate, color_to_str
-from widgets.searchPopupWidget import SearchPopupWidget
+from widgets.searchPopupWidget import (
+    SearchPopupWidget,
+    resize_popup_for_text,
+)
 
 
 class CommandPaletteWidget(SearchPopupWidget):
@@ -37,19 +39,17 @@ class CommandPaletteWidget(SearchPopupWidget):
         if self.editor:
             self.load_commands()
 
-        fm = QFontMetrics(font) if font else QFontMetrics(self.font())
-        max_text_width = 0
-        for act in self.actions_data:
-            cat = act.get("category", "")
-            title = act.get("title", "")
-            sc = act.get("shortcut", "")
-            full_str = f"{cat}: {title}    {sc}"
-            w = fm.horizontalAdvance(full_str) if hasattr(fm, "horizontalAdvance") else fm.width(full_str)
-            w += 60
-            if w > max_text_width:
-                max_text_width = w
-
-        self.resize_and_move(max_text_width)
+        resize_popup_for_text(
+            self,
+            font,
+            (
+                f"{act.get('category', '')}: "
+                f"{act.get('title', '')}    "
+                f"{act.get('shortcut', '')}"
+                for act in self.actions_data
+            ),
+            padding=60,
+        )
         self.populate_list("")
 
     def load_commands(self):

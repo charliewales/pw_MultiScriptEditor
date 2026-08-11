@@ -1,4 +1,5 @@
 from vendor.Qt.QtCore import QEvent, QSize, Qt
+from vendor.Qt.QtGui import QFontMetrics
 from vendor.Qt.QtWidgets import QDialog, QLineEdit, QListWidget, QVBoxLayout
 
 
@@ -121,3 +122,17 @@ class SearchPopupWidget(QDialog):
         item = self.list_widget.currentItem()
         if item:
             self.on_item_clicked(item)
+
+
+def resize_popup_for_text(popup, font, labels, padding=0):
+    metrics = QFontMetrics(font or popup.font())
+    measure = (
+        metrics.horizontalAdvance
+        if hasattr(metrics, 'horizontalAdvance')
+        else metrics.width
+    )
+    max_width = max(
+        (measure(label) + padding for label in labels),
+        default=0,
+    )
+    popup.resize_and_move(max_width)

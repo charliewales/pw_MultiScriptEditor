@@ -2,10 +2,10 @@ import html
 
 from icons import icons
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtGui import QFontMetrics, QIcon
+from vendor.Qt.QtGui import QIcon
 from vendor.Qt.QtWidgets import QListWidgetItem
 from widgets.outline_utils import HtmlDelegate, rgb_to_hex
-from widgets.searchPopupWidget import SearchPopupWidget
+from widgets.searchPopupWidget import SearchPopupWidget, resize_popup_for_text
 
 
 def create_bookmark_item(
@@ -144,18 +144,15 @@ class BookmarkWidget(SearchPopupWidget):
 
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
-        # Calculate dynamic size
-        fm = QFontMetrics(font) if font else QFontMetrics(self.font())
-
-        max_text_width = 0
-        for b in self.bookmarks:
-            label = f"{b['line']}: {b['text'].strip()}"
-            w = fm.horizontalAdvance(label) if hasattr(fm, 'horizontalAdvance') else fm.width(label)
-            w += 40  # Icon + margin padding
-            if w > max_text_width:
-                max_text_width = w
-
-        self.resize_and_move(max_text_width)
+        resize_popup_for_text(
+            self,
+            font,
+            (
+                f"{bookmark['line']}: {bookmark['text'].strip()}"
+                for bookmark in self.bookmarks
+            ),
+            padding=40,
+        )
         self.populate_list("")
 
     def populate_list(self, filter_text):

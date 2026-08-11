@@ -1,10 +1,13 @@
 import os
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QFontMetrics, QIcon
+from vendor.Qt.QtGui import QIcon
 from vendor.Qt.QtWidgets import QApplication, QListWidgetItem
 from icons import icons
 from widgets.outline_utils import HtmlDelegate, color_to_str
-from widgets.searchPopupWidget import SearchPopupWidget
+from widgets.searchPopupWidget import (
+    SearchPopupWidget,
+    resize_popup_for_text,
+)
 from core.git_manager import GitManager
 
 
@@ -43,16 +46,12 @@ class GitPopupWidget(SearchPopupWidget):
         if file_path and os.path.exists(file_path) and GitManager.is_in_repo(file_path):
             self.load_git_actions()
 
-        fm = QFontMetrics(font) if font else QFontMetrics(self.font())
-        max_text_width = 0
-        for act in self.actions_data:
-            title = act.get("title", "")
-            w = fm.horizontalAdvance(title) if hasattr(fm, "horizontalAdvance") else fm.width(title)
-            w += 40
-            if w > max_text_width:
-                max_text_width = w
-
-        self.resize_and_move(max_text_width)
+        resize_popup_for_text(
+            self,
+            font,
+            (act.get("title", "") for act in self.actions_data),
+            padding=40,
+        )
         self.populate_list("")
 
     def load_git_actions(self):
