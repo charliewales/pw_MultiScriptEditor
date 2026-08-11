@@ -904,12 +904,8 @@ class tabWidgetClass(QTabWidget):
             msg_box.setText(f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.")
             msg_box.setIcon(QMessageBox.Question)
             msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            btn = msg_box.button(QMessageBox.No)
-            if btn:
-                msg_box.setDefaultButton(btn)
-                btn.setFocus()
-            else:
-                msg_box.setDefaultButton(QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.No)
+            msg_box.button(QMessageBox.No).setFocus()
             fallback_font = getattr(self.p, 'current_outline_font', self.font())
             self._apply_parent_theme_font(msg_box, fallback_font)
             reply = msg_box.exec_()
@@ -1072,12 +1068,8 @@ class tabWidgetClass(QTabWidget):
         msg_box.setWindowTitle('Delete File')
         msg_box.setText('Are you sure you want to delete "%s" from disk?' % filename)
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        no_button = msg_box.button(QMessageBox.No)
-        if no_button:
-            msg_box.setDefaultButton(no_button)
-            no_button.setFocus()
-        else:
-            msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.button(QMessageBox.No).setFocus()
         self._apply_parent_theme_font(msg_box)
 
         reply = msg_box.exec_()

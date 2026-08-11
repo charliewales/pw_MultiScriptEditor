@@ -880,12 +880,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         msg_box.setText("Are you sure you want to clear all bookmarks in the current document?")
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        no_button = msg_box.button(QMessageBox.No)
-        if no_button:
-            msg_box.setDefaultButton(no_button)
-            no_button.setFocus()
-        else:
-            msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        msg_box.button(QMessageBox.No).setFocus()
         msg_box.setFont(self.font())
         if hasattr(self.p, 'theme_font'):
             msg_box.setFont(self.p.theme_font)
