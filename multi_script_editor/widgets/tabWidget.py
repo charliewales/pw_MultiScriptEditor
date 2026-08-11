@@ -926,6 +926,7 @@ class tabWidgetClass(QTabWidget):
                         w.edit.document().setModified(False)
                 except Exception:
                     pass
+                self.reloadFile()
                 self.update_tab_git_status(index)
                 if hasattr(self.p, 'updateStatusBarInfo'):
                     self.p.updateStatusBarInfo()
