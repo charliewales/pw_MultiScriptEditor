@@ -37,7 +37,12 @@ def get_session_editor_state(edit, loaded_text):
 
 class SessionModel(object):
     def __init__(self):
-        self.path = os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), sessionFilename))
+        user_pref_folder = SettingsModel()._get_user_pref_folder()
+        self.path = os.path.normpath(os.path.join(user_pref_folder, sessionFilename))
+        self._backup_path = os.path.normpath(
+            os.path.join(user_pref_folder, backupFilename)
+        )
+        self._sessions_folder = os.path.join(user_pref_folder, 'mse_sessions')
         if not os.path.exists(self.path):
             self._write_json(self.path, [])
 
@@ -68,7 +73,7 @@ class SessionModel(object):
 
     # BACKUP METHODS (Auto-save)
     def getBackupPath(self):
-        return os.path.normpath(os.path.join(SettingsModel()._get_user_pref_folder(), backupFilename))
+        return self._backup_path
 
     def writeBackup(self, data):
         path = self.getBackupPath()
@@ -90,7 +95,7 @@ class SessionModel(object):
 
     # NAMED SESSIONS METHODS
     def getSessionsFolder(self):
-        folder = os.path.join(SettingsModel()._get_user_pref_folder(), 'mse_sessions')
+        folder = self._sessions_folder
         if not os.path.exists(folder):
             try:
                 os.makedirs(folder)
