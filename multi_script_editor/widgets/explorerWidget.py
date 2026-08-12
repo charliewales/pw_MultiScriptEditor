@@ -318,6 +318,15 @@ class FileBrowserTree(ExplorerTreeView):
             "- Return/Enter/Middle Click: set root folder\n"
             "- Backspace: go to parent folder"
         )
+
+        self.filter_edit = QLineEdit(self)
+        self.filter_edit.setObjectName("fileBrowserFilterInput")
+        self.filter_edit.setPlaceholderText("Filter paths...")
+        self.filter_edit.setClearButtonEnabled(True)
+        self.filter_edit.setStatusTip("Filter file browser paths")
+        self.filter_edit.setFont(self.font())
+        self.filter_edit.textChanged.connect(self._on_filter_changed)
+
         self.proxy_model.sort(0, Qt.AscendingOrder)
         for column in range(1, 4):
             self.setColumnHidden(column, True)
@@ -330,6 +339,43 @@ class FileBrowserTree(ExplorerTreeView):
         self.fs_model.directoryLoaded.connect(
             self._on_directory_loaded
         )
+        self.updateGeometries()
+        self._position_filter_edit()
+
+    def setFont(self, font):
+        super(FileBrowserTree, self).setFont(font)
+        if hasattr(self, "filter_edit"):
+            self.filter_edit.setFont(font)
+            self.updateGeometries()
+            self._position_filter_edit()
+
+    def updateGeometries(self):
+        super(FileBrowserTree, self).updateGeometries()
+        self.setViewportMargins(
+            0,
+            self.filter_edit.sizeHint().height() + 2,
+            0,
+            0,
+        )
+
+    def resizeEvent(self, event):
+        super(FileBrowserTree, self).resizeEvent(event)
+        self._position_filter_edit()
+
+    def _position_filter_edit(self):
+        filter_height = self.filter_edit.sizeHint().height()
+        frame_width = self.frameWidth()
+        self.filter_edit.setGeometry(
+            frame_width,
+            frame_width,
+            max(0, self.width() - frame_width * 2),
+            filter_height,
+        )
+
+    def _on_filter_changed(self, text):
+        self.proxy_model.setFilterFixedString(text)
+        if text.strip():
+            self.expandAll()
 
     def set_action_handler(self, handler):
         self._action_handler = handler

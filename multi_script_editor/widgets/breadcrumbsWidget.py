@@ -162,6 +162,7 @@ class BreadcrumbTreePopup(QFrame):
         elif node_type == "file":
             self.filter_edit.hide()
             self._ensure_file_tree()
+            self.file_tree.filter_edit.clear()
             self.tree.hide()
             self.file_tree.show()
             file_path = path_or_data or ""
@@ -169,6 +170,7 @@ class BreadcrumbTreePopup(QFrame):
         elif node_type == "dir":
             self.filter_edit.hide()
             self._ensure_file_tree()
+            self.file_tree.filter_edit.clear()
             self.tree.hide()
             self.file_tree.show()
             normalized_path = (
@@ -300,7 +302,6 @@ class BreadcrumbTreePopup(QFrame):
                     )
                 ),
             )
-            filter_height = self.filter_edit.sizeHint().height() + 2
         else:
             content_rows = max(
                 8,
@@ -308,7 +309,12 @@ class BreadcrumbTreePopup(QFrame):
                     self.file_tree.rootIndex()
                 ),
             )
-            filter_height = 0
+        active_filter = (
+            self.filter_edit
+            if node_type == "symbol"
+            else self.file_tree.filter_edit
+        )
+        filter_height = active_filter.sizeHint().height() + 2
         maximum_height = min(600, max(240, int(available.height() * 0.7)))
         height = min(
             maximum_height,
@@ -344,10 +350,7 @@ class BreadcrumbTreePopup(QFrame):
         self.move(position)
         self.show()
         self.raise_()
-        if node_type == "symbol":
-            self.filter_edit.setFocus(Qt.PopupFocusReason)
-        else:
-            active_tree.setFocus(Qt.PopupFocusReason)
+        active_filter.setFocus(Qt.PopupFocusReason)
         if refine:
             if node_type == "symbol":
                 scroll_bar = active_tree.verticalScrollBar()
@@ -399,7 +402,7 @@ class BreadcrumbTreePopup(QFrame):
         self.file_tree.fs_model.directoryLoaded.connect(
             self._schedule_file_tree_geometry_refinement
         )
-        self._layout.insertWidget(0, self.file_tree)
+        self._layout.insertWidget(1, self.file_tree)
 
     def _schedule_file_tree_geometry_refinement(self, *_args):
         if getattr(self, '_geometry_refinement_scheduled', False):
@@ -531,7 +534,8 @@ class BreadcrumbTreePopup(QFrame):
                 background-color: {0};
                 border: 1px solid {3};
             }}
-            QLineEdit#breadcrumbFilter {{
+            QLineEdit#breadcrumbFilter,
+            QLineEdit#fileBrowserFilterInput {{
                 background-color: {0};
                 color: {1};
                 border: 1px solid {3};
