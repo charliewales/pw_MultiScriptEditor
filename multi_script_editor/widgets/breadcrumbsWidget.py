@@ -1014,6 +1014,34 @@ class BreadcrumbBar(QScrollArea):
             item_btn.symbolSelected.connect(self.symbolSelected.emit)
             self.layout.addWidget(item_btn)
 
+        scope_symbols = (
+            chain[-1][0].get('children', [])
+            if chain
+            else self._raw_symbols
+        )
+        if scope_symbols:
+            if not first:
+                sep = QLabel(">", self)
+                sep.setStatusTip("Breadcrumb separator")
+                if self._font:
+                    sep.setFont(self._font)
+                self.layout.addWidget(sep)
+            first = False
+
+            item_btn = BreadcrumbItemWidget(
+                title="...",
+                node_type="symbol",
+                path_or_data=scope_symbols[0],
+                siblings=scope_symbols,
+                theme_colors=self._theme_colors,
+                font=self._font,
+                parent=self,
+            )
+            item_btn.setIcon(QIcon())
+            item_btn.setStatusTip("Browse symbols in current scope")
+            item_btn.symbolSelected.connect(self.symbolSelected.emit)
+            self.layout.addWidget(item_btn)
+
         if first:
             placeholder = QLabel(">", self)
             placeholder.setStatusTip("Empty breadcrumb")
