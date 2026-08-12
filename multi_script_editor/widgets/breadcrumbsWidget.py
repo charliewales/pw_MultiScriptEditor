@@ -3,6 +3,7 @@ import weakref
 from bisect import bisect_right
 
 from vendor.Qt.QtCore import (
+    QEvent,
     QFileInfo,
     QPoint,
     QRect,
@@ -120,6 +121,7 @@ class BreadcrumbTreePopup(QFrame):
         self.filter_edit.setClearButtonEnabled(True)
         self.filter_edit.setStatusTip("Filter breadcrumb symbols")
         self.filter_edit.textChanged.connect(self._filter_symbols)
+        self.filter_edit.installEventFilter(self)
         layout.addWidget(self.filter_edit)
 
         self.tree = QTreeWidget(self)
@@ -133,6 +135,7 @@ class BreadcrumbTreePopup(QFrame):
         self.tree.setExpandsOnDoubleClick(False)
         self.tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.tree.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.tree.installEventFilter(self)
         if font:
             self.setFont(font)
             self.filter_edit.setFont(font)
@@ -472,6 +475,63 @@ class BreadcrumbTreePopup(QFrame):
                 ),
             )
             self.tree.addTopLevelItem(item)
+
+    def eventFilter(self, watched, event):
+        if event.type() == QEvent.KeyPress and self.tree.isVisible():
+            if (
+                watched is self.filter_edit
+                and event.key() in (Qt.Key_Up, Qt.Key_Down)
+            ):
+                visible_items = [
+                    self.tree.topLevelItem(index)
+                    for index in range(self.tree.topLevelItemCount())
+                    if not self.tree.topLevelItem(index).isHidden()
+                ]
+                if visible_items:
+                    current_item = self.tree.currentItem()
+                    self.tree.setFocus(Qt.PopupFocusReason)
+                    if (
+                        current_item is None
+                        or current_item.isHidden()
+                    ):
+                        self.tree.setCurrentItem(
+                            visible_items[-1]
+                            if event.key() == Qt.Key_Up
+                            else visible_items[0]
+                        )
+                    else:
+                        self.tree.keyPressEvent(event)
+                return True
+
+            if watched is self.tree:
+                if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+                    current_item = self.tree.currentItem()
+                    if (
+                        current_item is not None
+                        and not current_item.isHidden()
+                    ):
+                        self._activate_symbol(current_item)
+                    return True
+
+                has_command_modifier = bool(
+                    event.modifiers()
+                    & (
+                        Qt.ControlModifier
+                        | Qt.AltModifier
+                        | Qt.MetaModifier
+                    )
+                )
+                if event.key() == Qt.Key_Backspace or (
+                    event.text() and not has_command_modifier
+                ):
+                    self.filter_edit.setFocus(Qt.PopupFocusReason)
+                    self.filter_edit.keyPressEvent(event)
+                    return True
+
+        return super(BreadcrumbTreePopup, self).eventFilter(
+            watched,
+            event,
+        )
 
     def _filter_symbols(self, text):
         query = text.strip().casefold()
