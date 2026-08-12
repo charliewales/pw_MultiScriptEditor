@@ -486,6 +486,10 @@ class FileBrowserTree(ExplorerTreeView):
         else:
             main_window.statusBar().clearMessage()
 
+    def focusOutEvent(self, event):
+        super(FileBrowserTree, self).focusOutEvent(event)
+        self._show_status_tip(None)
+
     def _copy_path(self, path):
         normalized_path = os.path.normpath(path)
         QApplication.clipboard().setText(normalized_path)
@@ -508,6 +512,9 @@ class FileBrowserTree(ExplorerTreeView):
         menu = QMenu(self)
         menu.setFont(self.font())
         menu.hovered.connect(self._show_status_tip)
+        menu.aboutToHide.connect(
+            lambda: self._show_status_tip(None)
+        )
 
         if len(selected_paths) > 1:
             self._populate_multi_path_menu(
