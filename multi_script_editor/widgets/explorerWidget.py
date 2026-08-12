@@ -486,6 +486,20 @@ class FileBrowserTree(ExplorerTreeView):
         else:
             main_window.statusBar().clearMessage()
 
+    def _copy_path(self, path):
+        normalized_path = os.path.normpath(path)
+        QApplication.clipboard().setText(normalized_path)
+        owner = self._action_handler or self
+        main_window = owner.window()
+        if hasattr(main_window, 'out'):
+            main_window.out.showMessage(
+                "File path: %s" % normalized_path
+            )
+        if hasattr(main_window, 'showStatusMessage'):
+            main_window.showStatusMessage(
+                "File path copied to clipboard"
+            )
+
     def show_context_menu(self, position):
         selected_paths, clicked_index = self._selected_paths(position)
         if not selected_paths:
@@ -592,13 +606,25 @@ class FileBrowserTree(ExplorerTreeView):
         target_path,
         clicked_index,
     ):
+        copy_action = QAction("Copy file path", menu)
+        copy_action.setStatusTip(
+            "Copy the absolute file path to clipboard"
+        )
+        copy_action.setIcon(QIcon(icons.get("copy", "")))
+        copy_action.triggered.connect(
+            lambda: self._copy_path(target_path)
+        )
+        menu.addAction(copy_action)
+
+        menu.addSeparator()
+
         if os.path.isfile(target_path):
             open_action = QAction(
-                "Open in editor [MMB]",
+                "Open in editor",
                 menu,
             )
             open_action.setStatusTip(
-                "Open this file in a new tab (Middle Mouse Button)"
+                "Open this file in a new tab (Double Click / Middle Mouse Button)"
             )
             open_action.setIcon(QIcon(icons.get("open", "")))
             open_action.triggered.connect(
@@ -625,6 +651,7 @@ class FileBrowserTree(ExplorerTreeView):
                 "add_path_to_bookmarks"
             )
             if add_bookmark:
+                menu.addSeparator()
                 bookmark_action = QAction(
                     "Add to favorites/bookmarks",
                     menu,
@@ -640,6 +667,9 @@ class FileBrowserTree(ExplorerTreeView):
 
         menu.addSeparator()
 
+
+        menu.addSeparator()
+
         reveal_action = QAction("Reveal in file explorer", menu)
         reveal_action.setStatusTip("Open in system file manager")
         reveal_action.setIcon(
@@ -650,15 +680,6 @@ class FileBrowserTree(ExplorerTreeView):
         )
         menu.addAction(reveal_action)
 
-        copy_action = QAction("Copy full path", menu)
-        copy_action.setStatusTip(
-            "Copy the absolute file path to clipboard"
-        )
-        copy_action.setIcon(QIcon(icons.get("copy", "")))
-        copy_action.triggered.connect(
-            lambda: QApplication.clipboard().setText(target_path)
-        )
-        menu.addAction(copy_action)
 
         target_dir = (
             target_path
@@ -701,18 +722,6 @@ class FileBrowserTree(ExplorerTreeView):
             and (rename_path or delete_path)
         ):
             menu.addSeparator()
-            if rename_path:
-                rename_action = QAction("Rename...", menu)
-                rename_action.setStatusTip(
-                    "Rename this file or folder"
-                )
-                rename_action.setIcon(
-                    QIcon(icons.get("rename_file", ""))
-                )
-                rename_action.triggered.connect(
-                    lambda: rename_path(target_path)
-                )
-                menu.addAction(rename_action)
             if delete_path:
                 delete_action = QAction("Delete", menu)
                 delete_action.setStatusTip(
@@ -725,6 +734,18 @@ class FileBrowserTree(ExplorerTreeView):
                     lambda: delete_path(target_path)
                 )
                 menu.addAction(delete_action)
+            if rename_path:
+                rename_action = QAction("Rename...", menu)
+                rename_action.setStatusTip(
+                    "Rename this file or folder"
+                )
+                rename_action.setIcon(
+                    QIcon(icons.get("rename_file", ""))
+                )
+                rename_action.triggered.connect(
+                    lambda: rename_path(target_path)
+                )
+                menu.addAction(rename_action)
 
     def _reveal_path(self, path):
         reveal_path = self._handler_method("_open_in_os_explorer")

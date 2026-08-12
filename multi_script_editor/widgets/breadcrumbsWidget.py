@@ -348,9 +348,12 @@ class BreadcrumbTreePopup(QFrame):
         )
 
         self.move(position)
-        self.show()
-        self.raise_()
-        active_filter.setFocus(Qt.PopupFocusReason)
+        if not is_visible:
+            self.show()
+        active_popup = QApplication.activePopupWidget()
+        if active_popup is None or active_popup is self:
+            self.raise_()
+            active_filter.setFocus(Qt.PopupFocusReason)
         if refine:
             if node_type == "symbol":
                 scroll_bar = active_tree.verticalScrollBar()
