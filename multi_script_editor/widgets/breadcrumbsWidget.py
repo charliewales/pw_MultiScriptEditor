@@ -18,6 +18,7 @@ from vendor.Qt.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QScrollArea,
     QSizePolicy,
     QStyle,
@@ -113,6 +114,14 @@ class BreadcrumbTreePopup(QFrame):
 
         self.file_tree = None
 
+        self.filter_edit = QLineEdit(self)
+        self.filter_edit.setObjectName("breadcrumbFilter")
+        self.filter_edit.setPlaceholderText("Filter symbols...")
+        self.filter_edit.setClearButtonEnabled(True)
+        self.filter_edit.setStatusTip("Filter breadcrumb symbols")
+        self.filter_edit.textChanged.connect(self._filter_symbols)
+        layout.addWidget(self.filter_edit)
+
         self.tree = QTreeWidget(self)
         self.tree.setObjectName("breadcrumbTree")
         self.tree.setHeaderHidden(True)
@@ -126,6 +135,7 @@ class BreadcrumbTreePopup(QFrame):
         self.tree.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         if font:
             self.setFont(font)
+            self.filter_edit.setFont(font)
             self.tree.setFont(font)
 
         self.tree.itemClicked.connect(self._on_item_clicked)
@@ -140,6 +150,8 @@ class BreadcrumbTreePopup(QFrame):
 
     def populate(self, node_type, path_or_data=None, siblings=None):
         if node_type == "symbol":
+            self.filter_edit.show()
+            self.filter_edit.clear()
             if self.file_tree:
                 self.file_tree.hide()
             self.tree.show()
@@ -148,12 +160,14 @@ class BreadcrumbTreePopup(QFrame):
             self._populate_symbols(siblings or [])
             self.tree.setUpdatesEnabled(True)
         elif node_type == "file":
+            self.filter_edit.hide()
             self._ensure_file_tree()
             self.tree.hide()
             self.file_tree.show()
             file_path = path_or_data or ""
             self._populate_file_tree(os.path.dirname(file_path))
         elif node_type == "dir":
+            self.filter_edit.hide()
             self._ensure_file_tree()
             self.tree.hide()
             self.file_tree.show()
@@ -279,8 +293,14 @@ class BreadcrumbTreePopup(QFrame):
         if node_type == "symbol":
             content_rows = max(
                 1,
-                self.tree.topLevelItemCount(),
+                sum(
+                    not self.tree.topLevelItem(index).isHidden()
+                    for index in range(
+                        self.tree.topLevelItemCount()
+                    )
+                ),
             )
+            filter_height = self.filter_edit.sizeHint().height() + 2
         else:
             content_rows = max(
                 8,
@@ -288,10 +308,14 @@ class BreadcrumbTreePopup(QFrame):
                     self.file_tree.rootIndex()
                 ),
             )
+            filter_height = 0
         maximum_height = min(600, max(240, int(available.height() * 0.7)))
         height = min(
             maximum_height,
-            content_rows * row_height + self.frameWidth() * 2 + 6,
+            content_rows * row_height
+            + filter_height
+            + self.frameWidth() * 2
+            + 6,
         )
         width = min(
             max(220, active_tree.sizeHintForColumn(0) + 42),
@@ -320,7 +344,10 @@ class BreadcrumbTreePopup(QFrame):
         self.move(position)
         self.show()
         self.raise_()
-        active_tree.setFocus(Qt.PopupFocusReason)
+        if node_type == "symbol":
+            self.filter_edit.setFocus(Qt.PopupFocusReason)
+        else:
+            active_tree.setFocus(Qt.PopupFocusReason)
         if refine:
             if node_type == "symbol":
                 scroll_bar = active_tree.verticalScrollBar()
@@ -440,6 +467,12 @@ class BreadcrumbTreePopup(QFrame):
             )
             self.tree.addTopLevelItem(item)
 
+    def _filter_symbols(self, text):
+        query = text.strip().casefold()
+        for index in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(index)
+            item.setHidden(query not in item.text(0).casefold())
+
     def _on_item_clicked(self, item, column):
         self._activate_symbol(item)
 
@@ -497,6 +530,13 @@ class BreadcrumbTreePopup(QFrame):
             QFrame#breadcrumbPopup {{
                 background-color: {0};
                 border: 1px solid {3};
+            }}
+            QLineEdit#breadcrumbFilter {{
+                background-color: {0};
+                color: {1};
+                border: 1px solid {3};
+                padding: 3px 6px;
+                selection-background-color: {2};
             }}
             QTreeWidget#breadcrumbTree,
             QTreeView#breadcrumbFileTree {{
