@@ -1,10 +1,12 @@
 import os
+import time
 
 from core.base_text_widget import BaseTextWidgetMixin, configure_tab_stops
 from core.settings_model import SettingsModel
 from vendor.Qt.QtCore import Qt, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QTextCursor, QTextDocument
-from vendor.Qt.QtWidgets import QPlainTextEdit, QTextEdit
+from icons import icons
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QTextCursor, QTextDocument
+from vendor.Qt.QtWidgets import QAction, QPlainTextEdit, QTextEdit
 from widgets.pythonSyntax import design, syntaxHighLighter
 
 font_name = 'monospace'
@@ -90,6 +92,70 @@ class outputClass(BaseTextWidgetMixin, QPlainTextEdit):
         cursor.insertText(str(msg)+'\n')
         self.setTextCursor(cursor)
         self.ensureCursorVisible()
+
+    def contextMenuEvent(self, event):
+        menu = self.createStandardContextMenu()
+        main_window = self.window()
+        if hasattr(main_window, 'menubar'):
+            menu.setFont(main_window.menubar.font())
+            menu.setStyleSheet(main_window.menubar.styleSheet())
+
+        first_action = menu.actions()[0] if menu.actions() else None
+        cursor = self.textCursor()
+        insert_before = first_action
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
+            action = QAction("Selection to tab", self)
+            action.setStatusTip("Copy the selected output text to a new tab")
+            action.setToolTip(action.statusTip())
+            if 'save_output_to_tab' in icons:
+                action.setIcon(QIcon(icons['save_output_to_tab']))
+
+            def create_selection_tab():
+                current_time = time.strftime("%H:%M:%S")
+                tab_name = f"selection {current_time}"
+                if hasattr(main_window, 'tab') and hasattr(main_window.tab, 'addNewTab'):
+                    curr_idx = main_window.tab.currentIndex()
+                    insert_idx = curr_idx + 1 if curr_idx >= 0 else None
+                    main_window.tab.addNewTab(
+                        tab_name,
+                        selected_text,
+                        insert_index=insert_idx,
+                    )
+
+            action.triggered.connect(create_selection_tab)
+            if first_action:
+                menu.insertAction(first_action, action)
+                insert_before = first_action
+            else:
+                menu.addAction(action)
+
+        output_to_tab = QAction("Output to tab", self)
+        output_to_tab.setStatusTip("Copy the output panel text to a new tab")
+        output_to_tab.setToolTip(output_to_tab.statusTip())
+        if 'save_output_to_tab' in icons:
+            output_to_tab.setIcon(QIcon(icons['save_output_to_tab']))
+        if hasattr(main_window, 'saveOutputToTab'):
+            output_to_tab.triggered.connect(main_window.saveOutputToTab)
+
+        save_output = QAction("Save output to...", self)
+        save_output.setStatusTip("Save the output panel text to a file")
+        save_output.setToolTip(save_output.statusTip())
+        if 'save_output_as' in icons:
+            save_output.setIcon(QIcon(icons['save_output_as']))
+        if hasattr(main_window, 'saveOutputAs'):
+            save_output.triggered.connect(main_window.saveOutputAs)
+
+        if first_action:
+            menu.insertAction(insert_before, output_to_tab)
+            menu.insertAction(insert_before, save_output)
+            menu.insertSeparator(first_action)
+        else:
+            menu.addAction(output_to_tab)
+            menu.addAction(save_output)
+
+        menu.exec_(event.globalPos())
+        del menu
 
     def search(self, text=None, case_sensitive=False):
         if text:
