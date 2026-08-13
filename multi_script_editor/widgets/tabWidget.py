@@ -284,7 +284,7 @@ class tabWidgetClass(QTabWidget):
         sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
         self.reload_file_shortcut = QShortcut(
-            QKeySequence("Ctrl+Alt+Shift+R"),
+            QKeySequence("Ctrl+Alt+Shift+L"),
             self,
             self.reloadFile,
         )
@@ -732,7 +732,7 @@ class tabWidgetClass(QTabWidget):
         # File specific actions (only when tab has a file_path)
         if has_file:
             reload_action = QAction('Reload file', menu)
-            reload_action.setShortcut('Ctrl+Alt+Shift+R')
+            reload_action.setShortcut('Ctrl+Alt+Shift+L')
             reload_action.setEnabled(os.path.exists(widget.file_path))
             if 'clear' in icons:
                 reload_action.setIcon(QIcon(icons['clear']))
