@@ -2192,31 +2192,48 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         else:
             dial.exec_()
 
-    def findWidget(self):
+    def findWidget(self, replace_mode=False):
         from widgets import findWidget
         focus_widget = QApplication.focusWidget()
         target = 'input'
+        anchor_widget = None
 
-        if focus_widget == self.out or self.out.isAncestorOf(focus_widget):
+        if not replace_mode and (focus_widget == self.out or self.out.isAncestorOf(focus_widget)):
             target = 'output'
 
         selected_text = ""
         if target == 'output':
-            # Searching in log, center on editor (self.tab)
-            center_widget = self.tab
+            anchor_widget = self.out
             cursor = self.out.textCursor()
             if cursor.hasSelection():
                 selected_text = cursor.selectedText()
         else:
-            # Searching in editor, center on log (self.out)
-            center_widget = self.out
             current_widget = self.tab.currentWidget()
             if current_widget and hasattr(current_widget, 'edit'):
+                anchor_widget = current_widget.edit
                 cursor = current_widget.edit.textCursor()
                 if cursor.hasSelection():
                     selected_text = cursor.selectedText()
 
-        w = findWidget.findWidgetClass(self.out, center_widget)
+        if anchor_widget is None:
+            return
+
+        for existing in self.findChildren(findWidget.findWidgetClass):
+            existing.hide()
+            existing.close()
+            existing.deleteLater()
+        self._find_widget = None
+
+        popup_edit = anchor_widget if target == 'input' else None
+        _, _, popup_font = self._popup_style_args(popup_edit)
+        w = findWidget.findWidgetClass(anchor_widget, anchor_widget, font=popup_font)
+        self._find_widget = w
+
+        def clear_find_widget_reference():
+            if getattr(self, '_find_widget', None) is w:
+                self._find_widget = None
+
+        w.destroyed.connect(clear_find_widget_reference)
         if selected_text:
             # Replace paragraph separators with spaces or newlines (Qt quirk)
             selected_text = selected_text.replace('\u2029', '\n')
@@ -2244,14 +2261,15 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             w.searchSignal.connect(self.out.search)
             w.setWindowTitle("Find in Log")
         else:
-            w.setReplaceEnabled(True)
+            w.setReplaceEnabled(replace_mode)
             w.searchSignal.connect(self.tab.search)
-            w.replaceSignal.connect(self.tab.replace)
-            w.replaceAllSignal.connect(self.tab.replaceAll)
-            w.setWindowTitle("Find in Editor")
+            if replace_mode:
+                w.replaceSignal.connect(self.tab.replace)
+                w.replaceAllSignal.connect(self.tab.replaceAll)
+            w.setWindowTitle("Replace in Editor" if replace_mode else "Find in Editor")
 
         w.show()
-        w.activateWindow()
+        w.raise_()
 
     def openFolder(self, path):
         if os.name == 'nt':

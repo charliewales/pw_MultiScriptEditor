@@ -103,6 +103,7 @@ class ScriptEditorUIBuilder:
         configure(editor.addCursorAbove_act, editor.tab.addCursorAbove, 'add_cursor_above', 'Ctrl+Shift+Up', Qt.WindowShortcut)
         configure(editor.addCursorBelow_act, editor.tab.addCursorBelow, 'add_cursor_below', 'Ctrl+Shift+Down', Qt.WindowShortcut)
         configure(editor.find_act, editor.findWidget, 'replace', 'Ctrl+F', Qt.WindowShortcut)
+        configure(editor.replace_act, lambda: editor.findWidget(True), 'replace', 'Ctrl+H', Qt.WindowShortcut)
         configure_optional(editor.commandPalette_act, editor.openCommandPalette, 'shortcut', 'Ctrl+Shift+P', Qt.WindowShortcut)
         # Ctrl+Shift+G is set in retranslateUi but setting it here for context explicitly
         configure_optional(editor.gitAction_act, editor.openGitPopup, 'git', 'Ctrl+Shift+G', Qt.WindowShortcut)
@@ -341,7 +342,8 @@ class ScriptEditorUIBuilder:
             editor.execSel_act: "Execute the selected code or current line",
             editor.exit_act: "Close the application",
             editor.f_string_act: "Create an f-string from the current selection or clipboard",
-            editor.find_act: "Find and replace text in the editor",
+            editor.find_act: "Find text in the editor or output",
+            editor.replace_act: "Find and replace text in the editor",
             editor.fold_act: "Fold the current code block",
             editor.fold_all_act: "Fold all code blocks",
             editor.fuzzy_autocomplete_act: "Toggle fuzzy code autocomplete functionality",
