@@ -351,6 +351,8 @@ class FileBrowserTree(ExplorerTreeView):
 
     def updateGeometries(self):
         super(FileBrowserTree, self).updateGeometries()
+        if not hasattr(self, "filter_edit"):
+            return
         self.setViewportMargins(
             0,
             self.filter_edit.sizeHint().height() + 2,
