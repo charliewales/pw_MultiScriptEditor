@@ -1606,11 +1606,23 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             theme_colors = data.get("colors", {}).get(theme, {})
             self._highlight_color_cache = theme_colors.get('highlight_line', (85,85,85))
 
+        block = cursor.block()
+        block_layout = block.layout()
+        visual_line_count = block_layout.lineCount() if block_layout else 0
+        if block_layout and visual_line_count:
+            visual_line_starts = tuple(
+                block_layout.lineAt(index).textStart()
+                for index in range(visual_line_count)
+            )
+        else:
+            visual_line_starts = (cursor.position() - block.position(),)
+
         multi_selections = self.multi_cursor_manager.get_extra_selections()
         cursor_state = (
             cursor.position(),
             cursor.anchor(),
             self._highlight_color_cache,
+            visual_line_starts,
         )
         if (
             cursor_state == getattr(
@@ -1626,13 +1638,19 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         ):
             return
 
-        selection = QTextEdit.ExtraSelection()
-        selection.format.setProperty(QTextFormat.FullWidthSelection, True)
-        selection.format.setBackground(
-            QColor.fromRgb(*self._highlight_color_cache)
-        )
-        selection.cursor = cursor
-        selections = [selection]
+        selections = []
+        for text_start in visual_line_starts:
+            highlight_cursor = QTextCursor(cursor)
+            highlight_cursor.setPosition(block.position() + text_start)
+
+            selection = QTextEdit.ExtraSelection()
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.format.setBackground(
+                QColor.fromRgb(*self._highlight_color_cache)
+            )
+            selection.cursor = highlight_cursor
+            selections.append(selection)
+
         selections.extend(multi_selections)
         self.setExtraSelections(selections)
         self._last_highlight_cursor_state = cursor_state
