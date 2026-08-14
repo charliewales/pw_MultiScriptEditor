@@ -2107,12 +2107,13 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             cursor.setPosition(end,QTextCursor.KeepAnchor)
             self.setTextCursor(cursor)
         else: # duplicate line
-            cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
-            cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
-            line = cursor.selectedText()
-            cursor.clearSelection()
+            block = cursor.block()
+            line = block.text()
+            column = current_cursor_pos - block.position()
+            insertion_pos = block.position() + block.length() - 1
+            cursor.setPosition(insertion_pos)
             cursor.insertText('\n'+line)
-            cursor.setPosition(current_cursor_pos + len(line) + 1)
+            cursor.setPosition(insertion_pos + 1 + min(column, len(line)))
             self.setTextCursor(cursor)
 
         self._cancel_pending_autocomplete()

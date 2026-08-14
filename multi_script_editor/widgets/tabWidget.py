@@ -1477,13 +1477,7 @@ class tabWidgetClass(QTabWidget):
 
         edit = self.widget(i).edit
         cursor = edit.textCursor()
-        current_cursor_pos = cursor.position()
-        cursor.select(QTextCursor.LineUnderCursor)
-        edit.setTextCursor(cursor)
-        text = edit.getSelection()
-        cursor.setPosition(current_cursor_pos)
-        edit.setTextCursor(cursor)
-        return text
+        return cursor.block().text()
 
     def setCurrentText(self, text):
         i = self.currentIndex()
