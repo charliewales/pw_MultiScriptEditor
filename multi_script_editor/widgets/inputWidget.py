@@ -2162,7 +2162,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             else:
                 cursor.deleteChar()
         else:
-            current_cursor_pos = cursor.position()
+            column = cursor.positionInBlock()
             cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
             cursor.movePosition(QTextCursor.MoveOperation.EndOfLine, QTextCursor.KeepAnchor)
 
@@ -2172,10 +2172,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             else:
                 cursor.deleteChar()
 
-            max_pos = self.document().characterCount() - 1
-            if current_cursor_pos > max_pos:
-                current_cursor_pos = max_pos
-            cursor.setPosition(current_cursor_pos)
+            block = cursor.block()
+            cursor.setPosition(
+                block.position() + min(column, len(block.text()))
+            )
 
         cursor.endEditBlock()
         self.setTextCursor(cursor)
