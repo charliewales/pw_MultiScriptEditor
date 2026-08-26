@@ -11,6 +11,95 @@ from widgets.searchPopupWidget import (
 from core.git_manager import GitManager
 
 
+def build_git_actions(file_path, tab_widget=None, tab_index=-1):
+    status_info = GitManager.get_file_status(file_path)
+    if not status_info.get("in_repo"):
+        return []
+
+    branch = status_info.get("branch", "HEAD")
+    status_text = status_info.get("status_text", "Clean")
+    actions = [
+        {
+            "title": f"Branch: {branch} ({status_text})",
+            "icon": icons.get("git_branch"),
+            "is_header": True,
+        },
+        {
+            "title": "Commit File...",
+            "icon": icons.get("git_commit"),
+            "callback": lambda: tab_widget.git_commit_dialog(file_path)
+            if tab_widget
+            else None,
+        },
+    ]
+
+    rel_path = status_info.get("relative_path", "")
+    if rel_path:
+        actions.append(
+            {
+                "title": "Copy Path Relative to Repo",
+                "icon": icons.get("copy"),
+                "callback": lambda rp=rel_path: QApplication.clipboard().setText(rp),
+            }
+        )
+
+    if status_info.get("is_modified"):
+        actions.append(
+            {
+                "title": "Discard Changes...",
+                "icon": icons.get("git_discard"),
+                "callback": lambda: tab_widget.git_discard_changes(
+                    tab_index,
+                    file_path,
+                )
+                if tab_widget
+                else None,
+            }
+        )
+
+    actions.extend(
+        [
+            {
+                "title": "File History / Log...",
+                "icon": icons.get("git_history"),
+                "callback": lambda: tab_widget.git_history_dialog(file_path)
+                if tab_widget
+                else None,
+            },
+            {
+                "title": "Git Diff (vs HEAD)",
+                "icon": icons.get("git_diff"),
+                "callback": lambda: tab_widget.run_git_diff(file_path)
+                if tab_widget
+                else None,
+            },
+        ]
+    )
+
+    if status_info.get("is_staged"):
+        actions.append(
+            {
+                "title": "Unstage File",
+                "icon": icons.get("git_unstage"),
+                "callback": lambda: tab_widget.git_unstage(file_path)
+                if tab_widget
+                else None,
+            }
+        )
+    else:
+        actions.append(
+            {
+                "title": "Stage File",
+                "icon": icons.get("git_stage"),
+                "callback": lambda: tab_widget.git_stage(file_path)
+                if tab_widget
+                else None,
+            }
+        )
+
+    return actions
+
+
 class GitPopupWidget(SearchPopupWidget):
     """
     Floating search popup widget displaying Git actions for the active file tab (Ctrl+Shift+G).
@@ -55,88 +144,13 @@ class GitPopupWidget(SearchPopupWidget):
         self.populate_list("")
 
     def load_git_actions(self):
-        status_info = GitManager.get_file_status(self.file_path)
-        branch = status_info.get("branch", "HEAD")
-        status_text = status_info.get("status_text", "Clean")
-
-        # Branch & status header info item
-        self.actions_data.append(
-            {
-                "title": f"Branch: {branch} ({status_text})",
-                "icon": icons.get("git_branch"),
-                "is_header": True,
-            }
-        )
-
-        # Commit File
-        self.actions_data.append(
-            {
-                "title": "Commit File...",
-                "icon": icons.get("git_commit"),
-                "callback": lambda: self.tab_widget.git_commit_dialog(self.file_path) if self.tab_widget else None,
-            }
-        )
-
-        # Copy Path Relative to Repo
-        rel_path = status_info.get("relative_path", "")
-        if rel_path:
-            self.actions_data.append(
-                {
-                    "title": "Copy Path Relative to Repo",
-                    "icon": icons.get("copy"),
-                    "callback": lambda rp=rel_path: QApplication.clipboard().setText(
-                        rp
-                    ),
-                }
+        self.actions_data.extend(
+            build_git_actions(
+                self.file_path,
+                self.tab_widget,
+                self.tab_index,
             )
-
-        # Discard Changes
-        if status_info.get("is_modified"):
-            self.actions_data.append(
-                {
-                    "title": "Discard Changes...",
-                    "icon": icons.get("git_discard"),
-                    "callback": lambda: self.tab_widget.git_discard_changes(self.tab_index, self.file_path)
-                    if self.tab_widget
-                    else None,
-                }
-            )
-
-        # File History / Log
-        self.actions_data.append(
-            {
-                "title": "File History / Log...",
-                "icon": icons.get("git_history"),
-                "callback": lambda: self.tab_widget.git_history_dialog(self.file_path) if self.tab_widget else None,
-            }
         )
-
-        # Git Diff vs HEAD
-        self.actions_data.append(
-            {
-                "title": "Git Diff (vs HEAD)",
-                "icon": icons.get("git_diff"),
-                "callback": lambda: self.tab_widget.run_git_diff(self.file_path) if self.tab_widget else None,
-            }
-        )
-
-        # Stage / Unstage File
-        if status_info.get("is_staged"):
-            self.actions_data.append(
-                {
-                    "title": "Unstage File",
-                    "icon": icons.get("git_unstage"),
-                    "callback": lambda: self.tab_widget.git_unstage(self.file_path) if self.tab_widget else None,
-                }
-            )
-        else:
-            self.actions_data.append(
-                {
-                    "title": "Stage File",
-                    "icon": icons.get("git_stage"),
-                    "callback": lambda: self.tab_widget.git_stage(self.file_path) if self.tab_widget else None,
-                }
-            )
 
     def populate_list(self, filter_text):
         self.list_widget.clear()

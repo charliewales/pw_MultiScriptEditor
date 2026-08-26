@@ -1,5 +1,8 @@
+import os
+
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import QAction, QListWidgetItem, QMenu
+from widgets.gitPopupWidget import build_git_actions
 from widgets.outline_utils import HtmlDelegate, color_to_str
 from widgets.searchPopupWidget import (
     SearchPopupWidget,
@@ -121,6 +124,28 @@ class CommandPaletteWidget(SearchPopupWidget):
                     title = m.title().replace("&", "").strip()
                     if is_allowed_top_level(title):
                         extract_menu_actions(m, title)
+
+        if getattr(self.editor, "_version_control_enabled", False):
+            tab_widget = getattr(self.editor, "tab", None)
+            tab_index = tab_widget.currentIndex() if tab_widget else -1
+            current_widget = tab_widget.widget(tab_index) if tab_index >= 0 else None
+            file_path = getattr(current_widget, "file_path", "")
+            if file_path and os.path.exists(file_path):
+                for git_action in build_git_actions(
+                    file_path,
+                    tab_widget,
+                    tab_index,
+                ):
+                    if git_action.get("is_header"):
+                        continue
+                    self.actions_data.append(
+                        {
+                            "category": "Git",
+                            "title": git_action["title"],
+                            "shortcut": "",
+                            "action": git_action.get("callback"),
+                        }
+                    )
 
         # Sort actions alphabetically by Category, then Title
         self.actions_data.sort(key=lambda x: (x["category"].lower(), x["title"].lower()))
