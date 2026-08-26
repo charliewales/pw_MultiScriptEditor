@@ -791,6 +791,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
 
     def getCurrentIndent(self):
         cursor = self.textCursor()
+        position_in_block = cursor.positionInBlock()
         auto = self.charBeforeCursor(cursor) == ':'
         cursor.movePosition(QTextCursor.MoveOperation.StartOfLine)
         cursor.movePosition(QTextCursor.MoveOperation.EndOfLine,QTextCursor.KeepAnchor)
@@ -798,7 +799,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         result = ''
         if line.strip():
             p = r"(^\s*)"
-            m = re.search(p, line)
+            m = re.search(p, line[:position_in_block])
             if m:
                 result = m.group(0)
             if auto:
