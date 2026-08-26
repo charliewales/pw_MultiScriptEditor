@@ -21,7 +21,7 @@ if vendor_path not in sys.path:
 import random
 import time
 
-import managers
+from multi_script_editor import managers
 import vendor.Qt
 from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text

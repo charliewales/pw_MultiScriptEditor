@@ -2,7 +2,7 @@ import ast
 import re
 import sys
 
-import managers
+from multi_script_editor import managers
 
 
 PYTHON_COMPLETION_EXTENSIONS = frozenset(('.py', '.pyw', '.pyx'))

@@ -1,4 +1,4 @@
-import managers
+from multi_script_editor import managers
 from vendor.Qt.QtCore import QSize, Qt, QTimer
 from vendor.Qt.QtGui import QFont, QFontMetrics
 from vendor.Qt.QtWidgets import QApplication, QLabel, QListWidget, QListWidgetItem

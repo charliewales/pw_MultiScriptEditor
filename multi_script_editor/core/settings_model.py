@@ -22,7 +22,7 @@ class SettingsModel:
 
     def _get_user_pref_folder(self):
         appData = None
-        import managers
+        from multi_script_editor import managers
         if managers.context == 'hou':
             try:
                 import hou

@@ -35,7 +35,7 @@ def showNuke(panel=False):
     """
     from .managers import _nuke
 
-    _nuke.show(panel)
+    return _nuke.show(panel)
 
 
 # MAYA
@@ -45,7 +45,7 @@ def showMaya(dock=False):
     """
     from .managers import _maya
 
-    _maya.show(dock)
+    return _maya.show(dock)
 
 
 def show(*args, **kwargs):
@@ -59,5 +59,5 @@ def show(*args, **kwargs):
         # Nuke's show takes 'panel' kwarg
         return showNuke(kwargs.get('panel', False))
 
-    import scriptEditor
-    scriptEditor.show()
+    from . import scriptEditor
+    return scriptEditor.show()

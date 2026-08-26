@@ -3,7 +3,7 @@ import re
 import webbrowser
 from bisect import bisect_right
 
-import managers
+from multi_script_editor import managers
 from core.autocomplete_provider import PYTHON_COMPLETION_EXTENSIONS
 from core.base_text_widget import BaseTextWidgetMixin, configure_tab_stops, resolve_font_family
 from core.multi_cursor import MultiCursorManager

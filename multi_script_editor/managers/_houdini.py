@@ -2,8 +2,7 @@ import re
 
 import hou
 
-import managers
-
+from multi_script_editor import managers
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import QAction, QMenu
 
