@@ -1,6 +1,4 @@
-import os
 import re
-import sys
 
 # import nuke
 main = __import__('__main__')
@@ -9,10 +7,9 @@ exec('import nuke', ns)
 exec('import nukescripts', ns)
 nuke = ns['nuke']
 import nukescripts
-from managers.nuke import nodes
 
-nuke_nodes = dir(nodes)
-from managers.completeWidget import contextCompleterClass
+nuke_nodes = dir(nuke.nodes)
+
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import (
     QAbstractItemView,
@@ -25,10 +22,6 @@ from vendor.Qt.QtWidgets import (
     QPushButton,
     QVBoxLayout,
 )
-
-p = os.path.dirname(__file__).replace('\\','/')
-if p not in sys.path:
-    sys.path.insert(0, p)
 
 from multi_script_editor import scriptEditor
 
@@ -82,7 +75,7 @@ def completer(line, ns):
             auto = [x for x in nuke_nodes if x.lower().startswith(name.lower())]
         else:
             auto = nuke_nodes
-        return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
+        return [(x, x[prefix_len:], True) for x in auto], None
 
     # p2 = r"nuke\.allNodes\(.*(filter=)*['\"](\w*)$"
     funcs = ['allNodes', 'selectedNodes']
@@ -96,7 +89,7 @@ def completer(line, ns):
                 auto = [x for x in nuke_nodes if x.lower().startswith(name.lower())]
             else:
                 auto = nuke_nodes
-            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
+            return [(x, x[prefix_len:], True) for x in auto], None
 
     # exists nodes
     p3 = r"nuke\.toNode\(\w*['\"](\w*)$"
@@ -110,7 +103,7 @@ def completer(line, ns):
         else:
             result = nodes
         prefix_len = len(name)
-        return [contextCompleterClass(x, x[prefix_len:], True) for x in result], None
+        return [(x, x[prefix_len:], True) for x in result], None
     # node knobs
     p4 = r"(\w+)\[['\"]{1}(\w*)$"
     m = re.search(p4, line)
@@ -126,7 +119,7 @@ def completer(line, ns):
                 else:
                     result = names
                 prefix_len = len(name)
-                return [contextCompleterClass(x, x[prefix_len:], True) for x in result if x], None
+                return [(x, x[prefix_len:], True) for x in result if x], None
             # nuke.tprint(ns[node])
     return None, None
 

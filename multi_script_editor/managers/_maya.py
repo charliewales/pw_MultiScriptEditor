@@ -1,9 +1,8 @@
 import os
 import re
-import sys
 
 import maya.OpenMayaUI as omui
-from managers.completeWidget import contextCompleterClass
+
 from maya import cmds, mel
 from vendor.Qt.QtCompat import wrapInstance
 from vendor.Qt.QtCore import QSize, Qt
@@ -26,13 +25,6 @@ from vendor.Qt.QtWidgets import (
 
 main = __import__('__main__')
 ns = main.__dict__
-
-# jedi completion path
-current_path = os.path.dirname(__file__)
-compPath = os.path.join(current_path,'maya_completion').replace('\\','/')
-if compPath in sys.path:
-    sys.path.remove(compPath)
-sys.path.insert(0, compPath)
 
 def getMayaWindow():
     return wrapInstance(int(omui.MQtUtil.mainWindow()), QWidget)
@@ -94,7 +86,7 @@ def completer(line, ns):
         if name:
             auto = [x for x in nodes if x.lower().startswith(name.lower())]
             prefix_len = len(name)
-            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
+            return [(x, x[prefix_len:], True) for x in auto], None
     # exists nodes
     p = r"PyNode\(['\"](\w*)$"
     m = re.search(p, line)
@@ -104,9 +96,9 @@ def completer(line, ns):
         prefix_len = len(name)
         if name:
             auto = [x for x in existsNodes if x.lower().startswith(name.lower())]
-            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
+            return [(x, x[prefix_len:], True) for x in auto], None
         else:
-            return [contextCompleterClass(x, x, True) for x in existsNodes], None
+            return [(x, x, True) for x in existsNodes], None
     return None, None
 
 # drop event

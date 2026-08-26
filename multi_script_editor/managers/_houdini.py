@@ -1,28 +1,11 @@
-import os
 import re
-import sys
 
 import hou
 
-main = __import__('__main__')
-# hou = main.__dict__['hou']
 import managers
-from managers.completeWidget import contextCompleterClass
+
 from vendor.Qt.QtCore import Qt
 from vendor.Qt.QtWidgets import QAction, QMenu
-
-path = os.path.join(os.path.dirname(__file__), 'houdini')
-
-ns = main.__dict__
-for mod in [os.path.splitext(x)[0] for x in os.listdir(path)]:
-    if mod not in ns:
-        try:
-            exec('import {0}'.format(mod), ns)
-        except Exception:
-            pass
-
-if path not in sys.path:
-    sys.path.insert(0, path)
 
 from multi_script_editor import scriptEditor
 
@@ -119,7 +102,7 @@ def completer(line, ns):
             else:
                 auto = nodes
             prefix_len = len(name)
-            return [contextCompleterClass(x, x[prefix_len:], True) for x in auto], None
+            return [(x, x[prefix_len:], True) for x in auto], None
     # absolute path
     p = r"(?<=['\"]{1})(/[\w/]*)$"
     m = re.search(p, line)
@@ -134,19 +117,19 @@ def getChildrenFromPath(path):
     sp = path.rsplit('/', 1)
     if not sp[0]: # rootOnly
         if sp[1]:
-            nodes = [contextCompleterClass(x, x[len(sp[1]):]) for x in roots if x.startswith(sp[1])]
+            nodes = [(x, x[len(sp[1]):], None) for x in roots if x.startswith(sp[1])]
             return nodes, None
         else:
-            nodes = [contextCompleterClass(x, x) for x in roots]
+            nodes = [(x, x, None) for x in roots]
             return nodes, None
     # add parms
     else:
         node = hou.node(sp[0][1:])
         if node:
             nd = list(set([x.name() for x in node.children()]))
-            nodes = [contextCompleterClass(x, x[len(sp[1]):]) for x in sorted(nd) if x.startswith(sp[1])]
+            nodes = [(x, x[len(sp[1]):], None) for x in sorted(nd) if x.startswith(sp[1])]
             ch = list(set([x.name() for x in node.parms()] + [x.name() for x in node.parmTuples()]))
-            channels = [contextCompleterClass(x, x[len(sp[1]):]) for x in sorted(ch) if x.startswith(sp[1])]
+            channels = [(x, x[len(sp[1]):], None) for x in sorted(ch) if x.startswith(sp[1])]
             return nodes, channels
     return None, None
 
