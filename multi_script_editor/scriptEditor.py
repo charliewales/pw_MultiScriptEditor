@@ -5,12 +5,6 @@ import sys
 import webbrowser
 from functools import partial
 
-# Set preferred binding
-if not os.environ.get("QT_PREFERRED_BINDING"):
-    os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(["PySide2", "PySide6", "PyQt5", "PySide", "PyQt4"])
-# Disable High Dpi Scaling in PySide6
-os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "0"
-
 mse_version = "6.5.0"
 
 root_path = os.path.dirname(__file__)
@@ -926,8 +920,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                     pal.setColor(QPalette.PlaceholderText, color)
                 self.outline_widget.filter_le.setPalette(pal)
 
-            if __name__ == '__main__':
-                self.setWindowIcon(QIcon(icons['pw']))
+            self.setWindowIcon(QIcon(icons['pw']))
 
     def _apply_dialog_font(self, dialog):
         font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
