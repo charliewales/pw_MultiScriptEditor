@@ -1,5 +1,6 @@
-# Multi Script Editor v6.x.x
-<img width="1188" height="1162" alt="imaxe" src="https://github.com/user-attachments/assets/e9ce1c64-f675-47af-82c6-95932336c02d" />
+# Multi Script Editor v6.5.0
+<img width="1124" height="1021" alt="imagen" src="https://github.com/user-attachments/assets/9b6aca1d-8e62-4cc4-867b-7b41f66e42de" />
+
 
 
 ## [Original code from Paul Winex](https://github.com/paulwinex/pw_MultiScriptEditor)
@@ -18,7 +19,7 @@ or embedded in another application. The main purpose for integration - the abili
   - Context completion for different functions like existing nodes and path in scene
 
 ### Existing integration modules
-
+  - Blender 5+ (requires PySide6)
   - Houdini 19-22
   - Nuke 15-17
   - Maya 2024-2027
