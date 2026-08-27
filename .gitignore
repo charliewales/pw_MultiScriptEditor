@@ -5,5 +5,16 @@ tmp
 _backup
 _tmp
 *.pyc
+*.dist-info/
+*.egg-info/
+build/
+dist/
 .history/
 .agents/
+scratch/
+.gitnexus/
+AGENTS.md
+CLAUDE.md
+.claude/
+tests/
+.tokensave/
