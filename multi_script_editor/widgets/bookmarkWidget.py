@@ -1,13 +1,19 @@
-from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtGui import QFontMetrics, QIcon
-from vendor.Qt.QtWidgets import QListWidgetItem
-from widgets.searchPopupWidget import SearchPopupWidget
-from widgets.outline_utils import HtmlDelegate
-from icons import icons
 import html
 
+from icons import icons
+from vendor.Qt.QtCore import Qt, Signal
+from vendor.Qt.QtGui import QIcon
+from vendor.Qt.QtWidgets import QListWidgetItem
+from widgets.outline_utils import HtmlDelegate, rgb_to_hex
+from widgets.searchPopupWidget import SearchPopupWidget, resize_popup_for_text
 
-def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_class=None):
+
+def create_bookmark_item(
+    bookmark,
+    theme_colors=None,
+    font=None,
+    highlighter_class=None,
+):
     """
     Creates and formats a QListWidgetItem for a given bookmark,
     displaying the line number and the syntax-highlighted line preview.
@@ -24,13 +30,8 @@ def create_bookmark_item(bookmark, theme_colors=None, font=None, highlighter_cla
     if not theme_colors:
         theme_colors = {}
 
-    def rgb2hex(rgb):
-        if not isinstance(rgb, (list, tuple)) or len(rgb) < 3:
-            return "#ffffff"
-        return "#{:02x}{:02x}{:02x}".format(rgb[0], rgb[1], rgb[2])
-
-    c_line = rgb2hex(theme_colors.get('methods', (120, 190, 205)))
-    c_text = rgb2hex(theme_colors.get('default', theme_colors.get("tab_selected_text", (210, 210, 210))))
+    c_line = rgb_to_hex(theme_colors.get('methods', (120, 190, 205)))
+    c_text = rgb_to_hex(theme_colors.get('default', theme_colors.get("tab_selected_text", (210, 210, 210))))
 
     if highlighter_class:
         from vendor.Qt.QtGui import QTextDocument
@@ -139,31 +140,39 @@ class BookmarkWidget(SearchPopupWidget):
         self.bookmarks = bookmarks
         self.allow_delete = True
         self.highlighter_class = highlighter_class
+        self._items_by_line = {}
 
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
-        # Calculate dynamic size
-        fm = QFontMetrics(font) if font else QFontMetrics(self.font())
-
-        max_text_width = 0
-        for b in self.bookmarks:
-            label = f"{b['line']}: {b['text'].strip()}"
-            w = fm.horizontalAdvance(label) if hasattr(fm, 'horizontalAdvance') else fm.width(label)
-            w += 40  # Icon + margin padding
-            if w > max_text_width:
-                max_text_width = w
-
-        self.resize_and_move(max_text_width)
+        resize_popup_for_text(
+            self,
+            font,
+            (
+                f"{bookmark['line']}: {bookmark['text'].strip()}"
+                for bookmark in self.bookmarks
+            ),
+            padding=40,
+        )
         self.populate_list("")
 
     def populate_list(self, filter_text):
-        self.list_widget.clear()
+        while self.list_widget.count():
+            self.list_widget.takeItem(0)
         filter_text = filter_text.lower()
 
         for b in self.bookmarks:
             label = f"{b['line']}: {b['text']}"
             if filter_text in label.lower():
-                item = create_bookmark_item(b, self.colors, self._font, self.highlighter_class)
+                line = b.get('line')
+                item = self._items_by_line.get(line)
+                if item is None:
+                    item = create_bookmark_item(
+                        b,
+                        self.colors,
+                        self._font,
+                        self.highlighter_class,
+                    )
+                    self._items_by_line[line] = item
                 self.list_widget.addItem(item)
 
         if self.list_widget.count() > 0:
@@ -193,3 +202,4 @@ class BookmarkWidget(SearchPopupWidget):
             if b.get('line') == data_val:
                 self.bookmarks.pop(i)
                 break
+        self._items_by_line.pop(data_val, None)

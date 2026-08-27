@@ -1,21 +1,41 @@
 from vendor.Qt.QtCore import Qt
-from vendor.Qt.QtGui import QTextCursor, QColor, QTextDocument
+from vendor.Qt.QtGui import QColor, QTextCursor, QTextDocument
 from vendor.Qt.QtWidgets import QTextEdit
+
 
 class MultiCursorManager:
     def __init__(self, editor):
         self.editor = editor
         self.multi_cursors = []
         self.is_auto_populated = False
+        self._occurrence_cache_key = None
+        self._extra_selections_cache = None
 
     def clear(self):
         self.multi_cursors = []
         self.is_auto_populated = False
+        self._occurrence_cache_key = None
+        self._extra_selections_cache = None
         if hasattr(self.editor, 'messageSignal'):
             self.editor.messageSignal.emit("")
 
     def has_cursors(self):
         return len(self.multi_cursors) > 0
+
+    def _occurrences_case_sensitive(self):
+        action = getattr(
+            getattr(self.editor, 'p', None),
+            'occurrencesCaseSensitive_act',
+            None,
+        )
+        if action is not None:
+            return action.isChecked()
+        try:
+            from core.settings_model import SettingsModel
+            data = SettingsModel().read_settings() or {}
+            return data.get('occurrences_case_sensitive', False)
+        except ImportError:
+            return False
 
     def add_cursor_at(self, cursor):
         """Adds a copy of the given cursor to the multi-cursors list."""
@@ -32,6 +52,7 @@ class MultiCursorManager:
 
     def deduplicate_and_sort_cursors(self):
         if not self.multi_cursors:
+            self._extra_selections_cache = None
             return
         seen = set()
         unique_cursors = []
@@ -42,8 +63,12 @@ class MultiCursorManager:
                 seen.add(key)
                 unique_cursors.append(c)
         self.multi_cursors = unique_cursors
+        self._extra_selections_cache = None
 
     def get_extra_selections(self):
+        if self._extra_selections_cache is not None:
+            return self._extra_selections_cache
+
         selections = []
         for mc in self.multi_cursors:
             sel = QTextEdit.ExtraSelection()
@@ -60,6 +85,7 @@ class MultiCursorManager:
                     sel.cursor = c_copy
                     sel.format.setBackground(QColor(128, 128, 255, 180))
             selections.append(sel)
+        self._extra_selections_cache = selections
         return selections
 
     def handle_key_press(self, event):
@@ -70,6 +96,12 @@ class MultiCursorManager:
         modifiers = event.modifiers()
 
         if key in (Qt.Key_Control, Qt.Key_Shift, Qt.Key_Alt, Qt.Key_Meta):
+            return False
+
+        if (
+            modifiers == Qt.AltModifier
+            and key in (Qt.Key_C, Qt.Key_Up, Qt.Key_Down)
+        ):
             return False
 
         if key == Qt.Key_Escape:
@@ -190,15 +222,11 @@ class MultiCursorManager:
 
         if not self.multi_cursors:
             self.multi_cursors = [cursor]
+            self._extra_selections_cache = None
 
         last_cursor = self.multi_cursors[-1]
         start_pos = last_cursor.position()
-        try:
-            from core.settings_model import SettingsModel
-            data = SettingsModel().read_settings() or {}
-            case_sensitive = data.get('occurrences_case_sensitive', False)
-        except ImportError:
-            case_sensitive = False
+        case_sensitive = self._occurrences_case_sensitive()
 
         options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
 
@@ -216,8 +244,9 @@ class MultiCursorManager:
 
             if not already_selected:
                 self.multi_cursors.append(found_cursor)
+                self._extra_selections_cache = None
                 self.editor.setTextCursor(found_cursor)
-                self.editor.centerCursor()
+                self.editor.ensureCursorVisible()
 
         self.editor.highlight_current_line()
         if hasattr(self.editor, 'messageSignal'):
@@ -237,25 +266,36 @@ class MultiCursorManager:
         if not target_text:
             return
 
+        document = self.editor.document()
+        is_auto_populated = getattr(
+            self.editor,
+            '_is_auto_selecting',
+            False,
+        )
+        case_sensitive = self._occurrences_case_sensitive()
+        cache_key = (
+            target_text,
+            document.revision(),
+            case_sensitive,
+            is_auto_populated,
+        )
+        if cache_key == self._occurrence_cache_key:
+            return
+
         self.clear()
-        self.is_auto_populated = getattr(self.editor, '_is_auto_selecting', False)
-        try:
-            from core.settings_model import SettingsModel
-            data = SettingsModel().read_settings() or {}
-            case_sensitive = data.get('occurrences_case_sensitive', False)
-        except ImportError:
-            case_sensitive = False
+        self.is_auto_populated = is_auto_populated
 
         options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
 
         start_pos = 0
         while True:
-            found_cursor = self.editor.document().find(target_text, start_pos, options)
+            found_cursor = document.find(target_text, start_pos, options)
             if found_cursor.isNull() or found_cursor.position() <= start_pos:
                 break
             self.multi_cursors.append(found_cursor)
             start_pos = found_cursor.position()
 
+        self._occurrence_cache_key = cache_key
         self.editor.highlight_current_line()
         if hasattr(self.editor, 'messageSignal'):
             count = len(self.multi_cursors) if self.multi_cursors else 1
@@ -314,7 +354,7 @@ class MultiCursorManager:
         self._center_cursor_in_editor()
 
     def _center_cursor_in_editor(self):
-        self.editor.centerCursor()
+        self.editor.ensureCursorVisible()
 
     def add_cursors_to_line_ends(self):
         cursor = self.editor.textCursor()
@@ -366,6 +406,7 @@ class MultiCursorManager:
         if not self.multi_cursors:
             cursor = self.editor.textCursor()
             self.multi_cursors.append(QTextCursor(cursor))
+            self._extra_selections_cache = None
 
         top_cursor = min(self.multi_cursors, key=lambda c: c.blockNumber())
         new_cursor = QTextCursor(top_cursor)
@@ -385,6 +426,7 @@ class MultiCursorManager:
         if not self.multi_cursors:
             cursor = self.editor.textCursor()
             self.multi_cursors.append(QTextCursor(cursor))
+            self._extra_selections_cache = None
 
         bottom_cursor = max(self.multi_cursors, key=lambda c: c.blockNumber())
         new_cursor = QTextCursor(bottom_cursor)

@@ -1,21 +1,216 @@
 import os
-
-from vendor.Qt.QtCore import Qt, Signal, QSize, QEvent, QRectF, QTimer
-from vendor.Qt.QtGui import QCursor, QIcon, QKeySequence, QTextCursor, QFont, QColor, QPixmap, QPainter
-from widgets.pythonSyntax.design import defaultColors
 import re
-from vendor.Qt.QtWidgets import QAction, QApplication, QHBoxLayout, QInputDialog, QMenu, QMessageBox, QPushButton, QShortcut, QTabWidget, QWidget, QTabBar, QLabel, QLineEdit
-from widgets import numBarWidget, inputWidget
+
+import vendor.Qt
+from vendor.Qt.QtCore import QEvent, QRectF, QSize, Qt, QTimer, Signal
+from vendor.Qt.QtGui import (
+    QColor,
+    QCursor,
+    QFont,
+    QIcon,
+    QKeySequence,
+    QPainter,
+    QPixmap,
+    QTextCursor,
+)
+
+from vendor.Qt.QtWidgets import (
+    QAction,
+    QApplication,
+    QHBoxLayout,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPushButton,
+    QShortcut,
+    QTabBar,
+    QTabWidget,
+    QToolButton,
+    QVBoxLayout,
+    QWidget,
+    QFileDialog,
+)
+from core.file_utils import read_file_text
+from core.git_manager import GitManager
+from core.diff_manager import DiffManager
+from icons import icons
+from widgets import inputWidget, numBarWidget
+from widgets.breadcrumbsWidget import BreadcrumbBar
+from widgets.git_dialogs import GitCommitDialog, GitHistoryDialog
 from widgets.pythonSyntax import design
-from icons import *
 
 
+class TabCloseButton(QPushButton):
+    """
+    Custom close button for editor tabs.
+    Displays Git status code (e.g. 'M', 'U', 'A') when in Git repo and modified,
+    dirty circle dot when unsaved, and close icon ('x') on hover.
+    """
+    def __init__(self, parent=None, colors=None):
+        super(TabCloseButton, self).__init__(parent)
+        self.setObjectName("CustomCloseBtn")
+        self._right_spacing = 4 if vendor.Qt.IsPySide6 else 0
+        self.setFixedSize(20 + self._right_spacing, 20)
+        self.setMouseTracking(True)
+        self._git_status_code = ""
+        self._is_dirty = False
+        self._is_selected = False
+        self._quick_index = None
+        self._quick_index_font = None
+        self._quick_index_color = None
+        self._colors = colors or {}
+        self._close_icon = None
+        self._close_icon_grey = None
+        self._load_icons()
+
+    def _load_icons(self):
+        try:
+            p1 = icons.get('close_tab')
+            p2 = icons.get('close_tab_grey')
+            if p1 and os.path.exists(p1):
+                self._close_icon = QIcon(p1)
+            if p2 and os.path.exists(p2):
+                self._close_icon_grey = QIcon(p2)
+        except Exception:
+            pass
+
+    def set_colors(self, colors):
+        self._colors = colors or {}
+        self.update()
+
+    def set_git_status_code(self, status_code):
+        if self._git_status_code != status_code:
+            self._git_status_code = status_code
+            self.update()
+
+    def set_dirty(self, state):
+        if self._is_dirty != state:
+            self._is_dirty = state
+            self.update()
+
+    def set_selected(self, state):
+        if self._is_selected != state:
+            self._is_selected = state
+            self.update()
+
+    def set_quick_index(self, index, font=None, color=None):
+        self._quick_index = index
+        self._quick_index_font = font
+        self._quick_index_color = color
+        self.update()
+
+    def enterEvent(self, event):
+        super(TabCloseButton, self).enterEvent(event)
+        self.update()
+
+    def leaveEvent(self, event):
+        super(TabCloseButton, self).leaveEvent(event)
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        content_rect = self.rect().adjusted(
+            0,
+            0,
+            -self._right_spacing,
+            0,
+        )
+
+        is_hovered = self.underMouse()
+        has_git = bool(self._git_status_code and self._git_status_code != 'CLEAN')
+
+        if self._quick_index is not None:
+            text_color = self._quick_index_color
+            if text_color is None:
+                text_color = self._colors.get(
+                    'line_number',
+                    self._colors.get(
+                        'tab_selected_text',
+                        [200, 200, 200],
+                    ),
+                )
+            if isinstance(text_color, (list, tuple)):
+                text_color = QColor(*text_color)
+            elif not isinstance(text_color, QColor):
+                text_color = QColor(text_color)
+            painter.setPen(text_color)
+            font = self._quick_index_font or painter.font()
+            font.setBold(True)
+            painter.setFont(font)
+            painter.drawText(
+                content_rect,
+                Qt.AlignCenter,
+                str(self._quick_index),
+            )
+        elif is_hovered:
+            bg_color = QColor(*self._colors.get('background', [60, 60, 60])) if isinstance(self._colors.get('background'), list) else QColor(60, 60, 60)
+            if bg_color.isValid():
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(bg_color)
+                painter.drawRoundedRect(content_rect, 3, 3)
+
+            icon = self._close_icon or self._close_icon_grey
+            if icon and not icon.isNull():
+                icon.paint(painter, content_rect)
+            else:
+                painter.setPen(QColor(200, 200, 200))
+                font = painter.font()
+                font.setBold(True)
+                font.setPointSize(10)
+                painter.setFont(font)
+                painter.drawText(content_rect, Qt.AlignCenter, "×")
+        elif has_git:
+            code = self._git_status_code
+            if 'U' in code or 'A' in code:
+                text_color = QColor('#73c991')
+            elif 'M' in code or 'S' in code:
+                text_color = QColor('#e2c08d')
+            elif 'D' in code:
+                text_color = QColor('#e06c75')
+            else:
+                text_color = QColor('#888888')
+
+            painter.setPen(text_color)
+            font = painter.font()
+            font.setBold(True)
+            font.setPointSize(9)
+            painter.setFont(font)
+            painter.drawText(content_rect, Qt.AlignCenter, code)
+        elif self._is_dirty:
+            dirty_color = self._colors.get('tab_selected_text', self._colors.get('window', [200, 200, 200]))
+            if isinstance(dirty_color, (list, tuple)):
+                painter.setBrush(QColor(*dirty_color))
+            elif isinstance(dirty_color, QColor):
+                painter.setBrush(dirty_color)
+            elif isinstance(dirty_color, str):
+                painter.setBrush(QColor(dirty_color))
+            else:
+                painter.setBrush(QColor(200, 200, 200))
+            painter.setPen(Qt.NoPen)
+            r = min(content_rect.width(), content_rect.height()) / 4.0
+            cx = content_rect.x() + content_rect.width() / 2.0
+            cy = content_rect.y() + content_rect.height() / 2.0
+            painter.drawEllipse(QRectF(cx - r, cy - r, r * 2.0, r * 2.0))
+        else:
+            if self._is_selected:
+                icon = self._close_icon or self._close_icon_grey
+            else:
+                icon = self._close_icon_grey or self._close_icon
+
+            if icon and not icon.isNull():
+                icon.paint(painter, content_rect)
+            else:
+                painter.setPen(QColor(150, 150, 150) if not self._is_selected else QColor(220, 220, 220))
+                font = painter.font()
+                font.setBold(True)
+                font.setPointSize(10)
+                painter.setFont(font)
+                painter.drawText(content_rect, Qt.AlignCenter, "×")
+        painter.end()
 
 
 class tabWidgetClass(QTabWidget):
-    # Signals to decouple from MainWindow
-    tab_closed = Signal(int)
-    session_save_requested = Signal()
     execute_selected_requested = Signal()
 
     def __init__(self, parent=None):
@@ -26,9 +221,12 @@ class tabWidgetClass(QTabWidget):
         self.lastSearch = [0, None]
         self._ctrl_pressed = False
         self._mru_tabs = []
+        self._selected_close_button = None
+        self._current_editor = None
         # ui
         self.setTabsClosable(True)
         self.setMovable(True)
+        self.setAcceptDrops(True)
         # Ensure scroll buttons are shown instead of squeezing tabs when they exceed the width
         self.setUsesScrollButtons(True)
         self.tabBar().setExpanding(False)
@@ -43,25 +241,27 @@ class tabWidgetClass(QTabWidget):
         self.corner_layout.setContentsMargins(0, 0, 10, 0)
         self.corner_layout.setSpacing(2)
 
-        self.toggleOutline_btn = QPushButton(self.corner_widget)
-        self.toggleOutline_btn.setMaximumWidth(30)
-        self.toggleOutline_btn.setCursor(Qt.ArrowCursor)
-        self.toggleOutline_btn.setIcon(QIcon(icons['outline']))
-        self.toggleOutline_btn.setIconSize(QSize(24, 24))
-        self.toggleOutline_btn.setToolTip("Toggle Code Outline (Ctrl+Shift+O)")
-        self.toggleOutline_btn.setCheckable(True)
-        self.toggleOutline_btn.toggled.connect(self.toggle_outline)
+        self.toggleExplorer_btn = QToolButton(self.corner_widget)
+        self.toggleExplorer_btn.setMaximumWidth(30)
+        self.toggleExplorer_btn.setCursor(Qt.ArrowCursor)
+        self.toggleExplorer_btn.setIcon(QIcon(icons.get('explorer_panel', icons.get('open', ''))))
+        self.toggleExplorer_btn.setIconSize(QSize(24, 24))
+        self.toggleExplorer_btn.setToolTip("Toggle Explorer (Ctrl+E)")
+        self.toggleExplorer_btn.setStatusTip("Show or hide the file explorer panel")
+        self.toggleExplorer_btn.setCheckable(True)
+        self.toggleExplorer_btn.toggled.connect(self.toggle_explorer)
 
-        newTabButton = QPushButton(self.corner_widget)
+        newTabButton = QToolButton(self.corner_widget)
         newTabButton.setMaximumWidth(30)
         newTabButton.setCursor(Qt.ArrowCursor)
         newTabButton.setIcon(QIcon(icons['add_tab']))
         newTabButton.setIconSize(QSize(24, 24))
         newTabButton.clicked.connect(lambda checked=False: self.addNewTab())
         newTabButton.setToolTip("New Tab (Ctrl+T)")
+        newTabButton.setStatusTip("Open a new empty editor tab")
         newTabButton.setShortcut('Ctrl+T')
 
-        self.corner_layout.addWidget(self.toggleOutline_btn)
+        self.corner_layout.addWidget(self.toggleExplorer_btn)
         self.corner_layout.addWidget(newTabButton)
         self.setCornerWidget(self.corner_widget, Qt.TopLeftCorner)
 
@@ -83,24 +283,54 @@ class tabWidgetClass(QTabWidget):
         QShortcut(QKeySequence("Alt+R"), self, self.renameTab)
         sc = QShortcut(QKeySequence("Alt+Shift+C"), self, self.copyFilePath)
         sc.setContext(Qt.WidgetWithChildrenShortcut)
+        self.reload_file_shortcut = QShortcut(
+            QKeySequence("Ctrl+Alt+Shift+L"),
+            self,
+            self.reloadFile,
+        )
+        self.reload_file_shortcut.setContext(
+            Qt.WidgetWithChildrenShortcut
+        )
 
         for i in range(1, 10):
             QShortcut(QKeySequence("Ctrl+%d" % i), self, lambda i=i: self.switch_to_tab_index(i-1))
 
         self.currentChanged.connect(self.onTabChanged)
+        self.tabBarClicked.connect(self._schedule_editor_focus_after_tab_click)
         self.tabBarDoubleClicked.connect(self.on_tab_bar_double_clicked)
         QApplication.instance().installEventFilter(self)
 
     def on_tab_bar_double_clicked(self, index):
-        if QApplication.mouseButtons() & Qt.LeftButton:
+        if index >= 0:
             self.renameTab(index)
 
     def eventFilter(self, obj, event):
-        if obj == getattr(self, '_rename_edit', None) and event.type() == QEvent.KeyPress and event.key() == Qt.Key_Escape:
+        event_type = event.type()
+
+        if event_type == QEvent.KeyPress and obj == getattr(self, '_rename_edit', None) and event.key() == Qt.Key_Escape:
             self.finishRename(commit=False)
             return True
 
-        if event.type() in (QEvent.MouseButtonPress, QEvent.MouseButtonRelease, QEvent.MouseButtonDblClick) and event.button() == Qt.MiddleButton:
+        if (
+            event_type == QEvent.MouseButtonDblClick
+            and event.button() == Qt.LeftButton
+            and obj is self.tabBar()
+        ):
+            pos = (
+                event.position().toPoint()
+                if hasattr(event, 'position')
+                else event.pos()
+            )
+            index = self.tabBar().tabAt(pos)
+            if index >= 0:
+                QTimer.singleShot(0, lambda i=index: self.renameTab(i))
+                return True
+
+        if event_type in (
+            QEvent.MouseButtonPress,
+            QEvent.MouseButtonRelease,
+            QEvent.MouseButtonDblClick,
+        ) and event.button() == Qt.MiddleButton:
             if getattr(self, '_rename_edit', None):
                 return True
             # Check if click is on the tab bar or one of its children
@@ -112,35 +342,85 @@ class tabWidgetClass(QTabWidget):
                     break
                 p = p.parent()
             if is_tabbar_click:
-                if event.type() == QEvent.MouseButtonPress:
-                    pos = self.tabBar().mapFrom(obj, event.pos())
+                if event_type == QEvent.MouseButtonPress:
+                    event_pos = (
+                        event.position().toPoint()
+                        if hasattr(event, 'position')
+                        else event.pos()
+                    )
+                    pos = self.tabBar().mapFrom(obj, event_pos)
                     index = self.tabBar().tabAt(pos)
                     if index >= 0:
-                        QTimer.singleShot(0, lambda i=index: self.closeTab(i))
+                        QTimer.singleShot(
+                            0,
+                            lambda i=index: self.closeTab(i),
+                        )
                 return True
 
-        quick_tab_switching = True
-        if hasattr(self.p, 'quickTabSwitching_act'):
-            quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+        if event_type not in (
+            QEvent.KeyPress,
+            QEvent.KeyRelease,
+            QEvent.WindowDeactivate,
+            QEvent.ApplicationDeactivate,
+        ):
+            return False
 
-        if event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_Control and not self._ctrl_pressed:
+        if event_type == QEvent.KeyPress:
+            key = event.key()
+            if key == Qt.Key_Control and not self._ctrl_pressed:
+                quick_tab_switching = True
+                if hasattr(self.p, 'quickTabSwitching_act'):
+                    try:
+                        quick_tab_switching = self.p.quickTabSwitching_act.isChecked()
+                    except RuntimeError:
+                        quick_tab_switching = False
                 if quick_tab_switching:
                     self._ctrl_pressed = True
                     self.show_tab_numbers(True)
-            elif event.key() == Qt.Key_Tab and (event.modifiers() & Qt.ControlModifier):
-                if hasattr(self.p, 'showOpenTabs'):
-                    self.p.showOpenTabs()
-                return True
-        elif event.type() == QEvent.KeyRelease:
+            elif (
+                key in (Qt.Key_PageUp, Qt.Key_PageDown)
+                and event.modifiers() & Qt.ControlModifier
+            ):
+                previous_index = self.currentIndex()
+                QTimer.singleShot(
+                    0,
+                    lambda index=previous_index: (
+                        self._focus_editor_after_keyboard_tab_change(index)
+                    ),
+                )
+        elif event_type == QEvent.KeyRelease:
             if event.key() == Qt.Key_Control and self._ctrl_pressed:
                 self._ctrl_pressed = False
                 self.show_tab_numbers(False)
-        elif event.type() == QEvent.WindowDeactivate or event.type() == QEvent.ApplicationDeactivate:
+        else:
             if self._ctrl_pressed:
                 self._ctrl_pressed = False
                 self.show_tab_numbers(False)
         return False
+
+    def _focus_editor_after_keyboard_tab_change(self, previous_index):
+        if self.currentIndex() == previous_index:
+            return
+        self._focus_current_editor()
+
+    def _schedule_editor_focus_after_tab_click(self, index):
+        QTimer.singleShot(
+            0,
+            lambda clicked_index=index: (
+                self._focus_editor_after_tab_click(clicked_index)
+            ),
+        )
+
+    def _focus_editor_after_tab_click(self, index):
+        if self.currentIndex() != index:
+            return
+        self._focus_current_editor()
+
+    def _focus_current_editor(self):
+        current_widget = self.currentWidget()
+        edit = getattr(current_widget, 'edit', None)
+        if edit is not None:
+            edit.setFocus()
 
     def get_line_num_font_and_color(self, edit):
         font = edit.font()
@@ -166,81 +446,60 @@ class tabWidgetClass(QTabWidget):
 
     def show_tab_numbers(self, show):
         for i in range(min(self.count(), 9)):
-            tab_widget = self.widget(i)
-            if not tab_widget:
-                continue
-            if show:
-                btn = self.tabBar().tabButton(i, QTabBar.RightSide)
-                style = "border-radius: 4px; margin-right: 4px;"
-                if btn and type(btn).__name__ != 'QLabel':
-                    tab_widget._original_close_button = btn
+            button = self.tabBar().tabButton(i, QTabBar.RightSide)
+            if isinstance(button, TabCloseButton):
+                font = None
+                color = None
+                tab_widget = self.widget(i)
+                if show and tab_widget and hasattr(tab_widget, 'edit'):
+                    font, color = self.get_line_num_font_and_color(
+                        tab_widget.edit
+                    )
+                button.set_quick_index(
+                    i + 1 if show else None,
+                    font,
+                    color,
+                )
 
-                    if not hasattr(tab_widget, '_tab_number_label'):
-                        lbl = QLabel(str(i + 1))
-                        lbl.setAlignment(Qt.AlignCenter)
-
-                        # Apply font and color from line numbers
-                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
-                        lbl.setFont(font)
-
-                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
-                        if color:
-                            style += f" color: {color.name()};"
-                        lbl.setStyleSheet(style)
-
-                        # Apply original button size
-                        if btn.size().width() > 0 and btn.size().height() > 0:
-                            lbl.setFixedSize(btn.size())
-
-                        tab_widget._tab_number_label = lbl
-                    else:
-                        tab_widget._tab_number_label.setText(str(i + 1))
-                        # Update size/style in case it changed
-                        font, color = self.get_line_num_font_and_color(tab_widget.edit)
-                        tab_widget._tab_number_label.setFont(font)
-                        # style = "font-weight: bold; margin: 0px; padding: 0px; border: 1px solid red;"
-                        if color:
-                            style += f" color: {color.name()};"
-                        tab_widget._tab_number_label.setStyleSheet(style)
-                        if btn.size().width() > 0 and btn.size().height() > 0:
-                            tab_widget._tab_number_label.setFixedSize(btn.size())
-
-                    self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._tab_number_label)
-                    tab_widget._tab_number_label.show()
-            else:
-                current_btn = self.tabBar().tabButton(i, QTabBar.RightSide)
-                if current_btn and type(current_btn).__name__ == 'QLabel':
-                    if hasattr(tab_widget, '_original_close_button') and tab_widget._original_close_button:
-                        self.tabBar().setTabButton(i, QTabBar.RightSide, tab_widget._original_close_button)
-                        tab_widget._original_close_button.show()
-
-    def toggle_outline(self, state):
-        if hasattr(self.p, 'toggleOutline'):
-            self.p.toggleOutline(state)
+    def toggle_explorer(self, state):
+        if hasattr(self.p, 'toggleExplorer'):
+            self.p.toggleExplorer(state)
 
     def onTabChanged(self, index):
-        self.hideAllCompleters()
+        container = self.widget(index) if index >= 0 else None
+        edit = getattr(container, 'edit', None)
+        previous_editor = self._current_editor
+        if previous_editor is not None and previous_editor is not edit:
+            try:
+                completer = getattr(previous_editor, 'completer', None)
+                if completer is not None:
+                    completer.hideMe()
+            except RuntimeError:
+                pass
+        self._current_editor = edit
+
         if index >= 0:
-            container = self.widget(index)
+            self.git_status_for_tab(index)
             if hasattr(self, '_mru_tabs'):
                 if container in self._mru_tabs:
                     self._mru_tabs.remove(container)
                 self._mru_tabs.insert(0, container)
 
-            if hasattr(container, 'edit'):
-                edit = container.edit
+            if edit is not None:
                 if hasattr(edit, 'needs_loading_file') or hasattr(edit, 'needs_loading_text'):
                     text = ""
                     file_path = getattr(edit, 'needs_loading_file', None)
-                    if file_path and os.path.exists(file_path):
-                        from core.file_utils import read_file_text
+                    modified = bool(
+                        getattr(edit, 'needs_loading_modified', False)
+                    )
+                    if file_path and os.path.exists(file_path) and not modified:
                         text = read_file_text(file_path)
                         if not text:
                             text = getattr(edit, 'needs_loading_text', "") or ""
                     else:
                         text = getattr(edit, 'needs_loading_text', "") or ""
 
-                    if text:
+                    if text or modified:
                         edit.addText(text)
                         # Restore line and column once text is loaded
                         if hasattr(edit, 'needs_loading_line'):
@@ -272,14 +531,10 @@ class tabWidgetClass(QTabWidget):
                         if hasattr(edit, 'needs_loading_scroll_v'):
                             scroll_v = edit.needs_loading_scroll_v
                             delattr(edit, 'needs_loading_scroll_v')
-                            if scroll_v > 0:
-                                edit.verticalScrollBar().setValue(scroll_v)
-                                from vendor.Qt.QtCore import QTimer
-                                QTimer.singleShot(0, lambda: edit.verticalScrollBar().setValue(scroll_v))
-                                QTimer.singleShot(150, lambda: edit.verticalScrollBar().setValue(scroll_v))
+                            edit.verticalScrollBar().setValue(scroll_v)
 
                         edit.document().clearUndoRedoStacks()
-                        edit.document().setModified(False)
+                        edit.document().setModified(modified)
                         if hasattr(edit, 'needs_loading_folds') and edit.needs_loading_folds:
                             if hasattr(edit, 'set_folded_blocks'):
                                 edit.set_folded_blocks(edit.needs_loading_folds)
@@ -309,6 +564,19 @@ class tabWidgetClass(QTabWidget):
                         delattr(edit, 'needs_loading_file')
                     if hasattr(edit, 'needs_loading_text'):
                         delattr(edit, 'needs_loading_text')
+                    if hasattr(edit, 'needs_loading_modified'):
+                        delattr(edit, 'needs_loading_modified')
+
+                syntax_action = getattr(self.p, 'syntaxCheck_act', None)
+                if (
+                    syntax_action is None
+                    or syntax_action.isChecked()
+                ):
+                    lint_timer = getattr(edit, '_lint_timer', None)
+                    if lint_timer is not None:
+                        lint_timer.start(0)
+                    elif hasattr(edit, 'runLinter'):
+                        edit.runLinter()
 
     def close_current_tab(self):
         index = self.currentIndex()
@@ -323,6 +591,8 @@ class tabWidgetClass(QTabWidget):
         if not widget or not hasattr(widget, 'edit'):
             return False
         if hasattr(widget, 'file_path') and widget.file_path:
+            if hasattr(widget.edit, 'needs_loading_modified'):
+                return bool(widget.edit.needs_loading_modified)
             return widget.edit.document().isModified()
         return bool(self.getCurrentText(i).strip())
 
@@ -331,8 +601,13 @@ class tabWidgetClass(QTabWidget):
             self.finishRename(commit=False)
         removed = False
         widget_to_remove = self.widget(i)
+        target_index = i - 1 if i > 0 else 0
+
         if self.tabNeedsSaving(i):
-            if self.yes_no_question('Close this tab without saving?\n'+self.tabText(i)):
+            if self.yes_no_question(
+                'Close this tab without saving?\n' + self.tabText(i),
+                QMessageBox.No,
+            ):
                 self.removeTab(i)
                 removed = True
         else:
@@ -344,6 +619,25 @@ class tabWidgetClass(QTabWidget):
                 self._mru_tabs.remove(widget_to_remove)
             if self.count() == 0:
                 self.addNewTab()
+            else:
+                target_index = min(target_index, self.count() - 1)
+                self.setCurrentIndex(target_index)
+
+            current_widget = self.currentWidget()
+            if current_widget and hasattr(current_widget, 'edit'):
+                current_widget.edit.setFocus()
+
+    def closeOtherTabs(self, keep_index=None):
+        if keep_index is None or isinstance(keep_index, bool):
+            keep_index = self.currentIndex()
+        keep_widget = self.widget(keep_index)
+        for i in range(self.count() - 1, -1, -1):
+            if self.widget(i) != keep_widget:
+                self.closeTab(i)
+
+    def closeAllTabs(self):
+        for i in range(self.count() - 1, -1, -1):
+            self.closeTab(i)
 
     def openMenu(self, pos=None):
         if pos is not None and not isinstance(pos, bool):
@@ -358,35 +652,120 @@ class tabWidgetClass(QTabWidget):
         has_file = hasattr(widget, 'file_path') and bool(widget.file_path)
 
         menu = QMenu(self)
-        if hasattr(self.p, 'menubar'):
+
+        def on_hover(action):
+            if hasattr(self.p, 'statusBar'):
+                if action and action.statusTip():
+                    if getattr(self.p, '_show_status_tips', True):
+                        self.p.statusBar().showMessage(action.statusTip())
+                else:
+                    self.p.statusBar().clearMessage()
+
+        menu.hovered.connect(on_hover)
+
+        if hasattr(self.p, 'menubar') and self.p.menubar:
             menu.setFont(self.p.menubar.font())
+            menu.setStyleSheet(self.p.menubar.styleSheet())
 
+        # Git menu (if file exists in git repo and version control is enabled)
+        if has_file and getattr(self.p, '_version_control_enabled', False):
+            file_path = getattr(widget, 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                if GitManager.is_in_repo(file_path):
+                    git_menu = menu.addMenu('Git')
+                    if hasattr(self.p, 'menubar') and self.p.menubar:
+                        git_menu.setFont(self.p.menubar.font())
+                        git_menu.setStyleSheet(self.p.menubar.styleSheet())
+                    elif menu.font():
+                        git_menu.setFont(menu.font())
+                        git_menu.setStyleSheet(menu.styleSheet())
+                    if 'git' in icons:
+                        git_menu.setIcon(QIcon(icons['git']))
+                    git_menu.hovered.connect(on_hover)
+                    self.build_git_menu(git_menu, index)
+                    menu.addSeparator()
 
+        # Tab management actions (available for all tabs)
+        close_action = QAction('Close Tab', self)
+        close_action.setShortcut('Ctrl+W')
+        if 'close_tab' in icons:
+            close_action.setIcon(QIcon(icons['close_tab']))
+        close_action.triggered.connect(lambda checked=False, idx=index: self.closeTab(idx))
+        menu.addAction(close_action)
+
+        if self.count() > 1:
+            close_others_action = QAction('Close Other Tabs', self)
+            if 'close_other_tabs' in icons:
+                close_others_action.setIcon(QIcon(icons['close_other_tabs']))
+            close_others_action.triggered.connect(lambda checked=False, idx=index: self.closeOtherTabs(idx))
+            menu.addAction(close_others_action)
+
+            close_all_action = QAction('Close All Tabs', self)
+            if 'close_all_tabs' in icons:
+                close_all_action.setIcon(QIcon(icons['close_all_tabs']))
+            close_all_action.triggered.connect(lambda checked=False: self.closeAllTabs())
+            menu.addAction(close_all_action)
+
+        menu.addSeparator()
+
+        del_action = QAction('Delete file', self)
+        if 'delete_file' in icons:
+            del_action.setIcon(QIcon(icons['delete_file']))
+        del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
+        menu.addAction(del_action)
+
+        dup_title = 'Duplicate file' if has_file else 'Duplicate Tab'
+        dup_action = QAction(dup_title, self)
+        if 'duplicate_file' in icons:
+            dup_action.setIcon(QIcon(icons['duplicate_file']))
+        dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
+        menu.addAction(dup_action)
+
+        ren_title = 'Rename File' if has_file else 'Rename Tab'
+        ren_action = QAction(ren_title, self)
+        ren_action.setShortcut('Alt+R')
+        if 'rename_file' in icons:
+            ren_action.setIcon(QIcon(icons['rename_file']))
+        ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
+        menu.addAction(ren_action)
+
+        # File specific actions (only when tab has a file_path)
         if has_file:
+            reload_action = QAction('Reload file', menu)
+            reload_action.setShortcut('Ctrl+Alt+Shift+L')
+            reload_action.setEnabled(os.path.exists(widget.file_path))
+            if 'clear' in icons:
+                reload_action.setIcon(QIcon(icons['clear']))
+            reload_action.triggered.connect(
+                lambda checked=False, idx=index: self.reloadFile(idx)
+            )
+            menu.addAction(reload_action)
+
             menu.addSeparator()
-            copy_action = QAction('Copy File Path', self)
+
+            copy_action = QAction('Copy file path', self)
             copy_action.setShortcut('Alt+Shift+C')
+            if 'copy' in icons:
+                copy_action.setIcon(QIcon(icons['copy']))
             copy_action.triggered.connect(lambda checked=False, idx=index: self.copyFilePath(idx))
             menu.addAction(copy_action)
 
-            del_action = QAction('Delete File', self)
-            del_action.triggered.connect(lambda checked=False, idx=index: self.deleteFile(idx))
-            menu.addAction(del_action)
 
-            dup_title = 'Duplicate File' if has_file else 'Duplicate Tab'
-            dup_action = QAction(dup_title, self)
-            dup_action.triggered.connect(lambda checked=False, idx=index: self.duplicateTab(idx))
-            menu.addAction(dup_action)
-
-            ren_title = 'Rename File' if has_file else 'Rename Tab'
-            ren_action = QAction(ren_title, self)
-            ren_action.setShortcut('Alt+R')
-            ren_action.triggered.connect(lambda checked=False, idx=index: self.renameTab(idx))
-            menu.addAction(ren_action)
+            compare_menu = menu.addMenu('Compare with...')
+            if 'git_diff' in icons:
+                compare_menu.setIcon(QIcon(icons['git_diff']))
+            if hasattr(self.p, 'menubar') and self.p.menubar:
+                compare_menu.setFont(self.p.menubar.font())
+                compare_menu.setStyleSheet(self.p.menubar.styleSheet())
+            elif menu.font():
+                compare_menu.setFont(menu.font())
+                compare_menu.setStyleSheet(menu.styleSheet())
+            compare_menu.hovered.connect(on_hover)
+            self.build_compare_menu(compare_menu, index)
 
         if hasattr(self.p, 'menubar') and not self.p.menubar.isVisible():
             menu.addSeparator()
-            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            show_menus_action = QAction("Show menus\tCtrl+Alt+M", self)
             if 'menu' in icons:
                 show_menus_action.setIcon(QIcon(icons['menu']))
             if hasattr(self.p, 'toggleMenus_act'):
@@ -394,6 +773,283 @@ class tabWidgetClass(QTabWidget):
             menu.addAction(show_menus_action)
 
         menu.exec_(QCursor.pos())
+
+    def build_git_menu(self, git_menu, index):
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        if not file_path:
+            return
+
+        if hasattr(self.p, 'menubar') and self.p.menubar:
+            git_menu.setFont(self.p.menubar.font())
+            git_menu.setStyleSheet(self.p.menubar.styleSheet())
+        elif git_menu.parentWidget() and hasattr(git_menu.parentWidget(), 'font'):
+            git_menu.setFont(git_menu.parentWidget().font())
+            git_menu.setStyleSheet(git_menu.parentWidget().styleSheet())
+
+        status_info = GitManager.get_file_status(file_path)
+        branch = status_info.get('branch', 'HEAD')
+        status_text = status_info.get('status_text', 'Clean')
+
+        branch_act = git_menu.addAction(f"Branch: {branch} ({status_text})")
+        branch_act.setStatusTip("Current branch and file status")
+        branch_act.setEnabled(False)
+        if 'git_branch' in icons:
+            branch_act.setIcon(QIcon(icons['git_branch']))
+        git_menu.addSeparator()
+
+        commit_act = git_menu.addAction("Commit File...")
+        commit_act.setStatusTip("Commit this file")
+        if 'git_commit' in icons:
+            commit_act.setIcon(QIcon(icons['git_commit']))
+        commit_act.triggered.connect(lambda checked=False, fp=file_path: self.git_commit_dialog(fp))
+
+        if status_info.get('is_modified'):
+            discard_act = git_menu.addAction("Discard Changes...")
+            discard_act.setStatusTip("Discard local changes to this file")
+            if 'git_discard' in icons:
+                discard_act.setIcon(QIcon(icons['git_discard']))
+            discard_act.triggered.connect(lambda checked=False, idx=index, fp=file_path: self.git_discard_changes(idx, fp))
+
+        diff_act = git_menu.addAction("Git Diff (vs HEAD)")
+        diff_act.setStatusTip("Compare current file with HEAD revision")
+        if 'git_diff' in icons:
+            diff_act.setIcon(QIcon(icons['git_diff']))
+        diff_act.triggered.connect(lambda checked=False, fp=file_path: self.run_git_diff(fp))
+
+        if status_info.get('is_staged'):
+            unstage_act = git_menu.addAction("Unstage File")
+            unstage_act.setStatusTip("Unstage this file")
+            if 'git_unstage' in icons:
+                unstage_act.setIcon(QIcon(icons['git_unstage']))
+            unstage_act.triggered.connect(lambda checked=False, fp=file_path: self.git_unstage(fp))
+        else:
+            stage_act = git_menu.addAction("Stage File")
+            stage_act.setStatusTip("Stage this file for commit")
+            if 'git_stage' in icons:
+                stage_act.setIcon(QIcon(icons['git_stage']))
+            stage_act.triggered.connect(lambda checked=False, fp=file_path: self.git_stage(fp))
+
+        git_menu.addSeparator()
+
+        rel_path = status_info.get('relative_path', '')
+        if rel_path:
+            copy_rel_act = git_menu.addAction("Copy Path Relative to Repo")
+            copy_rel_act.setStatusTip("Copy file path relative to repository root")
+            if 'copy' in icons:
+                copy_rel_act.setIcon(QIcon(icons['copy']))
+            copy_rel_act.triggered.connect(lambda checked=False, rp=rel_path: QApplication.clipboard().setText(rp))
+
+        log_act = git_menu.addAction("File History / Log...")
+        log_act.setStatusTip("View file history and commits")
+        if 'git_history' in icons:
+            log_act.setIcon(QIcon(icons['git_history']))
+        log_act.triggered.connect(lambda checked=False, fp=file_path: self.git_history_dialog(fp))
+
+
+    def run_git_diff(self, file_path):
+        head_path = GitManager.get_head_file_temp_path(file_path)
+        if head_path and os.path.exists(head_path):
+            DiffManager.run_diff(head_path, file_path, parent=self.p)
+        else:
+            QMessageBox.information(self, "Git Diff", "No previous HEAD revision found for this file.")
+
+    def git_stage(self, file_path):
+        success, msg = GitManager.stage_file(file_path)
+        self.update_tab_git_status(self.currentIndex())
+        if hasattr(self.p, 'updateStatusBarInfo'):
+            self.p.updateStatusBarInfo()
+
+    def git_unstage(self, file_path):
+        success, msg = GitManager.unstage_file(file_path)
+        self.update_tab_git_status(self.currentIndex())
+        if hasattr(self.p, 'updateStatusBarInfo'):
+            self.p.updateStatusBarInfo()
+
+    def git_commit_dialog(self, file_path):
+        dlg = GitCommitDialog(parent=self.p, file_path=file_path)
+        if dlg.exec_():
+            self.update_tab_git_status(self.currentIndex())
+            if hasattr(self.p, 'updateStatusBarInfo'):
+                self.p.updateStatusBarInfo()
+
+    def git_history_dialog(self, file_path):
+        dlg = GitHistoryDialog(parent=self.p, file_path=file_path)
+        dlg.exec_()
+
+    def _apply_parent_theme_font(self, widget, fallback_font=None):
+        font = getattr(self.p, 'theme_font', None) or fallback_font
+        if not font:
+            return
+        widget.setFont(font)
+        size_css = f" font-size: {font.pointSize()}pt;" if font.pointSize() > 0 else ""
+        widget.setStyleSheet(f"* {{ font-family: '{font.family()}';{size_css} }}")
+        for child in widget.findChildren(QWidget):
+            child.setFont(font)
+        if hasattr(widget, 'buttons'):
+            for btn in widget.buttons():
+                btn.setFont(font)
+
+    def git_discard_changes(self, index, file_path):
+        if hasattr(self.p, 'show_question_msg'):
+            reply = self.p.show_question_msg(
+                "Discard Changes",
+                f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+        else:
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Discard Changes")
+            msg_box.setText(f"Are you sure you want to discard working modifications to:\n{file_path}?\n\nThis action cannot be undone.")
+            msg_box.setIcon(QMessageBox.Question)
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.No)
+            msg_box.button(QMessageBox.No).setFocus()
+            fallback_font = getattr(self.p, 'current_outline_font', self.font())
+            self._apply_parent_theme_font(msg_box, fallback_font)
+            reply = msg_box.exec_()
+
+        if reply == QMessageBox.Yes:
+            success, msg = GitManager.discard_changes(file_path)
+            if success:
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                        text = f.read()
+                    w = self.widget(index)
+                    if hasattr(w, 'edit') and w.edit:
+                        w.edit.setText(text)
+                        w.edit.document().setModified(False)
+                except Exception:
+                    pass
+                self.reloadFile()
+                self.update_tab_git_status(index)
+                if hasattr(self.p, 'updateStatusBarInfo'):
+                    self.p.updateStatusBarInfo()
+
+    def update_tab_git_status(self, index, status_info=None):
+        if index < 0 or index >= self.count():
+            return
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        btn = getattr(widget, '_custom_close_btn', None)
+
+        if not file_path or not os.path.exists(file_path):
+            widget._git_status_info = None
+            widget._git_status_file_path = None
+            if btn and hasattr(btn, 'set_git_status_code'):
+                btn.set_git_status_code("")
+            return
+
+        norm_path = os.path.normpath(file_path)
+        cache_path = os.path.normcase(os.path.abspath(file_path))
+        if not getattr(self.p, '_version_control_enabled', False):
+            widget._git_status_info = None
+            widget._git_status_file_path = cache_path
+            self.setTabToolTip(index, norm_path)
+            if btn and hasattr(btn, 'set_git_status_code'):
+                btn.set_git_status_code("")
+            return
+
+        if status_info is None:
+            status_info = GitManager.get_file_status(file_path)
+        widget._git_status_info = status_info
+        widget._git_status_file_path = cache_path
+        git_code = ""
+        if status_info.get('in_repo'):
+            tooltip = f"{norm_path}\nGit: {status_info['branch']} [{status_info['status_text']}]"
+            git_code = status_info.get('status_code', '')
+            if git_code == 'CLEAN':
+                git_code = ''
+        else:
+            tooltip = norm_path
+
+        self.setTabToolTip(index, tooltip)
+        if btn and hasattr(btn, 'set_git_status_code'):
+            btn.set_git_status_code(git_code)
+        return status_info
+
+    def git_status_for_tab(self, index):
+        if index < 0 or index >= self.count():
+            return None
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        if not file_path or not os.path.exists(file_path):
+            return None
+        cache_path = os.path.normcase(os.path.abspath(file_path))
+        if getattr(widget, '_git_status_file_path', None) == cache_path:
+            return getattr(widget, '_git_status_info', None)
+        return self.update_tab_git_status(index)
+
+    def update_all_tabs_git_status(self):
+        if not getattr(self.p, '_version_control_enabled', False):
+            for index in range(self.count()):
+                self.update_tab_git_status(index)
+            return
+
+        tabs = []
+        for index in range(self.count()):
+            widget = self.widget(index)
+            file_path = getattr(widget, 'file_path', None)
+            if file_path and os.path.exists(file_path):
+                tabs.append((index, file_path))
+            else:
+                self.update_tab_git_status(index)
+
+        statuses = GitManager.get_files_status(
+            [file_path for _, file_path in tabs]
+        )
+        for index, file_path in tabs:
+            cache_path = os.path.normcase(os.path.abspath(file_path))
+            self.update_tab_git_status(
+                index,
+                statuses.get(cache_path),
+            )
+
+    def build_compare_menu(self, compare_menu, index):
+        if index < 0 or index >= self.count():
+            return
+
+        current_widget = self.widget(index)
+        current_file = getattr(current_widget, 'file_path', "")
+
+        # 1. List other open tabs with file paths
+        other_tabs_count = 0
+        for i in range(self.count()):
+            if i == index:
+                continue
+            w = self.widget(i)
+            other_file = getattr(w, 'file_path', "")
+            if other_file and os.path.exists(other_file):
+                other_tabs_count += 1
+                tab_title = self.tabText(i)
+                act_text = f"{tab_title}  ({other_file})"
+                act = compare_menu.addAction(act_text)
+                act.triggered.connect(
+                    lambda checked=False, f1=current_file, f2=other_file: DiffManager.run_diff(
+                        f1, f2, parent=self.p
+                    )
+                )
+
+        if other_tabs_count == 0:
+            no_act = compare_menu.addAction("No other open saved files")
+            no_act.setEnabled(False)
+
+        compare_menu.addSeparator()
+
+        # 2. Browse File option
+        browse_file_act = compare_menu.addAction("Browse File...")
+        def _browse_file(checked=False, f1=current_file):
+            path, _ = QFileDialog.getOpenFileName(self, "Select File to Compare")
+            if path:
+                DiffManager.run_diff(f1, path, parent=self.p)
+        browse_file_act.triggered.connect(_browse_file)
+
+        compare_menu.addSeparator()
+
+        # 4. Configure Diff Tool option
+        cfg_act = compare_menu.addAction("Configure Diff Tool...")
+        cfg_act.triggered.connect(lambda checked=False: DiffManager.configure_diff_tool(parent=self.p))
 
     def deleteFile(self, index=None):
         if index is None or isinstance(index, bool):
@@ -413,11 +1069,8 @@ class tabWidgetClass(QTabWidget):
         msg_box.setText('Are you sure you want to delete "%s" from disk?' % filename)
         msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         msg_box.setDefaultButton(QMessageBox.No)
-        if hasattr(self.p, 'theme_font'):
-            msg_box.setFont(self.p.theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
+        msg_box.button(QMessageBox.No).setFocus()
+        self._apply_parent_theme_font(msg_box)
 
         reply = msg_box.exec_()
 
@@ -425,15 +1078,9 @@ class tabWidgetClass(QTabWidget):
             try:
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                widget.file_path = None
                 if hasattr(widget, 'edit') and hasattr(widget.edit, 'document'):
                     widget.edit.document().setModified(False)
-                widget_to_remove = self.widget(index)
-                self.removeTab(index)
-                if hasattr(self, '_mru_tabs') and widget_to_remove in self._mru_tabs:
-                    self._mru_tabs.remove(widget_to_remove)
-                if self.count() == 0:
-                    self.addNewTab()
+                self.closeTab(index)
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Deleted file: %s' % os.path.normpath(file_path))
                 elif hasattr(self.p, 'showStatusMessage'):
@@ -443,12 +1090,96 @@ class tabWidgetClass(QTabWidget):
                 err_box.setIcon(QMessageBox.Critical)
                 err_box.setWindowTitle('Delete File Error')
                 err_box.setText('Could not delete file:\n%s' % str(e))
-                if hasattr(self.p, 'theme_font'):
-                    err_box.setFont(self.p.theme_font)
-                    err_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-                    for btn in err_box.buttons():
-                        btn.setFont(self.p.theme_font)
+                self._apply_parent_theme_font(err_box)
                 err_box.exec_()
+
+    def reloadFile(self, index=None):
+        if index is None or isinstance(index, bool):
+            index = self.currentIndex()
+        if index < 0:
+            return
+
+        widget = self.widget(index)
+        file_path = getattr(widget, 'file_path', None)
+        edit = getattr(widget, 'edit', None)
+        if not file_path or not edit or not os.path.exists(file_path):
+            return
+
+        cursor = edit.textCursor()
+        line = getattr(
+            edit,
+            'needs_loading_line',
+            cursor.blockNumber() + 1,
+        ) - 1
+        column = getattr(
+            edit,
+            'needs_loading_column',
+            cursor.columnNumber(),
+        )
+        scroll_v = getattr(
+            edit,
+            'needs_loading_scroll_v',
+            edit.verticalScrollBar().value(),
+        )
+        scroll_h = edit.horizontalScrollBar().value()
+        text = read_file_text(file_path)
+
+        if hasattr(edit, 'addText'):
+            edit.addText(text)
+        else:
+            edit.setPlainText(text)
+        edit.document().clearUndoRedoStacks()
+        edit.document().setModified(False)
+
+        if (
+            hasattr(edit, 'needs_loading_folds')
+            and edit.needs_loading_folds
+            and hasattr(edit, 'set_folded_blocks')
+        ):
+            edit.set_folded_blocks(edit.needs_loading_folds)
+        if (
+            hasattr(edit, 'needs_loading_bookmarks')
+            and edit.needs_loading_bookmarks
+            and hasattr(edit, 'set_bookmarks')
+        ):
+            edit.set_bookmarks(edit.needs_loading_bookmarks)
+
+        block = edit.document().findBlockByNumber(line)
+        if not block.isValid():
+            block = edit.document().lastBlock()
+        if block.isValid():
+            cursor = edit.textCursor()
+            column = min(column, max(0, block.length() - 1))
+            cursor.setPosition(block.position() + column)
+            edit.setTextCursor(cursor)
+
+        edit.verticalScrollBar().setValue(scroll_v)
+        edit.horizontalScrollBar().setValue(scroll_h)
+        for attribute in (
+            'needs_loading_file',
+            'needs_loading_text',
+            'needs_loading_modified',
+            'needs_loading_line',
+            'needs_loading_column',
+            'needs_loading_scroll_v',
+            'needs_loading_folds',
+            'needs_loading_bookmarks',
+        ):
+            if hasattr(edit, attribute):
+                delattr(edit, attribute)
+        if index == self.currentIndex():
+            status_update = getattr(
+                self.p,
+                'updateDocumentStatusBarInfo',
+                getattr(self.p, 'updateStatusBarInfo', None),
+            )
+            if status_update:
+                status_update()
+        message = 'Reloaded file: %s' % os.path.normpath(file_path)
+        if hasattr(self.p, 'out'):
+            self.p.out.showMessage(message)
+        elif hasattr(self.p, 'showStatusMessage'):
+            self.p.showStatusMessage(message)
 
     def copyFilePath(self, index=None):
         if index is None or isinstance(index, bool):
@@ -457,6 +1188,12 @@ class tabWidgetClass(QTabWidget):
             widget = self.widget(index)
             if hasattr(widget, 'file_path') and widget.file_path:
                 QApplication.clipboard().setText(os.path.normpath(widget.file_path))
+                if hasattr(self.p, 'out'):
+                    out_message = "File path: %s" % os.path.normpath(widget.file_path)
+                    self.p.out.showMessage(out_message)
+                if hasattr(self.p, 'showStatusMessage'):
+                    message = "File path copied to clipboard"
+                    self.p.showStatusMessage(message)
 
     def duplicateTab(self, index=None):
         if index is None or isinstance(index, bool):
@@ -466,6 +1203,7 @@ class tabWidgetClass(QTabWidget):
         widget = self.widget(index)
         text = self.getCurrentText(index)
         old_path = getattr(widget, 'file_path', None) if widget else None
+        target_index = index + 1
 
         if old_path:
             dir_name = os.path.dirname(old_path)
@@ -482,7 +1220,9 @@ class tabWidgetClass(QTabWidget):
                 with open(new_path, 'w') as f:
                     f.write(text or '')
                 new_tab_name = os.path.basename(new_path)
-                self.addNewTab(new_tab_name, text, file_path=new_path)
+                self.addNewTab(new_tab_name, text, file_path=new_path, insert_index=target_index)
+                if hasattr(self.p, 'addRecentFile'):
+                    self.p.addRecentFile(new_path)
                 norm_new_path = os.path.normpath(new_path)
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Duplicated file saved to: %s' % norm_new_path)
@@ -492,24 +1232,22 @@ class tabWidgetClass(QTabWidget):
                 if hasattr(self.p, 'out'):
                     self.p.out.showMessage('Error duplicating file: %s' % str(e))
                 name = self.tabText(index) + " (copy)"
-                self.addNewTab(name, text)
+                self.addNewTab(name, text, insert_index=target_index)
         else:
             name = self.tabText(index) + " (copy)"
-            self.addNewTab(name, text)
-
-        self.setCurrentIndex(self.count() - 1)
+            self.addNewTab(name, text, insert_index=target_index)
 
     def finishRename(self, commit=True):
         edit = getattr(self, '_rename_edit', None)
         if not edit:
             return
+        widget = getattr(edit, '_widget_to_rename', None)
         self._rename_edit = None
         try:
             edit.editingFinished.disconnect()
         except Exception:
             pass
         if commit:
-            widget = getattr(edit, '_widget_to_rename', None)
             if widget:
                 new_text = edit.text().strip()
                 idx = self.indexOf(widget)
@@ -555,6 +1293,20 @@ class tabWidgetClass(QTabWidget):
                         self.setTabText(idx, new_text)
         edit.hide()
         edit.deleteLater()
+        QTimer.singleShot(
+            0,
+            lambda target=widget: self._focus_editor_after_rename(target),
+        )
+
+    def _focus_editor_after_rename(self, widget):
+        if (
+            widget is not None
+            and self.currentWidget() is widget
+            and getattr(self, '_rename_edit', None) is None
+        ):
+            edit = getattr(widget, 'edit', None)
+            if edit is not None:
+                edit.setFocus()
 
     def renameTab(self, index=None):
         if index is None or isinstance(index, bool):
@@ -603,7 +1355,7 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
-    def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True):
+    def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True, insert_index=None):
         # Ensure name is a string and handle PySide6 signal boolean parameter
         if isinstance(name, bool) or name is None:
             name = 'New Tab'
@@ -620,60 +1372,90 @@ class tabWidgetClass(QTabWidget):
                         self.setCurrentIndex(i)
                     return w.edit
 
-        cont = EditorTabContainer(text, self.p, self.desk, file_path=file_path)
-        cont.edit.saveSignal.connect(self.session_save_requested.emit)
+        cont = EditorTabContainer(
+            text,
+            self.p,
+            self.desk,
+            file_path=file_path,
+            fallback_name=name,
+        )
         cont.edit.executeSignal.connect(self.execute_selected_requested.emit)
         if hasattr(self.p, 'showStatusMessage'):
             cont.edit.messageSignal.connect(self.p.showStatusMessage)
-        self.addTab(cont, name)
 
-        btn = QPushButton()
-        btn.setObjectName("CustomCloseBtn")
-        btn.setFixedSize(20, 20)
-        # btn.setCursor(Qt.ArrowCursor)
-        btn.setProperty('isDirty', False)
-        btn.setProperty('isSelected', self.count() - 1 == self.currentIndex())
+        if insert_index is None:
+            curr = self.currentIndex()
+            if curr >= 0:
+                insert_index = curr + 1
+
+        if insert_index is not None and 0 <= insert_index <= self.count():
+            self.insertTab(insert_index, cont, name)
+        else:
+            self.addTab(cont, name)
+
+        new_index = self.indexOf(cont)
+
+        presenter = getattr(self.p, '_presenter', None)
+        settings = presenter.settings_model.read_settings() if presenter else {}
+        colors = {}
+        if presenter:
+            theme_name = settings.get('theme', 'Multi Script Editor')
+            colors = design.getColors(theme_name)
+
+        btn = TabCloseButton(colors=colors)
+        is_selected = new_index == self.currentIndex()
+        btn.set_selected(is_selected)
         btn.clicked.connect(lambda checked=False, c=cont: self.tabCloseRequested.emit(self.indexOf(c)))
-        self.tabBar().setTabButton(self.count() - 1, QTabBar.RightSide, btn)
+        self.tabBar().setTabButton(new_index, QTabBar.RightSide, btn)
         cont._custom_close_btn = btn
+        if is_selected:
+            self._selected_close_button = btn
 
         if file_path:
-            self.setTabToolTip(self.count() - 1, os.path.normpath(file_path))
+            self.setTabToolTip(new_index, os.path.normpath(file_path))
+            self.update_tab_git_status(new_index)
 
         if hasattr(self.p, 'updateStatusBarInfo'):
-            cont.edit.cursorPositionChanged.connect(self.p.updateStatusBarInfo)
-            cont.edit.textChanged.connect(self.p.updateStatusBarInfo)
+            cursor_status_update = getattr(
+                self.p,
+                'updateCursorStatusBarInfo',
+                self.p.updateStatusBarInfo,
+            )
+            document_status_update = getattr(
+                self.p,
+                'updateDocumentStatusBarInfo',
+                self.p.updateStatusBarInfo,
+            )
+            cont.edit.cursorPositionChanged.connect(
+                cursor_status_update
+            )
+            cont.edit.textChanged.connect(document_status_update)
 
         cont.edit.document().modificationChanged.connect(lambda state, c=cont: self.mark_tab_dirty(c, state))
         cont.edit.moveCursor(QTextCursor.Start)
         cont.edit.highlight_current_line()
         if make_current:
-            self.setCurrentIndex(self.count()-1)
+            self.setCurrentIndex(new_index)
 
         # Apply settings from presenter instead of trying to find actions in MainWindow
-        if hasattr(self.p, '_presenter'):
-            settings = self.p._presenter.settings_model.read_settings()
+        if presenter:
             show_whitespace = settings.get('show_whitespace', False)
             wrap = settings.get('wrap', False)
 
-            # Resolve font: theme font first, then general settings font
-            theme_name = settings.get('theme', 'Multi Script Editor')
-
-            colors = design.getColors(theme_name)
-            font_d = colors.get('font')
-            if not font_d:
-                font_d = settings.get('font', {})
-
             cont.edit.render_whitespace(show_whitespace)
             cont.edit.wordWrap(wrap)
-            cont.edit.set_start_font(font_d)
-            cont.edit.applyHightLighter(theme_name)
+
+        if make_current:
+            cont.edit.setFocus()
 
         return cont.edit
 
     def getTabText(self, i):
-        text = self.widget(i).edit.toPlainText()
-        return text
+        edit = self.widget(i).edit
+        document_text = getattr(edit, '_document_text', None)
+        if callable(document_text):
+            return document_text()
+        return edit.toPlainText()
 
     def addToCurrent(self, text):
         i = self.currentIndex()
@@ -687,8 +1469,7 @@ class tabWidgetClass(QTabWidget):
     def getCurrentText(self, i=None):
         if i is None:
             i = self.currentIndex()
-        text = self.widget(i).edit.toPlainText()
-        return text
+        return self.getTabText(i)
 
     def getCurrentLine(self, i=None):
         if i is None:
@@ -696,23 +1477,22 @@ class tabWidgetClass(QTabWidget):
 
         edit = self.widget(i).edit
         cursor = edit.textCursor()
-        current_cursor_pos = cursor.position()
-        cursor.select(QTextCursor.LineUnderCursor)
-        edit.setTextCursor(cursor)
-        text = edit.getSelection()
-        cursor.setPosition(current_cursor_pos)
-        edit.setTextCursor(cursor)
-        return text
+        return cursor.block().text()
 
     def setCurrentText(self, text):
         i = self.currentIndex()
         self.widget(i).edit.setPlainText(text)
         self.widget(i).edit.document().clearUndoRedoStacks()
 
+    def _iter_editors(self):
+        for i in range(self.count()):
+            widget = self.widget(i)
+            if widget and hasattr(widget, 'edit'):
+                yield widget.edit
 
     def hideAllCompleters(self):
-        for i in range(self.count()):
-            self.widget(i).edit.completer.hideMe()
+        for editor in self._iter_editors():
+            editor.completer.hideMe()
 
     def current(self):
         w = self.widget(self.currentIndex())
@@ -720,36 +1500,73 @@ class tabWidgetClass(QTabWidget):
             return w.edit
         return None
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.MiddleButton:
-            if getattr(self, '_rename_edit', None):
-                return
-            pos = self.tabBar().mapFrom(self, event.pos())
-            index = self.tabBar().tabAt(pos)
-            if index >= 0:
-                QTimer.singleShot(0, lambda i=index: self.closeTab(i))
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
         else:
-            super(tabWidgetClass, self).mousePressEvent(event)
+            super(tabWidgetClass, self).dragEnterEvent(event)
 
-############################## editor commands
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+        else:
+            super(tabWidgetClass, self).dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+            for url in event.mimeData().urls():
+                if url.isLocalFile():
+                    file_path = url.toLocalFile()
+                    if os.path.exists(file_path):
+                        if os.path.isfile(file_path):
+                            if hasattr(self.p, 'loadScript'):
+                                self.p.loadScript(file_path)
+                            elif hasattr(self.p, 'openRecentFile'):
+                                self.p.openRecentFile(file_path)
+                        elif os.path.isdir(file_path):
+                            if hasattr(self.p, 'explorer_widget'):
+                                self.p.explorer_widget.set_root_path(file_path)
+            return
+        super(tabWidgetClass, self).dropEvent(event)
+
+    ############################## editor commands
     def update_custom_close_buttons(self, index=None):
-        for i in range(self.count()):
-            cont = self.widget(i)
-            if hasattr(cont, '_custom_close_btn'):
-                btn = cont._custom_close_btn
-                is_sel = (i == self.currentIndex())
-                btn.setProperty('isSelected', is_sel)
-                btn.style().unpolish(btn)
-                btn.style().polish(btn)
+        index = self.currentIndex() if index is None else index
+        container = self.widget(index) if index >= 0 else None
+        current_button = getattr(container, '_custom_close_btn', None)
+        previous_button = self._selected_close_button
+
+        if previous_button is current_button:
+            return
+
+        self._set_close_button_selected(previous_button, False)
+        self._set_close_button_selected(current_button, True)
+        self._selected_close_button = current_button
+
+    @staticmethod
+    def _set_close_button_selected(button, state):
+        if button is None:
+            return
+        try:
+            if hasattr(button, 'set_selected'):
+                button.set_selected(state)
+            else:
+                button.setProperty('isSelected', state)
+                button.style().unpolish(button)
+                button.style().polish(button)
+        except RuntimeError:
+            pass
 
     def mark_tab_dirty(self, container, state):
         if not hasattr(container, '_custom_close_btn'):
             return
 
-        if not hasattr(container, 'file_path') or not container.file_path:
+        btn = container._custom_close_btn
+        if hasattr(btn, 'set_dirty'):
+            btn.set_dirty(state)
             return
 
-        btn = container._custom_close_btn
         btn.setProperty('isDirty', state)
 
         if state:
@@ -757,13 +1574,20 @@ class tabWidgetClass(QTabWidget):
             if hasattr(self.p, '_presenter'):
                 theme_name = self.p._presenter.settings_model.read_settings().get('theme', theme_name)
             colors = design.getColors(theme_name)
-            window_color = colors.get('window', [160, 160, 160])
+            dirty_color = colors.get('tab_selected_text', colors.get('window', [200, 200, 200]))
 
             pixmap = QPixmap(btn.size())
             pixmap.fill(Qt.transparent)
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
-            painter.setBrush(QColor(*window_color))
+            if isinstance(dirty_color, (list, tuple)):
+                painter.setBrush(QColor(*dirty_color))
+            elif isinstance(dirty_color, QColor):
+                painter.setBrush(dirty_color)
+            elif isinstance(dirty_color, str):
+                painter.setBrush(QColor(dirty_color))
+            else:
+                painter.setBrush(QColor(200, 200, 200))
             painter.setPen(Qt.NoPen)
 
             r = min(pixmap.width(), pixmap.height()) / 4.0
@@ -780,11 +1604,29 @@ class tabWidgetClass(QTabWidget):
         btn.style().unpolish(btn)
         btn.style().polish(btn)
 
+    def mark_untitled_tabs_session_saved(self):
+        for index in range(self.count()):
+            container = self.widget(index)
+            if not container or getattr(container, 'file_path', None):
+                continue
+            edit = getattr(container, 'edit', None)
+            if not edit:
+                continue
+            if hasattr(edit, 'needs_loading_modified'):
+                edit.needs_loading_modified = False
+            edit.document().setModified(False)
+            self.mark_tab_dirty(container, False)
+
     def apply_tab_style(self, colors=None):
         if not colors:
-            colors = defaultColors
+            colors = design.defaultColors
 
         self._use_theme_font_on_tab_label = colors.get('use_theme_font_on_tab_label', True)
+
+        for i in range(self.count()):
+            cont = self.widget(i)
+            if hasattr(cont, '_custom_close_btn') and hasattr(cont._custom_close_btn, 'set_colors'):
+                cont._custom_close_btn.set_colors(colors)
 
         tab_text_size = colors.get('tab_text_size', None)
         if tab_text_size is not None:
@@ -863,21 +1705,18 @@ class tabWidgetClass(QTabWidget):
         self.setStyleSheet(ss + css)
 
     def render_whitespace(self, state):
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.render_whitespace(state)
 
     def wordWrap(self, state):
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.wordWrap(state)
         # update line numbers
         self.update()
 
     def set_font(self, font):
         self._apply_tab_font(font)
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.setFont(font)
 
     def set_start_font(self, font_d=None):
@@ -891,8 +1730,7 @@ class tabWidgetClass(QTabWidget):
                 font = QFont(family, size, weight, italic)
                 font.setStyleHint(QFont.Monospace)
                 self._apply_tab_font(font)
-        for i in range(self.count()):
-            current_edit = self.widget(i).edit
+        for current_edit in self._iter_editors():
             current_edit.set_start_font(font_d)
 
     def paste(self):
@@ -958,48 +1796,128 @@ class tabWidgetClass(QTabWidget):
 
 
 
-    def yes_no_question(self, question):
+    def yes_no_question(self, question, default_button=QMessageBox.Yes):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Multi Script Editor")
         msg_box.setText(question)
-        if hasattr(self.p, 'theme_font'):
-            msg_box.setFont(self.p.theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.p.theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
-        msg_box.addButton("No", QMessageBox.NoRole)
-        yes_button.setFocus()
-        if hasattr(self.p, 'theme_font'):
-            for btn in msg_box.buttons():
-                btn.setFont(self.p.theme_font)
+        no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        button = yes_button if default_button == QMessageBox.Yes else no_button
+        msg_box.setDefaultButton(button)
+        button.setFocus()
+        self._apply_parent_theme_font(msg_box)
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 
 
 class EditorTabContainer(QWidget):
-    def __init__(self, text, parent, desk, file_path=None):
+    def __init__(
+        self,
+        text,
+        parent,
+        desk,
+        file_path=None,
+        fallback_name="Untitled",
+    ):
         super(EditorTabContainer, self).__init__()
         self.file_path = file_path
-        hbox = QHBoxLayout(self)
-        hbox.setSpacing(0)
-        hbox.setContentsMargins(0,0,0,0)
-        # input widget
-        self.edit = inputWidget.inputClass(parent, desk)
+        self.setMinimumWidth(0)
+
+        vbox = QVBoxLayout(self)
+        vbox.setSpacing(0)
+        vbox.setContentsMargins(0, 0, 0, 0)
+
+        # Breadcrumbs Bar
+        self.breadcrumbs = BreadcrumbBar(
+            self,
+            file_path=file_path,
+            fallback_name=fallback_name,
+            theme_colors=getattr(parent, '_current_colors_cache', None),
+            font=getattr(parent, 'current_outline_font', None),
+        )
+        self.breadcrumbs.symbolSelected.connect(self._on_breadcrumb_symbol_selected)
+        self.breadcrumbs.fileSelected.connect(self._on_breadcrumb_file_selected)
+        show_b = False
+        if hasattr(parent, 'showBreadcrumbs_act'):
+            show_b = parent.showBreadcrumbs_act.isChecked()
+        self.breadcrumbs.setVisible(show_b)
+        vbox.addWidget(self.breadcrumbs)
+
+        editor_hbox = QHBoxLayout()
+        editor_hbox.setSpacing(0)
+        editor_hbox.setContentsMargins(0, 2, 0, 0)
+
+        # Input widget
+        file_extension = os.path.splitext(file_path)[1] if file_path else None
+        self.edit = inputWidget.inputClass(
+            parent,
+            desk,
+            file_extension=file_extension,
+        )
         if text:
             self.edit.addText(text)
             self.edit.document().clearUndoRedoStacks()
             self.edit.document().setModified(False)
         self.lineNum = numBarWidget.lineNumberBarClass(self.edit, self)
-        self.edit.verticalScrollBar().valueChanged.connect(lambda :self.lineNum.update())
-        self.edit.inputSignal.connect(lambda :self.lineNum.update())
-        self.edit.document().blockCountChanged.connect(lambda :self.lineNum.update())
-        self.edit.cursorPositionChanged.connect(lambda :self.lineNum.update())
+        self.edit.updateRequest.connect(self.lineNum.update_from_editor)
+        self.edit.document().blockCountChanged.connect(lambda: self.lineNum.update())
+        self.edit.cursorPositionChanged.connect(self.lineNum.request_repaint)
+        self.edit.cursorPositionChanged.connect(self._on_cursor_changed_update_breadcrumbs)
+        self.lineNum.update()
+        self._initial_horizontal_scroll_pending = True
 
-        hbox.addWidget(self.lineNum)
-        hbox.addWidget(self.edit)
+        editor_hbox.addWidget(self.lineNum)
+        editor_hbox.addWidget(self.edit)
 
+        vbox.addLayout(editor_hbox)
+
+    def showEvent(self, event):
+        super(EditorTabContainer, self).showEvent(event)
+        if self._initial_horizontal_scroll_pending:
+            QTimer.singleShot(0, self._restore_initial_horizontal_scroll)
+
+    def _restore_initial_horizontal_scroll(self):
+        if not self.isVisible():
+            return
+        self._initial_horizontal_scroll_pending = False
+        self.edit.reset_horizontal_scroll_for_cursor()
+
+    def _on_cursor_changed_update_breadcrumbs(self):
+        line_num = self.edit.textCursor().blockNumber() + 1
+        self.breadcrumbs.set_cursor_line(line_num)
+
+    def _on_breadcrumb_symbol_selected(self, line):
+        if line:
+            block = self.edit.document().findBlockByNumber(line - 1)
+            if block.isValid():
+                cursor = self.edit.textCursor()
+                cursor.setPosition(block.position())
+                self.edit.setTextCursor(cursor)
+                self.edit.centerCursor()
+                self.edit.highlight_current_line()
+                self.edit.setFocus()
+
+    def _on_breadcrumb_file_selected(self, file_path):
+        if not file_path or not os.path.exists(file_path):
+            return
+
+        parent = getattr(self.edit, 'p', None)
+        if not parent:
+            return
+
+        if hasattr(parent, 'tab'):
+            tab_widget = parent.tab
+            for i in range(tab_widget.count()):
+                container = tab_widget.widget(i)
+                if container and getattr(container, 'file_path', None) == file_path:
+                    tab_widget.setCurrentIndex(i)
+                    return
+
+        if hasattr(parent, 'openRecentFile'):
+            parent.openRecentFile(file_path)
+
+        self.edit.setFocus()
 
 if __name__ == '__main__':
     app = QApplication([])

@@ -9,7 +9,25 @@
 
 
 from vendor.Qt.QtCore import QMetaObject, Qt
-from vendor.Qt.QtWidgets import QApplication, QComboBox, QHBoxLayout, QLabel, QListWidget, QPushButton, QSizePolicy, QSpacerItem, QSpinBox, QSplitter, QVBoxLayout, QWidget, QFormLayout, QCheckBox, QGroupBox, QGridLayout
+from vendor.Qt.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QListWidget,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QSpinBox,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
+
 
 class Ui_themeEditor(object):
     def setupUi(self, themeEditor):

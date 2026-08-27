@@ -1,0 +1,7 @@
+include license.md
+include readme*.md
+include releaseNote.md
+recursive-include multi_script_editor *.cmd *.css *.html *.ico *.png *.pypanel *.pyi *.sh *.svg *.txt *.typed
+recursive-include multi_script_editor/managers/houdini *.py
+prune multi_script_editor/*.egg-info
+global-exclude *.py[cod]

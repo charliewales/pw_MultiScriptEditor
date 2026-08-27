@@ -1,10 +1,10 @@
 ## Houdini install
 
-### Houdini 14+
+### Houdini 19+
 
   - extract module `multi_script_editor` to PYTHONPATH
 
-    Example: `{HOME}/Documents/Houdini13.X/scripts/python/multi_script_editor`
+    Example: `{HOME}/Documents/Houdini19.X/scripts/python/multi_script_editor`
   - create new tool on shelf
 
 ```python

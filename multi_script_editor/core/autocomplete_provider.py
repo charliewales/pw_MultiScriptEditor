@@ -1,18 +1,43 @@
+import ast
 import re
-import managers
+import sys
+
+from multi_script_editor import managers
+
+
+PYTHON_COMPLETION_EXTENSIONS = frozenset(('.py', '.pyw', '.pyx'))
+
 
 class CompletionItem:
-    def __init__(self, name, complete, comp_type, docstring_val="", prefix_length=0):
+    def __init__(
+        self,
+        name,
+        complete,
+        comp_type,
+        docstring_val="",
+        prefix_length=0,
+        docstring_loader=None,
+        end_char=None,
+    ):
         self.name = name
         self.complete = complete
         self.type = comp_type
         self._docstring = docstring_val
+        self._docstring_loader = docstring_loader
         self.prefix_length = prefix_length
+        self.end_char = end_char
 
     def get_completion_prefix_length(self):
         return self.prefix_length
 
     def docstring(self):
+        if self._docstring_loader is not None:
+            loader = self._docstring_loader
+            self._docstring_loader = None
+            try:
+                self._docstring = loader()
+            except Exception:
+                self._docstring = ""
         return self._docstring
 
 
@@ -27,6 +52,120 @@ class AutocompleteProvider:
             self._jedi = jedi
         return self._jedi
 
+    @staticmethod
+    def _completion_namespace(text, line, namespace):
+        resolved = dict(namespace or {})
+        source = '\n'.join(text.splitlines()[:max(line - 1, 0)])
+        if not source.strip():
+            return resolved
+
+        try:
+            statements = ast.parse(source).body
+        except SyntaxError:
+            return resolved
+
+        missing = object()
+        for statement in statements:
+            if isinstance(statement, ast.Import):
+                for alias in statement.names:
+                    value = sys.modules.get(alias.name, missing)
+                    if value is missing:
+                        continue
+                    if alias.asname:
+                        resolved[alias.asname] = value
+                    else:
+                        root_name = alias.name.partition('.')[0]
+                        root = sys.modules.get(root_name, missing)
+                        if root is not missing:
+                            resolved[root_name] = root
+                continue
+
+            if (
+                not isinstance(statement, ast.ImportFrom)
+                or statement.level
+                or not statement.module
+            ):
+                continue
+
+            parent = sys.modules.get(statement.module)
+            for alias in statement.names:
+                if alias.name == '*':
+                    continue
+                value = sys.modules.get(
+                    statement.module + '.' + alias.name,
+                    missing,
+                )
+                if value is missing and parent is not None:
+                    value = vars(parent).get(alias.name, missing)
+                if value is not missing:
+                    resolved[alias.asname or alias.name] = value
+
+        return resolved
+
+    @staticmethod
+    def _runtime_completions(text, line, column, namespace):
+        lines = text.splitlines()
+        if line < 1 or line > len(lines):
+            return []
+
+        missing = object()
+        current_line = lines[line - 1][:column]
+        from_import = re.match(
+            r'^\s*from\s+([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)'
+            r'\s+import\s*([A-Za-z_]\w*)?$',
+            current_line,
+        )
+        if from_import:
+            module_name, prefix = from_import.groups()
+            value = sys.modules.get(module_name, missing)
+        else:
+            member = re.search(
+                r'\b([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\.'
+                r'([A-Za-z_]\w*)?$',
+                current_line,
+            )
+            if not member:
+                return []
+            path, prefix = member.groups()
+            parts = path.split('.')
+            value = namespace.get(parts[0], missing)
+            try:
+                for part in parts[1:]:
+                    value = getattr(value, part)
+            except Exception:
+                return []
+
+        if value is missing:
+            return []
+        try:
+            names = dir(value)
+        except Exception:
+            return []
+
+        members = getattr(value, '__dict__', {})
+        items = []
+        prefix = prefix or ''
+        for name in names:
+            if not name.startswith(prefix):
+                continue
+            member = members.get(name, missing)
+            comp_type = (
+                'class' if isinstance(member, type)
+                else 'function' if callable(member)
+                else 'statement'
+            )
+            items.append(CompletionItem(
+                name=name,
+                complete=name[len(prefix):],
+                comp_type=comp_type,
+                prefix_length=len(prefix),
+                docstring_loader=(
+                    lambda obj=value, attr=name:
+                    getattr(obj, attr).__doc__ or ''
+                ),
+            ))
+        return items
+
     def get_completions(self, text, line, column, namespace=None, fuzzy=True, context=None, prefer_single_quotes=False):
         """
         Returns a list of CompletionItem objects.
@@ -36,6 +175,7 @@ class AutocompleteProvider:
 
         preferred_quote = "'" if prefer_single_quotes else '"'
         other_quote = '"' if prefer_single_quotes else "'"
+        namespace = self._completion_namespace(text, line, namespace)
 
         def format_quotes(name, complete, comp_type):
             if comp_type == 'string' or (len(name) >= 2 and name[0] in ('"', "'") and name[-1] in ('"', "'")):
@@ -60,22 +200,35 @@ class AutocompleteProvider:
             comp, extra = managers.contextCompleters[context](current_line_text, namespace)
             if comp or extra:
                 context_completer = True
-                # Format them as CompletionItem
-                if comp:
-                    for c in comp:
-                        name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
-                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
-                if extra:
-                    for c in extra:
-                        name, complete = format_quotes(c.name, getattr(c, 'complete', ''), getattr(c, 'type', 'statement'))
-                        comp_items.append(CompletionItem(name, complete, getattr(c, 'type', 'statement'), c.docstring() if hasattr(c, 'docstring') else ''))
+                for name, complete, end_char in (comp or []) + (extra or []):
+                    name, complete = format_quotes(
+                        name,
+                        complete,
+                        'statement',
+                    )
+                    comp_items.append(CompletionItem(
+                        name,
+                        complete,
+                        'statement',
+                        end_char=end_char,
+                    ))
                 
                 if comp_items:
                     return comp_items
 
+        runtime_items = self._runtime_completions(
+            text,
+            line,
+            column,
+            namespace,
+        )
+        if runtime_items:
+            return runtime_items
+
         # 2. Fallback to Jedi Autocompletion
         if not context_completer:
             jedi = self._get_jedi()
+            project = None
             
             # Prepend autoImports if necessary
             offs = 0
@@ -89,9 +242,13 @@ class AutocompleteProvider:
             
             try:
                 if namespace:
-                    script = jedi.Interpreter(text, namespaces=[namespace])
+                    script = jedi.Interpreter(
+                        text,
+                        namespaces=[namespace],
+                        project=project,
+                    )
                 else:
-                    script = jedi.Script(code=text)
+                    script = jedi.Script(code=text, project=project)
                     
                 jedi_comps = script.complete(line=jedi_line, column=column, fuzzy=fuzzy)
                 
@@ -100,12 +257,6 @@ class AutocompleteProvider:
                     if c.name == 'mro':
                         continue
                     
-                    doc = ''
-                    try:
-                        doc = c.docstring()
-                    except Exception:
-                        pass
-                        
                     prefix_len = 0
                     if hasattr(c, 'get_completion_prefix_length'):
                         prefix_len = c.get_completion_prefix_length()
@@ -116,8 +267,8 @@ class AutocompleteProvider:
                         name=name,
                         complete=complete,
                         comp_type=c.type,
-                        docstring_val=doc,
-                        prefix_length=prefix_len
+                        prefix_length=prefix_len,
+                        docstring_loader=c.docstring,
                     ))
             except Exception:
                 pass

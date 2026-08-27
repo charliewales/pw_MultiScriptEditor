@@ -1,29 +1,30 @@
-import os
 import json
+import os
+
+from core.settings_model import SettingsModel, ThemesModel
 from vendor.Qt.QtCore import QSize, Qt, QTimer
-from vendor.Qt.QtGui import QColor, QIcon, QPixmap, QFont
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QPixmap
 from vendor.Qt.QtWidgets import (
+    QAction,
     QApplication,
     QColorDialog,
     QDialog,
-    QInputDialog,
-    QLineEdit,
-    QListWidgetItem,
-    QMessageBox,
-    QMenuBar,
-    QStatusBar,
-    QMainWindow,
-    QLabel,
-    QAction,
-    QMenu,
-    QFontDialog,
-    QPushButton,
     QFileDialog,
+    QFontDialog,
+    QInputDialog,
+    QLabel,
+    QListWidgetItem,
+    QMainWindow,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
+    QPushButton,
+    QStatusBar,
 )
 from widgets import themeEditor_UIs as ui
-from core.settings_model import SettingsModel, ThemesModel
-from .pythonSyntax import design
 from widgets.tabWidget import tabWidgetClass
+
+from .pythonSyntax import design
 
 
 class themeEditorClass(QDialog, ui.Ui_themeEditor):
@@ -177,6 +178,17 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def save_theme_settings(self, theme_settings):
         self.t_model.write_settings(theme_settings)
 
+    def _apply_parent_theme_font(self, widget):
+        parent = self.parent()
+        font = getattr(parent, 'theme_font', None) if parent else None
+        if not font:
+            return
+        widget.setFont(font)
+        widget.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        if hasattr(widget, 'buttons'):
+            for btn in widget.buttons():
+                btn.setFont(font)
+
     def fillUI(self, restore=None):
         self.themeList_cbb.blockSignals(True)
         try:
@@ -218,112 +230,41 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         colors = design.getColors(curTheme)
 
         self.colors_lwd.clear()
+        default_font_size = self.get_settings().get('font', {}).get('pointSize', 12)
 
-        self.textSize_spb.blockSignals(True)
-        if 'textsize' in colors:
-            self.textSize_spb.setValue(int(colors['textsize']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.textSize_spb.setValue(int(font_size * 0.9))
-        self.textSize_spb.blockSignals(False)
+        font_mult = 0.9
+        font_size_controls = (
+            (self.textSize_spb, 'textsize', int(default_font_size * font_mult)),
+            (self.lineNumbersSize_spb, 'line_numbers_text_size', max(1, int(default_font_size * 0.8))),
+            (self.menuSize_spb, 'menu_text_size', int(default_font_size * font_mult)),
+            (self.tabRadius_spb, 'tab_radius', 12),
+            (self.tabSize_spb, 'tab_text_size', int(default_font_size * font_mult)),
+            (self.outlineSize_spb, 'outline_text_size', int(default_font_size * font_mult)),
+            (self.outputSize_spb, 'output_text_size', int(default_font_size * font_mult)),
+            (self.symbolsSize_spb, 'symbols_text_size', int(default_font_size * font_mult)),
+            (self.statusBarSize_spb, 'status_bar_text_size', int(default_font_size * font_mult)),
+        )
+        for control, key, default in font_size_controls:
+            control.blockSignals(True)
+            try:
+                control.setValue(int(colors[key]) if key in colors else default)
+            finally:
+                control.blockSignals(False)
 
-        self.lineNumbersSize_spb.blockSignals(True)
-        if 'line_numbers_text_size' in colors:
-            self.lineNumbersSize_spb.setValue(int(colors['line_numbers_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.lineNumbersSize_spb.setValue(max(1, int(font_size * 0.8)))
-        self.lineNumbersSize_spb.blockSignals(False)
-
-        self.menuSize_spb.blockSignals(True)
-        if 'menu_text_size' in colors:
-            self.menuSize_spb.setValue(int(colors['menu_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.menuSize_spb.setValue(int(font_size * 0.9))
-        self.menuSize_spb.blockSignals(False)
-
-        # Update tab radius (or default to 12 if not present)
-        self.tabRadius_spb.blockSignals(True)
-        if 'tab_radius' in colors:
-            self.tabRadius_spb.setValue(int(colors['tab_radius']))
-        else:
-            self.tabRadius_spb.setValue(12)
-        self.tabRadius_spb.blockSignals(False)
-
-        # Update tab label text size percentage (or default to 10 if not present)
-        self.tabSize_spb.blockSignals(True)
-        if 'tab_text_size' in colors:
-            self.tabSize_spb.setValue(int(colors['tab_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.tabSize_spb.setValue(int(font_size * 0.9))
-        self.tabSize_spb.blockSignals(False)
-
-        # Update outline text size (or default to 80% if not present)
-        self.outlineSize_spb.blockSignals(True)
-        if 'outline_text_size' in colors:
-            self.outlineSize_spb.setValue(int(colors['outline_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.outlineSize_spb.setValue(int(font_size * 0.9))
-        self.outlineSize_spb.blockSignals(False)
-
-        self.outputSize_spb.blockSignals(True)
-        if 'output_text_size' in colors:
-            self.outputSize_spb.setValue(int(colors['output_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.outputSize_spb.setValue(int(font_size * 0.9))
-        self.outputSize_spb.blockSignals(False)
-
-        self.symbolsSize_spb.blockSignals(True)
-        if 'symbols_text_size' in colors:
-            self.symbolsSize_spb.setValue(int(colors['symbols_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.symbolsSize_spb.setValue(int(font_size * 0.9))
-        self.symbolsSize_spb.blockSignals(False)
-
-        self.statusBarSize_spb.blockSignals(True)
-        if 'status_bar_text_size' in colors:
-            self.statusBarSize_spb.setValue(int(colors['status_bar_text_size']))
-        else:
-            default_font = self.get_settings().get('font', {})
-            font_size = default_font.get('pointSize', 12)
-            self.statusBarSize_spb.setValue(int(font_size * 0.9))
-        self.statusBarSize_spb.blockSignals(False)
-
-        self.completerFont_cb.blockSignals(True)
-        self.completerFont_cb.setChecked(bool(colors.get('use_theme_font_on_completer', True)))
-        self.completerFont_cb.blockSignals(False)
-
-        self.menuFont_cb.blockSignals(True)
-        self.menuFont_cb.setChecked(bool(colors.get('use_theme_font_on_menus', False)))
-        self.menuFont_cb.blockSignals(False)
-
-        self.outlineFont_cb.blockSignals(True)
-        self.outlineFont_cb.setChecked(bool(colors.get('use_theme_font_on_outline', True)))
-        self.outlineFont_cb.blockSignals(False)
-
-        self.symbolsFont_cb.blockSignals(True)
-        self.symbolsFont_cb.setChecked(bool(colors.get('use_theme_font_on_symbols', True)))
-        self.symbolsFont_cb.blockSignals(False)
-
-        self.statusBarFont_cb.blockSignals(True)
-        self.statusBarFont_cb.setChecked(bool(colors.get('use_theme_font_on_status_bar', False)))
-        self.statusBarFont_cb.blockSignals(False)
-
-        self.tabFont_cb.blockSignals(True)
-        self.tabFont_cb.setChecked(bool(colors.get('use_theme_font_on_tab_label', True)))
-        self.tabFont_cb.blockSignals(False)
+        font_option_controls = (
+            (self.completerFont_cb, 'use_theme_font_on_completer', True),
+            (self.menuFont_cb, 'use_theme_font_on_menus', False),
+            (self.outlineFont_cb, 'use_theme_font_on_outline', True),
+            (self.symbolsFont_cb, 'use_theme_font_on_symbols', True),
+            (self.statusBarFont_cb, 'use_theme_font_on_status_bar', False),
+            (self.tabFont_cb, 'use_theme_font_on_tab_label', True),
+        )
+        for control, key, default in font_option_controls:
+            control.blockSignals(True)
+            try:
+                control.setChecked(bool(colors.get(key, default)))
+            finally:
+                control.blockSignals(False)
 
         self.choose_font_btn.setEnabled(True)
         if curTheme in design.predefinedThemes:
@@ -443,7 +384,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.resetFont()
 
     def resetFont(self):
-        curTheme = self.themeList_cbb.currentText()
         settings = self.get_settings()
 
         global_font_data = settings.get('font', {})
@@ -543,7 +483,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def openSizeMenu(self, position):
         sender = self.sender()
-        if not sender: return
+        if not sender:
+            return
         menu = QMenu(self)
         ratio_1 = (None,)
         ratio_08 = (self.lineNumbersSize_spb,)
@@ -584,33 +525,26 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
     def _resetAllFontSizes(self):
         pts = self._getBaseFontPointSize()
-        self.textSize_spb.blockSignals(True)
-        self.lineNumbersSize_spb.blockSignals(True)
-        self.menuSize_spb.blockSignals(True)
-        self.outlineSize_spb.blockSignals(True)
-        self.outputSize_spb.blockSignals(True)
-        self.statusBarSize_spb.blockSignals(True)
-        self.tabSize_spb.blockSignals(True)
-        self.symbolsSize_spb.blockSignals(True)
-
         font_mult = 0.9
-        self.textSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.lineNumbersSize_spb.setValue(max(1, int(pts * 0.8)))
-        self.menuSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.outlineSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.outputSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.statusBarSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.tabSize_spb.setValue(max(1, int(pts * font_mult)))
-        self.symbolsSize_spb.setValue(max(1, int(pts * font_mult)))
+        font_size_controls = (
+            (self.textSize_spb, font_mult),
+            (self.lineNumbersSize_spb, 0.8),
+            (self.menuSize_spb, font_mult),
+            (self.outlineSize_spb, font_mult),
+            (self.outputSize_spb, font_mult),
+            (self.statusBarSize_spb, font_mult),
+            (self.tabSize_spb, font_mult),
+            (self.symbolsSize_spb, font_mult),
+        )
 
-        self.textSize_spb.blockSignals(False)
-        self.lineNumbersSize_spb.blockSignals(False)
-        self.menuSize_spb.blockSignals(False)
-        self.outlineSize_spb.blockSignals(False)
-        self.outputSize_spb.blockSignals(False)
-        self.statusBarSize_spb.blockSignals(False)
-        self.tabSize_spb.blockSignals(False)
-        self.symbolsSize_spb.blockSignals(False)
+        for control, _ in font_size_controls:
+            control.blockSignals(True)
+        try:
+            for control, multiplier in font_size_controls:
+                control.setValue(max(1, int(pts * multiplier)))
+        finally:
+            for control, _ in font_size_controls:
+                control.blockSignals(False)
 
     def saveTheme(self):
         text = self.themeList_cbb.currentText() or 'NewTheme'
@@ -618,9 +552,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         dlg.setWindowTitle('Theme name')
         dlg.setLabelText('Enter Theme name')
         dlg.setTextValue(text)
-        if hasattr(self.parent(), 'theme_font'):
-            dlg.setFont(self.parent().theme_font)
-            dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+        self._apply_parent_theme_font(dlg)
         ok = dlg.exec_() == QInputDialog.Accepted
         name = dlg.textValue().strip() if ok else ""
         if name:
@@ -629,7 +561,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             theme_settings = self.get_theme_settings()
             if 'colors' in theme_settings:
                 if name in theme_settings['colors']:
-                    if not self.yes_no_question('Replace existing?'):
+                    if not self.yes_no_question(
+                        'Replace existing?',
+                        QMessageBox.No,
+                    ):
                         return False
 
             colors = self.getCurrentColors()
@@ -664,7 +599,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     prev_theme = item_text
                     break
 
-            if self.yes_no_question('Remove current theme?'):
+            if self.yes_no_question(
+                'Remove current theme?',
+                QMessageBox.No,
+            ):
                 name = self.themeList_cbb.currentText()
                 theme_settings = self.get_theme_settings()
                 if 'colors' in theme_settings:
@@ -703,11 +641,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Error")
                 msg_box.setText("Could not export theme:\n" + str(e))
-                if hasattr(self.parent(), 'theme_font'):
-                    msg_box.setFont(self.parent().theme_font)
-                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                    for btn in msg_box.buttons():
-                        btn.setFont(self.parent().theme_font)
+                self._apply_parent_theme_font(msg_box)
                 msg_box.exec_()
 
     def importTheme(self):
@@ -725,9 +659,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 dlg.setWindowTitle('Theme name')
                 dlg.setLabelText('Enter Theme name')
                 dlg.setTextValue(name)
-                if hasattr(self.parent(), 'theme_font'):
-                    dlg.setFont(self.parent().theme_font)
-                    dlg.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
+                self._apply_parent_theme_font(dlg)
                 ok = dlg.exec_() == QInputDialog.Accepted
                 name_input = dlg.textValue().strip() if ok else ""
                 if name_input:
@@ -738,7 +670,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     theme_settings = self.get_theme_settings()
                     if 'colors' in theme_settings:
                         if name in theme_settings['colors']:
-                            if not self.yes_no_question('Replace existing?'):
+                            if not self.yes_no_question(
+                                'Replace existing?',
+                                QMessageBox.No,
+                            ):
                                 return
 
                     if 'colors' in theme_settings:
@@ -762,11 +697,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 msg_box.setIcon(QMessageBox.Critical)
                 msg_box.setWindowTitle("Error")
                 msg_box.setText("Could not import theme:\n" + str(e))
-                if hasattr(self.parent(), 'theme_font'):
-                    msg_box.setFont(self.parent().theme_font)
-                    msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                    for btn in msg_box.buttons():
-                        btn.setFont(self.parent().theme_font)
+                self._apply_parent_theme_font(msg_box)
                 msg_box.exec_()
 
     def updateUI(self):
@@ -805,8 +736,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if saved_v is None:
                 return True
 
-            if isinstance(v, list): v = tuple(v)
-            if isinstance(saved_v, list): saved_v = tuple(saved_v)
+            if isinstance(v, list):
+                v = tuple(v)
+            if isinstance(saved_v, list):
+                saved_v = tuple(saved_v)
 
             if v != saved_v:
                 return True
@@ -822,14 +755,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
-            if hasattr(self.parent(), 'theme_font'):
-                msg_box.setFont(self.parent().theme_font)
-                msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                for btn in msg_box.buttons():
-                    btn.setFont(self.parent().theme_font)
+            self._apply_parent_theme_font(msg_box)
             save_btn = msg_box.addButton("Save", QMessageBox.AcceptRole)
             discard_btn = msg_box.addButton("Discard", QMessageBox.DestructiveRole)
-            cancel_btn = msg_box.addButton("Cancel", QMessageBox.RejectRole)
+            msg_box.addButton("Cancel", QMessageBox.RejectRole)
             msg_box.exec_()
 
             if msg_box.clickedButton() == save_btn:
@@ -854,17 +783,16 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         pass
         # print self.colors_lwd.selectedItems()[0].data(32)
 
-    def yes_no_question(self, question):
+    def yes_no_question(self, question, default_button=QMessageBox.Yes):
         msg_box = QMessageBox(self)
         msg_box.setText(question)
         msg_box.setWindowTitle('?')
-        if hasattr(self.parent(), 'theme_font'):
-            msg_box.setFont(self.parent().theme_font)
-            msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-            for btn in msg_box.buttons():
-                btn.setFont(self.parent().theme_font)
+        self._apply_parent_theme_font(msg_box)
         yes_button = msg_box.addButton("Yes", QMessageBox.YesRole)
         no_button = msg_box.addButton("No", QMessageBox.NoRole)
+        button = yes_button if default_button == QMessageBox.Yes else no_button
+        msg_box.setDefaultButton(button)
+        button.setFocus()
         msg_box.exec_()
         return msg_box.clickedButton() == yes_button
 

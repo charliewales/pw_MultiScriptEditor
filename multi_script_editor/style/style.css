@@ -61,6 +61,27 @@ QToolBar QToolButton:pressed
     background: rgb[highlight_line];
 }
 
+QToolButton {
+    background: transparent;
+    border: none;
+}
+
+QToolButton:hover {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+QToolButton:pressed {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+QToolButton:checked {
+    background: rgb[highlight_line];
+    border-radius: 6px;
+}
+
+
 /**************MAINWINDOW*************/
 
 QMainWindow::separator
@@ -468,7 +489,7 @@ QSplitter::handle:hover, QSplitter::handle:pressed {
 }
 
 QTabWidget::pane  { /* The tab widget frame */
-    border-top: 1px solid rgb[border];
+    border: none;
 }
 
 
@@ -476,6 +497,7 @@ QTabWidget::pane  { /* The tab widget frame */
 QTabBar::tab {
     min-width: 80px;
     border: 1px solid rgb[tab_border];
+    border-bottom: none;
     border-top-left-radius: [tab_radius];
     border-top-right-radius: [tab_radius];
     padding-left: 10px;
@@ -490,6 +512,7 @@ QTabBar::tab {
 QTabBar::tab:hover {
     background: rgb[tab_hover_background];
     border: 1px solid rgb[tab_hover_border];
+    border-bottom: none;
     color: rgb[tab_hover_text];
 }
 
@@ -497,7 +520,7 @@ QTabBar::tab:selected {
     background: rgb[tab_selected_background];
     color: rgb[tab_selected_text];
     border: 1px solid rgb[tab_selected_border];
-    border-bottom-color: rgb[tab_selected_background];
+    border-bottom: none;
 }
 
 QTabBar QLineEdit, QLineEdit#tabRenameEdit {
@@ -635,14 +658,32 @@ SymbolWidget QListWidget::item:hover {
     color: rgb[completer_text];
 }
 
-QListWidget#outlineList
+QListWidget#outlineList,
+QTreeWidget#outlineTree
 {
     background-color: rgb[outline_background];
     color: rgb[default];
     border: 1px solid rgb[border];
 }
 
-QLineEdit#outlineFilter
+QTreeWidget#outlineTree::item
+{
+    padding: 2px 0px;
+    border: none;
+}
+
+QTreeWidget#outlineTree::item:hover
+{
+    background-color: rgb[highlight_line];
+}
+
+QTreeWidget#outlineTree::item:selected
+{
+    background-color: rgb[highlight_line];
+    color: rgb[tab_selected_text];
+}
+
+QLineEdit#outlineFilter, QLineEdit#explorerPathFilterInput
 {
     background-color: rgb[outline_background];
     color: rgb[tab_selected_text];
@@ -664,9 +705,8 @@ QToolTip
 }
 
 QToolBar#editorToolBar {
-    background-color: rgb[background];
+    background-color: rgb[window];
     border: none;
-    border-bottom: 1px solid rgb[border];
     spacing: 4px;
     padding: 2px;
 }

@@ -11,6 +11,7 @@ from vendor.Qt.QtCore import QMetaObject, Qt
 from vendor.Qt.QtGui import QFont
 from vendor.Qt.QtWidgets import QApplication, QFrame, QLabel, QTableWidget, QVBoxLayout
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")

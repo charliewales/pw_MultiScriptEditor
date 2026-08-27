@@ -1,9 +1,9 @@
 from vendor.Qt.QtCore import Qt, Signal
-from vendor.Qt.QtWidgets import QListWidgetItem
 from vendor.Qt.QtGui import QIntValidator
-from widgets.searchPopupWidget import SearchPopupWidget
-from widgets.outline_utils import HtmlDelegate
 from widgets.bookmarkWidget import create_bookmark_item
+from widgets.outline_utils import HtmlDelegate
+from widgets.searchPopupWidget import SearchPopupWidget
+
 
 class GotoLineWidget(SearchPopupWidget):
     lineSelected = Signal(int)

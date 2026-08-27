@@ -1,9 +1,10 @@
+import icons
+from docs.constants import TESTED_TEXT
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QIcon, QPixmap
 from vendor.Qt.QtWidgets import QDialog
-import icons
 from widgets import about_UIs
-import os
+
 
 class aboutClass(QDialog, about_UIs.Ui_Dialog):
     def __init__(self, parent):
@@ -19,10 +20,7 @@ class aboutClass(QDialog, about_UIs.Ui_Dialog):
         self.donate_btn.setIcon(QIcon(icons.icons['donate']))
         self.donate_btn.clicked.connect(lambda :parent.openLink('donate'))
         # self.donate_btn.hide()
-        testedFile = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tested.txt')
-        if os.path.exists(testedFile):
-            outText = open(testedFile).read()
-            self.textBrowser.setPlainText(outText)
+        self.textBrowser.setPlainText(TESTED_TEXT)
 
 
 text = '''Paul Winex 2018

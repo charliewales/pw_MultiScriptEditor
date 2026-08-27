@@ -1,28 +1,12 @@
-import os, sys, re
+import re
+
 import hou
-main = __import__('__main__')
-# hou = main.__dict__['hou']
-from vendor.Qt.QtWidgets import QMenu, QAction, QWidget
+
+from multi_script_editor import managers
 from vendor.Qt.QtCore import Qt
-
-from managers.completeWidget import contextCompleterClass
-import managers
-
-path = os.path.join(os.path.dirname(__file__), 'houdini')
-
-ns = main.__dict__
-for mod in [os.path.splitext(x)[0] for x in os.listdir(path)]:
-    if not mod in ns:
-        try:
-            exec('import {0}'.format(mod), ns)
-        except:
-            pass
-
-if not path in sys.path:
-    sys.path.insert(0, path)
+from vendor.Qt.QtWidgets import QAction, QMenu
 
 from multi_script_editor import scriptEditor
-
 
 _houdini_window = None
 
@@ -116,8 +100,8 @@ def completer(line, ns):
                 auto = [x for x in nodes if x.lower().startswith(name.lower())]
             else:
                 auto = nodes
-            l = len(name)
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            prefix_len = len(name)
+            return [(x, x[prefix_len:], True) for x in auto], None
     # absolute path
     p = r"(?<=['\"]{1})(/[\w/]*)$"
     m = re.search(p, line)
@@ -132,19 +116,19 @@ def getChildrenFromPath(path):
     sp = path.rsplit('/', 1)
     if not sp[0]: # rootOnly
         if sp[1]:
-            nodes = [contextCompleterClass(x, x[len(sp[1]):]) for x in roots if x.startswith(sp[1])]
+            nodes = [(x, x[len(sp[1]):], None) for x in roots if x.startswith(sp[1])]
             return nodes, None
         else:
-            nodes = [contextCompleterClass(x, x) for x in roots]
+            nodes = [(x, x, None) for x in roots]
             return nodes, None
     # add parms
     else:
         node = hou.node(sp[0][1:])
         if node:
             nd = list(set([x.name() for x in node.children()]))
-            nodes = [contextCompleterClass(x, x[len(sp[1]):]) for x in sorted(nd) if x.startswith(sp[1])]
+            nodes = [(x, x[len(sp[1]):], None) for x in sorted(nd) if x.startswith(sp[1])]
             ch = list(set([x.name() for x in node.parms()] + [x.name() for x in node.parmTuples()]))
-            channels = [contextCompleterClass(x, x[len(sp[1]):]) for x in sorted(ch) if x.startswith(sp[1])]
+            channels = [(x, x[len(sp[1]):], None) for x in sorted(ch) if x.startswith(sp[1])]
             return nodes, channels
     return None, None
 
@@ -231,7 +215,7 @@ class houdiniMenuClass(QMenu):
         if Def:
             sections = Def.sections()
             for s in sections:
-                if not sections[s].name() in default:
+                if sections[s].name() not in default:
                     res[s] = sections[s]
         pySop = hou.parm(node.path() + '/python')
         if pySop:

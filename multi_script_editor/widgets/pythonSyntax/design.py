@@ -1,7 +1,8 @@
-from core.settings_model import SettingsModel, ThemesModel
 import os
 import re
+from functools import lru_cache
 
+from core.settings_model import SettingsModel, ThemesModel
 
 defaultColors = dict(
         background=(40, 40, 40),
@@ -613,11 +614,17 @@ def editorStyle(theme=None):
     return applyColorToMainStyle(colors)
 
 
+@lru_cache(maxsize=1)
+def _read_style_css(path):
+    with open(path) as style_file:
+        return style_file.read()
+
+
 def applyColorToMainStyle(colors=None):
     StyleCss = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'style', 'style.css')
     icons_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'icons').replace('\\', '/')
     if os.path.exists(StyleCss):
-        text = open(StyleCss).read()
+        text = _read_style_css(StyleCss)
         text = text.replace("../icons", icons_dir)
         proxys = re.findall(r'\[.*\]', text)
         for p in proxys:

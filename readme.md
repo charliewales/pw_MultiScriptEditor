@@ -6,7 +6,7 @@
 
 ## [Tutorials](https://vimeo.com/channels/multiscripteditor)
 
-This is a cross application, cross platform and open source Python editor, which can be run as a standalone application 
+This is a cross application, cross platform and open source Python editor, which can be run as a standalone application
 or embedded in another application. The main purpose for integration - the ability to script in Python.
 
 ### Key features
@@ -22,20 +22,18 @@ or embedded in another application. The main purpose for integration - the abili
   - Houdini 19-22
   - Nuke 15-17
   - Maya 2024-2027
-    
-RV Integration in [nebukadhezer branch](https://github.com/nebukadhezer/multi_script_editor)
 
 If necessary, you can extend this to make your own integration module.
 The main pre condition - Should be used Python 3+.
- 
+
 
 ### Houdini features
   - Code completion for all modules and return types (remastered hou library)
   - Context completion for functions CreateNode, CreateInputNode and CreateOutputNode with existing houdini node types
   - Context completion string for absolute houdini internal path and node parameters. To use this complete start string with "/ or '/
   - Drag&Drop Houdini nodes and parameters fills in their path. Use Alt modifier to wrap node or parameter as code like in Houdini Python Shell.
-  - Reading and writing to PythonSOP code and asset sections 
- 
+  - Reading and writing to PythonSOP code and asset sections
+
 ### Nuke features
   - Code completion for all modules and return types (remastered nuke library)
   - Context completion for createNode with existing Nuke node types
@@ -43,7 +41,7 @@ The main pre condition - Should be used Python 3+.
   - Converting selected nodes to code with function nuke.toNode
   - Searching and converting nodes to code from clipboard
   - Reading and writing from PythonKnobs code
-   
+
 ### Maya features
   - Save code to shelf and accept dropped shelf button code, like default Maya script editor
   - Drag&Drop Maya nodes fills in their names. Use Alt modifier to wrap node as code. Import PyMEL before doing this!
@@ -84,5 +82,3 @@ Do this for each app.
 # License
 
 This project is licensed under the MIT License
-
-

@@ -1,20 +1,79 @@
+from core.outline_parser import OutlineParser
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtGui import QFontMetrics
-from widgets.outline_utils import create_symbol_item, HtmlDelegate
+from widgets.outline_utils import (
+    HtmlDelegate,
+    create_symbol_item,
+    symbol_sort_key,
+)
 from widgets.searchPopupWidget import SearchPopupWidget
+
+
+def _flatten_symbols_alphabetically(symbols):
+    flat = []
+    for symbol in sorted(symbols, key=symbol_sort_key):
+        symbol_copy = dict(symbol)
+        children = symbol_copy.pop('children', [])
+        flat.append(symbol_copy)
+        if children:
+            flat.extend(_flatten_symbols_alphabetically(children))
+    return flat
+
 
 class SymbolWidget(SearchPopupWidget):
     symbolSelected = Signal(object)  # emits the line number or any other data
     symbolDeleted = Signal(object)
 
-    def __init__(self, symbols, parent=None, center_widget=None, qss=None, font=None, colors=None, ext='.py', placeholder_text="Search symbol...", auto_accept_on_ctrl_release=False, allow_delete=False):
+    def __init__(
+        self,
+        symbols,
+        parent=None,
+        center_widget=None,
+        qss=None,
+        font=None,
+        colors=None,
+        ext='.py',
+        placeholder_text="Search symbol...",
+        auto_accept_on_ctrl_release=False,
+        allow_delete=False,
+        sort_alphabetical=None,
+    ):
         super(SymbolWidget, self).__init__(parent, center_widget, qss, font, colors, placeholder_text=placeholder_text)
 
-        self.symbols = symbols
+        if sort_alphabetical is None:
+            outline_widget = getattr(
+                parent,
+                'outline_widget',
+                None,
+            )
+            sort_alphabetical = bool(
+                ext != '.generic'
+                and getattr(
+                    outline_widget,
+                    '_sort_alphabetical',
+                    False,
+                )
+            )
+
+        if any('children' in s for s in symbols):
+            if sort_alphabetical:
+                self.symbols = _flatten_symbols_alphabetically(
+                    symbols
+                )
+            else:
+                self.symbols = OutlineParser.flatten_symbols(symbols)
+        else:
+            self.symbols = (
+                sorted(symbols, key=symbol_sort_key)
+                if sort_alphabetical
+                else symbols
+            )
         self.ext = ext
         self.auto_accept_on_ctrl_release = auto_accept_on_ctrl_release
         self.allow_delete = allow_delete
-        
+        self._items_by_symbol_id = {}
+
+        self.list_widget.setUniformItemSizes(True)
         self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
 
         # Calculate dynamic size
@@ -36,13 +95,24 @@ class SymbolWidget(SearchPopupWidget):
         self.populate_list("")
 
     def populate_list(self, filter_text):
-        self.list_widget.clear()
+        while self.list_widget.count():
+            self.list_widget.takeItem(0)
+
         filter_text = filter_text.lower()
 
         for sym in self.symbols:
             name = sym.get('name', '')
             if filter_text in name.lower():
-                item = create_symbol_item(sym, self.colors, self._font, ext=self.ext)
+                symbol_id = id(sym)
+                item = self._items_by_symbol_id.get(symbol_id)
+                if item is None:
+                    item = create_symbol_item(
+                        sym,
+                        self.colors,
+                        self._font,
+                        ext=self.ext,
+                    )
+                    self._items_by_symbol_id[symbol_id] = item
                 self.list_widget.addItem(item)
 
         if self.list_widget.count() > 0:
@@ -77,5 +147,6 @@ class SymbolWidget(SearchPopupWidget):
                 break
         for i, sym in enumerate(self.symbols):
             if sym.get('line') == data_val:
+                self._items_by_symbol_id.pop(id(sym), None)
                 self.symbols.pop(i)
                 break

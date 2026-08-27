@@ -1,20 +1,30 @@
+import os
+import re
+
+import maya.OpenMayaUI as omui
+
+from maya import cmds, mel
+from vendor.Qt.QtCompat import wrapInstance
 from vendor.Qt.QtCore import QSize, Qt
 from vendor.Qt.QtGui import QIcon
-from vendor.Qt.QtWidgets import QAbstractItemView, QAction, QDialog, QGridLayout, QLabel, QLineEdit, QListView, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout, QWidget
-from vendor.Qt.QtCompat import wrapInstance
-import maya.OpenMayaUI as omui
-from maya import cmds, mel
-import os, sys, re
-from managers.completeWidget import contextCompleterClass
+from vendor.Qt.QtWidgets import (
+    QAbstractItemView,
+    QAction,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QListView,
+    QListWidget,
+    QListWidgetItem,
+    QMenu,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
+
 main = __import__('__main__')
 ns = main.__dict__
-
-# jedi completion path
-current_path = os.path.dirname(__file__)
-compPath = os.path.join(current_path,'maya_completion').replace('\\','/')
-if compPath in sys.path:
-    sys.path.remove(compPath)
-sys.path.insert(0, compPath)
 
 def getMayaWindow():
     return wrapInstance(int(omui.MQtUtil.mainWindow()), QWidget)
@@ -75,20 +85,20 @@ def completer(line, ns):
         name = m.group(1)
         if name:
             auto = [x for x in nodes if x.lower().startswith(name.lower())]
-            l = len(name)
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            prefix_len = len(name)
+            return [(x, x[prefix_len:], True) for x in auto], None
     # exists nodes
     p = r"PyNode\(['\"](\w*)$"
     m = re.search(p, line)
     if m:
         name = m.group(1)
         existsNodes = sorted(cmds.ls())
-        l = len(name)
+        prefix_len = len(name)
         if name:
             auto = [x for x in existsNodes if x.lower().startswith(name.lower())]
-            return [contextCompleterClass(x, x[l:], True) for x in auto], None
+            return [(x, x[prefix_len:], True) for x in auto], None
         else:
-            return [contextCompleterClass(x, x, True) for x in existsNodes], None
+            return [(x, x, True) for x in existsNodes], None
     return None, None
 
 # drop event
@@ -138,7 +148,7 @@ def wrapDroppedText(namespace, text, event):
                     else:
                         syntax.append(node)
                 return '\n'.join(syntax)
-            except:
+            except Exception:
                 pass
     return text
 

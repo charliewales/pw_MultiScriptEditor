@@ -1,8 +1,39 @@
 import os
-import webbrowser
-from vendor.Qt.QtGui import QFont, QTextOption, QFontDatabase, QIcon
-from vendor.Qt.QtWidgets import QTextEdit, QPlainTextEdit, QAction
+from functools import lru_cache
+
 from icons import icons
+from vendor.Qt.QtGui import QFont, QFontDatabase, QFontMetrics, QIcon, QTextOption
+from vendor.Qt.QtWidgets import QAction, QPlainTextEdit, QTextEdit
+
+
+@lru_cache(maxsize=1)
+def get_font_families():
+    try:
+        families = QFontDatabase.families()
+    except TypeError:
+        families = QFontDatabase().families()
+    return frozenset(families)
+
+
+def resolve_font_family(family):
+    families = get_font_families()
+    if family in families:
+        return family
+
+    variations = (
+        family.replace(" NFM", " Nerd Font Mono"),
+        family.replace(" Nerd Font Mono", " NFM"),
+        family.replace(" NFP", " Nerd Font Propo"),
+        family.replace(" Nerd Font Propo", " NFP"),
+        family.replace(" NF", " Nerd Font"),
+        family.replace(" Nerd Font", " NF"),
+        family.replace(" Nerd Font Mono", " Nerd Font"),
+        family.replace(" Nerd Font Propo", " Nerd Font"),
+        family.replace(" Nerd Font", " Nerd Font Mono"),
+        family.replace(" Nerd Font", " Nerd Font Propo"),
+    )
+    return next((name for name in variations if name in families), family)
+
 
 class BaseTextWidgetMixin:
     """
@@ -71,30 +102,7 @@ class BaseTextWidgetMixin:
         italic = font_d.get('italic', False)
         weight = font_d.get('weight', 1)
 
-        # Cross-compatibility patch for PySide2 (NF) vs PySide6 (Nerd Font)
-        try:
-            families = QFontDatabase.families()
-        except TypeError:
-            db = QFontDatabase()
-            families = db.families()
-
-        if family not in families:
-            variations = [
-                family.replace(" NFM", " Nerd Font Mono"),
-                family.replace(" Nerd Font Mono", " NFM"),
-                family.replace(" NFP", " Nerd Font Propo"),
-                family.replace(" Nerd Font Propo", " NFP"),
-                family.replace(" NF", " Nerd Font"),
-                family.replace(" Nerd Font", " NF"),
-                family.replace(" Nerd Font Mono", " Nerd Font"),
-                family.replace(" Nerd Font Propo", " Nerd Font"),
-                family.replace(" Nerd Font", " Nerd Font Mono"),
-                family.replace(" Nerd Font", " Nerd Font Propo")
-            ]
-            for alt in variations:
-                if alt in families:
-                    family = alt
-                    break
+        family = resolve_font_family(family)
 
         editor_font = QFont(family, pointSize, weight, italic)
         editor_font.setStyleHint(QFont.Monospace)
@@ -114,28 +122,7 @@ class BaseTextWidgetMixin:
             menu.setFont(main_win.menubar.font())
             menu.setStyleSheet(main_win.menubar.styleSheet())
 
-        # Selection to tab action
-        cursor = self.textCursor()
-        if cursor.hasSelection():
-            selected_text = cursor.selectedText().replace('\u2029', '\n')
-            sel_to_tab_action = QAction('Selection to tab', self)
-            
-            def create_selection_tab():
-                import datetime
-                time_str = datetime.datetime.now().strftime("%H:%M:%S")
-                tab_name = f"selection {time_str}"
-                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
-                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
-            
-            sel_to_tab_action.triggered.connect(create_selection_tab)
-            if menu.actions():
-                first_action = menu.actions()[0]
-                menu.insertAction(first_action, sel_to_tab_action)
-                menu.insertSeparator(first_action)
-            else:
-                menu.addAction(sel_to_tab_action)
-
-        # Check if we are editing an HTML file to add "Open in browser"
+        # Resolve file path for Git / File specific actions
         file_path = None
         curr = self
         while curr:
@@ -149,12 +136,39 @@ class BaseTextWidgetMixin:
             else:
                 break
 
-        if file_path and os.path.exists(file_path):
+        # Selection to tab action
+        cursor = self.textCursor()
+        if cursor.hasSelection():
+            selected_text = cursor.selectedText().replace('\u2029', '\n')
+            sel_to_tab_action = QAction('Selection to tab', self)
+
+            def create_selection_tab():
+                import datetime
+                time_str = datetime.datetime.now().strftime("%H:%M:%S")
+                tab_name = f"selection {time_str}"
+                if hasattr(main_win, 'tab') and hasattr(main_win.tab, 'addNewTab'):
+                    main_win.tab.addNewTab(name=tab_name, text=selected_text)
+
+            sel_to_tab_action.triggered.connect(create_selection_tab)
+            if menu.actions():
+                first_action = menu.actions()[0]
+                menu.insertAction(first_action, sel_to_tab_action)
+                menu.insertSeparator(first_action)
+            else:
+                menu.addAction(sel_to_tab_action)
+
+        # File type specific actions (Markdown Preview / Open in browser) - Available regardless of text selection
+        browser_preview_action = getattr(
+            self,
+            'open_browser_preview_action',
+            None,
+        )
+        if file_path and browser_preview_action is not None:
             _, ext = os.path.splitext(file_path)
             if ext.lower() in ['.html', '.htm']:
-                open_action = QAction('Open in browser    \tCtrl+Alt+B', self)
+                open_action = browser_preview_action
+                open_action.setText('Open in browser')
                 open_action.setIcon(QIcon(icons['open_in_browser']))
-                open_action.triggered.connect(lambda checked=False, path=file_path: webbrowser.open(path))
                 if menu.actions():
                     first_action = menu.actions()[0]
                     menu.insertAction(first_action, open_action)
@@ -162,19 +176,49 @@ class BaseTextWidgetMixin:
                 else:
                     menu.addAction(open_action)
             elif ext.lower() == '.md':
-                preview_action = QAction('Markdown Preview    \tCtrl+Alt+B', self)
+                preview_action = browser_preview_action
+                preview_action.setText("Markdown Preview")
                 if 'docs' in icons:
                     preview_action.setIcon(QIcon(icons['docs']))
-                preview_action.triggered.connect(lambda checked=False: self.show_markdown_preview())
                 if menu.actions():
                     first_action = menu.actions()[0]
                     menu.insertAction(first_action, preview_action)
                     menu.insertSeparator(first_action)
                 else:
                     menu.addAction(preview_action)
+
+        # Place Git menu at the very top if file is inside a Git repository and version control is enabled
+        if file_path and os.path.exists(file_path) and getattr(main_win, '_version_control_enabled', False):
+            from core.git_manager import GitManager
+            if GitManager.is_in_repo(file_path):
+                from vendor.Qt.QtWidgets import QMenu
+                git_menu = QMenu('Git', self)
+                if hasattr(main_win, 'menubar') and main_win.menubar:
+                    git_menu.setFont(main_win.menubar.font())
+                    git_menu.setStyleSheet(main_win.menubar.styleSheet())
+                elif menu.font():
+                    git_menu.setFont(menu.font())
+                    git_menu.setStyleSheet(menu.styleSheet())
+                if 'git' in icons:
+                    git_menu.setIcon(QIcon(icons['git']))
+                tab_widget = getattr(main_win, 'tab', None)
+                if tab_widget and hasattr(tab_widget, 'build_git_menu'):
+                    tab_idx = tab_widget.indexOf(curr) if hasattr(tab_widget, 'indexOf') else -1
+                    if tab_idx < 0:
+                        tab_idx = tab_widget.currentIndex()
+                    if tab_idx >= 0:
+                        tab_widget.build_git_menu(git_menu, tab_idx)
+
+                actions = menu.actions()
+                if actions:
+                    first_act = actions[0]
+                    menu.insertMenu(first_act, git_menu)
+                    menu.insertSeparator(first_act)
+                else:
+                    menu.addMenu(git_menu)
         if hasattr(main_win, 'menubar') and not main_win.menubar.isVisible():
             menu.addSeparator()
-            show_menus_action = QAction('Show menus\tCtrl+M', self)
+            show_menus_action = QAction("Show menus\tCtrl+Alt+M", self)
             if 'menu' in icons:
                 show_menus_action.setIcon(QIcon(icons['menu']))
             if hasattr(main_win, 'toggleMenus_act'):
@@ -183,3 +227,15 @@ class BaseTextWidgetMixin:
 
         menu.exec_(event.globalPos())
         del menu
+
+
+def configure_tab_stops(editor, spaces=4):
+    metrics = QFontMetrics(editor.document().defaultFont())
+    if hasattr(metrics, 'horizontalAdvance'):
+        width = metrics.horizontalAdvance(' ')
+    else:
+        width = metrics.width(' ')
+    if hasattr(editor, 'setTabStopDistance'):
+        editor.setTabStopDistance(spaces * width)
+    else:
+        editor.setTabStopWidth(spaces * width)

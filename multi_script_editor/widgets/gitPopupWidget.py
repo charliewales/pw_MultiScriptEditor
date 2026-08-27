@@ -1,0 +1,201 @@
+import os
+from vendor.Qt.QtCore import Qt
+from vendor.Qt.QtGui import QIcon
+from vendor.Qt.QtWidgets import QApplication, QListWidgetItem
+from icons import icons
+from widgets.outline_utils import HtmlDelegate, color_to_str
+from widgets.searchPopupWidget import (
+    SearchPopupWidget,
+    resize_popup_for_text,
+)
+from core.git_manager import GitManager
+
+
+def build_git_actions(file_path, tab_widget=None, tab_index=-1):
+    status_info = GitManager.get_file_status(file_path)
+    if not status_info.get("in_repo"):
+        return []
+
+    branch = status_info.get("branch", "HEAD")
+    status_text = status_info.get("status_text", "Clean")
+    actions = [
+        {
+            "title": f"Branch: {branch} ({status_text})",
+            "icon": icons.get("git_branch"),
+            "is_header": True,
+        },
+        {
+            "title": "Commit File...",
+            "icon": icons.get("git_commit"),
+            "callback": lambda: tab_widget.git_commit_dialog(file_path)
+            if tab_widget
+            else None,
+        },
+    ]
+
+    rel_path = status_info.get("relative_path", "")
+    if rel_path:
+        actions.append(
+            {
+                "title": "Copy Path Relative to Repo",
+                "icon": icons.get("copy"),
+                "callback": lambda rp=rel_path: QApplication.clipboard().setText(rp),
+            }
+        )
+
+    if status_info.get("is_modified"):
+        actions.append(
+            {
+                "title": "Discard Changes...",
+                "icon": icons.get("git_discard"),
+                "callback": lambda: tab_widget.git_discard_changes(
+                    tab_index,
+                    file_path,
+                )
+                if tab_widget
+                else None,
+            }
+        )
+
+    actions.extend(
+        [
+            {
+                "title": "File History / Log...",
+                "icon": icons.get("git_history"),
+                "callback": lambda: tab_widget.git_history_dialog(file_path)
+                if tab_widget
+                else None,
+            },
+            {
+                "title": "Git Diff (vs HEAD)",
+                "icon": icons.get("git_diff"),
+                "callback": lambda: tab_widget.run_git_diff(file_path)
+                if tab_widget
+                else None,
+            },
+        ]
+    )
+
+    if status_info.get("is_staged"):
+        actions.append(
+            {
+                "title": "Unstage File",
+                "icon": icons.get("git_unstage"),
+                "callback": lambda: tab_widget.git_unstage(file_path)
+                if tab_widget
+                else None,
+            }
+        )
+    else:
+        actions.append(
+            {
+                "title": "Stage File",
+                "icon": icons.get("git_stage"),
+                "callback": lambda: tab_widget.git_stage(file_path)
+                if tab_widget
+                else None,
+            }
+        )
+
+    return actions
+
+
+class GitPopupWidget(SearchPopupWidget):
+    """
+    Floating search popup widget displaying Git actions for the active file tab (Ctrl+Shift+G).
+    Subclasses SearchPopupWidget.
+    """
+
+    def __init__(
+        self,
+        parent=None,
+        center_widget=None,
+        qss=None,
+        font=None,
+        colors=None,
+        file_path="",
+        tab_widget=None,
+        tab_index=-1,
+    ):
+        super(GitPopupWidget, self).__init__(
+            parent,
+            center_widget,
+            qss,
+            font,
+            colors,
+            placeholder_text="Search Git action...",
+        )
+        self.file_path = file_path
+        self.tab_widget = tab_widget
+        self.tab_index = tab_index
+
+        self.list_widget.setItemDelegate(HtmlDelegate(self.list_widget))
+        self.actions_data = []
+
+        if file_path and os.path.exists(file_path) and GitManager.is_in_repo(file_path):
+            self.load_git_actions()
+
+        resize_popup_for_text(
+            self,
+            font,
+            (act.get("title", "") for act in self.actions_data),
+            padding=40,
+        )
+        self.populate_list("")
+
+    def load_git_actions(self):
+        self.actions_data.extend(
+            build_git_actions(
+                self.file_path,
+                self.tab_widget,
+                self.tab_index,
+            )
+        )
+
+    def populate_list(self, filter_text):
+        self.list_widget.clear()
+        filter_text = filter_text.lower()
+
+        c = self.colors or {}
+        text_color = color_to_str(c.get("tab_selected_text", c.get("text")), "#d4d4d4")
+        sub_color = color_to_str(c.get("comment"), "#808080")
+
+        first_selectable_row = -1
+
+        for act in self.actions_data:
+            title = act.get("title", "")
+            is_header = act.get("is_header", False)
+
+            if is_header or filter_text in title.lower():
+                item = QListWidgetItem()
+                if self._font:
+                    item.setFont(self._font)
+                item.setFlags(Qt.NoItemFlags if is_header else (Qt.ItemIsEnabled | Qt.ItemIsSelectable))
+
+                if is_header:
+                    html = f'<div style="color: {sub_color}; font-style: italic;">{title}</div>'
+                else:
+                    html = f'<div style="color: {text_color};">{title}</div>'
+
+                item.setText(html)
+                if act.get("icon"):
+                    item.setIcon(QIcon(act["icon"]))
+
+                item.setData(Qt.UserRole, act)
+                self.list_widget.addItem(item)
+
+                if not is_header and first_selectable_row == -1:
+                    first_selectable_row = self.list_widget.count() - 1
+
+        if first_selectable_row != -1:
+            self.list_widget.setCurrentRow(first_selectable_row)
+
+    def on_item_clicked(self, item):
+        act_data = item.data(Qt.UserRole)
+        if not act_data or act_data.get("is_header"):
+            return
+
+        callback = act_data.get("callback")
+        self.accept()
+        if callback:
+            callback()

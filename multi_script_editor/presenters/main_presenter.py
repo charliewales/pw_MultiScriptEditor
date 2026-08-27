@@ -3,7 +3,10 @@ import os
 from core.outline_parser import OutlineParser
 from core.settings_model import SettingsModel
 from core.session_model import SessionModel
-from core.autocomplete_provider import AutocompleteProvider
+from core.autocomplete_provider import (
+    AutocompleteProvider,
+    PYTHON_COMPLETION_EXTENSIONS,
+)
 from core.linter_provider import LinterProvider
 
 class MainPresenter:
@@ -68,7 +71,12 @@ class MainPresenter:
         """
         Parses the code for the outline view and updates the UI.
         """
-        symbols = OutlineParser.parse(code, ext)
+        tree = (
+            self.linter_provider.syntax_tree_for(code)
+            if ext == '.py'
+            else None
+        )
+        symbols = OutlineParser.parse(code, ext, tree=tree)
         self.view.set_outline_symbols(symbols, ext)
 
     def handle_execute_command(self, command, echo_command=False, clear_history=False):
@@ -100,7 +108,7 @@ class MainPresenter:
         if edit and hasattr(edit, 'file_path') and edit.file_path:
              ext = os.path.splitext(edit.file_path)[1].lower()
              
-        if ext != '.py':
+        if ext not in PYTHON_COMPLETION_EXTENSIONS:
             return []
             
         # Check if the user prefers single quotes

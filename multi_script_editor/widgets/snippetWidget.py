@@ -1,7 +1,10 @@
 from vendor.Qt.QtCore import Qt, Signal
 from vendor.Qt.QtWidgets import QListWidgetItem, QMessageBox
-from vendor.Qt.QtGui import QFontMetrics
-from widgets.searchPopupWidget import SearchPopupWidget
+from widgets.searchPopupWidget import (
+    SearchPopupWidget,
+    resize_popup_for_text,
+)
+
 
 class SnippetWidget(SearchPopupWidget):
     snippetSelected = Signal(str)  # emits the snippet content
@@ -16,15 +19,7 @@ class SnippetWidget(SearchPopupWidget):
         self.snippets = snippets  # Dict of {name: content}
         self.mode = mode
 
-        # Calculate dynamic size
-        fm = QFontMetrics(font) if font else QFontMetrics(self.font())
-        max_text_width = 0
-        for name in self.snippets.keys():
-            w = fm.horizontalAdvance(name) if hasattr(fm, 'horizontalAdvance') else fm.width(name)
-            if w > max_text_width:
-                max_text_width = w
-                
-        self.resize_and_move(max_text_width)
+        resize_popup_for_text(self, font, self.snippets.keys())
         self.populate_list("")
 
     def populate_list(self, filter_text):
@@ -41,6 +36,18 @@ class SnippetWidget(SearchPopupWidget):
 
         if self.list_widget.count() > 0:
             self.list_widget.setCurrentRow(0)
+
+    def _apply_dialog_font(self, dialog):
+        parent = self.parent()
+        font = getattr(parent, 'theme_font', None) if parent else None
+        if not font:
+            font = self._font
+        if not font:
+            return
+        dialog.setFont(font)
+        dialog.setStyleSheet(f"* {{ font-family: '{font.family()}'; }}")
+        for btn in dialog.buttons():
+            btn.setFont(font)
 
     def on_item_clicked(self, item):
         if self.mode == "save":
@@ -61,16 +68,8 @@ class SnippetWidget(SearchPopupWidget):
                     msg_box.setIcon(QMessageBox.Question)
                     msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
                     msg_box.setDefaultButton(QMessageBox.No)
-                    if hasattr(self.parent(), 'theme_font'):
-                        msg_box.setFont(self.parent().theme_font)
-                        msg_box.setStyleSheet(f"* {{ font-family: '{self.parent().theme_font.family()}'; }}")
-                        for btn in msg_box.buttons():
-                            btn.setFont(self.parent().theme_font)
-                    elif self._font:
-                        msg_box.setFont(self._font)
-                        msg_box.setStyleSheet(f"* {{ font-family: '{self._font.family()}'; }}")
-                        for btn in msg_box.buttons():
-                            btn.setFont(self._font)
+                    msg_box.button(QMessageBox.No).setFocus()
+                    self._apply_dialog_font(msg_box)
                     reply = msg_box.exec_()
                     if reply == QMessageBox.No:
                         return

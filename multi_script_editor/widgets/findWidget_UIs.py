@@ -7,7 +7,13 @@
 # WARNING! All changes made in this file will be lost!
 
 from vendor.Qt.QtCore import QMetaObject
-from vendor.Qt.QtWidgets import QApplication, QGridLayout, QLineEdit, QPushButton, QVBoxLayout
+from vendor.Qt.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+)
 
 
 class Ui_findReplace(object):

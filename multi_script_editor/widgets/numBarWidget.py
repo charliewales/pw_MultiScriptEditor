@@ -1,6 +1,16 @@
-from vendor.Qt.QtCore import QRect, Qt, QPoint
-from vendor.Qt.QtGui import QBrush, QColor, QPainter, QPalette, QPen, QGuiApplication, QFontMetrics, QPolygon
+from vendor.Qt.QtCore import QPoint, QRect, Qt
+from vendor.Qt.QtGui import (
+    QBrush,
+    QColor,
+    QFontMetrics,
+    QGuiApplication,
+    QPainter,
+    QPalette,
+    QPen,
+    QPolygon,
+)
 from vendor.Qt.QtWidgets import QApplication, QWidget
+
 
 class lineNumberBarClass(QWidget):
     def __init__(self, edit, parent=None):
@@ -11,7 +21,7 @@ class lineNumberBarClass(QWidget):
             screen_resolution = desktop.screenGeometry()
         else:
             screen_resolution = QGuiApplication.primaryScreen().geometry()
-        width, height = screen_resolution.width(), screen_resolution.height()
+        width = screen_resolution.width()
 
         self.font_size_mult = 1.0
         if width > 2560:
@@ -24,12 +34,74 @@ class lineNumberBarClass(QWidget):
         self.setMouseTracking(True)
 
     def enterEvent(self, event):
-        self.update()
+        self.request_repaint()
         QWidget.enterEvent(self, event)
 
-    def leaveEvent(self, event):
-        self.update()
-        QWidget.leaveEvent(self, event)
+    def request_repaint(self, *args):
+        QWidget.update(self)
+
+    def update_from_editor(self, rect, dy):
+        if dy:
+            self.scroll(0, dy)
+            return
+
+        offset = self._viewport_offset()
+        self._update_region(rect.y() + offset, rect.height())
+
+    def _update_region(self, y, height):
+        QWidget.update(self, 0, y, self.width(), height)
+
+    def _viewport_offset(self):
+        if self.edit and self.edit.viewport():
+            return self.edit.y() + self.edit.viewport().y() - self.y()
+        return 0
+
+    def _block_at_y(self, y):
+        viewport_offset = self._viewport_offset()
+        viewport_y = y - viewport_offset
+        viewport = self.edit.viewport()
+        if viewport_y < 0 or viewport_y >= viewport.height():
+            return None
+
+        block = self.edit.cursorForPosition(QPoint(0, viewport_y)).block()
+        if not block.isValid() or not block.isVisible():
+            return None
+
+        _, pos_y, block_height = self._block_geometry(
+            block,
+            self.edit.verticalScrollBar().value(),
+            viewport_offset,
+        )
+        if pos_y <= y <= pos_y + block_height:
+            return block
+        return None
+
+    def _block_geometry(
+        self,
+        block,
+        contents_y=0,
+        viewport_offset=None,
+    ):
+        if viewport_offset is None:
+            viewport_offset = self._viewport_offset()
+
+        if hasattr(self.edit, 'blockBoundingGeometry'):
+            block_rect = self.edit.blockBoundingGeometry(block).translated(
+                self.edit.contentOffset()
+            )
+            pos_y = block_rect.top() + viewport_offset
+            layout = block.layout()
+            layout_height = layout.boundingRect().height() if layout else 0
+            block_height = (
+                layout_height if layout_height > 0 else block_rect.height()
+            )
+            return block_rect, pos_y, block_height
+
+        block_rect = self.edit.document().documentLayout().blockBoundingRect(
+            block
+        )
+        pos_y = block_rect.top() - contents_y + viewport_offset
+        return block_rect, pos_y, block_rect.height()
 
     def update(self, *args):
         '''
@@ -104,9 +176,6 @@ class lineNumberBarClass(QWidget):
                     font.setPixelSize(max(1, int(px_size * 0.8)))
         
         # update fm for paint
-        font_metrics = QFontMetrics(font)
-        
-        offset = font_metrics.ascent() + font_metrics.descent() * 0.7
         color = painter.pen().color()
         if hasattr(self.edit, '_line_num_text_cache') and self.edit._line_num_text_cache:
             color = QColor.fromRgb(*self.edit._line_num_text_cache)
@@ -115,11 +184,7 @@ class lineNumberBarClass(QWidget):
         align = Qt.AlignRight | Qt.AlignVCenter
         is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
         
-        is_hovered = self.underMouse()
-        
-        vp_offset = 0
-        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
+        vp_offset = self._viewport_offset()
 
         while block.isValid():
             if not block.isVisible():
@@ -128,22 +193,19 @@ class lineNumberBarClass(QWidget):
                 
             actual_line_number = block.blockNumber() + 1
             
+            block_rect, pos_y, block_height = self._block_geometry(
+                block,
+                contents_y,
+                vp_offset,
+            )
+
             if is_plaintextedit:
-                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top() + vp_offset
-                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                block_height = layout_h if layout_h > 0 else block_rect.height()
                 if pos_y > self.edit.viewport().height() + vp_offset:
                     break
                 if pos_y + block_height < vp_offset:
                     block = block.next()
                     continue
             else:
-                # The top left position of the block in the document
-                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y + vp_offset
-                block_height = block_rect.height()
-                
                 # Check if the position of the block is outside of the visible area.
                 if block_rect.top() > page_bottom:
                     break
@@ -254,37 +316,8 @@ class lineNumberBarClass(QWidget):
 
     def mouseMoveEvent(self, event):
         click_y = event.y()
-        contents_y = self.edit.verticalScrollBar().value()
-        cursor = self.edit.cursorForPosition(QPoint(0, 0))
-        block = cursor.block()
-        if block.previous().isValid():
-            block = block.previous()
-            
-        vp_offset = 0
-        if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-            vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
-
-        hover_block = -1
-        is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
-        while block.isValid():
-            if not block.isVisible():
-                block = block.next()
-                continue
-                
-            if is_plaintextedit:
-                block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                pos_y = block_rect.top() + vp_offset
-                layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                block_height = layout_h if layout_h > 0 else block_rect.height()
-            else:
-                block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                pos_y = block_rect.top() - contents_y + vp_offset
-                block_height = block_rect.height()
-                
-            if pos_y <= click_y <= pos_y + block_height:
-                hover_block = block.blockNumber()
-                break
-            block = block.next()
+        block = self._block_at_y(click_y)
+        hover_block = block.blockNumber() if block is not None else -1
 
         hover_in_bookmark_area = (event.x() < 20)
         hover_in_folding_area = (event.x() > self.width() - 20)
@@ -301,69 +334,42 @@ class lineNumberBarClass(QWidget):
             changed = True
 
         if changed:
-            self.update()
+            self.request_repaint()
         QWidget.mouseMoveEvent(self, event)
 
     def leaveEvent(self, event):
         self.hover_block_number = -1
         self.hover_in_bookmark_area = False
         self.hover_in_folding_area = False
-        self.update()
+        self.request_repaint()
         QWidget.leaveEvent(self, event)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            click_y = event.y()
-            contents_y = self.edit.verticalScrollBar().value()
-            cursor = self.edit.cursorForPosition(QPoint(0, 0))
-            block = cursor.block()
-            if block.previous().isValid():
-                block = block.previous()
-                
-            vp_offset = 0
-            if self.edit and hasattr(self.edit, 'viewport') and self.edit.viewport():
-                vp_offset = self.edit.y() + self.edit.viewport().y() - self.y()
-
-            is_plaintextedit = hasattr(self.edit, 'blockBoundingGeometry')
-            while block.isValid():
-                if not block.isVisible():
-                    block = block.next()
-                    continue
-                    
-                if is_plaintextedit:
-                    block_rect = self.edit.blockBoundingGeometry(block).translated(self.edit.contentOffset())
-                    pos_y = block_rect.top() + vp_offset
-                    layout_h = block.layout().boundingRect().height() if block.layout() and block.layout().boundingRect().height() > 0 else 0
-                    block_height = layout_h if layout_h > 0 else block_rect.height()
-                else:
-                    block_rect = self.edit.document().documentLayout().blockBoundingRect(block)
-                    pos_y = block_rect.top() - contents_y + vp_offset
-                    block_height = block_rect.height()
-                    
-                if pos_y <= click_y <= pos_y + block_height:
-                    # Check if click is on the right side (chevron / folding region)
-                    if event.x() > self.width() - 20:
-                        block_num = block.blockNumber()
-                        if hasattr(self.edit, 'folding_regions') and block_num in self.edit.folding_regions:
-                            recursive = bool(event.modifiers() & Qt.ShiftModifier)
-                            self.edit.toggle_fold(block_num, recursive=recursive)
-                            self.update()
-                            return
-                    elif event.x() < 20:
-                        # Toggle bookmark on left margin click
-                        block_num = block.blockNumber()
-                        if hasattr(self.edit, 'toggle_bookmark'):
-                            self.edit.toggle_bookmark(block_num)
-                            self.update()
-                            return
-                    break
-                block = block.next()
+            block = self._block_at_y(event.y())
+            if block is not None:
+                # Check if click is on the right side (chevron / folding region)
+                if event.x() > self.width() - 20:
+                    block_num = block.blockNumber()
+                    if (
+                        hasattr(self.edit, 'folding_regions')
+                        and block_num in self.edit.folding_regions
+                    ):
+                        recursive = bool(
+                            event.modifiers() & Qt.ShiftModifier
+                        )
+                        self.edit.toggle_fold(
+                            block_num,
+                            recursive=recursive,
+                        )
+                        self.request_repaint()
+                        return
+                elif event.x() < 20:
+                    # Toggle bookmark on left margin click
+                    block_num = block.blockNumber()
+                    if hasattr(self.edit, 'toggle_bookmark'):
+                        self.edit.toggle_bookmark(block_num)
+                        self.request_repaint()
+                        return
         QWidget.mousePressEvent(self, event)
 
-    def eventFilter(self, object, event):
-        # Update the line numbers for all events on the text edit and the viewport.
-        # This is easier than connecting all necessary signals.
-        if object in (self.edit, self.edit.viewport()):
-            self.update()
-            return False
-        return QWidget.eventFilter(object, event)

@@ -1,5 +1,6 @@
+import os
 import platform
-import sys, os
+import sys
 
 main = __import__('__main__')
 
@@ -7,36 +8,36 @@ main = __import__('__main__')
 
 # NUKE
 def nukeCompleter(*args):
-    from managers import _nuke
+    from . import _nuke
     return _nuke.completer(*args)
 
 def getNukeContextMenu(*args):
-    from managers import _nuke
+    from . import _nuke
     return _nuke.contextMenu(*args)
 ###################################################################
 
 # HOUDINI
 def houdiniCompleter(*args):
-    from managers import _houdini
+    from . import _houdini
     return _houdini.completer(*args)
 def getHoudiniContextMenu(*args):
-    from managers import _houdini
+    from . import _houdini
     return _houdini.contextMenu(*args)
 def houdiniDropEvent(*args):
-    from managers import _houdini
+    from . import _houdini
     return _houdini.wrapDroppedText(*args)
 ###################################################################
 
 # MAYA
 def mayaCompleter(*args):
-    from managers import _maya
+    from . import _maya
     return _maya.completer(*args)
 
 def mayaDropEvent(*args):
-    from managers import _maya
+    from . import _maya
     return _maya.wrapDroppedText(*args)
 def getMayaContextMenu(*args):
-    from managers import _maya
+    from . import _maya
     return _maya.contextMenu(*args)
 ###################################################################
 
@@ -60,10 +61,9 @@ dropEvents = dict(
 
 autoImport = dict(
     hou='import hou\n',
-    nuke='import nuke\n'
+    nuke='import nuke\n',
+    blender='import bpy\n'
 )
-mayaDragTempData = 'maya_temp_drag_empty_Data'
-
 context = None
 
 
@@ -71,20 +71,21 @@ exec_name = os.path.basename(sys.executable).lower()
 
 if 'hou' in main.__dict__ or 'houdini' in exec_name or 'hindie' in exec_name or 'hython' in exec_name:
     context = 'hou'
-    from managers import _houdini
+    from . import _houdini
 elif 'cmds' in main.__dict__ or 'maya' in exec_name:
     context = 'maya'
-    from managers import _maya
+    from . import _maya
 elif 'nuke' in main.__dict__ or 'nuke' in exec_name:
     context = 'nuke'
-    from managers import _nuke
+    from . import _nuke
+elif 'bpy' in sys.modules or 'blender' in exec_name:
+    context = 'blender'
+    from . import _blender as _blender
 
 
 
 
-if platform.system().lower() == 'windows':
-    _s = 'w'
-elif platform.system().lower() == 'darwin':
-    _s = 'x'
-else:
-    _s = 'l'
+_s = {
+    'windows': 'w',
+    'darwin': 'x',
+}.get(platform.system().lower(), 'l')

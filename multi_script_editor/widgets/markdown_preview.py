@@ -1,9 +1,10 @@
-from vendor.Qt.QtCore import Qt, QEvent
-from vendor.Qt.QtWidgets import QTextEdit, QPushButton, QApplication
-from vendor.Qt.QtGui import QIcon
 from core.settings_model import SettingsModel
-from widgets.pythonSyntax import design
 from icons import icons
+from vendor.Qt.QtCore import QEvent, Qt
+from vendor.Qt.QtGui import QIcon
+from vendor.Qt.QtWidgets import QApplication, QPushButton, QTextEdit
+from widgets.pythonSyntax import design
+
 
 class MarkdownPreviewEdit(QTextEdit):
     """

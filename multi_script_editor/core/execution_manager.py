@@ -1,6 +1,8 @@
 import sys
 import traceback
+
 from vendor.Qt.QtCore import QCoreApplication
+
 
 class StdoutProxy:
     def __init__(self, write_func):
@@ -35,7 +37,7 @@ class ExecutionManager:
 
         tmp_stdout = sys.stdout
         sys.stdout = StdoutProxy(output_callback)
-        
+
         try:
             try:
                 # Try evaluating first to see if it's an expression that returns a value
@@ -47,7 +49,7 @@ class ExecutionManager:
                 exec(command, namespace)
         except SystemExit:
             close_callback()
-        except:
+        except Exception:
             traceback_lines = traceback.format_exc().split('\n')
             # Remove eval/exec internal traceback lines for cleaner output
             try:
