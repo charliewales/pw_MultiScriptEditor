@@ -5,8 +5,6 @@ import sys
 import webbrowser
 from functools import partial
 
-mse_version = "6.5.0"
-
 root_path = os.path.dirname(__file__)
 vendor_path = os.path.join(root_path, 'vendor')
 if vendor_path not in sys.path:
@@ -15,7 +13,7 @@ if vendor_path not in sys.path:
 import random
 import time
 
-from multi_script_editor import managers
+from multi_script_editor import __version__, managers
 import vendor.Qt
 from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
@@ -132,7 +130,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         super(scriptEditorClass, self).__init__(parent)
         # ui
         py_ver = sys.version.split(' ')[0]
-        self.ver = f"{mse_version} · Python-{py_ver} · {vendor.Qt.__binding__}-{vendor.Qt.__binding_version__}"
+        self.ver = f"{__version__} · Python-{py_ver} · {vendor.Qt.__binding__}-{vendor.Qt.__binding_version__}"
         self.setupUi(self)
         self.icon_path = os.path.dirname(__file__)
 

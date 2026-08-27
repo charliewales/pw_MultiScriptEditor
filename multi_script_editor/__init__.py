@@ -1,6 +1,8 @@
 import os
 import sys
 
+from ._version import __version__ as __version__
+
 # Set preferred binding
 if not os.environ.get("QT_PREFERRED_BINDING"):
     os.environ["QT_PREFERRED_BINDING"] = os.pathsep.join(

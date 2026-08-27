@@ -1,15 +1,17 @@
 from pathlib import Path
+from runpy import run_path
 from tempfile import TemporaryDirectory
 
 from setuptools import find_packages, setup
 
 
 ROOT = Path(__file__).parent
+VERSION = run_path(str(ROOT / "multi_script_editor" / "_version.py"))["__version__"]
 EGG_INFO_BASE = TemporaryDirectory(prefix="multi_script_editor-")
 
 setup(
     name="multi_script_editor",
-    version="6.5.0",
+    version=VERSION,
     description="Python editor for multiple platforms",
     long_description=(ROOT / "readme.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
