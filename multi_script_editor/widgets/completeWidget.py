@@ -1,6 +1,6 @@
 from multi_script_editor import managers
 from vendor.Qt.QtCore import QSize, Qt, QTimer
-from vendor.Qt.QtGui import QFont, QFontMetrics
+from vendor.Qt.QtGui import QBrush, QColor, QFont, QFontMetrics
 from vendor.Qt.QtWidgets import QApplication, QLabel, QListWidget, QListWidgetItem
 
 from .outline_utils import get_symbol_type_icon
@@ -50,6 +50,7 @@ class completeMenuClass(QListWidget):
         self.doc_tooltip.setWordWrap(True)
         self.doc_tooltip.setContentsMargins(4, 4, 4, 4)
         self._pending_style = None
+        self._completion_colors = {}
 
         def doc_tooltip_focusOutEvent(event):
             QLabel.focusOutEvent(self.doc_tooltip, event)
@@ -116,7 +117,15 @@ class completeMenuClass(QListWidget):
             self.doc_tooltip.hide()
 
     def updateStyle(self, colors=None, style=None):
-        text = design.editorStyle() if style is None else style
+        text = style
+        if text is None:
+            text = (
+                design.applyColorToMainStyle(colors)
+                if colors is not None
+                else design.editorStyle()
+            )
+        if colors is not None:
+            self._completion_colors = colors
         self._pending_style = text if text != self.styleSheet() else None
         if self.isVisible():
             self._apply_pending_style()
@@ -149,9 +158,19 @@ class completeMenuClass(QListWidget):
         if lines or extra:
             self.showMe()
             all_items = (lines or []) + (extra or [])
-            for i in all_items:
+            for row, i in enumerate(all_items):
                 item = QListWidgetItem(i.name)
                 item.setData(32, i)
+                color_key = (
+                    'completer_background'
+                    if row % 2 == 0
+                    else 'completer_alt_background'
+                )
+                background = self._completion_colors.get(color_key)
+                if background is not None:
+                    if isinstance(background, (list, tuple)):
+                        background = QColor(*background)
+                    item.setBackground(QBrush(background))
 
                 if hasattr(i, 'type') and i.type:
                     symbol_type = _COMPLETION_SYMBOL_TYPES.get(
