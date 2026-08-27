@@ -34,6 +34,12 @@ class SettingsModel:
         elif managers.context == 'nuke':
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = os.path.join(home, '.nuke')
+        elif managers.context == 'blender':
+            try:
+                import bpy
+                appData = bpy.utils.user_resource('CONFIG')
+            except Exception:
+                appData = None
         else:
             home = os.getenv('HOME') or os.path.expanduser('~')
             appData = home

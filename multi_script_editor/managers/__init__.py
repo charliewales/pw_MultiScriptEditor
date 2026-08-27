@@ -61,7 +61,8 @@ dropEvents = dict(
 
 autoImport = dict(
     hou='import hou\n',
-    nuke='import nuke\n'
+    nuke='import nuke\n',
+    blender='import bpy\n'
 )
 context = None
 
@@ -77,6 +78,9 @@ elif 'cmds' in main.__dict__ or 'maya' in exec_name:
 elif 'nuke' in main.__dict__ or 'nuke' in exec_name:
     context = 'nuke'
     from . import _nuke
+elif 'bpy' in sys.modules or 'blender' in exec_name:
+    context = 'blender'
+    from . import _blender as _blender
 
 
 

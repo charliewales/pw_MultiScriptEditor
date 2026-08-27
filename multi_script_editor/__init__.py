@@ -19,6 +19,16 @@ if vendor_path not in sys.path:
     sys.path.insert(0, vendor_path)
 
 
+# BLENDER
+def showBlender():
+    """
+    Launch Multi Script Editor in Blender.
+    """
+    from .managers import _blender
+
+    return _blender.show()
+
+
 # HOUDINI
 def showHoudini(*args, **kwargs):
     """
@@ -26,16 +36,6 @@ def showHoudini(*args, **kwargs):
     """
     from .managers import _houdini
     return _houdini.show(*args, **kwargs)
-
-
-# NUKE
-def showNuke(panel=False):
-    """
-    Launch Multi Script Editor in Nuke
-    """
-    from .managers import _nuke
-
-    return _nuke.show(panel)
 
 
 # MAYA
@@ -48,6 +48,16 @@ def showMaya(dock=False):
     return _maya.show(dock)
 
 
+# NUKE
+def showNuke(panel=False):
+    """
+    Launch Multi Script Editor in Nuke
+    """
+    from .managers import _nuke
+
+    return _nuke.show(panel)
+
+
 def show(*args, **kwargs):
     from . import managers
     if managers.context == 'hou':
@@ -58,6 +68,8 @@ def show(*args, **kwargs):
     elif managers.context == 'nuke':
         # Nuke's show takes 'panel' kwarg
         return showNuke(kwargs.get('panel', False))
+    elif managers.context == 'blender':
+        return showBlender()
 
     from . import scriptEditor
     return scriptEditor.show()
