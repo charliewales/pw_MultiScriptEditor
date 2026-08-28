@@ -108,4 +108,5 @@ icons = dict(
     sym_ini_section=os.path.join(root, "sym_ini_section.png"),
     sym_ini_key=os.path.join(root, "sym_ini_key.png"),
     follow_cursor=os.path.join(root, "follow_cursor.png"),
+    select_line=os.path.join(root, "select_line.png"),
 )

@@ -543,7 +543,7 @@ class Ui_scriptEditor(object):
         self.printHelp_act.setText(QApplication.translate("scriptEditor", "Help", None))
         self.moveLineUp_act.setText(QApplication.translate("scriptEditor", "Move line(s) up", None))
         self.moveLineDown_act.setText(QApplication.translate("scriptEditor", "Move line(s) down", None))
-        self.selectLine_act.setText(QApplication.translate("scriptEditor", "Select line", None))
+        self.selectLine_act.setText(QApplication.translate("scriptEditor", "Select line(s)", None))
         self.comment_cat.setText(QApplication.translate("scriptEditor", "Comment", None))
         self.add_quotes_act.setText(QApplication.translate("scriptEditor", "Add quotes", None))
         self.f_string_act.setText(QApplication.translate("scriptEditor", "f-string", None))
