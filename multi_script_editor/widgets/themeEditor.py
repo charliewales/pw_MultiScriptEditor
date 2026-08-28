@@ -137,26 +137,15 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.updateUI()
         self.updateColors()
 
-        # Adjust height to fit all items
-        row_height = self.colors_lwd.sizeHintForRow(0)
-        if row_height <= 0:
-            row_height = 25
-
-        list_needed_height = self.colors_lwd.count() * row_height
-        needed_height = list_needed_height + 200
-
-        ideal_height = needed_height
-
+        ideal_width = 1100
+        ideal_height = 720
         desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
         if desk:
             screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
-            ideal_height = min(ideal_height, screen_rect.height() - 100)
-
-        ideal_width = 920
-        if desk:
             ideal_width = min(ideal_width, screen_rect.width() - 40)
+            ideal_height = min(ideal_height, screen_rect.height() - 40)
         self.resize(ideal_width, ideal_height)
-        self.setMinimumHeight(min(needed_height, ideal_height))
+        self.setMinimumSize(min(ideal_width, 720), min(ideal_height, 480))
 
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
@@ -348,6 +337,37 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if main_style:
                 if font.family():
                     main_style += f"\nQLabel, QComboBox, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
+                button_size = colors.get('menu_text_size', 10)
+                button_font = (
+                    QFont(font.family(), button_size, font.weight(), font.italic())
+                    if colors.get('use_theme_font_on_menus', False) and font_data
+                    else QApplication.font('QMenu')
+                )
+                button_background = colors.get('background', (40, 40, 40))
+                button_text = colors.get('default', (210, 210, 210))
+                button_border = colors.get('border', (85, 85, 85))
+                hover_background = colors.get('completer_hover_background', (85, 85, 85))
+                muted_text = colors.get('tab_text', (128, 128, 128))
+                def rgb(value):
+                    return 'rgb(%d, %d, %d)' % tuple(value)
+                main_style += (
+                    "\nQPushButton { background-color: %s; color: %s; "
+                    "border: 1px solid %s; padding: 6px 14px; font-family: '%s'; font-size: %spt; }"
+                    "\nQPushButton:hover { background-color: %s; }"
+                    "\nQPushButton:disabled { color: %s; }"
+                    % (rgb(button_background), rgb(button_text), rgb(button_border),
+                       button_font.family(), button_size, rgb(hover_background), rgb(muted_text))
+                )
+                for button in self.findChildren(QPushButton):
+                    button.setFont(button_font)
+                    button.setStyleSheet(
+                        "QPushButton { background-color: %s; color: %s; "
+                        "border: 1px solid %s; padding: 6px 14px; }"
+                        "QPushButton:hover { background-color: %s; }"
+                        "QPushButton:disabled { color: %s; }"
+                        % (rgb(button_background), rgb(button_text), rgb(button_border),
+                           rgb(hover_background), rgb(muted_text))
+                    )
                 if self.styleSheet() != main_style:
                     self.setStyleSheet(main_style)
         else:

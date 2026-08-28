@@ -22,6 +22,9 @@ class MultiCursorManager:
     def has_cursors(self):
         return len(self.multi_cursors) > 0
 
+    def has_manual_cursors(self):
+        return self.has_cursors() and not self.is_auto_populated
+
     def _occurrences_case_sensitive(self):
         action = getattr(
             getattr(self.editor, 'p', None),
@@ -89,7 +92,7 @@ class MultiCursorManager:
         return selections
 
     def handle_key_press(self, event):
-        if not self.multi_cursors:
+        if not self.has_manual_cursors():
             return False
 
         key = event.key()

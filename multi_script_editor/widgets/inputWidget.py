@@ -1111,6 +1111,25 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                 (tab_widget.currentIndex() + offset) % tab_count
             )
 
+    def createStandardContextMenu(self):
+        menu = super(inputClass, self).createStandardContextMenu()
+        handlers = {
+            'Cut': self.cut,
+            'Copy': self.copy,
+            'Paste': self.paste,
+        }
+        for action in menu.actions():
+            name = action.text().replace('&', '').split('\t', 1)[0]
+            handler = handlers.get(name)
+            if handler is None:
+                continue
+            try:
+                action.triggered.disconnect()
+            except (RuntimeError, TypeError):
+                pass
+            action.triggered.connect(handler)
+        return menu
+
     def keyPressEvent(self, event):
         # unsuppress autocomplete if alphanumeric or dot/underscore
         text = event.text()
@@ -1121,6 +1140,15 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         if self.multi_cursor_manager.handle_key_press(event):
             return
 
+        if event.matches(QKeySequence.Copy):
+            self.copy()
+            return
+        if event.matches(QKeySequence.Cut):
+            self.cut()
+            return
+        if event.matches(QKeySequence.Paste):
+            self.paste()
+            return
         if event.matches(QKeySequence.Undo):
             self.undo()
             return
@@ -1306,6 +1334,8 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
     def _select_line(self):
         document = self.document()
         manager = self.multi_cursor_manager
+        if manager.is_auto_populated:
+            manager.clear()
         cursors = manager.multi_cursors if manager.has_cursors() else [self.textCursor()]
         selections = []
 
@@ -1339,6 +1369,78 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         else:
             self.setTextCursor(selections[0])
         self.highlight_current_line()
+
+    def _multi_cursor_line_numbers(self):
+        document = self.document()
+        line_numbers = set()
+        for cursor in self.multi_cursor_manager.multi_cursors:
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            end_lookup = end - 1 if cursor.hasSelection() and end > start else end
+            start_line = document.findBlock(start).blockNumber()
+            end_line = document.findBlock(end_lookup).blockNumber()
+            line_numbers.update(range(start_line, end_line + 1))
+        return sorted(line_numbers)
+
+    def _multi_cursor_line_groups(self):
+        groups = []
+        for line in self._multi_cursor_line_numbers():
+            if groups and line == groups[-1][1] + 1:
+                groups[-1] = (groups[-1][0], line)
+            else:
+                groups.append((line, line))
+        return groups
+
+    def _has_full_line_multi_selections(self):
+        document = self.document()
+        cursors = self.multi_cursor_manager.multi_cursors
+        if not cursors or not all(cursor.hasSelection() for cursor in cursors):
+            return False
+
+        for cursor in cursors:
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            start_block = document.findBlock(start)
+            end_block = document.findBlock(end - 1)
+            if (
+                start != start_block.position()
+                or end != end_block.position() + len(end_block.text())
+            ):
+                return False
+        return True
+
+    def _finish_multi_cursor_edit(self):
+        manager = self.multi_cursor_manager
+        manager.deduplicate_and_sort_cursors()
+        if manager.multi_cursors:
+            self._run_manual_multi_select(
+                lambda: self.setTextCursor(manager.multi_cursors[0])
+            )
+        self._cancel_pending_autocomplete()
+        self.highlight_current_line()
+
+    def _replace_multi_cursor_selections(self, transform):
+        manager = self.multi_cursor_manager
+        if not manager.has_manual_cursors():
+            return False
+        cursors = sorted(
+            manager.multi_cursors,
+            key=lambda cursor: cursor.selectionStart(),
+        )
+        if not cursors or not all(cursor.hasSelection() for cursor in cursors):
+            return False
+
+        edit_cursor = self.textCursor()
+        edit_cursor.beginEditBlock()
+        try:
+            for cursor in reversed(cursors):
+                cursor.insertText(
+                    transform(cursor.selection().toPlainText())
+                )
+        finally:
+            edit_cursor.endEditBlock()
+        self._finish_multi_cursor_edit()
+        return True
 
     def _capture_multi_cursor_states(self):
         document = self.document()
@@ -1383,46 +1485,117 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         manager.multi_cursors = restored
         manager.deduplicate_and_sort_cursors()
         if manager.multi_cursors:
-            self.setTextCursor(manager.multi_cursors[0])
+            self._run_manual_multi_select(
+                lambda: self.setTextCursor(manager.multi_cursors[0])
+            )
         self.highlight_current_line()
 
     def _move_multi_cursor_lines(self, direction):
         manager = self.multi_cursor_manager
-        if not manager.has_cursors():
+        if not manager.has_manual_cursors():
             return False
 
         states = self._capture_multi_cursor_states()
-        touched_lines = [
-            line
-            for position_state, anchor_state in states
-            for line in (position_state[0], anchor_state[0])
-        ]
-        start_line = min(touched_lines)
-        end_line = max(touched_lines)
+        selected_lines = set(self._multi_cursor_line_numbers())
+        start_line = min(selected_lines)
+        end_line = max(selected_lines)
         last_line = self.document().blockCount() - 1
-        if (
-            (direction < 0 and start_line == 0)
-            or (direction > 0 and end_line >= last_line)
-        ):
+        affected_start_line = max(0, start_line - (direction < 0))
+        affected_end_line = min(last_line, end_line + (direction > 0))
+        if affected_start_line == affected_end_line:
             return True
 
         document = self.document()
-        start_block = document.findBlockByNumber(start_line)
-        end_block = document.findBlockByNumber(end_line)
-        selection = QTextCursor(document)
-        selection.setPosition(start_block.position())
-        selection.setPosition(
-            end_block.position() + len(end_block.text()),
-            QTextCursor.KeepAnchor,
-        )
+        start_block = document.findBlockByNumber(affected_start_line)
+        end_block = document.findBlockByNumber(affected_end_line)
+        block_items = []
+        block = start_block
+        while block.isValid():
+            line = block.blockNumber()
+            block_items.append(
+                [line, block.text(), self._capture_block_state(block)]
+            )
+            if block == end_block:
+                break
+            block = block.next()
 
-        manager.multi_cursors = []
-        self.setTextCursor(selection)
-        self.move_selected_lines(direction)
+        selected_flags = [item[0] in selected_lines for item in block_items]
+        moved = False
+        indices = (
+            range(1, len(block_items))
+            if direction < 0
+            else range(len(block_items) - 2, -1, -1)
+        )
+        for index in indices:
+            adjacent = index - 1 if direction < 0 else index + 1
+            if selected_flags[index] and not selected_flags[adjacent]:
+                moved = True
+                block_items[index], block_items[adjacent] = (
+                    block_items[adjacent],
+                    block_items[index],
+                )
+                selected_flags[index], selected_flags[adjacent] = (
+                    selected_flags[adjacent],
+                    selected_flags[index],
+                )
+
+        if not moved:
+            return True
+
+        line_mapping = {
+            old_line: affected_start_line + index
+            for index, (old_line, _text, _state) in enumerate(block_items)
+        }
+        after_affected = end_block.next()
+        has_trailing_block = after_affected.isValid()
+        trailing_states = (
+            [self._capture_block_state(after_affected)]
+            if has_trailing_block
+            else []
+        )
+        before_states = [
+            self._capture_block_state(
+                document.findBlockByNumber(line)
+            )
+            for line in range(affected_start_line, affected_end_line + 1)
+        ] + trailing_states
+        after_states = [item[2] for item in block_items] + trailing_states
+        before_cursor = (
+            self.textCursor().anchor(),
+            self.textCursor().position(),
+        )
+        replacement_end = (
+            after_affected.position()
+            if has_trailing_block
+            else document.characterCount() - 1
+        )
+        replacement = '\n'.join(item[1] for item in block_items)
+        if has_trailing_block:
+            replacement += '\n'
+
+        edit_cursor = QTextCursor(document)
+        edit_cursor.beginEditBlock()
+        try:
+            edit_cursor.setPosition(start_block.position())
+            edit_cursor.setPosition(replacement_end, QTextCursor.KeepAnchor)
+            edit_cursor.insertText(replacement)
+            self._restore_block_states(affected_start_line, after_states)
+        finally:
+            edit_cursor.endEditBlock()
+
         self._restore_multi_cursor_states(
             states,
-            lambda line, column: (line + direction, column),
+            lambda line, column: (line_mapping.get(line, line), column),
         )
+        after_cursor = self.textCursor()
+        self._record_line_move(
+            before_cursor,
+            (after_cursor.anchor(), after_cursor.position()),
+            affected_start_line,
+            before_states,
+            after_states,
+        )
+        self._cancel_pending_autocomplete()
         return True
 
     def selected_line_range(self):
@@ -1765,6 +1938,20 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.update()
 
     def addQuotesSelected(self, prefer_single_quotes=False):
+        quote_char = "'" if prefer_single_quotes else '"'
+        if self._replace_multi_cursor_selections(
+            lambda text: (
+                text
+                if (
+                    len(text) >= 2
+                    and text[:1] == text[-1:]
+                    and text[:1] in ('"', "'")
+                )
+                else quote_char + text + quote_char
+            )
+        ):
+            return
+
         cursor = self.textCursor()
 
         if cursor.hasSelection():
@@ -1812,7 +1999,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                         is_quoted = True
 
             if not is_quoted:
-                quote_char = "'" if prefer_single_quotes else '"'
                 self.document().documentLayout().blockSignals(True)
                 cursor.insertText(quote_char + text + quote_char)
                 self.document().documentLayout().blockSignals(False)
@@ -1876,6 +2062,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         return None
 
     def fStringSelected(self, prefer_single_quotes=False):
+        quote_char = "'" if prefer_single_quotes else '"'
+        if self._replace_multi_cursor_selections(
+            lambda text: 'f{0}{{{1}}}{0}'.format(quote_char, text)
+        ):
+            return
+
         cursor = self.textCursor()
         text_to_format = ""
         has_selection = cursor.hasSelection()
@@ -1886,7 +2078,6 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             clipboard = QApplication.clipboard()
             text_to_format = clipboard.text()
 
-        quote_char = "'" if prefer_single_quotes else '"'
         new_text = f'f{quote_char}{{{text_to_format}}}{quote_char}'
 
         self.document().documentLayout().blockSignals(True)
@@ -1904,7 +2095,7 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.update()
 
     def commentSelected(self):
-        if self.multi_cursor_manager.has_cursors():
+        if self.multi_cursor_manager.has_manual_cursors():
             self._comment_multi_cursor_lines()
             self._finish_comment_edit()
             return
@@ -2155,6 +2346,41 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         return cursor
 
     def duplicate(self):
+        manager = self.multi_cursor_manager
+        if manager.has_manual_cursors():
+            groups = self._multi_cursor_line_groups()
+            states = self._capture_multi_cursor_states()
+            document = self.document()
+            edit_cursor = QTextCursor(document)
+            edit_cursor.beginEditBlock()
+            try:
+                for start_line, end_line in reversed(groups):
+                    lines = [
+                        document.findBlockByNumber(line).text()
+                        for line in range(start_line, end_line + 1)
+                    ]
+                    insertion = QTextCursor(
+                        document.findBlockByNumber(end_line)
+                    )
+                    insertion.movePosition(QTextCursor.EndOfBlock)
+                    insertion.insertText('\n' + '\n'.join(lines))
+            finally:
+                edit_cursor.endEditBlock()
+
+            def duplicate_position(line, column):
+                offset = 0
+                for start_line, end_line in groups:
+                    length = end_line - start_line + 1
+                    if start_line <= line <= end_line:
+                        return line + offset + length, column
+                    if end_line < line:
+                        offset += length
+                return line + offset, column
+
+            self._restore_multi_cursor_states(states, duplicate_position)
+            self._cancel_pending_autocomplete()
+            return
+
         cursor = self.textCursor()
         current_cursor_pos = cursor.position()
 
@@ -2179,6 +2405,73 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
         self.highlight_current_line()
 
     def deleteLine(self):
+        manager = self.multi_cursor_manager
+        if manager.has_manual_cursors():
+            groups = self._multi_cursor_line_groups()
+            cursor_targets = []
+            for cursor in manager.multi_cursors:
+                line = self.document().findBlock(
+                    cursor.selectionStart()
+                ).blockNumber()
+                column = 0 if cursor.hasSelection() else cursor.positionInBlock()
+                for start_line, end_line in groups:
+                    if start_line <= line <= end_line:
+                        deleted_before = sum(
+                            group_end - group_start + 1
+                            for group_start, group_end in groups
+                            if group_end < start_line
+                        )
+                        cursor_targets.append(
+                            (start_line - deleted_before, column)
+                        )
+                        break
+
+            document = self.document()
+            edit_cursor = QTextCursor(document)
+            edit_cursor.beginEditBlock()
+            try:
+                for start_line, end_line in reversed(groups):
+                    start_block = document.findBlockByNumber(start_line)
+                    end_block = document.findBlockByNumber(end_line)
+                    after_block = end_block.next()
+                    deletion = QTextCursor(document)
+                    if after_block.isValid():
+                        deletion.setPosition(start_block.position())
+                        deletion.setPosition(
+                            after_block.position(),
+                            QTextCursor.KeepAnchor,
+                        )
+                    elif start_block.previous().isValid():
+                        previous = start_block.previous()
+                        deletion.setPosition(
+                            previous.position() + len(previous.text())
+                        )
+                        deletion.setPosition(
+                            document.characterCount() - 1,
+                            QTextCursor.KeepAnchor,
+                        )
+                    else:
+                        deletion.setPosition(0)
+                        deletion.setPosition(
+                            document.characterCount() - 1,
+                            QTextCursor.KeepAnchor,
+                        )
+                    deletion.removeSelectedText()
+            finally:
+                edit_cursor.endEditBlock()
+
+            last_line = document.blockCount() - 1
+            manager.multi_cursors = []
+            for line, column in cursor_targets:
+                block = document.findBlockByNumber(min(line, last_line))
+                cursor = QTextCursor(document)
+                cursor.setPosition(
+                    block.position() + min(column, len(block.text()))
+                )
+                manager.multi_cursors.append(cursor)
+            self._finish_multi_cursor_edit()
+            return
+
         cursor = self.textCursor()
         cursor.beginEditBlock()
 
@@ -2322,7 +2615,10 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self.highlight_current_line()
             return
 
-        cleared_multi_cursors = self.multi_cursor_manager.has_cursors()
+        cleared_multi_cursors = (
+            event.button() == Qt.LeftButton
+            and self.multi_cursor_manager.has_cursors()
+        )
         if cleared_multi_cursors:
             self.multi_cursor_manager.clear()
 
@@ -2501,19 +2797,95 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             self._is_undo_redo = False
 
     def cut(self):
-        if self.multi_cursor_manager.has_cursors():
-            self.multi_cursor_manager.clear()
-            self.highlight_current_line()
+        manager = self.multi_cursor_manager
+        if manager.has_manual_cursors():
+            full_lines = self._has_full_line_multi_selections()
+            self.copy()
+            if full_lines:
+                self.deleteLine()
+                return
+
+            cursors = sorted(
+                manager.multi_cursors,
+                key=lambda cursor: cursor.selectionStart(),
+                reverse=True,
+            )
+            edit_cursor = self.textCursor()
+            edit_cursor.beginEditBlock()
+            try:
+                for cursor in cursors:
+                    if cursor.hasSelection():
+                        cursor.removeSelectedText()
+            finally:
+                edit_cursor.endEditBlock()
+            self._finish_multi_cursor_edit()
+            return
         super(inputClass, self).cut()
 
     def copy(self):
-        if self.multi_cursor_manager.has_cursors():
-            self.multi_cursor_manager.clear()
-            self.highlight_current_line()
+        manager = self.multi_cursor_manager
+        if manager.has_manual_cursors():
+            cursors = sorted(
+                manager.multi_cursors,
+                key=lambda cursor: cursor.selectionStart(),
+            )
+            parts = [
+                cursor.selection().toPlainText()
+                for cursor in cursors
+                if cursor.hasSelection()
+            ]
+            if parts:
+                clipboard_text = '\n'.join(parts)
+                self._multi_cursor_clipboard_parts = tuple(parts)
+                self._multi_cursor_clipboard_text = clipboard_text
+                self._multi_cursor_clipboard_full_lines = (
+                    self._has_full_line_multi_selections()
+                )
+                QApplication.clipboard().setText(clipboard_text)
+            return
+        self._multi_cursor_clipboard_parts = None
+        self._multi_cursor_clipboard_text = None
+        self._multi_cursor_clipboard_full_lines = False
         super(inputClass, self).copy()
 
     def paste(self):
-        if self.multi_cursor_manager.has_cursors():
-            self.multi_cursor_manager.clear()
-            self.highlight_current_line()
+        manager = self.multi_cursor_manager
+        if manager.has_manual_cursors():
+            clipboard_text = QApplication.clipboard().text()
+            cursors = sorted(
+                manager.multi_cursors,
+                key=lambda cursor: cursor.selectionStart(),
+            )
+            stored_parts = getattr(self, '_multi_cursor_clipboard_parts', None)
+            stored_text = getattr(self, '_multi_cursor_clipboard_text', None)
+            if (
+                stored_text == clipboard_text
+                and stored_parts is not None
+                and len(stored_parts) == len(cursors)
+            ):
+                if (
+                    getattr(
+                        self,
+                        '_multi_cursor_clipboard_full_lines',
+                        False,
+                    )
+                    and not any(cursor.hasSelection() for cursor in cursors)
+                ):
+                    replacements = tuple(part + '\n' for part in stored_parts)
+                else:
+                    replacements = stored_parts
+            else:
+                replacements = (clipboard_text,) * len(cursors)
+
+            edit_cursor = self.textCursor()
+            edit_cursor.beginEditBlock()
+            try:
+                for cursor, text in reversed(
+                    list(zip(cursors, replacements))
+                ):
+                    cursor.insertText(text)
+            finally:
+                edit_cursor.endEditBlock()
+            self._finish_multi_cursor_edit()
+            return
         super(inputClass, self).paste()
