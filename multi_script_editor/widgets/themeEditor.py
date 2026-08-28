@@ -358,6 +358,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     % (rgb(button_background), rgb(button_text), rgb(button_border),
                        button_font.family(), button_size, rgb(hover_background), rgb(muted_text))
                 )
+                main_style += "\nQComboBox { padding-top: 0px; padding-bottom: 0px; }"
                 for button in self.findChildren(QPushButton):
                     button.setFont(button_font)
                     button.setStyleSheet(
@@ -368,6 +369,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                         % (rgb(button_background), rgb(button_text), rgb(button_border),
                            rgb(hover_background), rgb(muted_text))
                     )
+                self.themeList_cbb.setFixedHeight(self.save_btn.sizeHint().height())
                 if self.styleSheet() != main_style:
                     self.setStyleSheet(main_style)
         else:
