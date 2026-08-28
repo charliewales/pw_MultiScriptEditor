@@ -100,7 +100,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.horizontalLayout_2.addWidget(self.cancel_btn)
         self.cancel_btn.clicked.connect(self.cancel)
 
-        self.textSize_spb.valueChanged.connect(self.updateExample)
+        # self.textSize_spb.valueChanged.connect(self.updateExample)
         self.textSize_spb.setContextMenuPolicy(Qt.CustomContextMenu)
         self.textSize_spb.customContextMenuRequested.connect(self.openSizeMenu)
         self.lineNumbersSize_spb.valueChanged.connect(self.updateExample)
@@ -286,9 +286,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.colors_lwd.addItem(item)
         self.updateExample()
 
-    def updateExample(self):
+    def getFont(self):
         colors = self.getCurrentColors()
-
         font_data = colors.get('font')
         if not font_data:
             font_data = self.get_settings().get('font', {})
@@ -302,6 +301,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             )
         else:
             font = QFont()
+
+        return font, font_data, colors
+
+    def updateExample(self):
+        font, font_data, colors = self.getFont()
 
         interface_font = QFont(font)
         interface_font.setPointSize(max(1, int(colors.get('menu_text_size', 10))))
@@ -362,7 +366,6 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                     % (rgb(button_background), rgb(button_text), rgb(button_border),
                        button_font.family(), button_size, rgb(hover_background), rgb(muted_text))
                 )
-                main_style += "\nQComboBox { padding-top: 0px; padding-bottom: 0px; }"
                 for button in self.findChildren(QPushButton):
                     button.setFont(button_font)
                     button.setStyleSheet(
@@ -380,7 +383,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 for control in self.widget.findChildren(QWidget):
                     control.setFont(interface_font)
                 self.themeList_cbb.setFont(interface_font)
-                self._fit_preview_width(font)
+                # self._fit_preview_width(font)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
@@ -810,6 +813,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
         return False
 
+    def showEvent(self, event):
+        self._fit_preview_width(self.getFont()[0])
+
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):
             event.accept()
@@ -884,8 +890,8 @@ if __name__ == '__main__':
     app = QApplication([])
     w = themeEditorClass()
     w.show()
-    colors = design.getColors(w.get_settings().get('theme', 'Multi Script Editor'))
-    main_style = design.applyColorToMainStyle(colors)
+    w_colors = design.getColors(w.get_settings().get('theme', 'Multi Script Editor'))
+    main_style = design.applyColorToMainStyle(w_colors)
     if main_style:
         w.setStyleSheet(main_style)
     app.exec_()
