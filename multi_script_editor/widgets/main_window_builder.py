@@ -75,6 +75,7 @@ class ScriptEditorUIBuilder:
         configure(editor.editTheme_act, editor.openThemeEditor, 'theme', 'Ctrl+Shift+T')
 
         configure(editor.donate_act, lambda: editor.openLink('donate'))
+        configure(editor.blenderManual_act, lambda: editor.openLink('blender_manual'), 'blender')
         configure(editor.openManual_act, lambda: editor.openLink('manual'), 'github')
         configure(
             editor.python_act,
@@ -332,6 +333,7 @@ class ScriptEditorUIBuilder:
             editor.autoCloseDelimiters_act: "Automatically close brackets, braces, and quotes",
             editor.autocomplete_act: "Toggle code autocomplete functionality",
             editor.bookmarksFinder_act: "Search and navigate bookmarked lines",
+            editor.blenderManual_act: "Open the Blender manual",
             editor.clear_exec_act: "Clear the output panel before executing code",
             editor.clearBookmarks_act: "Clear all bookmarks in the current document",
             editor.clearHistory_act: "Clear the output panel history",

@@ -15,6 +15,7 @@ icons = dict(
     maya=os.path.join(root, "maya.png"),
     houdini=os.path.join(root, "houdini.png"),
     nuke=os.path.join(root, "nuke.png"),
+    blender=os.path.join(root, "blender.png"),
     github=os.path.join(root, "github.png"),
     copy=os.path.join(root, "copy.png"),
     cut=os.path.join(root, "cut.png"),

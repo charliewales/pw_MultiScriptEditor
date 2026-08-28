@@ -1062,7 +1062,14 @@
             <!-- Host Integration Section -->
             <section id="host-integrations">
                 <h2>Host Integrations</h2>
-                <p><code>multi_script_editor.show()</code> detects Houdini, Maya, or Nuke and executes Python in that application's live namespace. Standalone mode uses its own persistent namespace. Host completion is sourced from the live DCC modules rather than bundled copies.</p>
+                <p><code>multi_script_editor.show()</code> detects Blender, Houdini, Maya, or Nuke and executes Python in that application's live namespace. Standalone mode uses its own persistent namespace. Host completion is sourced from the live DCC modules rather than bundled copies.</p>
+
+                <h3>Blender</h3>
+                <ul class="rtd-list">
+                    <li><code>multi_script_editor.showBlender()</code> launches or reuses a single editor window and automatically imports <code>bpy</code> into the execution namespace.</li>
+                    <li>Qt events are processed through a persistent <code>bpy.app.timers</code> callback, keeping Blender responsive without starting a nested Qt event loop.</li>
+                    <li>Preferences are stored under Blender's user <code>CONFIG</code> directory.</li>
+                </ul>
 
                 <h3>Houdini</h3>
                 <ul class="rtd-list">
