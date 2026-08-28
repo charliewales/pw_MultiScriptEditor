@@ -329,9 +329,19 @@
         }
 
         .action-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-weight: 600;
             color: var(--rtd-text-color);
             font-size: 0.98rem;
+        }
+
+        .action-icon {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            object-fit: contain;
         }
 
         /* Sphinx RTD Keyboard Shortcuts */
@@ -516,27 +526,27 @@
                 <h3 id="file">File</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Open script</span><kbd>CTRL + O</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/open.png" alt="" aria-hidden="true">Open script</span><kbd>CTRL + O</kbd></div>
                         <div class="action-desc">Opens an existing script file from your filesystem into a new editor tab.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Save script</span><kbd>CTRL + S</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Save script</span><kbd>CTRL + S</kbd></div>
                         <div class="action-desc">Saves the script in the active tab. Prompts for a file path if the script is untitled.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Save script as</span><kbd>CTRL + SHIFT + S</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Save script as</span><kbd>CTRL + SHIFT + S</kbd></div>
                         <div class="action-desc">Saves the active tab to a new file location and opens it in a separate tab.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Save session</span><kbd>CTRL + ALT + S</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Save session</span><kbd>CTRL + ALT + S</kbd></div>
                         <div class="action-desc">Forces an immediate save of all open tabs, layout states, bookmarks, and folding positions.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Recent files</span><kbd>CTRL + P</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/file_recent.png" alt="" aria-hidden="true">Recent files</span><kbd>CTRL + P</kbd></div>
                         <div class="action-desc">Opens a quick-search palette to filter and reopen recently opened files. <strong>Clear recent</strong> removes the history; an empty history is reported as <strong>No recent files</strong>.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Save output</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Save output</span></div>
                         <div class="action-desc">Sub-menu with options to export the console output:
                             <ul class="feature-list-box">
                                 <li><strong>As...</strong>: Saves output text to a file.</li>
@@ -545,15 +555,15 @@
                         </div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Close all tabs</span><kbd>CTRL + SHIFT + ALT + W</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/close_all_tabs.png" alt="" aria-hidden="true">Close all tabs</span><kbd>CTRL + SHIFT + ALT + W</kbd></div>
                         <div class="action-desc">Closes all open tabs to reset the workspace (prompts for confirmation before closing).</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Compare with...</span><kbd>CTRL + ALT + SHIFT + C</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git_diff.png" alt="" aria-hidden="true">Compare with...</span><kbd>CTRL + ALT + SHIFT + C</kbd></div>
                         <div class="action-desc">Compares the active saved file with another open file or a file selected from disk. The first use can locate or configure an external diff tool.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Quit</span><kbd>CTRL + Q</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/quit.png" alt="" aria-hidden="true">Quit</span><kbd>CTRL + Q</kbd></div>
                         <div class="action-desc">Safely exits the application, saving session data automatically.</div>
                     </div>
                 </div>
@@ -562,23 +572,23 @@
                 <h3 id="bookmarks">Bookmarks</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Toggle Bookmark</span><kbd>CTRL + F2</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/bookmark_toggle.png" alt="" aria-hidden="true">Toggle Bookmark</span><kbd>CTRL + F2</kbd></div>
                         <div class="action-desc">Toggles a line bookmark. Displays a ribbon tag in the gutter with a hover preview.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Next Bookmark</span><kbd>F2</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/bookmark_next.png" alt="" aria-hidden="true">Next Bookmark</span><kbd>F2</kbd></div>
                         <div class="action-desc">Jumps to the next bookmark in the document, centering the cursor in the viewport.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Previous Bookmark</span><kbd>SHIFT + F2</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/bookmark_prev.png" alt="" aria-hidden="true">Previous Bookmark</span><kbd>SHIFT + F2</kbd></div>
                         <div class="action-desc">Jumps to the previous bookmark in the document, centering the cursor in the viewport.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Clear Bookmarks</span><kbd>CTRL + SHIFT + F2</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/clear.png" alt="" aria-hidden="true">Clear Bookmarks</span><kbd>CTRL + SHIFT + F2</kbd></div>
                         <div class="action-desc">Removes all bookmarks from the document (prompts confirmation first).</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Go to bookmark...</span><kbd>CTRL + B</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/goto_line.png" alt="" aria-hidden="true">Go to bookmark...</span><kbd>CTRL + B</kbd></div>
                         <div class="action-desc">Opens a search popup palette to filter and jump to bookmarked lines.</div>
                     </div>
                 </div>
@@ -587,83 +597,83 @@
                 <h3 id="edit">Edit</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Undo / Redo</span><kbd>CTRL + Z</kbd> / <kbd>CTRL + Y</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/undo.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/redo.png" alt="" aria-hidden="true">Undo / Redo</span><kbd>CTRL + Z</kbd> / <kbd>CTRL + Y</kbd></div>
                         <div class="action-desc">Steps backward or forward through your text editing history.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Clipboard manager</span><kbd>CTRL + SHIFT + V</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/paste.png" alt="" aria-hidden="true">Clipboard manager</span><kbd>CTRL + SHIFT + V</kbd></div>
                         <div class="action-desc">Opens a persistent history popup displaying previously copied or cut code snippets.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Cut / Copy / Paste</span><kbd>CTRL + X</kbd> / <kbd>CTRL + C</kbd> / <kbd>CTRL + V</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/cut.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/copy.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/paste.png" alt="" aria-hidden="true">Cut / Copy / Paste</span><kbd>CTRL + X</kbd> / <kbd>CTRL + C</kbd> / <kbd>CTRL + V</kbd></div>
                         <div class="action-desc">Standard text clipboard actions.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Add quotes</span><kbd>ALT + Q</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/add_quotes.png" alt="" aria-hidden="true">Add quotes</span><kbd>ALT + Q</kbd></div>
                         <div class="action-desc">Wraps the selected text with quotation marks.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Comment</span><kbd>ALT + C</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/comment.png" alt="" aria-hidden="true">Comment</span><kbd>ALT + C</kbd></div>
                         <div class="action-desc">Toggles Python comment markers (<code>#</code>) on selected lines.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">f-string</span><kbd>ALT + F</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/f_string.png" alt="" aria-hidden="true">f-string</span><kbd>ALT + F</kbd></div>
                         <div class="action-desc">Converts selected text into a Python f-string literal.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Delete line(s) / Duplicate line(s)</span><kbd>CTRL + D</kbd> / <kbd>CTRL + SHIFT + D</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/delete_line.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/duplicate_line.png" alt="" aria-hidden="true">Delete line(s) / Duplicate line(s)</span><kbd>CTRL + D</kbd> / <kbd>CTRL + SHIFT + D</kbd></div>
                         <div class="action-desc">Deletes or duplicates current lines immediately.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Move line(s) up / Move line(s) down</span><kbd>ALT + UP</kbd> / <kbd>ALT + DOWN</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/move_line_up.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/move_line_down.png" alt="" aria-hidden="true">Move line(s) up / Move line(s) down</span><kbd>ALT + UP</kbd> / <kbd>ALT + DOWN</kbd></div>
                         <div class="action-desc">Shifts selected lines up or down within the script.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Add cursors to line ends</span><kbd>CTRL + SHIFT + I</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/add_cursors_to_line_ends.png" alt="" aria-hidden="true">Add cursors to line ends</span><kbd>CTRL + SHIFT + I</kbd></div>
                         <div class="action-desc">Places cursors at the ends of all selected lines for multi-cursor editing.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Add cursor above / Add cursor below</span><kbd>CTRL + SHIFT + UP</kbd> / <kbd>CTRL + SHIFT + DOWN</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/add_cursor_above.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/add_cursor_below.png" alt="" aria-hidden="true">Add cursor above / Add cursor below</span><kbd>CTRL + SHIFT + UP</kbd> / <kbd>CTRL + SHIFT + DOWN</kbd></div>
                         <div class="action-desc">Spawns additional cursors vertically above or below current selection.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Select next occurrence / Select all occurrences</span><kbd>CTRL + ALT + D</kbd> / <kbd>CTRL + SHIFT + ALT + D</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/select_next_occurrence.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/select_all_occurrences.png" alt="" aria-hidden="true">Select next occurrence / Select all occurrences</span><kbd>CTRL + ALT + D</kbd> / <kbd>CTRL + SHIFT + ALT + D</kbd></div>
                         <div class="action-desc">Multi-selects matching occurrences of the selected word for instant refactoring.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Next highlight/selection / Previous highlight/selection</span><kbd>CTRL + J</kbd> / <kbd>CTRL + SHIFT + J</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/down.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/up.png" alt="" aria-hidden="true">Next highlight/selection / Previous highlight/selection</span><kbd>CTRL + J</kbd> / <kbd>CTRL + SHIFT + J</kbd></div>
                         <div class="action-desc">Moves the active cursor through highlighted occurrences or existing multi-cursor selections.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Command palette...</span><kbd>CTRL + SHIFT + P</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/shortcut.png" alt="" aria-hidden="true">Command palette...</span><kbd>CTRL + SHIFT + P</kbd></div>
                         <div class="action-desc">Searches available editor actions, displays their shortcuts, remembers the five most recent commands, and includes Git actions when version control is enabled.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Find / Replace</span><kbd>CTRL + F</kbd> / <kbd>CTRL + H</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/replace.png" alt="" aria-hidden="true">Find / Replace</span><kbd>CTRL + F</kbd> / <kbd>CTRL + H</kbd></div>
                         <div class="action-desc">Opens a compact overlay anchored to the active editor or output panel, with case-sensitive and regular-expression modes. Return finds the next match, Shift+Return finds the previous match, Tab moves between controls, Escape closes it, and replace mode provides Replace and Replace All.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Git action</span><kbd>CTRL + SHIFT + G</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git.png" alt="" aria-hidden="true">Git action</span><kbd>CTRL + SHIFT + G</kbd></div>
                         <div class="action-desc">Opens a searchable Git action popup for the active saved file. It reports why actions are unavailable when Git is disabled or the file is outside a repository.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Go to line</span><kbd>CTRL + G</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/goto_line.png" alt="" aria-hidden="true">Go to line</span><kbd>CTRL + G</kbd></div>
                         <div class="action-desc">Opens a popup palette with line previews and syntax highlighting to jump directly to a line.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Go to symbol</span><kbd>CTRL + R</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/goto_symbol.png" alt="" aria-hidden="true">Go to symbol</span><kbd>CTRL + R</kbd></div>
                         <div class="action-desc">Opens a quick-search palette to filter and jump to functions or classes.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Trim trailing whitespace</span><kbd>ALT + SHIFT + W</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/trim_whitespace.png" alt="" aria-hidden="true">Trim trailing whitespace</span><kbd>ALT + SHIFT + W</kbd></div>
                         <div class="action-desc">Immediately removes trailing spaces and tabs from line ends across the document.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Spaces to tabs / Tabs to spaces</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/spaces_to_tabs.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/tabs_to_spaces.png" alt="" aria-hidden="true">Spaces to tabs / Tabs to spaces</span></div>
                         <div class="action-desc">Converts leading indentation in the current document using the configured tab width and marks the document as modified.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Show autocompletion</span><kbd>CTRL + SPACE</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/show_autocomplete.png" alt="" aria-hidden="true">Show autocompletion</span><kbd>CTRL + SPACE</kbd></div>
                         <div class="action-desc">Triggers the code autocompletion popup list manually.</div>
                     </div>
                 </div>
@@ -672,7 +682,7 @@
                 <h3 id="options">Options</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Autocomplete</span><kbd>ALT + A</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/show_autocomplete.png" alt="" aria-hidden="true">Autocomplete</span><kbd>ALT + A</kbd></div>
                         <div class="action-desc">Toggles automatic code autocompletion as you type.</div>
                     </div>
                     <div class="action-card">
@@ -700,7 +710,7 @@
                         <div class="action-desc">Controls case matching for occurrence highlighting and occurrence-selection commands.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Prefer single quotes</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/add_quotes.png" alt="" aria-hidden="true">Prefer single quotes</span></div>
                         <div class="action-desc">Uses single quotes for Add quotes, f-string conversion, and compatible completion insertions.</div>
                     </div>
                     <div class="action-card">
@@ -716,11 +726,11 @@
                         <div class="action-desc">Renders space dots and tab arrows in the editor view.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Trim auto whitespace</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/trim_whitespace.png" alt="" aria-hidden="true">Trim auto whitespace</span></div>
                         <div class="action-desc">Automatically trims trailing whitespace whenever a document is saved.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Version control (GIT)</span><kbd>CTRL + ALT + G</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git.png" alt="" aria-hidden="true">Version control (GIT)</span><kbd>CTRL + ALT + G</kbd></div>
                         <div class="action-desc">Enables Git status, badges, status-bar information, context menus, and command-palette actions. It is disabled by default.</div>
                     </div>
                     <div class="action-card">
@@ -732,11 +742,11 @@
                         <div class="action-desc">Toggles automatic line wrapping for console output logs.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Choose font...</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/font.png" alt="" aria-hidden="true">Choose font...</span></div>
                         <div class="action-desc">Opens font selection dialog to set global editor typography.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Open settings folder</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/settings.png" alt="" aria-hidden="true">Open settings folder</span></div>
                         <div class="action-desc">Opens local directory containing application settings, themes, and sessions.</div>
                     </div>
                 </div>
@@ -754,11 +764,11 @@
                         <div class="action-desc">Automatically clears the output console panel whenever code is executed.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Clear output</span><kbd>CTRL + SHIFT + C</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/clear.png" alt="" aria-hidden="true">Clear output</span><kbd>CTRL + SHIFT + C</kbd></div>
                         <div class="action-desc">Manually clears all text in the console output panel.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">dir() / help() / print() / type()</span><kbd>ALT + D</kbd> / <kbd>ALT + H</kbd> / <kbd>ALT + E</kbd> / <kbd>ALT + T</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/exec_sel.png" alt="" aria-hidden="true">dir() / help() / print() / type()</span><kbd>ALT + D</kbd> / <kbd>ALT + H</kbd> / <kbd>ALT + E</kbd> / <kbd>ALT + T</kbd></div>
                         <div class="action-desc">Wraps the selected object/word with Python helper inspection functions and executes it immediately in console.</div>
                     </div>
                     <div class="action-card">
@@ -766,15 +776,15 @@
                         <div class="action-desc">Prints the source code snippet in the console output before displaying execution results.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Execute selected</span><kbd>CTRL + RETURN</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/exec_sel.png" alt="" aria-hidden="true">Execute selected</span><kbd>CTRL + RETURN</kbd></div>
                         <div class="action-desc">Executes only the currently highlighted code selection (or active line if no text is selected).</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Execute line</span><kbd>CTRL + SHIFT + RETURN</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/exec_line.png" alt="" aria-hidden="true">Execute line</span><kbd>CTRL + SHIFT + RETURN</kbd></div>
                         <div class="action-desc">Executes specifically the single line at current cursor position.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Execute all</span><kbd>ALT + RETURN</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/exec_all.png" alt="" aria-hidden="true">Execute all</span><kbd>ALT + RETURN</kbd></div>
                         <div class="action-desc">Executes the entire script document from start to end.</div>
                     </div>
                 </div>
@@ -783,19 +793,19 @@
                 <h3 id="sessions">Sessions</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Save session...</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Save session...</span></div>
                         <div class="action-desc">Saves active tabs, tab ordering, and folding states as a named session (prompts overwrite confirmation).</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Restore backup...</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/restore_backup.png" alt="" aria-hidden="true">Restore backup...</span></div>
                         <div class="action-desc"><strong>Restore crash backup</strong> restores the automatic recovery state created by autosave.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Delete session</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/clear.png" alt="" aria-hidden="true">Delete session</span></div>
                         <div class="action-desc">Sub-menu to permanently delete saved named sessions.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">List of saved sessions</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/saved_session.png" alt="" aria-hidden="true">List of saved sessions</span></div>
                         <div class="action-desc"><strong>Save current session as...</strong> creates a named session. The menu lists saved sessions for immediate restoration and shows <strong>No saved sessions</strong> when empty.</div>
                     </div>
                 </div>
@@ -804,15 +814,15 @@
                 <h3 id="snippets">Snippets</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Insert/run/save snippet</span><kbd>ALT + S</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/snippets.png" alt="" aria-hidden="true">Insert/run/save snippet</span><kbd>ALT + S</kbd></div>
                         <div class="action-desc">Opens the snippets management dialog to insert, save, or run code snippets in console.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Import / Export</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/open.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/save.png" alt="" aria-hidden="true">Import / Export</span></div>
                         <div class="action-desc"><strong>Import snippets...</strong> merges a JSON snippet package; Export writes the current user collection to JSON. Empty user collections are reported as <strong>No saved snippets</strong>.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Delete snippet</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/clear.png" alt="" aria-hidden="true">Delete snippet</span></div>
                         <div class="action-desc">Removes user-defined custom code snippets (built-in snippets are protected).</div>
                     </div>
                 </div>
@@ -821,7 +831,7 @@
                 <h3 id="theme">Theme</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Edit...</span><kbd>CTRL + SHIFT + T</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/theme.png" alt="" aria-hidden="true">Edit...</span><kbd>CTRL + SHIFT + T</kbd></div>
                         <div class="action-desc">Opens the advanced Code Theme Editor to customize colors, font sizes, rounding, and fonts.</div>
                     </div>
                     <div class="action-card">
@@ -829,7 +839,7 @@
                         <div class="action-desc">When checked, randomly selects a saved custom theme whenever the application starts.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Theme List</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/theme.png" alt="" aria-hidden="true">Theme List</span></div>
                         <div class="action-desc">List of all installed predefined themes and custom user themes for instant switching.</div>
                     </div>
                 </div>
@@ -842,11 +852,11 @@
                         <div class="action-desc">Pins window on top of all other host windows (e.g. Maya, Nuke, Houdini).</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Explorer</span><kbd>CTRL + ALT + E</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/explorer_panel.png" alt="" aria-hidden="true">Explorer</span><kbd>CTRL + ALT + E</kbd></div>
                         <div class="action-desc">Shows or hides the File Explorer tab in the left sidebar.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Outline</span><kbd>CTRL + ALT + O</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/outline.png" alt="" aria-hidden="true">Outline</span><kbd>CTRL + ALT + O</kbd></div>
                         <div class="action-desc">Shows or hides the searchable structural outline tab in the left sidebar.</div>
                     </div>
                     <div class="action-card">
@@ -854,7 +864,7 @@
                         <div class="action-desc">Shows or hides the directory, file, and active-symbol breadcrumb bar above each editor.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Menus</span><kbd>CTRL + ALT + M</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/menu.png" alt="" aria-hidden="true">Menus</span><kbd>CTRL + ALT + M</kbd></div>
                         <div class="action-desc">Toggles menu bar visibility (shows a toolbar hamburger button when hidden).</div>
                     </div>
                     <div class="action-card">
@@ -870,15 +880,15 @@
                         <div class="action-desc">Toggles output console position between side-by-side and bottom layout.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Fold / Unfold</span><kbd>ALT + -</kbd> / <kbd>ALT + +</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/fold.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/unfold.png" alt="" aria-hidden="true">Fold / Unfold</span><kbd>ALT + -</kbd> / <kbd>ALT + +</kbd></div>
                         <div class="action-desc">Folds or unfolds current code block at cursor.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Fold all / Unfold all</span><kbd>CTRL + ALT + -</kbd> / <kbd>CTRL + ALT + +</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/fold_all.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/unfold_all.png" alt="" aria-hidden="true">Fold all / Unfold all</span><kbd>CTRL + ALT + -</kbd> / <kbd>CTRL + ALT + +</kbd></div>
                         <div class="action-desc">Folds or unfolds all code blocks in document.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Zoom in / Zoom out / Reset zoom</span><kbd>CTRL + +</kbd> / <kbd>CTRL + -</kbd> / <kbd>CTRL + 0</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/zoom_in.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/zoom_out.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/zoom_reset.png" alt="" aria-hidden="true">Zoom in / Zoom out / Reset zoom</span><kbd>CTRL + +</kbd> / <kbd>CTRL + -</kbd> / <kbd>CTRL + 0</kbd></div>
                         <div class="action-desc">Adjusts global text font sizing.</div>
                     </div>
                 </div>
@@ -887,27 +897,27 @@
                 <h3 id="help">Help</h3>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Quick help</span><kbd>F1</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/help.png" alt="" aria-hidden="true">Quick help</span><kbd>F1</kbd></div>
                         <div class="action-desc">Runs contextual help for the word under the cursor and displays the result in the output panel.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Shortcuts</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/shortcut.png" alt="" aria-hidden="true">Shortcuts</span></div>
                         <div class="action-desc">Opens the searchable application shortcut reference generated from the current shortcut definitions.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Documentation</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/docs.png" alt="" aria-hidden="true">Documentation</span></div>
                         <div class="action-desc">Opens this documentation in your browser.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Help</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/print_help.png" alt="" aria-hidden="true">Help</span></div>
                         <div class="action-desc">Prints application help and the embedded execution variables <code>self_main</code>, <code>self_output</code>, <code>self_version</code>, <code>self_context</code>, and <code>self_help</code> to the output panel.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">External Docs Links</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/python.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/houdini.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/maya.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/nuke.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/qt.png" alt="" aria-hidden="true">External Docs Links</span></div>
                         <div class="action-desc">Includes GitHub, Python documentation, Maya commands, Nuke dev guide, Houdini hou package, Houdini env variables, Qt for Python, and Qt modules.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Support &amp; About</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/donate.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/about.png" alt="" aria-hidden="true">Support &amp; About</span></div>
                         <div class="action-desc">Links to support development and view version/license information.</div>
                     </div>
                 </div>
@@ -918,7 +928,7 @@
                 <h2>Tab &amp; Context Menu</h2>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">New / Close tab</span><kbd>CTRL + T</kbd> / <kbd>CTRL + W</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/add_tab.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/close_tab.png" alt="" aria-hidden="true">New / Close tab</span><kbd>CTRL + T</kbd> / <kbd>CTRL + W</kbd></div>
                         <div class="action-desc">Creates a new empty tab or closes the active tab. At least one editor tab is always kept open.</div>
                     </div>
                     <div class="action-card">
@@ -926,43 +936,43 @@
                         <div class="action-desc">Opens the most-recently-used tab popup. <kbd>CTRL + SHIFT + TAB</kbd> and <kbd>CTRL + PAGE UP</kbd> move backward; <kbd>CTRL + PAGE DOWN</kbd> moves forward. Quick tab switching also enables <kbd>CTRL + 1..9</kbd>.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Middle-click tab</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/close_tab.png" alt="" aria-hidden="true">Middle-click tab</span></div>
                         <div class="action-desc">Closes the tab directly under the mouse cursor.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Double-click / Rename Tab</span><kbd>ALT + R</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/rename_file.png" alt="" aria-hidden="true">Double-click / Rename Tab</span><kbd>ALT + R</kbd></div>
                         <div class="action-desc">Opens inline label editor directly on tab header.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Selection to Tab</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save_output_to_tab.png" alt="" aria-hidden="true">Selection to Tab</span></div>
                         <div class="action-desc">Available from the editor and output context menus when text is selected; creates a new tab containing that selection.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Copy File Path</span><kbd>ALT + SHIFT + C</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/copy.png" alt="" aria-hidden="true">Copy File Path</span><kbd>ALT + SHIFT + C</kbd></div>
                         <div class="action-desc">Copies absolute file path of active document tab to clipboard.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Close others / Close all</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/close_other_tabs.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/close_all_tabs.png" alt="" aria-hidden="true">Close others / Close all</span></div>
                         <div class="action-desc"><strong>Close Other Tabs</strong> closes every tab except the clicked tab. <strong>Close All Tabs</strong> closes the complete tab set after handling modified documents.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Duplicate / Delete file or tab</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/duplicate_file.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/delete_file.png" alt="" aria-hidden="true">Duplicate / Delete file or tab</span></div>
                         <div class="action-desc">Duplicates an untitled tab or creates a new disk copy for a saved file. Delete removes a saved file after confirmation or closes an untitled tab.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Reload file</span><kbd>CTRL + ALT + SHIFT + L</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/clear.png" alt="" aria-hidden="true">Reload file</span><kbd>CTRL + ALT + SHIFT + L</kbd></div>
                         <div class="action-desc">Reloads the active saved file from disk and warns before replacing modified editor text.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Compare with...</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git_diff.png" alt="" aria-hidden="true">Compare with...</span></div>
                         <div class="action-desc">Selects another open saved tab, uses <strong>Browse File...</strong> to choose one from disk, or opens <strong>Configure Diff Tool...</strong>. The dialog explicitly reports when there are <strong>No other open saved files</strong>.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Git submenu</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git.png" alt="" aria-hidden="true">Git submenu</span></div>
                         <div class="action-desc">When Git is enabled and the file belongs to a repository, provides <strong>Commit File...</strong>, <strong>Discard Changes...</strong>, <strong>Git Diff (vs HEAD)</strong>, <strong>Stage File</strong> or <strong>Unstage File</strong>, <strong>Copy Path Relative to Repo</strong>, and <strong>File History / Log...</strong>.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Show menus</span><kbd>CTRL + ALT + M</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/menu.png" alt="" aria-hidden="true">Show menus</span><kbd>CTRL + ALT + M</kbd></div>
                         <div class="action-desc">Appears in context menus while the menu bar is hidden, providing a direct way to restore it.</div>
                     </div>
                 </div>
@@ -1002,19 +1012,19 @@
                 <p>Git support is opt-in through <strong>Options &raquo; Version control (GIT)</strong> or <kbd>CTRL + ALT + G</kbd>. It requires the <code>git</code> executable and a saved file inside a repository. When enabled, the active branch and file state appear in the status bar and modified tabs display compact Git status badges.</p>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Git action popup</span><kbd>CTRL + SHIFT + G</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git.png" alt="" aria-hidden="true">Git action popup</span><kbd>CTRL + SHIFT + G</kbd></div>
                         <div class="action-desc">Searches the valid Git operations for the active file. The same operations are available from editor and tab context menus and from the Command Palette.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Stage, unstage, commit, and history</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git_stage.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/git_unstage.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/git_commit.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/git_history.png" alt="" aria-hidden="true">Stage, unstage, commit, and history</span></div>
                         <div class="action-desc"><strong>Stage File</strong> and <strong>Unstage File</strong> change the index state, <strong>Commit File...</strong> commits the active file through a themed dialog, and <strong>File History / Log...</strong> displays its commit log.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Diff and discard</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git_diff.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/git_discard.png" alt="" aria-hidden="true">Diff and discard</span></div>
                         <div class="action-desc"><strong>Git Diff (vs HEAD)</strong> compares the working file with its HEAD revision using the configured diff tool. <strong>Discard Changes...</strong> requires confirmation, restores the Git version, reloads the tab, and cannot be undone.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">External comparison</span><kbd>CTRL + ALT + SHIFT + C</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git_diff.png" alt="" aria-hidden="true">External comparison</span><kbd>CTRL + ALT + SHIFT + C</kbd></div>
                         <div class="action-desc">Compares two files or two folders independently of Git. Choose another saved tab, browse from disk, or configure a discovered diff application.</div>
                     </div>
                 </div>
@@ -1026,19 +1036,19 @@
                 <p>Both text areas retain their standard Qt editing actions and add Multi Script Editor workflows. All added entries use the active theme and show status-bar descriptions when status tips are enabled.</p>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Editor selection</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save_output_to_tab.png" alt="" aria-hidden="true">Editor selection</span></div>
                         <div class="action-desc"><strong>Selection to tab</strong> copies selected editor text to a new tab. For a saved Markdown file, <strong>Markdown Preview</strong> opens the rendered overlay; for HTML, <strong>Open in browser</strong> launches the system browser.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Open in browser / Markdown Preview</span><kbd>CTRL + ALT + SHIFT + B</kbd></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/open_in_browser.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/docs.png" alt="" aria-hidden="true">Open in browser / Markdown Preview</span><kbd>CTRL + ALT + SHIFT + B</kbd></div>
                         <div class="action-desc">Uses the active saved file type to open HTML externally or render Markdown inside the editor. The action remains available even with no text selection.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Editor Git submenu</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/git.png" alt="" aria-hidden="true">Editor Git submenu</span></div>
                         <div class="action-desc">Appears at the top for saved repository files when Git is enabled and mirrors the file-level Git operations documented above.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Output actions</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/save_output_to_tab.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/save_output_as.png" alt="" aria-hidden="true">Output actions</span></div>
                         <div class="action-desc"><strong>Selection to tab</strong> copies only selected console text. <strong>Output to tab</strong> copies the complete output, and <strong>Save output to...</strong> writes it to disk. Standard copy, select-all, and clear behavior remains available.</div>
                     </div>
                 </div>
@@ -1077,15 +1087,15 @@
                 <p>Preferences are stored in an <code>mse_settings</code> directory under the current host's user-preference location. <strong>Options &raquo; Open settings folder</strong> opens the exact directory. Existing legacy preference files and named-session folders are migrated there when possible.</p>
                 <div class="action-grid">
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Automatic session and backup</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/restore_backup.png" alt="" aria-hidden="true">Automatic session and backup</span></div>
                         <div class="action-desc">Autosave tracks tab order, disk paths, untitled or modified text, cursor/scroll positions, bookmarks, folding, active tab, splitters, panels, and layout options. Unchanged backups are skipped.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Named sessions</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/saved_session.png" alt="" aria-hidden="true">Named sessions</span></div>
                         <div class="action-desc">Save a reusable workspace, restore the automatic backup, load a named session, or delete a named session. Overwriting an existing name requires confirmation.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title">Snippets and clipboard history</span></div>
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/snippets.png" alt="" aria-hidden="true"><img class="action-icon" src="../icons/paste.png" alt="" aria-hidden="true">Snippets and clipboard history</span></div>
                         <div class="action-desc">User snippets can be saved, imported, exported, inserted with Return, or executed with Enter/Numpad Enter; built-in snippets cannot be deleted. Clipboard history persists separately and is searchable.</div>
                     </div>
                     <div class="action-card">
