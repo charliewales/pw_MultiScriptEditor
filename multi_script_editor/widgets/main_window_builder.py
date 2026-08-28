@@ -75,7 +75,7 @@ class ScriptEditorUIBuilder:
         configure(editor.editTheme_act, editor.openThemeEditor, 'theme', 'Ctrl+Shift+T')
 
         configure(editor.donate_act, lambda: editor.openLink('donate'))
-        configure(editor.blenderManual_act, lambda: editor.openLink('blender_manual'), 'blender')
+        configure(editor.blenderManual_act, lambda: editor.openLink('blender_python_api'), 'blender')
         configure(editor.openManual_act, lambda: editor.openLink('manual'), 'github')
         configure(
             editor.python_act,
@@ -91,7 +91,7 @@ class ScriptEditorUIBuilder:
         configure(editor.about_act, editor.about, 'about')
         configure(editor.help_act, icon='sel')
         editor.shortcuts_act.setText('Shortcut manager')
-        configure(editor.shortcuts_act, editor.shortcuts, 'shortcut')
+        configure(editor.shortcuts_act, editor.shortcuts, 'shortcut', 'Ctrl+Shift+M', Qt.WindowShortcut)
         configure(editor.documentation_act, editor.openDocumentation, 'docs')
         configure(editor.printHelp_act, editor.mse_help, 'print_help')
 

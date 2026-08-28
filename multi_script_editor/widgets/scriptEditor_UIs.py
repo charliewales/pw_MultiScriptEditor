@@ -489,7 +489,7 @@ class Ui_scriptEditor(object):
         self.exit_act.setText(QApplication.translate("scriptEditor", "Exit", None))
         self.diffTool_act.setText(QApplication.translate("scriptEditor", "Compare with...", None))
         self.diffTool_act.setShortcut(QApplication.translate("scriptEditor", "Ctrl+Shift+C", None))
-        self.blenderManual_act.setText(QApplication.translate("scriptEditor", "Blender manual", None))
+        self.blenderManual_act.setText(QApplication.translate("scriptEditor", "Blender Python API", None))
         self.openManual_act.setText(QApplication.translate("scriptEditor", "GitHub", None))
         self.python_act.setText(QApplication.translate("scriptEditor", "Python documentation", None))
         self.quickHelp_act.setText(QApplication.translate("scriptEditor", "Quick help", None))

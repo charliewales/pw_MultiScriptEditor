@@ -243,7 +243,7 @@ class Ui_themeEditor(object):
         QMetaObject.connectSlotsByName(themeEditor)
 
     def retranslateUi(self, themeEditor):
-        themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Code Theme Editor", None))
+        themeEditor.setWindowTitle(QApplication.translate("themeEditor", "Theme Editor", None))
         self.label_radius.setText(QApplication.translate("themeEditor", "Tab border radius", None))
         self.tabRadius_spb.setToolTip(QApplication.translate("themeEditor", "Set the border radius (roundness) for the tabs", None))
 

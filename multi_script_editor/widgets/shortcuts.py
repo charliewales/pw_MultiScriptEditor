@@ -207,9 +207,9 @@ class shortcutsClass(QDialog):
         self.actions_tree.setSortingEnabled(False)
         header = self.actions_tree.header()
         header.setStretchLastSection(False)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Fixed)
         self.actions_tree.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
 
         details = QWidget(splitter)
@@ -328,8 +328,13 @@ class shortcutsClass(QDialog):
             self._select_first_visible()
 
     def _resize_action_columns(self):
+        header = self.actions_tree.header()
         for column in (0, 2):
+            header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
             self.actions_tree.resizeColumnToContents(column)
+            width = self.actions_tree.columnWidth(column)
+            header.setSectionResizeMode(column, QHeaderView.Fixed)
+            self.actions_tree.setColumnWidth(column, width)
 
     def _fit_initial_geometry(self):
         """Size the first view so the widest action, shortcut, and menu fit."""
@@ -338,6 +343,10 @@ class shortcutsClass(QDialog):
             header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
         for column in range(3):
             self.actions_tree.resizeColumnToContents(column)
+        fixed_widths = {
+            column: self.actions_tree.columnWidth(column)
+            for column in (0, 2)
+        }
         table_width = sum(self.actions_tree.columnWidth(column) for column in range(3))
         desired_width = table_width + 420
         screen = self.screen() or QApplication.primaryScreen()
@@ -348,9 +357,11 @@ class shortcutsClass(QDialog):
         else:
             desired_height = max(self.height(), 640)
         self.resize(max(self.minimumWidth(), desired_width), desired_height)
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)
         header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Fixed)
+        for column, width in fixed_widths.items():
+            self.actions_tree.setColumnWidth(column, width)
 
     def _center_on_editor(self):
         parent = self.parentWidget()
