@@ -1300,6 +1300,46 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
             return
         self.move_selected_lines(1)
 
+    def select_line(self):
+        self._run_manual_multi_select(self._select_line)
+
+    def _select_line(self):
+        document = self.document()
+        manager = self.multi_cursor_manager
+        cursors = manager.multi_cursors if manager.has_cursors() else [self.textCursor()]
+        selections = []
+
+        for cursor in cursors:
+            start = cursor.selectionStart()
+            end = cursor.selectionEnd()
+            if cursor.hasSelection() and end > start:
+                end -= 1
+
+            start_block = document.findBlock(start)
+            end_block = document.findBlock(end)
+            if not start_block.isValid() or not end_block.isValid():
+                continue
+
+            selection = QTextCursor(document)
+            selection.setPosition(start_block.position())
+            selection.setPosition(
+                end_block.position() + len(end_block.text()),
+                QTextCursor.KeepAnchor,
+            )
+            selections.append(selection)
+
+        if not selections:
+            return
+
+        if manager.has_cursors():
+            manager.multi_cursors = selections
+            manager.is_auto_populated = False
+            manager.deduplicate_and_sort_cursors()
+            self.setTextCursor(manager.multi_cursors[0])
+        else:
+            self.setTextCursor(selections[0])
+        self.highlight_current_line()
+
     def _capture_multi_cursor_states(self):
         document = self.document()
 

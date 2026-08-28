@@ -1762,6 +1762,9 @@ class tabWidgetClass(QTabWidget):
     def move_line_down(self):
         self.current().move_line_down()
 
+    def selectLine(self):
+        self.current().select_line()
+
     def comment(self):
         self.current().commentSelected()
 

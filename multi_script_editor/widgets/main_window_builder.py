@@ -129,6 +129,7 @@ class ScriptEditorUIBuilder:
         configure(editor.wordWrap_act, editor.tab.wordWrap, shortcut='Alt+W', context=Qt.WindowShortcut, checkable=True)
         configure(editor.moveLineUp_act, editor.tab.move_line_up, 'move_line_up', 'Alt+Up', Qt.WindowShortcut)
         configure(editor.moveLineDown_act, editor.tab.move_line_down, 'move_line_down', 'Alt+Down', Qt.WindowShortcut)
+        configure(editor.selectLine_act, editor.tab.selectLine, shortcut='Ctrl+L', context=Qt.WindowShortcut)
         configure(editor.comment_cat, editor.tab.comment, 'comment', 'Alt+C', Qt.WindowShortcut)
         configure(editor.add_quotes_act, editor.tab.addQuotes, 'add_quotes', 'Alt+Q', Qt.WindowShortcut)
         configure(editor.f_string_act, editor.tab.fString, 'f_string', 'Alt+F', Qt.WindowShortcut)
@@ -359,6 +360,7 @@ class ScriptEditorUIBuilder:
             editor.maya_cmds_act: "Open Maya commands documentation",
             editor.moveLineDown_act: "Move the current line or selection down",
             editor.moveLineUp_act: "Move the current line or selection up",
+            editor.selectLine_act: "Select the current line or every line containing a cursor",
             editor.nextBookmark_act: "Navigate to the next bookmark",
             editor.nextSelection_act: "Move to the next selection",
             editor.nuke_dev_guide_act: "Open Nuke Developer Guide",
