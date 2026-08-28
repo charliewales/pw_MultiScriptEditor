@@ -1200,7 +1200,12 @@ class inputClass(BaseTextWidgetMixin, QPlainTextEdit):
                     cursor.insertText(line)
                     self.setTextCursor(cursor)
         # execute all/selected on pressing Enter key (numpad)
-        elif event.key() == Qt.Key_Enter:
+        elif (
+            event.key() == Qt.Key_Enter
+            and 'Enter' in (
+                self.p.execAll_act.property('activeContextualShortcuts') or []
+            )
+        ):
             selection = self.getSelection()
             if selection:
                 self.executeSignal.emit()

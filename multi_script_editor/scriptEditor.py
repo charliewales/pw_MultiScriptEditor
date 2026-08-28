@@ -1015,14 +1015,19 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         return entries
 
     def captureDefaultShortcuts(self):
-        self._default_shortcut_mapping = {
-            entry['id']: [
+        self._default_shortcut_mapping = {}
+        for entry in self.shortcutEntries():
+            action = entry['action']
+            sequences = [
                 self._shortcut_text(sequence)
-                for sequence in entry['action'].shortcuts()
+                for sequence in action.shortcuts()
                 if self._shortcut_text(sequence)
             ]
-            for entry in self.shortcutEntries()
-        }
+            for sequence in action.property('contextualShortcuts') or []:
+                text = self._shortcut_text(sequence)
+                if text and text not in sequences:
+                    sequences.append(text)
+            self._default_shortcut_mapping[entry['id']] = sequences
 
     def defaultShortcutMapping(self):
         return {
@@ -1058,7 +1063,20 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 text = self._shortcut_text(sequence)
                 if text and text not in normalized:
                     normalized.append(text)
-            action.setShortcuts([QKeySequence(sequence) for sequence in normalized])
+            contextual = [
+                self._shortcut_text(sequence)
+                for sequence in action.property('contextualShortcuts') or []
+            ]
+            active_contextual = [
+                sequence for sequence in normalized
+                if sequence in contextual
+            ]
+            action.setProperty('activeContextualShortcuts', active_contextual)
+            action.setShortcuts([
+                QKeySequence(sequence)
+                for sequence in normalized
+                if sequence not in contextual
+            ])
 
             tip = action.statusTip()
             if tip:

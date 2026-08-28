@@ -176,9 +176,11 @@ class ScriptEditorUIBuilder:
         configure(
             editor.execAll_act,
             editor.executeAll,
-            shortcut=('Alt+Return', 'Alt+Enter'),
+            shortcut='Alt+Return',
             context=Qt.ApplicationShortcut,
         )
+        editor.execAll_act.setProperty('contextualShortcuts', ['Enter'])
+        editor.execAll_act.setProperty('activeContextualShortcuts', ['Enter'])
         configure(
             editor.execLine_act,
             editor.executeLine,
