@@ -2,8 +2,8 @@ import json
 import os
 
 from core.settings_model import SettingsModel, ThemesModel
-from vendor.Qt.QtCore import QSize, Qt, QTimer
-from vendor.Qt.QtGui import QColor, QFont, QIcon, QPixmap
+from vendor.Qt.QtCore import QSize, Qt
+from vendor.Qt.QtGui import QColor, QFont, QFontMetrics, QIcon, QPixmap
 from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
@@ -20,6 +20,7 @@ from vendor.Qt.QtWidgets import (
     QMessageBox,
     QPushButton,
     QStatusBar,
+    QWidget,
 )
 from widgets import themeEditor_UIs as ui
 from widgets.tabWidget import tabWidgetClass
@@ -150,8 +151,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
 
-        # Ensure style is reapplied correctly after dialog is shown
-        QTimer.singleShot(0, self.updateExample)
+        # Finish sizing and styling before the dialog becomes visible.
+        self.updateExample()
 
     def get_settings(self):
         if self.parent() and hasattr(self.parent(), '_current_settings'):
@@ -302,6 +303,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         else:
             font = QFont()
 
+        interface_font = QFont(font)
+        interface_font.setPointSize(max(1, int(colors.get('menu_text_size', 10))))
+        self.setFont(interface_font)
+
         if hasattr(self, 'preview_tab_widget'):
             self.preview_tab_widget._tab_text_size = colors.get('tab_text_size')
             self.preview_tab_widget.apply_tab_style(colors)
@@ -335,13 +340,12 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
 
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
-                if font.family():
-                    main_style += f"\nQLabel, QComboBox, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
+                if interface_font.family():
+                    main_style += f"\nQLabel, QComboBox, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{interface_font.family()}'; }}"
                 button_size = colors.get('menu_text_size', 10)
                 button_font = (
-                    QFont(font.family(), button_size, font.weight(), font.italic())
-                    if colors.get('use_theme_font_on_menus', False) and font_data
-                    else QApplication.font('QMenu')
+                    QFont(interface_font.family(), button_size, interface_font.weight(), interface_font.italic())
+                    if interface_font.family() else QApplication.font('QMenu')
                 )
                 button_background = colors.get('background', (40, 40, 40))
                 button_text = colors.get('default', (210, 210, 210))
@@ -372,10 +376,45 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 self.themeList_cbb.setFixedHeight(self.save_btn.sizeHint().height())
                 if self.styleSheet() != main_style:
                     self.setStyleSheet(main_style)
+                self.widget.setFont(interface_font)
+                for control in self.widget.findChildren(QWidget):
+                    control.setFont(interface_font)
+                self.themeList_cbb.setFont(interface_font)
+                self._fit_preview_width(font)
         else:
             self.preview_twd.applyPreviewStyle(colors)
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
                 self.preview_twd.set_start_font(font_data)
+
+    def _fit_preview_width(self, code_font):
+        metrics = QFontMetrics(code_font)
+        measure = getattr(metrics, 'horizontalAdvance', metrics.width)
+        code_width = max(measure(line) for line in defaultText.splitlines())
+        controls_width = self.widget.sizeHint().width()
+        desired_width = controls_width + code_width + 180
+        desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
+        if desk:
+            available = desk.availableGeometry(self.parent() if self.parent() else self)
+            desired_width = min(desired_width, available.width() - 40)
+        if desired_width > self.width():
+            self.resize(desired_width, self.height())
+        self.splitter.setSizes([controls_width, max(1, self.width() - controls_width)])
+        self._center_on_parent()
+
+    def _center_on_parent(self):
+        parent = self.parentWidget()
+        desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
+        if parent is not None:
+            target = parent.frameGeometry().center() - self.rect().center()
+        elif desk:
+            target = desk.availableGeometry(self).center() - self.rect().center()
+        else:
+            return
+        if desk:
+            available = desk.availableGeometry(parent or self)
+            target.setX(max(available.left(), min(target.x(), available.right() - self.width() + 1)))
+            target.setY(max(available.top(), min(target.y(), available.bottom() - self.height() + 1)))
+        self.move(target)
 
     def getCurrentColors(self):
         colors = getattr(self, '_current_colors_cache', {}).copy()
