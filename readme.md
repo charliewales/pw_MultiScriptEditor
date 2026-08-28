@@ -20,9 +20,9 @@ or embedded in another application. The main purpose for integration - the abili
 
 ### Existing integration modules
   - Blender 5+ (requires PySide6)
-  - Houdini 19-22
-  - Nuke 15-17
-  - Maya 2024-2027
+  - Houdini 19+
+  - Nuke 15+
+  - Maya 2024+
 
 If necessary, you can extend this to make your own integration module.
 The main pre condition - Should be used Python 3+.
