@@ -18,6 +18,7 @@ import vendor.Qt
 from core.execution_manager import ExecutionManager
 from core.file_utils import read_file_text
 from core.outline_parser import OutlineParser
+from core.shortcut_model import ShortcutProfilesModel
 from core.session_model import (
     get_restored_modified_state,
     get_session_editor_state,
@@ -28,7 +29,7 @@ from icons import icons
 from presenters.main_presenter import MainPresenter
 from style.links import links
 from vendor.Qt.QtCore import QEvent, QPoint, QSize, Qt, QTimer, Signal
-from vendor.Qt.QtGui import QColor, QFont, QIcon, QPalette, QTextCursor
+from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextCursor
 from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
@@ -52,6 +53,7 @@ from widgets import (
     explorerWidget,
     outlineWidget,
     outputWidget,
+    shortcuts,
     tabWidget,
 )
 from widgets import scriptEditor_UIs as ui
@@ -204,6 +206,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
         # variables
         self._current_settings = {}
+        self._shortcut_profiles_model = ShortcutProfilesModel()
+        self._default_shortcut_mapping = {}
         self._session_shutdown_saved = False
         self.namespace = __import__('__main__').__dict__
         self.dial = None
@@ -610,10 +614,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def fillThemeMenu(self):
         self.theme_menu.clear()
-        edit_action = QAction('Edit...', self, triggered=self.openThemeEditor)
-        edit_action.setShortcut('Ctrl+Shift+T')
-        edit_action.setStatusTip("Edit the current color theme")
-        self.theme_menu.addAction(edit_action)
+        self.theme_menu.addAction(self.editTheme_act)
 
         # Randomize custom theme at startup action
         randomize_act = QAction('Randomize custom at startup', self, triggered=self.toggleRandomizeCustomAtStartup)
@@ -979,9 +980,120 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if current_msg.startswith("Syntax Error"):
                     self.statusBar().clearMessage()
 
+    @staticmethod
+    def _shortcut_text(sequence):
+        return QKeySequence(sequence).toString(QKeySequence.PortableText)
+
+    def shortcutEntries(self):
+        entries = []
+        seen = set()
+
+        def visit_menu(menu, path):
+            for action in menu.actions():
+                submenu = action.menu()
+                if submenu is not None:
+                    title = submenu.title().replace('&', '').strip()
+                    visit_menu(submenu, path + ([title] if title else []))
+                    continue
+                action_id = action.objectName()
+                label = action.text().replace('&', '').strip()
+                if not action_id or not label or action.isSeparator() or action_id in seen:
+                    continue
+                seen.add(action_id)
+                entries.append({
+                    'id': action_id,
+                    'label': label,
+                    'menu': ' > '.join(path),
+                    'action': action,
+                })
+
+        for menu_action in self.menubar.actions():
+            menu = menu_action.menu()
+            if menu is not None:
+                title = menu.title().replace('&', '').strip()
+                visit_menu(menu, [title] if title else [])
+        return entries
+
+    def captureDefaultShortcuts(self):
+        self._default_shortcut_mapping = {
+            entry['id']: [
+                self._shortcut_text(sequence)
+                for sequence in entry['action'].shortcuts()
+                if self._shortcut_text(sequence)
+            ]
+            for entry in self.shortcutEntries()
+        }
+
+    def defaultShortcutMapping(self):
+        return {
+            action_id: list(sequences)
+            for action_id, sequences in self._default_shortcut_mapping.items()
+        }
+
+    def shortcutProfileNames(self):
+        return self._shortcut_profiles_model.list_profiles()
+
+    def activeShortcutProfile(self):
+        return self._current_settings.get(
+            'shortcut_profile',
+            ShortcutProfilesModel.DEFAULT_PROFILE,
+        )
+
+    def shortcutProfileMapping(self, profile_name):
+        mapping = self.defaultShortcutMapping()
+        if profile_name != ShortcutProfilesModel.DEFAULT_PROFILE:
+            overrides = self._shortcut_profiles_model.read_profile(profile_name)
+            for action_id, sequences in overrides.items():
+                if action_id in mapping:
+                    mapping[action_id] = list(sequences)
+        return mapping
+
+    def applyShortcutMapping(self, mapping):
+        defaults = self.defaultShortcutMapping()
+        for entry in self.shortcutEntries():
+            action = entry['action']
+            sequences = mapping.get(entry['id'], defaults.get(entry['id'], []))
+            normalized = []
+            for sequence in sequences:
+                text = self._shortcut_text(sequence)
+                if text and text not in normalized:
+                    normalized.append(text)
+            action.setShortcuts([QKeySequence(sequence) for sequence in normalized])
+
+            tip = action.statusTip()
+            if tip:
+                suffix = ' ({0})'.format(', '.join(normalized)) if normalized else ''
+                action.setToolTip(tip + suffix)
+
+    def applyShortcutProfile(self, profile_name, persist=False):
+        names = self.shortcutProfileNames()
+        canonical_name = next(
+            (name for name in names if name.casefold() == (profile_name or '').casefold()),
+            ShortcutProfilesModel.DEFAULT_PROFILE,
+        )
+        self.applyShortcutMapping(self.shortcutProfileMapping(canonical_name))
+        self._current_settings['shortcut_profile'] = canonical_name
+        if persist and hasattr(self, '_presenter'):
+            self.saveSettings()
+        return canonical_name
+
+    def saveShortcutProfile(self, profile_name, mapping, activate=True):
+        self._shortcut_profiles_model.write_profile(profile_name, mapping)
+        if activate:
+            self.applyShortcutMapping(mapping)
+            self._current_settings['shortcut_profile'] = profile_name
+            if hasattr(self, '_presenter'):
+                self.saveSettings()
+
+    def deleteShortcutProfile(self, profile_name):
+        self._shortcut_profiles_model.delete_profile(profile_name)
+        if self.activeShortcutProfile().casefold() == profile_name.casefold():
+            self.applyShortcutProfile(ShortcutProfilesModel.DEFAULT_PROFILE, persist=True)
+
     def getShortcut(self, action):
-        settings = self._presenter.settings_model.load_settings()
-        return settings.get('shortcuts', {}).get(action, None)
+        action_id = action.objectName() if isinstance(action, QAction) else action
+        sequences = self.shortcutProfileMapping(self.activeShortcutProfile()).get(action_id, [])
+        return sequences[0] if sequences else None
 
     def loadSession(self, sessions=None):
         if sessions is None:
@@ -1801,6 +1913,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def apply_settings(self, settings):
         self._current_settings = settings
+        self.applyShortcutProfile(settings.get('shortcut_profile'))
         if hasattr(self, 's') and hasattr(self.s, 'write_settings'):
             self.s.write_settings(settings)
         self.loadSettings()
@@ -2176,7 +2289,6 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
             dial.exec_()
 
     def shortcuts(self):
-        from widgets import shortcuts
         dial = shortcuts.shortcutsClass(self)
         if hasattr(dial, 'exec'):
             dial.exec()

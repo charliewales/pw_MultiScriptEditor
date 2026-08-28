@@ -152,7 +152,10 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
             ideal_height = min(ideal_height, screen_rect.height() - 100)
 
-        self.resize(1100, ideal_height)
+        ideal_width = 920
+        if desk:
+            ideal_width = min(ideal_width, screen_rect.width() - 40)
+        self.resize(ideal_width, ideal_height)
         self.setMinimumHeight(min(needed_height, ideal_height))
 
         self.preview_twd.completer.updateCompleteList()
@@ -344,7 +347,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             main_style = design.applyColorToMainStyle(colors)
             if main_style:
                 if font.family():
-                    main_style += f"\nQLabel, QComboBox, QPushButton, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
+                    main_style += f"\nQLabel, QComboBox, QListWidget, QSpinBox, QCheckBox, QGroupBox {{ font-family: '{font.family()}'; }}"
                 if self.styleSheet() != main_style:
                     self.setStyleSheet(main_style)
         else:

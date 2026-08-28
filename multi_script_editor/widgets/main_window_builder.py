@@ -72,6 +72,7 @@ class ScriptEditorUIBuilder:
         configure(editor.deleteLine_act, editor.deleteLine, 'delete_line', 'Ctrl+D', Qt.WindowShortcut)
         configure(editor.set_font_act, editor.choose_font, 'font')
         configure(editor.settingsFile_act, editor.openSettingsFile, 'settings')
+        configure(editor.editTheme_act, editor.openThemeEditor, 'theme', 'Ctrl+Shift+T')
 
         configure(editor.donate_act, lambda: editor.openLink('donate'))
         configure(editor.openManual_act, lambda: editor.openLink('manual'), 'github')
@@ -88,6 +89,7 @@ class ScriptEditorUIBuilder:
         configure(editor.qt_modules_act, lambda: editor.openLink(f"qt{'6' if vendor.Qt.IsPySide6 else '5'}_modules"), 'qt')
         configure(editor.about_act, editor.about, 'about')
         configure(editor.help_act, icon='sel')
+        editor.shortcuts_act.setText('Shortcut manager')
         configure(editor.shortcuts_act, editor.shortcuts, 'shortcut')
         configure(editor.documentation_act, editor.openDocumentation, 'docs')
         configure(editor.printHelp_act, editor.mse_help, 'print_help')
@@ -256,7 +258,9 @@ class ScriptEditorUIBuilder:
         editor.saveOutput_menu = QMenu("Save output", editor)
         editor.saveOutput_menu.setIcon(QIcon(icons['save']))
         editor.saveOutputAs_act = QAction("As...", editor)
+        editor.saveOutputAs_act.setObjectName('saveOutputAs_act')
         editor.saveOutputToTab_act = QAction("To tab", editor)
+        editor.saveOutputToTab_act.setObjectName('saveOutputToTab_act')
         configure(editor.saveOutputAs_act, editor.saveOutputAs, 'save_output_as')
         configure(editor.saveOutputToTab_act, editor.saveOutputToTab, 'save_output_to_tab')
         editor.saveOutput_menu.addAction(editor.saveOutputAs_act)
@@ -283,22 +287,27 @@ class ScriptEditorUIBuilder:
 
         # Create Bookmarks actions
         editor.toggleBookmark_act = QAction("Toggle Bookmark", editor)
+        editor.toggleBookmark_act.setObjectName('toggleBookmark_act')
         configure_optional(editor.toggleBookmark_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'toggle_bookmark'), 'bookmark_toggle', "Ctrl+F2")
         editor.addAction(editor.toggleBookmark_act)
 
         editor.nextBookmark_act = QAction("Next Bookmark", editor)
+        editor.nextBookmark_act.setObjectName('nextBookmark_act')
         configure_optional(editor.nextBookmark_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'next_bookmark'), 'bookmark_next', "F2")
         editor.addAction(editor.nextBookmark_act)
 
         editor.prevBookmark_act = QAction("Previous Bookmark", editor)
+        editor.prevBookmark_act.setObjectName('prevBookmark_act')
         configure_optional(editor.prevBookmark_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'prev_bookmark'), 'bookmark_prev', "Shift+F2")
         editor.addAction(editor.prevBookmark_act)
 
         editor.clearBookmarks_act = QAction("Clear Bookmarks", editor)
+        editor.clearBookmarks_act.setObjectName('clearBookmarks_act')
         configure_optional(editor.clearBookmarks_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'clear_bookmarks'), 'clear', "Ctrl+Shift+F2")
         editor.addAction(editor.clearBookmarks_act)
 
         editor.bookmarksFinder_act = QAction("Go to bookmark...", editor)
+        editor.bookmarksFinder_act.setObjectName('bookmarksFinder_act')
         configure_optional(editor.bookmarksFinder_act, partial(ScriptEditorUIBuilder._call_current_edit, editor, 'show_bookmarks_popup'), 'goto_line', "Ctrl+B")
         editor.addAction(editor.bookmarksFinder_act)
 
@@ -393,7 +402,7 @@ class ScriptEditorUIBuilder:
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.set_font_act: "Choose the font for the editor",
             editor.settingsFile_act: "Open the folder containing the settings file",
-            editor.shortcuts_act: "Show a list of application shortcuts",
+            editor.shortcuts_act: "Open the Shortcut Manager to configure keyboard shortcuts",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
             editor.showAutocomplete_act: "Show code autocompletion",
             editor.showExplorer_act: "Show or hide the file explorer panel",
@@ -524,6 +533,13 @@ class ScriptEditorUIBuilder:
             tb.addAction(editor.zoom_in_act)
             tb.addAction(editor.zoom_out_act)
             tb.addAction(editor.reset_zoom_act)
+
+        # Keep the manager at the bottom of Options, as the final preference action.
+        editor.help_menu.removeAction(editor.shortcuts_act)
+        editor.options_menu.addSeparator()
+        editor.options_menu.addAction(editor.shortcuts_act)
+
+        editor.captureDefaultShortcuts()
 
         # Ensure all actions with window-level shortcuts are added to the main window
         # so they remain active even if both the menus and toolbar are hidden.
