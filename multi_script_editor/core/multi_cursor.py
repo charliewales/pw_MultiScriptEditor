@@ -225,7 +225,7 @@ class MultiCursorManager:
             self._extra_selections_cache = None
 
         last_cursor = self.multi_cursors[-1]
-        start_pos = last_cursor.position()
+        start_pos = last_cursor.selectionEnd()
         case_sensitive = self._occurrences_case_sensitive()
 
         options = QTextDocument.FindCaseSensitively if case_sensitive else QTextDocument.FindFlags()
