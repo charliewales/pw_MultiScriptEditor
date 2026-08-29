@@ -153,6 +153,8 @@ class shortcutsClass(QDialog):
         for child in widget.findChildren(QWidget):
             child.setFont(font)
             child.setPalette(palette)
+        if widget is self:
+            self.profile_combo.setFixedHeight(self.save_as_button.sizeHint().height())
 
     @staticmethod
     def _set_help(widget, text):

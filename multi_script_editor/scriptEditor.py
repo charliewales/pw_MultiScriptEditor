@@ -2801,6 +2801,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
     def fillSessionsMenu(self):
         self.sessions_menu.clear()
+        self.sessions_menu.addAction(self.saveSeccion_act)
 
         save_act = QAction("Save current session as...", self)
         save_act.setIcon(QIcon(icons['save']))

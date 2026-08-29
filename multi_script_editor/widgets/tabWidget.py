@@ -246,7 +246,7 @@ class tabWidgetClass(QTabWidget):
         self.toggleExplorer_btn.setCursor(Qt.ArrowCursor)
         self.toggleExplorer_btn.setIcon(QIcon(icons.get('explorer_panel', icons.get('open', ''))))
         self.toggleExplorer_btn.setIconSize(QSize(24, 24))
-        self.toggleExplorer_btn.setToolTip("Toggle Explorer (Ctrl+E)")
+        self.toggleExplorer_btn.setToolTip("Toggle Explorer")
         self.toggleExplorer_btn.setStatusTip("Show or hide the file explorer panel")
         self.toggleExplorer_btn.setCheckable(True)
         self.toggleExplorer_btn.toggled.connect(self.toggle_explorer)
