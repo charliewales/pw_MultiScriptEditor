@@ -389,7 +389,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             if font_data and hasattr(self.preview_twd, 'set_start_font'):
                 self.preview_twd.set_start_font(font_data)
 
-    def _fit_preview_width(self, code_font):
+    def _fit_preview_width(self):
+        code_font, _, _ = self.getFont()
         metrics = QFontMetrics(code_font)
         measure = getattr(metrics, 'horizontalAdvance', metrics.width)
         code_width = max(measure(line) for line in defaultText.splitlines())
@@ -814,7 +815,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         return False
 
     def showEvent(self, event):
-        self._fit_preview_width(self.getFont()[0])
+        self._fit_preview_width()
 
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):

@@ -621,6 +621,7 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
         randomize_act.setCheckable(True)
         randomize_act.setChecked(self._current_settings.get('randomize_custom_at_startup', False))
         randomize_act.setStatusTip("If active, a random theme is chosen from the custom themes at startup")
+        self.theme_menu.addSeparator()
         self.theme_menu.addAction(randomize_act)
         self.randomize_custom_act = randomize_act
 

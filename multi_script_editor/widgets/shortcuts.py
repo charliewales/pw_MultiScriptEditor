@@ -36,8 +36,6 @@ class shortcutsClass(QDialog):
         self._loading_profile = False
 
         self.setWindowTitle('Shortcut Manager')
-        self.resize(920, 640)
-        self.setMinimumSize(720, 480)
         self._build_ui()
         self._apply_parent_theme()
         self._reload_profiles(parent.activeShortcutProfile())
@@ -337,31 +335,16 @@ class shortcutsClass(QDialog):
             self.actions_tree.setColumnWidth(column, width)
 
     def _fit_initial_geometry(self):
-        """Size the first view so the widest action, shortcut, and menu fit."""
-        header = self.actions_tree.header()
-        for column in range(3):
-            header.setSectionResizeMode(column, QHeaderView.ResizeToContents)
-        for column in range(3):
-            self.actions_tree.resizeColumnToContents(column)
-        fixed_widths = {
-            column: self.actions_tree.columnWidth(column)
-            for column in (0, 2)
-        }
-        table_width = sum(self.actions_tree.columnWidth(column) for column in range(3))
-        desired_width = table_width + 420
-        screen = self.screen() or QApplication.primaryScreen()
-        if screen is not None:
-            available = screen.availableGeometry()
-            desired_width = min(desired_width, int(available.width() * 0.95))
-            desired_height = min(max(self.height(), 640), int(available.height() * 0.9))
-        else:
-            desired_height = max(self.height(), 640)
-        self.resize(max(self.minimumWidth(), desired_width), desired_height)
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.Fixed)
-        for column, width in fixed_widths.items():
-            self.actions_tree.setColumnWidth(column, width)
+        """Match the Theme Editor's initial dimensions."""
+        ideal_width = 1372
+        ideal_height = 720
+        desk = QApplication.desktop() if hasattr(QApplication, 'desktop') else None
+        if desk:
+            screen_rect = desk.availableGeometry(self.parent() if self.parent() else self)
+            ideal_width = min(ideal_width, screen_rect.width() - 40)
+            ideal_height = min(ideal_height, screen_rect.height() - 40)
+        self.resize(ideal_width, ideal_height)
+        self.setMinimumSize(min(ideal_width, 720), min(ideal_height, 480))
 
     def _center_on_editor(self):
         parent = self.parentWidget()

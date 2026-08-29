@@ -467,13 +467,14 @@
 
             <p class="caption">Customization &amp; Advanced</p>
             <ul>
+                <li><a href="#shortcut-manager">Shortcut Manager</a></li>
                 <li><a href="#tab-interactions">Tab &amp; Context Menu</a></li>
                 <li><a href="#workspace-navigation">Explorer, Outline &amp; Breadcrumbs</a></li>
                 <li><a href="#git-integration">Git &amp; Comparison</a></li>
                 <li><a href="#editor-output-context">Editor &amp; Output Context Menus</a></li>
                 <li><a href="#host-integrations">Host Integrations</a></li>
                 <li><a href="#state-and-status">Settings, Sessions &amp; Status</a></li>
-                <li><a href="#code-theme-editor">Code Theme Editor</a></li>
+                <li><a href="#code-theme-editor">Theme Editor</a></li>
             </ul>
         </div>
     </nav>
@@ -754,6 +755,10 @@
                         <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/settings.png" alt="" aria-hidden="true">Open settings folder</span></div>
                         <div class="action-desc">Opens local directory containing application settings, themes, and sessions.</div>
                     </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/shortcut.png" alt="" aria-hidden="true">Shortcut manager</span><kbd>CTRL + SHIFT + M</kbd></div>
+                        <div class="action-desc">Opens the Shortcut Manager to configure keyboard shortcuts and profiles.</div>
+                    </div>
                 </div>
 
                 <!-- Run -->
@@ -837,7 +842,7 @@
                 <div class="action-grid">
                     <div class="action-card">
                         <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/theme.png" alt="" aria-hidden="true">Edit...</span><kbd>CTRL + SHIFT + T</kbd></div>
-                        <div class="action-desc">Opens the advanced Code Theme Editor to customize colors, font sizes, rounding, and fonts.</div>
+                        <div class="action-desc">Opens the advanced Theme Editor to customize colors, font sizes, rounding, and fonts.</div>
                     </div>
                     <div class="action-card">
                         <div class="action-header"><span class="action-title">Randomize custom at startup</span></div>
@@ -906,10 +911,6 @@
                         <div class="action-desc">Runs contextual help for the word under the cursor and displays the result in the output panel.</div>
                     </div>
                     <div class="action-card">
-                        <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/shortcut.png" alt="" aria-hidden="true">Shortcuts</span></div>
-                        <div class="action-desc">Opens the searchable application shortcut reference generated from the current shortcut definitions.</div>
-                    </div>
-                    <div class="action-card">
                         <div class="action-header"><span class="action-title"><img class="action-icon" src="../icons/docs.png" alt="" aria-hidden="true">Documentation</span></div>
                         <div class="action-desc">Opens this documentation in your browser.</div>
                     </div>
@@ -929,6 +930,29 @@
             </section>
 
             <!-- Customization & Advanced Section -->
+            <section id="shortcut-manager">
+                <h2>Shortcut Manager</h2>
+                <p>Open it with <strong>Options &raquo; Shortcut manager</strong> or <kbd>CTRL + SHIFT + M</kbd>. It lists every action with its assigned shortcuts and menu location, and follows the current application theme.</p>
+                <div class="action-grid">
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Search and filters</span></div>
+                        <div class="action-desc">Filters by action name, menu path, or key sequence, with additional Ctrl, Alt, Shift, Meta, and unassigned-only filters.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Shortcut assignments</span></div>
+                        <div class="action-desc">Adds, edits, or removes multiple shortcuts per action. Conflicts identify the existing action and can be reassigned after confirmation.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Profiles</span></div>
+                        <div class="action-desc">Switches between the built-in Default profile and custom profiles, with controls to save a copy, delete a custom profile, and save and apply changes immediately.</div>
+                    </div>
+                    <div class="action-card">
+                        <div class="action-header"><span class="action-title">Reset and unsaved changes</span></div>
+                        <div class="action-desc">Restores one action or every action to the built-in shortcuts and asks before discarding unsaved changes when switching profiles or closing.</div>
+                    </div>
+                </div>
+            </section>
+
             <section id="tab-interactions">
                 <h2>Tab &amp; Context Menu</h2>
                 <div class="action-grid">
@@ -1121,9 +1145,9 @@
                 </div>
             </section>
 
-            <!-- Code Theme Editor Section -->
+            <!-- Theme Editor Section -->
             <section id="code-theme-editor">
-                <h2>Code Theme Editor</h2>
+                <h2>Theme Editor</h2>
                 <p>Access the Theme Editor via <strong>Theme &raquo; Edit...</strong> (<kbd>CTRL + SHIFT + T</kbd>). It provides comprehensive real-time customization of UI colors, syntax tokens, font families, and element text sizes.</p>
 
                 <div class="admonition tip">
