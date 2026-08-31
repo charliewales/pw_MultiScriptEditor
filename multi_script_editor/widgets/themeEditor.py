@@ -405,7 +405,9 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def _fit_preview_width(self):
         code_font, _, _ = self.getFont()
         metrics = QFontMetrics(code_font)
-        measure = getattr(metrics, 'horizontalAdvance', metrics.width)
+        measure = getattr(metrics, 'horizontalAdvance', None)
+        if measure is None:
+            measure = metrics.width
         code_width = max(measure(line) for line in defaultText.splitlines())
         controls_width = self.widget.sizeHint().width()
         desired_width = controls_width + code_width + 180
