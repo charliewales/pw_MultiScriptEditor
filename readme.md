@@ -1,5 +1,6 @@
-# Multi Script Editor v6.5.0
-<img width="1124" height="1021" alt="imagen" src="https://github.com/user-attachments/assets/9b6aca1d-8e62-4cc4-867b-7b41f66e42de" />
+# Multi Script Editor
+<img width="1460" height="1259" alt="imagen" src="https://github.com/user-attachments/assets/db52c051-eda2-4241-bdaa-550e4f711901" />
+
 
 
 
