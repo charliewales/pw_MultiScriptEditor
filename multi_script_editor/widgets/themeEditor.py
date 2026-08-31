@@ -147,6 +147,14 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             ideal_height = min(ideal_height, screen_rect.height() - 40)
         self.resize(ideal_width, ideal_height)
         self.setMinimumSize(min(ideal_width, 720), min(ideal_height, 480))
+        saved_size = self.get_settings().get('theme_editor_size')
+        self._restored_size = (
+            isinstance(saved_size, list)
+            and len(saved_size) == 2
+            and all(isinstance(value, int) and value > 0 for value in saved_size)
+        )
+        if self._restored_size:
+            self.resize(saved_size[0], saved_size[1])
 
         self.preview_twd.completer.updateCompleteList()
         self.namespace={}
@@ -167,6 +175,11 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
             self.parent().save_settings_requested.emit(settings)
         else:
             self.s.write_settings(settings)
+
+    def _save_size(self):
+        settings = self.get_settings()
+        settings['theme_editor_size'] = [self.width(), self.height()]
+        self.save_settings(settings)
 
     def save_theme_settings(self, theme_settings):
         self.t_model.write_settings(theme_settings)
@@ -400,7 +413,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
         if desk:
             available = desk.availableGeometry(self.parent() if self.parent() else self)
             desired_width = min(desired_width, available.width() - 40)
-        if desired_width > self.width():
+        if not self._restored_size and desired_width > self.width():
             self.resize(desired_width, self.height())
         self.splitter.setSizes([controls_width, max(1, self.width() - controls_width)])
         self._center_on_parent()
@@ -820,9 +833,7 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
     def closeEvent(self, event):
         if getattr(self, '_force_close', False):
             event.accept()
-            return
-
-        if self.hasUnsavedChanges():
+        elif self.hasUnsavedChanges():
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText("You may have unsaved changes.\nDo you want to save them before closing?")
@@ -843,6 +854,8 @@ class themeEditorClass(QDialog, ui.Ui_themeEditor):
                 event.ignore()
         else:
             event.accept()
+        if event.isAccepted():
+            self._save_size()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

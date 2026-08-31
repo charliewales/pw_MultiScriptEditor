@@ -40,6 +40,13 @@ class shortcutsClass(QDialog):
         self._apply_parent_theme()
         self._reload_profiles(parent.activeShortcutProfile())
         self._fit_initial_geometry()
+        saved_size = parent._current_settings.get('shortcut_manager_size')
+        if (
+            isinstance(saved_size, list)
+            and len(saved_size) == 2
+            and all(isinstance(value, int) and value > 0 for value in saved_size)
+        ):
+            self.resize(saved_size[0], saved_size[1])
         self._center_on_editor()
 
     @staticmethod
@@ -628,6 +635,12 @@ class shortcutsClass(QDialog):
 
     def _confirm_discard(self, title):
         return self._confirm(title, 'Discard the unsaved shortcut changes?')
+
+    def done(self, result):
+        settings = self.editor._current_settings
+        settings['shortcut_manager_size'] = [self.width(), self.height()]
+        self.editor.save_settings_requested.emit(settings)
+        super(shortcutsClass, self).done(result)
 
     def reject(self):
         if self._dirty and not self._confirm_discard('Unsaved Changes'):
