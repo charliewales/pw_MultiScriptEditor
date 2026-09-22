@@ -17,7 +17,7 @@ class MainPresenter:
         self.session_model = SessionModel()
         self.autocomplete_provider = AutocompleteProvider()
         self.linter_provider = LinterProvider()
-        
+
         # Connect view signals to presenter slots
         self.view.execute_command_requested.connect(self.handle_execute_command)
         self.view.update_outline_requested.connect(self.handle_update_outline)
@@ -25,7 +25,7 @@ class MainPresenter:
             self.view.save_settings_requested.connect(self.handle_save_settings)
         if hasattr(self.view, 'load_settings_requested'):
             self.view.load_settings_requested.connect(self.handle_load_settings)
-            
+
         # Push initial settings to the view
         self.handle_load_settings()
 
@@ -39,31 +39,31 @@ class MainPresenter:
     # SESSION METHODS
     def get_session_tabs(self):
         return self.session_model.readSession()
-        
+
     def save_session(self, tabs):
         return self.session_model.writeSession(tabs)
-        
+
     def get_backup_tabs(self):
         return self.session_model.readBackup()
-        
+
     def save_backup(self, tabs):
         self.session_model.writeBackup(tabs)
-        
+
     def backup_exists(self):
         return self.session_model.backupExists()
-        
+
     def remove_backup(self):
         self.session_model.removeBackup()
-        
+
     def get_named_sessions(self):
         return self.session_model.listNamedSessions()
-        
+
     def save_named_session(self, name, tabs):
         self.session_model.writeNamedSession(name, tabs)
-        
+
     def get_named_session_tabs(self, name):
         return self.session_model.readNamedSession(name)
-        
+
     def delete_named_session(self, name):
         self.session_model.deleteNamedSession(name)
 
@@ -83,19 +83,21 @@ class MainPresenter:
         """
         Handles the execution of a command triggered from the View.
         """
+        self.view.saveSession()
+
         if clear_history:
             self.view.clear_output()
-            
+
         self.view.append_output_message(command)
-            
+
         namespace = self.view.get_namespace()
-        
+
         def output_callback(text):
             self.view.append_output_message(text)
-            
+
         def close_callback():
             self.view.close()
-            
+
         self.execution_manager.run_command(command, namespace, output_callback, close_callback)
 
     def request_autocomplete(self, text, line, column, namespace, fuzzy, context):
@@ -107,10 +109,10 @@ class MainPresenter:
         edit = self.view.tab.widget(self.view.tab.currentIndex())
         if edit and hasattr(edit, 'file_path') and edit.file_path:
              ext = os.path.splitext(edit.file_path)[1].lower()
-             
+
         if ext not in PYTHON_COMPLETION_EXTENSIONS:
             return []
-            
+
         # Check if the user prefers single quotes
         prefer_single_quotes = self.view.preferSingleQuotes_act.isChecked() if hasattr(self.view, 'preferSingleQuotes_act') else False
 
@@ -133,7 +135,7 @@ class MainPresenter:
         edit = self.view.tab.widget(self.view.tab.currentIndex())
         if edit and hasattr(edit, 'file_path') and edit.file_path:
              ext = os.path.splitext(edit.file_path)[1].lower()
-             
+
         if ext != '.py':
             self.view.show_syntax_errors({})
             return
