@@ -206,6 +206,10 @@ class SettingsModel:
                     recent_files=[],
                     recent_commands=[],
                     randomize_custom_at_startup=False,
+                    startup_script_enabled=False,
+                    startup_script_mode="file",
+                    startup_script_path="",
+                    startup_script_code="",
                     quick_tab_switching=True,
                     auto_close_delimiters=True,
                     diff_tool_path=""

@@ -72,6 +72,9 @@ class ScriptEditorUIBuilder:
         configure(editor.deleteLine_act, editor.deleteLine, 'delete_line', 'Ctrl+D', Qt.WindowShortcut)
         configure(editor.set_font_act, editor.choose_font, 'font')
         configure(editor.settingsFile_act, editor.openSettingsFile, 'settings')
+        editor.startupScript_act = QAction('Startup script...', editor)
+        editor.startupScript_act.setObjectName('startupScript_act')
+        configure(editor.startupScript_act, editor.configureStartupScript, 'settings')
         configure(editor.editTheme_act, editor.openThemeEditor, 'theme', 'Ctrl+Shift+T')
 
         configure(editor.donate_act, lambda: editor.openLink('donate'))
@@ -406,6 +409,7 @@ class ScriptEditorUIBuilder:
             editor.selectNextOccurrence_act: "Select the next occurrence of the current word",
             editor.set_font_act: "Choose the font for the editor",
             editor.settingsFile_act: "Open the folder containing the settings file",
+            editor.startupScript_act: "Configure the script that runs when Multi Script Editor opens",
             editor.shortcuts_act: "Open the Shortcut Manager to configure keyboard shortcuts",
             editor.show_docstrings_act: "Show docstrings in the autocomplete popup",
             editor.showAutocomplete_act: "Show code autocompletion",
@@ -540,6 +544,8 @@ class ScriptEditorUIBuilder:
 
         # Keep the manager at the bottom of Options, as the final preference action.
         editor.help_menu.removeAction(editor.shortcuts_act)
+        editor.options_menu.addSeparator()
+        editor.options_menu.addAction(editor.startupScript_act)
         editor.options_menu.addSeparator()
         editor.options_menu.addAction(editor.shortcuts_act)
 

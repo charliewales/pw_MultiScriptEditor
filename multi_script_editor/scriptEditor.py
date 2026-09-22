@@ -33,13 +33,19 @@ from vendor.Qt.QtGui import QColor, QFont, QIcon, QKeySequence, QPalette, QTextC
 from vendor.Qt.QtWidgets import (
     QAction,
     QApplication,
+    QCheckBox,
+    QComboBox,
+    QDialog,
     QFileDialog,
     QFontDialog,
+    QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMenu,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QSplitter,
     QStyle,
@@ -58,7 +64,7 @@ from widgets import (
 )
 from widgets import scriptEditor_UIs as ui
 from widgets.main_window_builder import ScriptEditorUIBuilder
-from widgets.pythonSyntax import design
+from widgets.pythonSyntax import design, syntaxHighLighter
 from core.git_manager import GitManager
 
 SUPPORTED_FILE_TYPES = {
@@ -524,6 +530,124 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 scroll_v = edit.needs_loading_scroll_v
                 delattr(edit, 'needs_loading_scroll_v')
                 edit.verticalScrollBar().setValue(scroll_v)
+        if not getattr(self, '_startup_script_scheduled', False):
+            self._startup_script_scheduled = True
+            QTimer.singleShot(0, self.runStartupScript)
+
+    def configureStartupScript(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle('Startup script')
+        dialog.setMinimumWidth(560)
+        dialog.resize(620, 520)
+        layout = QVBoxLayout(dialog)
+
+        settings = self._current_settings
+        enabled = QCheckBox('Enable startup script', dialog)
+        enabled.setChecked(settings.get('startup_script_enabled', False))
+        enabled.setStatusTip('Run the selected startup script when Multi Script Editor opens')
+        layout.addWidget(enabled)
+
+        mode = QComboBox(dialog)
+        mode.addItem('File', 'file')
+        mode.addItem('Inline code', 'inline')
+        mode.setCurrentIndex(1 if settings.get('startup_script_mode') == 'inline' else 0)
+        mode.setStatusTip('Choose which configured startup script runs')
+        layout.addWidget(QLabel('Run:', dialog))
+        layout.addWidget(mode)
+
+        file_layout = QHBoxLayout()
+        file_path = QLineEdit(settings.get('startup_script_path', ''), dialog)
+        file_path.setPlaceholderText('Path to a Python file')
+        file_path.setStatusTip('Configured startup script file')
+        browse = QPushButton('Browse...', dialog)
+        browse.setStatusTip('Choose a startup script file')
+        file_layout.addWidget(file_path)
+        file_layout.addWidget(browse)
+        layout.addWidget(QLabel('File script:', dialog))
+        layout.addLayout(file_layout)
+
+        inline_code = QPlainTextEdit(settings.get('startup_script_code', ''), dialog)
+        inline_code.setPlaceholderText('Python code to run at startup')
+        inline_code.setStatusTip('Configured inline startup script')
+        inline_code.setMinimumHeight(140)
+        colors = getattr(self, '_current_colors_cache', None)
+        if colors is None:
+            colors = design.getColors(self._current_settings.get('theme', 'Multi Script Editor'))
+        dialog._startup_script_highlighter = syntaxHighLighter.PythonHighlighterClass(
+            inline_code.document(), colors,
+        )
+        layout.addWidget(QLabel('Inline script:', dialog))
+        layout.addWidget(inline_code)
+
+        def update_mode():
+            is_file = mode.currentData() == 'file'
+            file_path.setEnabled(is_file)
+            browse.setEnabled(is_file)
+            inline_code.setEnabled(not is_file)
+
+        def choose_file():
+            path, _ = QFileDialog.getOpenFileName(
+                dialog,
+                'Select startup script',
+                file_path.text() or os.path.expanduser('~'),
+                'Python files (*.py *.pyw);;All files (*.*)',
+            )
+            if path:
+                file_path.setText(path)
+
+        mode.currentIndexChanged.connect(update_mode)
+        browse.clicked.connect(choose_file)
+        update_mode()
+
+        buttons = QHBoxLayout()
+        buttons.addStretch(1)
+        cancel = QPushButton('Cancel', dialog)
+        cancel.setStatusTip('Discard startup script changes')
+        save = QPushButton('Save', dialog)
+        save.setStatusTip('Save startup script settings')
+        buttons.addWidget(cancel)
+        buttons.addWidget(save)
+        layout.addLayout(buttons)
+        cancel.clicked.connect(dialog.reject)
+        save.clicked.connect(dialog.accept)
+
+        self._apply_dialog_font(dialog, self.menubar.font())
+        if (dialog.exec() if hasattr(dialog, 'exec') else dialog.exec_()) != QDialog.Accepted:
+            return
+
+        settings['startup_script_enabled'] = enabled.isChecked()
+        settings['startup_script_mode'] = mode.currentData()
+        settings['startup_script_path'] = file_path.text().strip()
+        settings['startup_script_code'] = inline_code.toPlainText()
+        self.saveSettings()
+
+    def _startup_script_text(self):
+        settings = self._current_settings
+        if not settings.get('startup_script_enabled', False):
+            return ''
+        if settings.get('startup_script_mode', 'file') == 'inline':
+            return settings.get('startup_script_code', '')
+
+        path = settings.get('startup_script_path', '')
+        if not path:
+            return ''
+        if not os.path.isfile(path):
+            self.out.showMessage('>>> Startup script not found: {0}'.format(path))
+            return ''
+        try:
+            return read_file_text(path) or ''
+        except Exception as error:
+            self.out.showMessage('>>> Unable to read startup script: {0}'.format(error))
+            return ''
+
+    def runStartupScript(self):
+        script = self._startup_script_text()
+        if script:
+            self.execute_command_requested.emit(
+                script,
+                self.print_command_act.isChecked(),
+                self.clear_exec_act.isChecked(),
+            )
 
     def checkUnsavedChanges(self):
         unsaved_tabs = []
@@ -922,8 +1046,8 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
 
             self.setWindowIcon(QIcon(icons['pw']))
 
-    def _apply_dialog_font(self, dialog):
-        font = getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
+    def _apply_dialog_font(self, dialog, font=None):
+        font = font or getattr(self, 'theme_font', getattr(self, 'current_outline_font', self.font()))
         if font:
             dialog.setFont(font)
             family = font.family()
