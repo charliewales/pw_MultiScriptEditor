@@ -3,8 +3,11 @@ from __future__ import with_statement
 import codecs
 import json
 import os
+from copy import deepcopy
+from uuid import uuid4
 
 from core.settings_model import SettingsModel
+from core.json_store import locked_json, write_json
 
 sessionFilename = 'pw_scriptEditor_session.json'
 backupFilename = 'pw_scriptEditor_session_backup.json'
@@ -43,6 +46,7 @@ class SessionModel(object):
             os.path.join(user_pref_folder, backupFilename)
         )
         self._sessions_folder = os.path.join(user_pref_folder, 'mse_sessions')
+        self._session_snapshot = []
         if not os.path.exists(self.path):
             self._write_json(self.path, [])
 
@@ -58,18 +62,84 @@ class SessionModel(object):
         return fallback
 
     def _write_json(self, path, data):
-        folder = os.path.dirname(path)
-        if folder and not os.path.exists(folder):
-            os.makedirs(folder)
-        with codecs.open(path, "w", "utf-16") as stream:
-            json.dump(data, stream, indent=4)
+        write_json(path, data)
         return path
 
     def readSession(self):
-        return self._read_json(self.path)
+        with locked_json(self.path):
+            session = self._normalize_session_tabs(self._read_json(self.path))
+            self._write_json(self.path, session)
+        self._session_snapshot = deepcopy(session)
+        return session
 
     def writeSession(self, data):
-        return self._write_json(self.path, data)
+        local = self._with_session_ids(data)
+        with locked_json(self.path):
+            remote = self._normalize_session_tabs(self._read_json(self.path))
+            merged = self._merge_session_tabs(
+                self._session_snapshot,
+                local,
+                remote,
+            )
+            path = self._write_json(self.path, merged)
+        self._session_snapshot = deepcopy(local)
+        return path
+
+    @staticmethod
+    def _with_session_ids(tabs):
+        result = []
+        for tab in tabs:
+            tab = dict(tab)
+            tab.setdefault('session_id', uuid4().hex)
+            result.append(tab)
+        return result
+
+    @classmethod
+    def _normalize_session_tabs(cls, tabs):
+        if any(not tab.get('session_id') for tab in tabs):
+            tabs = cls._deduplicate_legacy_tabs(tabs)
+        return cls._with_session_ids(tabs)
+
+    @staticmethod
+    def _tab_key(tab):
+        file_path = tab.get('file_path')
+        if file_path:
+            return ('file', os.path.normcase(os.path.abspath(file_path)))
+        return ('untitled', tab.get('name'), tab.get('text', ''))
+
+    @classmethod
+    def _deduplicate_legacy_tabs(cls, tabs):
+        unique_tabs = []
+        tab_keys = set()
+        for tab in tabs:
+            key = cls._tab_key(tab)
+            if key not in tab_keys:
+                tab_keys.add(key)
+                unique_tabs.append(tab)
+        return unique_tabs
+
+    @classmethod
+    def _merge_session_tabs(cls, base, local, remote):
+        base_by_id = {tab.get('session_id'): tab for tab in base}
+        local_ids = {tab['session_id'] for tab in local}
+        removed_ids = set(base_by_id) - local_ids
+        merged = {
+            tab['session_id']: tab
+            for tab in remote
+            if tab['session_id'] not in removed_ids
+        }
+        for tab in local:
+            session_id = tab['session_id']
+            if session_id not in base_by_id or tab != base_by_id[session_id]:
+                merged[session_id] = tab
+        ordered = [merged[tab['session_id']] for tab in local if tab['session_id'] in merged]
+        ordered.extend(
+            merged[tab['session_id']]
+            for tab in remote
+            if tab['session_id'] not in local_ids
+            and tab['session_id'] in merged
+        )
+        return ordered
 
     # BACKUP METHODS (Auto-save)
     def getBackupPath(self):

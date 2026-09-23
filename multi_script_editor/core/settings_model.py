@@ -2,8 +2,10 @@ import codecs
 import json
 import os
 import shutil
+from copy import deepcopy
 
 from vendor.Qt.QtGui import QFont
+from core.json_store import locked_json, write_json
 
 
 _USE_DEFAULT_FALLBACK = object()
@@ -19,6 +21,7 @@ class SettingsModel:
 
     def __init__(self):
         self.path = self._get_settings_file_path()
+        self._base_settings = None
 
     def _get_user_pref_folder(self):
         appData = None
@@ -170,11 +173,7 @@ class SettingsModel:
         return self._fallback_data() if fallback is _USE_DEFAULT_FALLBACK else fallback
 
     def _write_json_file(self, data):
-        folder = os.path.dirname(self.path)
-        if folder and not os.path.exists(folder):
-            os.makedirs(folder)
-        with codecs.open(self.path, "w", "utf-16") as stream:
-            json.dump(data, stream, indent=4)
+        write_json(self.path, data)
 
     def read_settings_from_disk(self):
         return self._read_json_file()
@@ -182,14 +181,46 @@ class SettingsModel:
     def read_settings(self):
         cached = self.__class__._get_cache()
         if cached is not None:
+            self._base_settings = deepcopy(cached)
             return cached
         data = self.read_settings_from_disk()
         self.__class__._set_cache(data)
+        self._base_settings = deepcopy(data)
         return data
 
     def write_settings(self, data):
-        self.__class__._set_cache(data)
-        self._write_json_file(data)
+        with locked_json(self.path):
+            base = self._base_settings
+            if base is None:
+                base = self.read_settings_from_disk()
+            merged = self._merge_settings(
+                base,
+                data,
+                self.read_settings_from_disk(),
+            )
+            self._write_json_file(merged)
+        self.__class__._set_cache(merged)
+        self._base_settings = deepcopy(merged)
+
+    @classmethod
+    def _merge_settings(cls, base, local, remote):
+        if not all(isinstance(value, dict) for value in (base, local, remote)):
+            return deepcopy(local if local != base else remote)
+        merged = {}
+        for key in set(base) | set(local) | set(remote):
+            if key not in local:
+                if key not in base and key in remote:
+                    merged[key] = deepcopy(remote[key])
+                continue
+            if key not in base:
+                merged[key] = deepcopy(local[key])
+            elif key not in remote:
+                merged[key] = deepcopy(local[key])
+            else:
+                merged[key] = cls._merge_settings(
+                    base[key], local[key], remote[key]
+                )
+        return merged
 
     @staticmethod
     def get_defaults():
@@ -239,10 +270,12 @@ class ThemesModel(SettingsModel):
 
     def read_settings(self):
         if ThemesModel._cached_settings is not None:
+            self._base_settings = deepcopy(ThemesModel._cached_settings)
             return ThemesModel._cached_settings
         data = self._read_json_file(fallback=_READ_FAILED)
         if data is not _READ_FAILED:
             ThemesModel._cached_settings = data
+            self._base_settings = deepcopy(data)
             return ThemesModel._cached_settings
 
         # Migration from pw_scriptEditor_pref.json
