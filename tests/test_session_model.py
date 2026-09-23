@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 
@@ -11,6 +12,7 @@ PACKAGE_ROOT = PROJECT_ROOT / "multi_script_editor"
 sys.path.insert(0, str(PACKAGE_ROOT))
 
 from core import session_model  # noqa: E402
+from widgets.tabWidget import tabWidgetClass  # noqa: E402
 
 
 class SessionModelTests(unittest.TestCase):
@@ -78,6 +80,33 @@ class SessionModelTests(unittest.TestCase):
         )
 
         self.assertEqual(['first', 'second'], [tab['session_id'] for tab in tabs])
+
+    def test_session_tab_names_are_read_without_restoring_the_session(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with patch.object(session_model, "SettingsModel") as settings_model:
+                settings_model.return_value._get_user_pref_folder.return_value = folder
+                model = session_model.SessionModel()
+
+            model._write_json(model.path, [{'name': 'New Tab 4'}])
+
+            self.assertEqual(['New Tab 4'], model.getSessionTabNames())
+
+    def test_new_tab_name_uses_open_and_saved_tab_numbers(self):
+        tabs = SimpleNamespace(
+            count=lambda: 2,
+            tabText=lambda index: ['New Tab 1', 'New Tab 3'][index],
+            p=SimpleNamespace(
+                _presenter=SimpleNamespace(
+                    session_model=SimpleNamespace(
+                        getSessionTabNames=lambda: ['New Tab 4']
+                    )
+                )
+            ),
+        )
+
+        self.assertEqual(
+            'New Tab 5', tabWidgetClass._next_untitled_tab_name(tabs)
+        )
 
 
 

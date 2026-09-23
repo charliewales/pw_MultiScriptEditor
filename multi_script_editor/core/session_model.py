@@ -72,6 +72,10 @@ class SessionModel(object):
         self._session_snapshot = deepcopy(session)
         return session
 
+    def getSessionTabNames(self):
+        with locked_json(self.path):
+            return [tab.get('name', '') for tab in self._read_json(self.path)]
+
     def writeSession(self, data):
         local = self._with_session_ids(data)
         with locked_json(self.path):
