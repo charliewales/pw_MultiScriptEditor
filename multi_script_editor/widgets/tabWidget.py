@@ -1355,12 +1355,28 @@ class tabWidgetClass(QTabWidget):
         text = self.tabText(index)
         return text
 
+    def _next_untitled_tab_name(self):
+        names = [self.tabText(index) for index in range(self.count())]
+        presenter = getattr(self.p, '_presenter', None)
+        session_model = getattr(presenter, 'session_model', None)
+        if session_model:
+            names.extend(session_model.getSessionTabNames())
+        numbers = [
+            int(match.group(1))
+            for name in names
+            for match in [re.match(r'^New Tab (\d+)$', name)]
+            if match
+        ]
+        return 'New Tab {0}'.format(max(numbers, default=0) + 1)
+
     def addNewTab(self, name='New Tab', text=None, file_path=None, make_current=True, insert_index=None):
         # Ensure name is a string and handle PySide6 signal boolean parameter
         if isinstance(name, bool) or name is None:
             name = 'New Tab'
         else:
             name = str(name)
+        if name == 'New Tab':
+            name = self._next_untitled_tab_name()
 
         if file_path:
             norm_file_path = os.path.normcase(os.path.abspath(file_path))

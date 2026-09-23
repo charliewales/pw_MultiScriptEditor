@@ -12,6 +12,7 @@ if vendor_path not in sys.path:
 
 import random
 import time
+from uuid import uuid4
 
 from multi_script_editor import __version__, managers
 import vendor.Qt
@@ -1257,7 +1258,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 if file_path and not os.path.exists(file_path):
                     self.out.showMessage('Warning: File does not exist: %s' % os.path.normpath(file_path))
 
+                tab_count = self.tab.count()
                 w = self.tab.addNewTab(s.get('name', 'tab'), None, file_path=file_path, make_current=False, insert_index=self.tab.count())
+                if self.tab.count() > tab_count:
+                    self.tab.widget(self.tab.count() - 1).session_id = s.get(
+                        'session_id', uuid4().hex
+                    )
 
                 # Store bookmarks, line, column, and scroll positions to be loaded when text is populated
                 w.needs_loading_bookmarks = s.get('bookmarks', "")
@@ -1401,7 +1407,12 @@ class scriptEditorClass(QMainWindow, ui.Ui_scriptEditor):
                 elif hasattr(edit, 'get_folded_blocks'):
                     folds = edit.get_folded_blocks()
 
+            session_id = getattr(widget, 'session_id', None)
+            if session_id is None:
+                session_id = uuid4().hex
+                widget.session_id = session_id
             tab = {
+                'session_id': session_id,
                 'name': name,
                 'text': text if (
                     save_full_text
